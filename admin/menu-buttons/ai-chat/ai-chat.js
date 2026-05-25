@@ -2217,6 +2217,24 @@ PAYOUT PURCHASES:
 
     // Call initial load
     loadChatThreads();
+
+    window.refreshAdminAiChatFromCloud = function () {
+        if (!document.getElementById('aiChatModalOverlay')) return;
+        const saved = localStorage.getItem('nd_ai_chat_threads');
+        if (!saved) return;
+        try {
+            aiChatThreads = JSON.parse(saved);
+            aiChatThreads = aiChatThreads.filter(t => !(t.title === 'New Chat' && t.messages.length === 0));
+            if (!aiChatThreads.find(t => t.id === currentChatId) && aiChatThreads.length) {
+                currentChatId = aiChatThreads[0].id;
+            }
+            const sidebarSearch = document.getElementById('aiSidebarSearch');
+            renderSidebar(sidebarSearch ? sidebarSearch.value : '');
+            renderActiveThread(true);
+        } catch (e) {
+            console.warn('[AI Chat] Cloud refresh failed', e);
+        }
+    };
 }
 
 window._openAiImagePreview = function (src) {

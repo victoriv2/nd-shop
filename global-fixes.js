@@ -702,13 +702,13 @@ window.updateShopContactPhone = function() {
     });
 };
 
-// Listen for storage updates to branding & contact phone
+// Listen for storage updates — broadcast to cloud sync handlers via realtimeSync
 window.addEventListener('local-storage-update', (e) => {
-    if (e.detail.key === 'nd_shop_name') {
-        window.updateShopBranding();
-    }
-    if (e.detail.key === 'nd_shop_owner_phone') {
-        window.updateShopContactPhone();
+    const k = e.detail.key;
+    if (k === 'nd_shop_name') window.updateShopBranding?.();
+    if (k === 'nd_shop_owner_phone') window.updateShopContactPhone?.();
+    if (window.realtimeSync && window.NdCloudSync && window.NdCloudSync.shouldSyncKey(k)) {
+        window.realtimeSync.syncNow(k);
     }
 });
 

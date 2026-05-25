@@ -154,19 +154,12 @@ localStorage.setItem = function(key, value) {
 
     originalSetItem.call(this, key, value);
     
-    // Auto-sync important data keys
-    const autoSyncKeys = [
-        'nd_products_data',
-        'nd_requests_data',
-        'nd_sales_history',
-        'nd_user_cart_data',
-        'nd_Tax_records',
-        'nd_logged_in_user',
-        'nd_shop_owner_phone',
-        'nd_shop_name'
-    ];
-    
-    if (autoSyncKeys.includes(key) && window.realtimeSync) {
-        window.realtimeSync.syncNow(key);
+    if (window.realtimeSync) {
+        const shouldBroadcast = window.NdCloudSync
+            ? window.NdCloudSync.shouldSyncKey(key)
+            : key && key.startsWith('nd_');
+        if (shouldBroadcast) {
+            window.realtimeSync.syncNow(key);
+        }
     }
 };

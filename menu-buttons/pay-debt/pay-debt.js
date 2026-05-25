@@ -2,6 +2,17 @@ let currentPayDebtBase64 = null;
 let pdCropperInstance = null;
 let isOpeningPayDebtModal = false;
 
+window.refreshPayDebtBankDisplay = function () {
+    const wrapper = document.getElementById('payDebtWrapper');
+    if (!wrapper) return;
+    const bankNumEl = wrapper.querySelector('.bank-account-num');
+    const bankNameEl = wrapper.querySelector('.bank-account-name');
+    const bankPlEl = wrapper.querySelector('.bank-name');
+    if (bankNumEl) bankNumEl.textContent = localStorage.getItem('nd_bank_account_num') || '5470972344';
+    if (bankNameEl) bankNameEl.textContent = localStorage.getItem('nd_bank_account_name') || 'Udeh Patience';
+    if (bankPlEl) bankPlEl.textContent = localStorage.getItem('nd_bank_name') || 'MONIEPOINT';
+};
+
 function openPayDebtModal() {
     if (isOpeningPayDebtModal) return;
     isOpeningPayDebtModal = true;

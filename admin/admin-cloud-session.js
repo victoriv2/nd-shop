@@ -59,7 +59,7 @@
                 const isAdmin = await verifyIsAdmin(sessionData.session.user.id);
                 if (isAdmin) {
                     if (window.realtimeSync && typeof window.realtimeSync.initialFetch === 'function') {
-                        window.realtimeSync.initialFetch();
+                        await window.realtimeSync.initialFetch();
                     }
                     return { ok: true, source: 'existing_session' };
                 }
@@ -71,7 +71,7 @@
                 const isAdmin = await verifyIsAdmin(refreshed.session.user.id);
                 if (isAdmin) {
                     if (window.realtimeSync && typeof window.realtimeSync.initialFetch === 'function') {
-                        window.realtimeSync.initialFetch();
+                        await window.realtimeSync.initialFetch();
                     }
                     return { ok: true, source: 'refreshed_session' };
                 }
@@ -106,7 +106,10 @@
                 cacheCloudCredentials(attempt.loginId, attempt.password);
                 console.log('[AdminCloud] Cloud session established via', attempt.label);
                 if (window.realtimeSync && typeof window.realtimeSync.initialFetch === 'function') {
-                    window.realtimeSync.initialFetch();
+                    await window.realtimeSync.initialFetch();
+                }
+                if (window.NdCloudSync && typeof window.NdCloudSync.pushAllLocalStateToCloud === 'function') {
+                    await window.NdCloudSync.pushAllLocalStateToCloud();
                 }
                 return { ok: true, source: attempt.label };
             } catch (e) {

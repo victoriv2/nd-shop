@@ -2166,6 +2166,24 @@ ${JSON.stringify(userRequests)}
 
     // Call initial load
     loadChatThreads();
+
+    window.refreshUserAiChatFromCloud = function () {
+        if (!document.getElementById('aiChatModalOverlay')) return;
+        const saved = localStorage.getItem('nd_user_ai_chat_threads');
+        if (!saved) return;
+        try {
+            aiChatThreads = JSON.parse(saved);
+            aiChatThreads = aiChatThreads.filter(t => !(t.title === 'New Chat' && t.messages.length === 0));
+            if (!aiChatThreads.find(t => t.id === currentChatId) && aiChatThreads.length) {
+                currentChatId = aiChatThreads[0].id;
+            }
+            const sidebarSearch = document.getElementById('aiSidebarSearch');
+            renderSidebar(sidebarSearch ? sidebarSearch.value : '');
+            renderActiveThread(true);
+        } catch (e) {
+            console.warn('[User AI] Cloud refresh failed', e);
+        }
+    };
 }
 
 window._openAiImagePreview = function (src) {

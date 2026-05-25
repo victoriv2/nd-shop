@@ -89,13 +89,21 @@ class RealtimeSyncEngine {
             // Listen to App State (Global Sync Bridge)
             window.supabaseClient.channel('custom-app-state-channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state' }, payload => {
-                    console.log('App state sync received!', payload);
-                    if (payload.new && payload.new.key && payload.new.data) {
-                        window.__isSupabaseSyncing = true;
-                        localStorage.setItem(payload.new.key, JSON.stringify(payload.new.data));
-                        window.__isSupabaseSyncing = false;
-                        this.broadcastChange(payload.new.key);
+                    const row = payload.new || payload.old;
+                    if (!row || !row.key) return;
+                    if (window.NdCloudSync && !window.NdCloudSync.shouldSyncKey(row.key)) return;
+
+                    window.__isSupabaseSyncing = true;
+                    if (payload.eventType === 'DELETE') {
+                        localStorage.removeItem(row.key);
+                    } else if (row.data !== undefined && row.data !== null) {
+                        const val = window.NdCloudSync
+                            ? window.NdCloudSync.valueForLocalStorage(row.data)
+                            : JSON.stringify(row.data);
+                        localStorage.setItem(row.key, val);
                     }
+                    window.__isSupabaseSyncing = false;
+                    this.broadcastChange(row.key);
                 })
                 .subscribe();
                 
@@ -136,7 +144,11 @@ class RealtimeSyncEngine {
             if (appStateData && appStateData.length > 0) {
                 window.__isSupabaseSyncing = true;
                 appStateData.forEach(row => {
-                    localStorage.setItem(row.key, JSON.stringify(row.data));
+                    if (window.NdCloudSync && !window.NdCloudSync.shouldSyncKey(row.key)) return;
+                    const val = window.NdCloudSync
+                        ? window.NdCloudSync.valueForLocalStorage(row.data)
+                        : JSON.stringify(row.data);
+                    localStorage.setItem(row.key, val);
                     this.broadcastChange(row.key);
                 });
                 window.__isSupabaseSyncing = false;
@@ -287,8 +299,12 @@ class RealtimeSyncEngine {
             // Ignore parse errors
         }
 
-        // Check monitored keys for changes
-        Object.keys(this.listeners).forEach(key => {
+        const keysToCheck = new Set(Object.keys(this.listeners));
+        if (window.NdCloudSync && typeof window.NdCloudSync.allSyncKeys === 'function') {
+            window.NdCloudSync.allSyncKeys().forEach(k => keysToCheck.add(k));
+        }
+
+        keysToCheck.forEach(key => {
             try {
                 const current = localStorage.getItem(key);
                 const cached_val = cache[key];
@@ -304,7 +320,7 @@ class RealtimeSyncEngine {
 
         // Update cache
         try {
-            localStorage.setItem(storageSyncKey, JSON.stringify(cache));
+            originalSetItem.call(localStorage, storageSyncKey, JSON.stringify(cache));
         } catch (e) {
             // Ignore quota exceeded
         }
@@ -329,48 +345,28 @@ if (document.readyState === 'loading') {
 window.__isSupabaseSyncing = false;
 const originalSetItem = localStorage.setItem;
 
-// Keys that should be synced to Supabase App State
-const SYNCED_KEYS = [
-    'nd_products_data',
-    'nd_requests_data',
-    'nd_expenses_notebook',
-    'nd_sales_history',
-    'nd_debt_requests',
-    'nd_Tax_records',
-    'nd_income_allocations',
-    'nd_maintenance_mode',
-    'nd_debtor_notes',
-    'nd_payout_rate',
-    'nd_payout_enabled',
-    'nd_reward_purchase_enabled',
-    'nd_messages',
-    'nd_comm_messages',
-    'nd_pinned_chats',
-    'nd_blocked_messaging_users',
-    'nd_shop_owner_phone',
-    'nd_shop_name'
-];
+function shouldSyncKeyToCloud(key) {
+    if (window.NdCloudSync && typeof window.NdCloudSync.shouldSyncKey === 'function') {
+        return window.NdCloudSync.shouldSyncKey(key);
+    }
+    return key && key.startsWith('nd_');
+}
 
 localStorage.setItem = function(key, value) {
-    // 1. Always execute standard localStorage save
     originalSetItem.apply(this, arguments);
 
-    // 2. If it's a critical key and we are not currently restoring from Supabase...
-    if (SYNCED_KEYS.includes(key) && !window.__isSupabaseSyncing && window.supabaseClient) {
+    if (shouldSyncKeyToCloud(key) && !window.__isSupabaseSyncing && window.supabaseClient) {
         try {
-            // Parse the value so it stores as proper JSONB, otherwise store as string
             let parsedData = value;
-            try { parsedData = JSON.parse(value); } catch(e) {}
-            
-            // Push to Supabase app_state table
-            window.supabaseClient.from('app_state').upsert({
-                key: key,
-                data: parsedData
-            }).then(({error}) => {
+            try { parsedData = JSON.parse(value); } catch (e) { /* plain string */ }
+
+            window.supabaseClient.from('app_state').upsert(
+                { key: key, data: parsedData },
+                { onConflict: 'key' }
+            ).then(({ error }) => {
                 if (error) console.error('[Global Sync Bridge] Failed to sync', key, error);
-                else console.log('[Global Sync Bridge] Synced', key, 'to Cloud');
             });
-        } catch(e) {
+        } catch (e) {
             console.error('[Global Sync Bridge] Error intercepting', key, e);
         }
     }
