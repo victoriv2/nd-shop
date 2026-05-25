@@ -153,12 +153,12 @@ async function sendRecoveryCode() {
 
     // Instead of sending immediately, show the modal
     const modal = document.getElementById('adminAuthMethodModal');
-    if (modal) modal.classList.add('show');
+    if (modal) modal.classList.add('active');
 }
 
 window.closeAdminAuthMethodModal = function() {
     const modal = document.getElementById('adminAuthMethodModal');
-    if (modal) modal.classList.remove('show');
+    if (modal) modal.classList.remove('active');
 };
 
 window.selectAdminAuthMethod = async function(method) {
