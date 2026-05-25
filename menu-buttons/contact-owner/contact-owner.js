@@ -105,4 +105,11 @@ function initContactOwnerLogic() {
             showToast("Opening Phone Dialer...", "tel:" + dynamicPhone);
         });
     }
+
+    if (window.realtimeSync) {
+        window.realtimeSync.on('nd_shop_owner_phone', () => {
+            const latest = localStorage.getItem('nd_shop_owner_phone') || '08109316532';
+            if (phoneText) phoneText.textContent = latest;
+        });
+    }
 }

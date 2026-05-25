@@ -363,6 +363,13 @@ window.saveAppContactSettings = function() {
 window._finishSavingAppContact = function(shopName, phone) {
     localStorage.setItem('nd_shop_name', shopName);
     localStorage.setItem('nd_shop_owner_phone', phone);
+
+    if (typeof window.updateShopBranding === 'function') window.updateShopBranding();
+    if (typeof window.updateShopContactPhone === 'function') window.updateShopContactPhone();
+    if (window.realtimeSync) {
+        window.realtimeSync.syncNow('nd_shop_name');
+        window.realtimeSync.syncNow('nd_shop_owner_phone');
+    }
     
     if(typeof customAlert === 'function') customAlert("Branding & Contact settings updated successfully!");
     else alert("Branding & Contact settings updated successfully!");

@@ -3,6 +3,22 @@
 // Called after product-details.html is injected into the DOM
 // ============================================================
 
+function _saveProductsToCloud(products) {
+    try {
+        window.__isSupabaseSyncing = true;
+        _saveProductsToCloud(products);
+        window.__isSupabaseSyncing = false;
+        if (typeof window.reloadAdminProducts === 'function') {
+            window.reloadAdminProducts();
+        }
+        if (window.realtimeSync) {
+            window.realtimeSync.syncNow('nd_products_data');
+        }
+    } catch (e) {
+        console.error('Failed to persist products:', e);
+    }
+}
+
 function initProductDetailsModal() {
 
     // ---- Close / Back helpers ----
@@ -709,7 +725,7 @@ function _pdSaveEditImage() {
     });
 
     if (updated) {
-        localStorage.setItem('nd_products_data', JSON.stringify(products));
+        _saveProductsToCloud(products);
         
         // Show success
         _pdShowView('productActionSuccessView');
@@ -1330,7 +1346,7 @@ function _pdSaveEditPrice() {
         if (newName) products[index].name = newName;
     }
 
-    localStorage.setItem('nd_products_data', JSON.stringify(products));
+    _saveProductsToCloud(products);
     if (typeof adminProducts !== 'undefined') {
         try { window.reloadAdminProducts(); } catch (e) { }
     }
@@ -1350,7 +1366,7 @@ function _pdExecuteClear() {
     const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     if (index === -1) return;
     products[index].cleared = true;
-    localStorage.setItem('nd_products_data', JSON.stringify(products));
+    _saveProductsToCloud(products);
     if (typeof window.reloadAdminProducts === 'function') window.reloadAdminProducts();
     if (typeof window.renderProductsGlobal === 'function') window.renderProductsGlobal();
     _pdShowSuccess('Product Hidden', 'Product hidden from view. History is kept intact.');
@@ -1363,7 +1379,7 @@ function _pdExecuteDelete() {
     const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     if (index === -1) return;
     products[index].isDeleted = true;
-    localStorage.setItem('nd_products_data', JSON.stringify(products));
+    _saveProductsToCloud(products);
     if (typeof window.reloadAdminProducts === 'function') window.reloadAdminProducts();
     if (typeof window.renderProductsGlobal === 'function') window.renderProductsGlobal();
     if (typeof window.renderRestockListGlobal === 'function') window.renderRestockListGlobal();
@@ -1416,7 +1432,7 @@ function _pdExecuteUndoTopUp() {
         prod.boughtQuantity = Math.max(0, (parseFloat(prod.boughtQuantity) || 0) - (lastTopUp.qty || 1));
     }
     
-    localStorage.setItem('nd_products_data', JSON.stringify(products));
+    _saveProductsToCloud(products);
     
     setTimeout(() => {
         if (typeof window.reloadAdminProducts === 'function') window.reloadAdminProducts();
@@ -1458,7 +1474,7 @@ window.toggleProductFlexibleState = function(name, dateAdded, isChecked) {
         if (index !== -1) {
             products[index].allowUserFlexiblePricing = false;
             products[index].flexibleVariants = [];
-            localStorage.setItem('nd_products_data', JSON.stringify(products));
+            _saveProductsToCloud(products);
             
             if (window._pdCurrentProduct && window._pdCurrentProduct.name === name && window._pdCurrentProduct.dateAdded === dateAdded) {
                 window._pdCurrentProduct.allowUserFlexiblePricing = false;
@@ -1537,7 +1553,7 @@ window.openFlexibleVariantsModal = function(name, dateAdded, isTogglingOn = fals
                 products[index].flexibleVariants = selectedTitles;
             }
             
-            localStorage.setItem('nd_products_data', JSON.stringify(products));
+            _saveProductsToCloud(products);
             
             if (window._pdCurrentProduct && window._pdCurrentProduct.name === name && window._pdCurrentProduct.dateAdded === dateAdded) {
                 window._pdCurrentProduct.allowUserFlexiblePricing = products[index].allowUserFlexiblePricing;

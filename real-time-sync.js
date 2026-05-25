@@ -72,9 +72,9 @@ class RealtimeSyncEngine {
                 })
                 .subscribe();
                 
-            // Listen to products
+            // Products table changes — app_state is the canonical sync path for full product JSON
             window.supabaseClient.channel('custom-products-channel')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
                     this.broadcastChange('nd_products_data');
                 })
                 .subscribe();
@@ -342,7 +342,13 @@ const SYNCED_KEYS = [
     'nd_debtor_notes',
     'nd_payout_rate',
     'nd_payout_enabled',
-    'nd_reward_purchase_enabled'
+    'nd_reward_purchase_enabled',
+    'nd_messages',
+    'nd_comm_messages',
+    'nd_pinned_chats',
+    'nd_blocked_messaging_users',
+    'nd_shop_owner_phone',
+    'nd_shop_name'
 ];
 
 localStorage.setItem = function(key, value) {

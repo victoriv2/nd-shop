@@ -35,16 +35,26 @@ window.loadProductTab = function() {
                 const searchWrapper = document.getElementById('searchWrapper');
                 const filterBtn = document.getElementById('filterBtn');
 
-                // Function to get current products from memory or Supabase
+                // Function to get current products — prefer cloud-synced localStorage (full structure)
                 async function getProductsFromMemory() {
+                    const saved = localStorage.getItem('nd_products_data');
+                    if (saved) {
+                        try {
+                            const products = JSON.parse(saved);
+                            if (Array.isArray(products) && products.length > 0) {
+                                return products;
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse products', e);
+                        }
+                    }
+
                     if (window.supabaseClient) {
                         const { data, error } = await window.supabaseClient.from('products').select('*');
                         if (error) {
                             console.error('Error fetching products:', error);
                             return [];
                         }
-                        
-                        // Map snake_case from DB back to camelCase used in frontend
                         return data.map(p => ({
                             ...p,
                             isCustom: p.is_custom,
@@ -58,16 +68,6 @@ window.loadProductTab = function() {
                             payoutRate: p.payout_rate,
                             dateAdded: p.created_at
                         }));
-                    }
-                    
-                    const saved = localStorage.getItem('nd_products_data');
-                    if (saved) {
-                        try {
-                            return JSON.parse(saved);
-                        } catch (e) {
-                            console.error('Failed to parse products', e);
-                            return [];
-                        }
                     }
                     return [];
                 }

@@ -340,6 +340,17 @@ function initMessagingLogic() {
             renderMessages();
         }
     });
+
+    // Sync across browsers via Supabase app_state / realtime
+    if (window.realtimeSync) {
+        window.realtimeSync.on('nd_messages', () => {
+            if (page && page.classList.contains('show')) renderMessages();
+            if (typeof _renderInboxList === 'function') _renderInboxList();
+        });
+        window.realtimeSync.on('nd_blocked_messaging_users', () => {
+            if (page && page.classList.contains('show')) renderMessages();
+        });
+    }
 }
 
 // --- Handle Send ---

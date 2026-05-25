@@ -682,6 +682,7 @@ window.updateShopBranding = function() {
 // Initial call on load
 document.addEventListener('DOMContentLoaded', () => {
     window.updateShopBranding();
+    window.updateShopContactPhone?.();
 
     // Observe modal container for any dynamic content loads
     const modalObserver = new MutationObserver(() => {
@@ -693,11 +694,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Listen for storage updates to branding
+window.updateShopContactPhone = function() {
+    const phone = localStorage.getItem('nd_shop_owner_phone') || '08109316532';
+    const phoneEls = document.querySelectorAll('#shopPhoneNumber, .shop-phone-number');
+    phoneEls.forEach(el => {
+        el.textContent = phone;
+    });
+};
+
+// Listen for storage updates to branding & contact phone
 window.addEventListener('local-storage-update', (e) => {
     if (e.detail.key === 'nd_shop_name') {
         window.updateShopBranding();
     }
+    if (e.detail.key === 'nd_shop_owner_phone') {
+        window.updateShopContactPhone();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (window.realtimeSync) {
+            window.realtimeSync.on('nd_shop_name', () => window.updateShopBranding?.());
+            window.realtimeSync.on('nd_shop_owner_phone', () => window.updateShopContactPhone?.());
+        }
+    }, 600);
 });
 
 // ============================================================

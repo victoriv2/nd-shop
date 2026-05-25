@@ -1,39 +1,44 @@
 let adminProducts = [];
 
-// Helper function to sync current products array with Supabase (fallback/bulk sync if needed)
+// Persist admin products to localStorage (triggers cloud sync via app_state bridge)
 async function saveProductsToMemory() {
-    console.log("Bulk save not recommended for Supabase. Use specific insert/update calls.");
+    try {
+        window.__isSupabaseSyncing = true;
+        localStorage.setItem('nd_products_data', JSON.stringify(adminProducts));
+        window.__isSupabaseSyncing = false;
+        if (window.realtimeSync) {
+            window.realtimeSync.syncNow('nd_products_data');
+        }
+    } catch (e) {
+        console.error('Failed to save products to storage:', e);
+    }
 }
 
-// Reload adminProducts from Supabase
+// Reload adminProducts from synced localStorage (hydrated from Supabase app_state)
 window.reloadAdminProducts = async function() {
-    if (!window.supabaseClient) return;
     try {
-        const { data, error } = await window.supabaseClient.from('products').select('*').order('created_at', { ascending: false });
-        if (data) {
-            // Map DB fields back to frontend camelCase expectations
-            adminProducts = data.map(p => ({
-                id: p.id,
-                name: p.name,
-                price: p.price,
-                description: p.description,
-                images: p.images || [],
-                dateAdded: p.created_at,
-                // Add default fields that were part of localStorage structure
-                colors: p.images ? p.images.map((_, i) => `Color ${i+1}`) : [],
-                cleared: false,
-                isDeleted: false,
-                qty: 1
-            }));
+        const saved = localStorage.getItem('nd_products_data');
+        if (saved) {
+            adminProducts = JSON.parse(saved);
+            if (typeof window.renderProductsGlobal === 'function') {
+                window.renderProductsGlobal();
+            }
         }
-    } catch(e) {
+    } catch (e) {
         console.error('Failed to reload admin products', e);
     }
 };
 
-// Immediately load on boot
-if (window.supabaseClient) {
+function initAdminProductsFromStorage() {
     window.reloadAdminProducts();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initAdminProductsFromStorage, 800);
+    });
+} else {
+    setTimeout(initAdminProductsFromStorage, 800);
 }
 
 // Current sort and filter state

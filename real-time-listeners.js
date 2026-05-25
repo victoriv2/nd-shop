@@ -82,10 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.reloadAdminProducts();
                 // Re-render product list if it's currently active
                 const activeTab = document.querySelector('.bottom-bar-item.active');
-                if (activeTab?.id === 'tab-product' && typeof window.initAdminProductLogic === 'function') {
-                    // Re-render the product list
-                    if (typeof window.renderAdminProductList === 'function') {
-                        window.renderAdminProductList();
+                if (activeTab?.id === 'tab-product') {
+                    if (typeof window.renderProductsGlobal === 'function') {
+                        window.renderProductsGlobal();
                     }
                 }
             });
@@ -162,7 +161,9 @@ localStorage.setItem = function(key, value) {
         'nd_sales_history',
         'nd_user_cart_data',
         'nd_Tax_records',
-        'nd_logged_in_user'
+        'nd_logged_in_user',
+        'nd_shop_owner_phone',
+        'nd_shop_name'
     ];
     
     if (autoSyncKeys.includes(key) && window.realtimeSync) {

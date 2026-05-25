@@ -346,6 +346,13 @@ function initCommunityLogic() {
             }
         });
     }
+
+    if (window.realtimeSync) {
+        window.realtimeSync.on('nd_comm_messages', () => {
+            const page = document.getElementById('communityPage');
+            if (page && page.classList.contains('show')) renderCommMessages();
+        });
+    }
 }
 
 // --- File Upload (stage in input, don't send immediately) ---

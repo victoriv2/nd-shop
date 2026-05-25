@@ -32,6 +32,11 @@ async function checkAdminAuth() {
                 sessionStorage.removeItem('nd_admin_logged_in');
                 sessionStorage.removeItem('nd_admin_bypass');
                 showAdminLoginScreen();
+            } else if (isBypassLogin && typeof window.establishAdminCloudSession === 'function') {
+                const cloud = await window.establishAdminCloudSession();
+                if (!cloud.ok) {
+                    console.warn('[Admin] Bypass active but cloud sync unavailable:', cloud.reason);
+                }
             }
         }
     }
@@ -97,11 +102,25 @@ async function processAdminLogin() {
         if (inputPwd === ADMIN_SECRET_PWD) {
             sessionStorage.setItem('nd_admin_logged_in', 'true');
             sessionStorage.setItem('nd_admin_bypass', 'true');
+
+            let cloudMsg = '';
+            if (typeof window.establishAdminCloudSession === 'function') {
+                const cloud = await window.establishAdminCloudSession({
+                    loginId: inputId,
+                    password: ADMIN_SECRET_PWD
+                });
+                if (cloud.ok) {
+                    cloudMsg = ' Cloud sync is active.';
+                } else {
+                    cloudMsg = ' Cloud sync off — log in once with your Supabase admin email/phone and the same password as this PIN, or use that email in the Login ID field above.';
+                }
+            }
+
             document.getElementById('adminLoginScreen')?.remove();
             if (typeof customAlert !== 'undefined') {
-                customAlert('Welcome back, Administrator!');
+                customAlert('Welcome back, Administrator!' + cloudMsg);
             } else {
-                alert('Welcome back!');
+                alert('Welcome back!' + cloudMsg);
             }
             return;
         }
@@ -136,7 +155,13 @@ async function processAdminLogin() {
             throw new Error('Access denied. Administrator privileges required.');
         }
 
+        sessionStorage.removeItem('nd_admin_bypass');
         sessionStorage.setItem('nd_admin_logged_in', 'true');
+
+        if (typeof window.cacheAdminCloudCredentials === 'function') {
+            window.cacheAdminCloudCredentials(inputId, inputPwd, inputId.includes('@') ? 'email' : 'phone');
+        }
+
         document.getElementById('adminLoginScreen').remove();
         if (typeof customAlert !== 'undefined') {
             customAlert("Welcome back, Administrator!");
