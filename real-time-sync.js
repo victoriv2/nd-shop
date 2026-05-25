@@ -9,6 +9,7 @@
 class RealtimeSyncEngine {
     constructor() {
         this.listeners = {}; // { dataKey: [callbacks] }
+        this.anyListeners = []; // called for every synced key change
         this.lastSync = {}; // Track last sync to debounce
         this.syncDelay = 300; // ms
         this.isInitialized = false;
@@ -173,6 +174,11 @@ class RealtimeSyncEngine {
         this.listeners[dataKey].push(callback);
     }
 
+    /** Fires on every synced nd_* key change */
+    onAny(callback) {
+        this.anyListeners.push(callback);
+    }
+
     /**
      * Broadcast a change to all registered listeners
      */
@@ -191,6 +197,19 @@ class RealtimeSyncEngine {
                     console.warn(`[RealtimeSync] Error in callback for ${dataKey}:`, e);
                 }
             });
+        }
+
+        if (window.NdCloudSync && window.NdCloudSync.shouldSyncKey(dataKey)) {
+            this.anyListeners.forEach(callback => {
+                try {
+                    callback(dataKey);
+                } catch (e) {
+                    console.warn(`[RealtimeSync] Error in onAny for ${dataKey}:`, e);
+                }
+            });
+            try {
+                window.dispatchEvent(new CustomEvent('nd-cloud-key-updated', { detail: { key: dataKey } }));
+            } catch (e) { /* ignore */ }
         }
     }
 
@@ -344,6 +363,8 @@ if (document.readyState === 'loading') {
 // ==========================================
 window.__isSupabaseSyncing = false;
 const originalSetItem = localStorage.setItem;
+const originalRemoveItem = localStorage.removeItem;
+const originalClear = localStorage.clear;
 
 function shouldSyncKeyToCloud(key) {
     if (window.NdCloudSync && typeof window.NdCloudSync.shouldSyncKey === 'function') {
@@ -369,6 +390,26 @@ localStorage.setItem = function(key, value) {
         } catch (e) {
             console.error('[Global Sync Bridge] Error intercepting', key, e);
         }
+    }
+};
+
+localStorage.removeItem = function (key) {
+    originalRemoveItem.apply(this, arguments);
+    if (shouldSyncKeyToCloud(key) && !window.__isSupabaseSyncing && window.supabaseClient) {
+        window.supabaseClient.from('app_state').delete().eq('key', key).then(({ error }) => {
+            if (error) console.error('[Global Sync Bridge] Failed to delete', key, error);
+        });
+        if (window.realtimeSync) window.realtimeSync.syncNow(key);
+    }
+};
+
+localStorage.clear = function () {
+    const keys = Object.keys(localStorage).filter(shouldSyncKeyToCloud);
+    originalClear.apply(this, arguments);
+    if (!window.__isSupabaseSyncing && window.supabaseClient && keys.length) {
+        Promise.all(
+            keys.map(key => window.supabaseClient.from('app_state').delete().eq('key', key))
+        ).catch(e => console.error('[Global Sync Bridge] clear sync failed', e));
     }
 };
 

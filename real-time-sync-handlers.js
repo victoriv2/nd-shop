@@ -89,10 +89,20 @@ document.addEventListener('DOMContentLoaded', () => {
         on('nd_payout_enabled', () => window.refreshPayouts?.());
         on('nd_reward_purchase_enabled', () => { /* payout UI reads on next open */ });
 
-        // --- AI chat (admin + user) ---
-        on('nd_ai_chat_threads', () => window.refreshAdminAiChatFromCloud?.());
-        on('nd_ai_chat_history', () => window.refreshAdminAiChatFromCloud?.());
-        on('nd_user_ai_chat_threads', () => window.refreshUserAiChatFromCloud?.());
+        // --- AI chat (admin + user) — debounced so cloud sync does not flash/reload while typing ---
+        let adminAiRefreshTimer = null;
+        let userAiRefreshTimer = null;
+        const scheduleAdminAiRefresh = () => {
+            clearTimeout(adminAiRefreshTimer);
+            adminAiRefreshTimer = setTimeout(() => window.refreshAdminAiChatFromCloud?.(), 1500);
+        };
+        const scheduleUserAiRefresh = () => {
+            clearTimeout(userAiRefreshTimer);
+            userAiRefreshTimer = setTimeout(() => window.refreshUserAiChatFromCloud?.(), 1500);
+        };
+        on('nd_ai_chat_threads', scheduleAdminAiRefresh);
+        on('nd_ai_chat_history', scheduleAdminAiRefresh);
+        on('nd_user_ai_chat_threads', scheduleUserAiRefresh);
 
         // --- Users / insights ---
         on('nd_users', () => {
@@ -129,6 +139,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        console.log('[CloudSyncHandlers] Registered refresh handlers for all store data');
+        // Catch-all: any nd_* key change triggers generic UI refresh hooks
+        window.realtimeSync.onAny((key) => {
+            if (key === 'nd_logged_in_user') {
+                const userStr = localStorage.getItem('nd_logged_in_user');
+                if (userStr) {
+                    try {
+                        window.loggedInUser = JSON.parse(userStr);
+                        window.refreshPayouts?.();
+                    } catch (e) { /* ignore */ }
+                }
+            }
+            if (key === 'nd_admin_name') {
+                const menuName = document.querySelector('.admin-name');
+                if (menuName) menuName.textContent = localStorage.getItem('nd_admin_name') || 'Shop Administrator';
+            }
+            if (key.startsWith('nd_comm_last_viewed_') && typeof window.updateCommunityBadge === 'function') {
+                window.updateCommunityBadge();
+            }
+        });
+
+        console.log('[CloudSyncHandlers] Sync-everything handlers active');
     }, 700);
 });

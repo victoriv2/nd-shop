@@ -1615,11 +1615,16 @@ ${JSON.stringify(userRequests)}
             }
         }
 
-        // Clean up empty "New Chat" threads to prevent duplicate spam on refresh
         aiChatThreads = aiChatThreads.filter(t => !(t.title === 'New Chat' && t.messages.length === 0));
 
-        // Always start a fresh new chat when visiting AI Mode
-        createNewThread();
+        if (aiChatThreads.length === 0) {
+            createNewThread();
+        } else if (!currentChatId || !aiChatThreads.find(t => t.id === currentChatId)) {
+            switchThread(aiChatThreads[0].id);
+        } else {
+            renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
+            renderActiveThread(true);
+        }
     }
 
     function createNewThread() {
@@ -1656,7 +1661,15 @@ ${JSON.stringify(userRequests)}
     }
 
     function saveActiveHistory() {
-        localStorage.setItem('nd_user_ai_chat_threads', JSON.stringify(aiChatThreads));
+        window.__userAiLocalSaveUntil = Date.now() + 3000;
+        const payload = JSON.stringify(aiChatThreads);
+        window.__userAiThreadsSnapshot = payload;
+        try {
+            window.__isSupabaseSyncing = true;
+            localStorage.setItem('nd_user_ai_chat_threads', payload);
+        } finally {
+            window.__isSupabaseSyncing = false;
+        }
         renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
     }
 
@@ -2169,11 +2182,23 @@ ${JSON.stringify(userRequests)}
 
     window.refreshUserAiChatFromCloud = function () {
         if (!document.getElementById('aiChatModalOverlay')) return;
+        if (window.__userAiLocalSaveUntil && Date.now() < window.__userAiLocalSaveUntil) return;
+
+        const input = document.getElementById('aiChatInput');
+        if (input && document.activeElement === input) return;
+
         const saved = localStorage.getItem('nd_user_ai_chat_threads');
         if (!saved) return;
+        if (saved === window.__userAiThreadsSnapshot) return;
+
         try {
-            aiChatThreads = JSON.parse(saved);
+            const incoming = JSON.parse(saved);
+            if (JSON.stringify(incoming) === JSON.stringify(aiChatThreads)) return;
+
+            aiChatThreads = incoming;
             aiChatThreads = aiChatThreads.filter(t => !(t.title === 'New Chat' && t.messages.length === 0));
+            window.__userAiThreadsSnapshot = saved;
+
             if (!aiChatThreads.find(t => t.id === currentChatId) && aiChatThreads.length) {
                 currentChatId = aiChatThreads[0].id;
             }

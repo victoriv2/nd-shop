@@ -1669,8 +1669,14 @@ PAYOUT PURCHASES:
         // Clean up empty "New Chat" threads to prevent duplicate spam on refresh
         aiChatThreads = aiChatThreads.filter(t => !(t.title === 'New Chat' && t.messages.length === 0));
 
-        // Always start a fresh new chat when visiting AI Mode
-        createNewThread();
+        if (aiChatThreads.length === 0) {
+            createNewThread();
+        } else if (!currentChatId || !aiChatThreads.find(t => t.id === currentChatId)) {
+            switchThread(aiChatThreads[0].id);
+        } else {
+            renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
+            renderActiveThread(true);
+        }
     }
 
     function createNewThread() {
@@ -1687,8 +1693,13 @@ PAYOUT PURCHASES:
     }
 
     function switchThread(id) {
-        if (window.showGlobalRefreshLoader) window.showGlobalRefreshLoader();
-        
+        if (id === currentChatId) {
+            const sidebarSearchInput = document.getElementById('aiSidebarSearch');
+            renderSidebar(sidebarSearchInput ? sidebarSearchInput.value : '');
+            renderActiveThread(true);
+            return;
+        }
+
         currentChatId = id;
         const sidebarSearchInput = document.getElementById('aiSidebarSearch');
         const activeSearchInput = document.getElementById('aiActiveChatSearch');
@@ -1704,12 +1715,18 @@ PAYOUT PURCHASES:
 
         renderSidebar(sidebarSearchInput ? sidebarSearchInput.value : '');
         renderActiveThread(false, false);
-        
-        if (window.hideGlobalRefreshLoader) setTimeout(window.hideGlobalRefreshLoader, 300);
     }
 
     function saveActiveHistory() {
-        localStorage.setItem('nd_ai_chat_threads', JSON.stringify(aiChatThreads));
+        window.__adminAiLocalSaveUntil = Date.now() + 3000;
+        const payload = JSON.stringify(aiChatThreads);
+        window.__adminAiThreadsSnapshot = payload;
+        try {
+            window.__isSupabaseSyncing = true;
+            localStorage.setItem('nd_ai_chat_threads', payload);
+        } finally {
+            window.__isSupabaseSyncing = false;
+        }
         renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
     }
 
@@ -2220,11 +2237,23 @@ PAYOUT PURCHASES:
 
     window.refreshAdminAiChatFromCloud = function () {
         if (!document.getElementById('aiChatModalOverlay')) return;
+        if (window.__adminAiLocalSaveUntil && Date.now() < window.__adminAiLocalSaveUntil) return;
+
+        const input = document.getElementById('aiChatInput');
+        if (input && document.activeElement === input) return;
+
         const saved = localStorage.getItem('nd_ai_chat_threads');
         if (!saved) return;
+        if (saved === window.__adminAiThreadsSnapshot) return;
+
         try {
-            aiChatThreads = JSON.parse(saved);
+            const incoming = JSON.parse(saved);
+            if (JSON.stringify(incoming) === JSON.stringify(aiChatThreads)) return;
+
+            aiChatThreads = incoming;
             aiChatThreads = aiChatThreads.filter(t => !(t.title === 'New Chat' && t.messages.length === 0));
+            window.__adminAiThreadsSnapshot = saved;
+
             if (!aiChatThreads.find(t => t.id === currentChatId) && aiChatThreads.length) {
                 currentChatId = aiChatThreads[0].id;
             }
