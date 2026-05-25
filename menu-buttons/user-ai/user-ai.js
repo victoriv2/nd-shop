@@ -46,7 +46,7 @@ window._sendAiSuggested = function(text) {
     }
 };
 
-window.openUserAiModal = function() {
+window.openUserAiModal = async function() {
     // Capture then clear context so it only applies to this session
     window._aiOpenedFromContext = window._aiPageContext || 'general';
     window._aiPageContext = null;
@@ -185,6 +185,7 @@ function initAiChatLogic() {
 
     closeBtn.addEventListener('click', () => {
         if (inputField) inputField.blur();
+        saveActiveHistory();
         overlay.classList.remove('show');
         setTimeout(() => {
             const wrapper = document.getElementById('ai-modal-wrapper');
@@ -590,7 +591,13 @@ function initAiChatLogic() {
 
         inputField.style.height = '50px';
 
-        const activeThread = aiChatThreads.find(t => t.id === currentChatId);
+        let activeThread = aiChatThreads.find(t => t.id === currentChatId);
+        if (!activeThread) {
+            if (aiChatThreads.length === 0) createNewThread();
+            else switchThread(aiChatThreads[0].id);
+            activeThread = aiChatThreads.find(t => t.id === currentChatId);
+        }
+        if (!activeThread) return;
 
         if (isEdit && spliceIndex !== null) {
             // Wiping messages from edit point onwards
@@ -1597,7 +1604,13 @@ ${JSON.stringify(userRequests)}
     function loadChatThreads() {
         const saved = localStorage.getItem('nd_user_ai_chat_threads');
         if (saved) {
-            aiChatThreads = JSON.parse(saved);
+            try {
+                aiChatThreads = JSON.parse(saved);
+                if (!Array.isArray(aiChatThreads)) aiChatThreads = [];
+            } catch (e) {
+                console.error('[User AI] Corrupt thread data', e);
+                aiChatThreads = [];
+            }
         } else {
             // Migrate legacy flat chat history if exists
             const legacy = localStorage.getItem('nd_ai_chat_history');
@@ -1661,14 +1674,23 @@ ${JSON.stringify(userRequests)}
     }
 
     function saveActiveHistory() {
+        if (!Array.isArray(aiChatThreads)) aiChatThreads = [];
+
         window.__userAiLocalSaveUntil = Date.now() + 3000;
         const payload = JSON.stringify(aiChatThreads);
         window.__userAiThreadsSnapshot = payload;
+
         try {
-            window.__isSupabaseSyncing = true;
             localStorage.setItem('nd_user_ai_chat_threads', payload);
-        } finally {
-            window.__isSupabaseSyncing = false;
+            const flatHistory = aiChatThreads.flatMap(t => (t.messages || []));
+            localStorage.setItem('nd_ai_chat_history', JSON.stringify(flatHistory));
+        } catch (e) {
+            console.error('[User AI] localStorage save failed', e);
+            return;
+        }
+
+        if (window.NdCloudSync && typeof window.NdCloudSync.pushKeyToCloud === 'function') {
+            window.NdCloudSync.pushKeyToCloud('nd_user_ai_chat_threads');
         }
         renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
     }
@@ -2177,8 +2199,11 @@ ${JSON.stringify(userRequests)}
         });
     }
 
-    // Call initial load
-    loadChatThreads();
+    if (window.NdCloudSync && typeof window.NdCloudSync.pullKeyFromCloud === 'function') {
+        window.NdCloudSync.pullKeyFromCloud('nd_user_ai_chat_threads').then(() => loadChatThreads());
+    } else {
+        loadChatThreads();
+    }
 
     window.refreshUserAiChatFromCloud = function () {
         if (!document.getElementById('aiChatModalOverlay')) return;
@@ -2189,7 +2214,7 @@ ${JSON.stringify(userRequests)}
 
         const saved = localStorage.getItem('nd_user_ai_chat_threads');
         if (!saved) return;
-        if (saved === window.__userAiThreadsSnapshot) return;
+        if (window.__userAiLocalSaveUntil && Date.now() < window.__userAiLocalSaveUntil && saved === window.__userAiThreadsSnapshot) return;
 
         try {
             const incoming = JSON.parse(saved);

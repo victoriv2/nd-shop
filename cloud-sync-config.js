@@ -97,6 +97,90 @@
         return JSON.stringify(data);
     }
 
+    const AI_CHAT_KEYS = new Set(['nd_ai_chat_threads', 'nd_user_ai_chat_threads', 'nd_ai_chat_history']);
+
+    function parseThreadsPayload(raw) {
+        if (!raw) return [];
+        try {
+            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function aiThreadsScore(threads) {
+        if (!Array.isArray(threads)) return 0;
+        return threads.reduce((sum, t) => {
+            const msgCount = (t && t.messages) ? t.messages.length : 0;
+            const updated = Number(t && t.updatedAt) || 0;
+            return sum + msgCount * 10000 + updated;
+        }, 0);
+    }
+
+    function stripImagesFromThreads(threads) {
+        if (!Array.isArray(threads)) return threads;
+        return threads.map(t => ({
+            ...t,
+            messages: (t.messages || []).map(m => {
+                if (!m || typeof m !== 'object') return m;
+                const copy = { ...m };
+                delete copy.imageBase64;
+                return copy;
+            })
+        }));
+    }
+
+    function prepareDataForCloud(key, parsed) {
+        if (AI_CHAT_KEYS.has(key) && Array.isArray(parsed)) {
+            return stripImagesFromThreads(parsed);
+        }
+        return parsed;
+    }
+
+    function pushKeyToCloud(key) {
+        if (!shouldSyncKey(key) || !window.supabaseClient) return Promise.resolve();
+        const raw = localStorage.getItem(key);
+        if (raw === null) return Promise.resolve();
+        let parsed = raw;
+        try { parsed = JSON.parse(raw); } catch (e) { /* plain string */ }
+        parsed = prepareDataForCloud(key, parsed);
+        return window.supabaseClient.from('app_state').upsert({ key, data: parsed }, { onConflict: 'key' });
+    }
+
+    async function pullKeyFromCloud(key) {
+        if (!shouldSyncKey(key) || !window.supabaseClient) return false;
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('app_state')
+                .select('data')
+                .eq('key', key)
+                .maybeSingle();
+            if (error || !data || data.data === undefined || data.data === null) return false;
+
+            const remoteThreads = AI_CHAT_KEYS.has(key) ? parseThreadsPayload(data.data) : null;
+            const localRaw = localStorage.getItem(key);
+
+            if (AI_CHAT_KEYS.has(key) && localRaw) {
+                const localThreads = parseThreadsPayload(localRaw);
+                const remoteScore = aiThreadsScore(remoteThreads);
+                const localScore = aiThreadsScore(localThreads);
+                if (localScore > remoteScore) {
+                    return false;
+                }
+            }
+
+            window.__isSupabaseSyncing = true;
+            localStorage.setItem(key, valueForLocalStorage(data.data));
+            window.__isSupabaseSyncing = false;
+            if (window.realtimeSync) window.realtimeSync.syncNow(key);
+            return true;
+        } catch (e) {
+            console.warn('[CloudSync] pull failed for', key, e);
+            return false;
+        }
+    }
+
     function pushAllLocalStateToCloud() {
         if (!window.supabaseClient) return Promise.resolve();
         const keys = allSyncKeys();
@@ -117,9 +201,15 @@
     window.NdCloudSync = {
         INTERNAL_ONLY,
         SYNC_MANIFEST,
+        AI_CHAT_KEYS,
         shouldSyncKey,
         allSyncKeys,
         valueForLocalStorage,
+        aiThreadsScore,
+        stripImagesFromThreads,
+        prepareDataForCloud,
+        pushKeyToCloud,
+        pullKeyFromCloud,
         pushAllLocalStateToCloud
     };
 })();

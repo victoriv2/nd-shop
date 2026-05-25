@@ -381,6 +381,10 @@ localStorage.setItem = function(key, value) {
             let parsedData = value;
             try { parsedData = JSON.parse(value); } catch (e) { /* plain string */ }
 
+            if (window.NdCloudSync && typeof window.NdCloudSync.prepareDataForCloud === 'function') {
+                parsedData = window.NdCloudSync.prepareDataForCloud(key, parsedData);
+            }
+
             window.supabaseClient.from('app_state').upsert(
                 { key: key, data: parsedData },
                 { onConflict: 'key' }
