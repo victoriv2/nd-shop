@@ -163,6 +163,7 @@ function initAdminMenu() {
         customConfirm('Are you sure you want to securely log out of the admin panel?', true).then(confirmed => {
             if (confirmed) {
                 sessionStorage.removeItem('nd_admin_logged_in');
+                sessionStorage.removeItem('nd_admin_bypass');
                 window.location.reload();
             }
         });
