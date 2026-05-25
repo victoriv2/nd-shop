@@ -1,0 +1,296 @@
+.security-hero-section {
+    text-align: center;
+    margin-bottom: 20px;
+    margin-top: 10px;
+}
+
+.security-icon {
+    font-size: 2.2rem;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.security-desc {
+    font-size: 0.95rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Segmented Tab Bar */
+.asec-tab-bar {
+    display: flex;
+    position: relative;
+    background-color: #f1f5f9;
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 28px;
+}
+
+.asec-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: color 0.3s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.asec-tab.active {
+    color: #fff;
+    font-weight: 700;
+}
+
+.asec-tab-indicator {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(33.333% - 4px);
+    background-color: #8b5cf6;
+    border-radius: 11px;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.asec-tab-bar-3[data-active="profile"] .asec-tab-indicator {
+    left: 4px;
+}
+
+.asec-tab-bar-3[data-active="login"] .asec-tab-indicator {
+    left: calc(33.333% + 0px);
+}
+
+.asec-tab-bar-3[data-active="password"] .asec-tab-indicator {
+    left: calc(66.666% - 2px);
+}
+
+.asec-tab-bar-4 .asec-tab-indicator {
+    width: calc(25% - 4px);
+}
+
+.asec-tab-bar-4[data-active="profile"] .asec-tab-indicator {
+    left: 4px;
+}
+
+.asec-tab-bar-4[data-active="login"] .asec-tab-indicator {
+    left: calc(25% + 0px);
+}
+
+.asec-tab-bar-4[data-active="password"] .asec-tab-indicator {
+    left: calc(50% - 1px);
+}
+
+.asec-tab-bar-4[data-active="pin"] .asec-tab-indicator {
+    left: calc(75% - 2px);
+}
+
+.asec-tab-bar-5 .asec-tab-indicator {
+    width: calc(20% - 4px);
+}
+
+.asec-tab-bar-5[data-active="profile"] .asec-tab-indicator {
+    left: 4px;
+}
+
+.asec-tab-bar-5[data-active="login"] .asec-tab-indicator {
+    left: calc(20% + 0px);
+}
+
+.asec-tab-bar-5[data-active="password"] .asec-tab-indicator {
+    left: calc(40% - 1px);
+}
+
+.asec-tab-bar-5[data-active="pin"] .asec-tab-indicator {
+    left: calc(60% - 2px);
+}
+
+.asec-tab-bar-5[data-active="locks"] .asec-tab-indicator {
+    left: calc(80% - 3px);
+}
+
+.asec-tab-bar-6 .asec-tab-indicator {
+    width: calc(16.666% - 4px);
+}
+
+.asec-tab-bar-6[data-active="profile"] .asec-tab-indicator {
+    left: 4px;
+}
+
+.asec-tab-bar-6[data-active="login"] .asec-tab-indicator {
+    left: calc(16.666% + 0px);
+}
+
+.asec-tab-bar-6[data-active="password"] .asec-tab-indicator {
+    left: calc(33.333% - 1px);
+}
+
+.asec-tab-bar-6[data-active="pin"] .asec-tab-indicator {
+    left: calc(50% - 1px);
+}
+
+.asec-tab-bar-6[data-active="locks"] .asec-tab-indicator {
+    left: calc(66.666% - 2px);
+}
+
+.asec-tab-bar-6[data-active="factory"] .asec-tab-indicator {
+    left: calc(83.333% - 3px);
+    background-color: #dc2626;
+}
+
+/* Panels */
+.asec-panel {
+    animation: secFadeIn 0.3s ease;
+    padding-bottom: 20px;
+}
+
+.asec-panel.hidden {
+    display: none;
+}
+
+@keyframes secFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.asec-panel-icon {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 6px;
+    color: #8b5cf6;
+}
+
+.asec-panel-title {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #1a202c;
+    margin-bottom: 4px;
+}
+
+.asec-panel-subtitle {
+    text-align: center;
+    font-size: 0.88rem;
+    color: #718096;
+    margin-bottom: 22px;
+    line-height: 1.4;
+}
+
+.security-form-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.req {
+    color: #dc3545;
+}
+
+.m-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.m-input:focus {
+    border-color: #8b5cf6;
+}
+
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.asec-save-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    background-color: #8b5cf6;
+    color: white;
+    box-shadow: none;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.asec-save-btn:hover {
+    background-color: #2c3e50;
+}
+
+.asec-save-btn:active {
+    transform: scale(0.98);
+}
+
+/* Access Control Toggle Switches */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    margin: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+input:checked + .toggle-slider {
+    background-color: #dc2626; /* Red for Locked State */
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+
+
+

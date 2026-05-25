@@ -1,0 +1,297 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    padding-top: 80px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* Prevent page scroll - only table scrolls */
+}
+
+/* Use AI Button (appears in panel page headers) */
+.use-ai-btn {
+    background: #8b5cf6;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+.use-ai-btn:hover {
+    background: #7c3aed;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.45);
+}
+.use-ai-btn:active {
+    transform: scale(0.96);
+}
+
+
+/* Header / Top Bar */
+.admin-header {
+    background-color: #ffffff;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 0 20px;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-container img {
+    height: 48px;
+    width: auto;
+}
+
+.header-print-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #8b5cf6;
+    border: none;
+    color: white;
+    padding: 10px 22px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.header-print-btn svg {
+    transition: transform 0.3s ease;
+}
+
+.header-print-btn:hover {
+    background: linear-gradient(135deg, #2c3e50, #2c3e50);
+}
+
+.header-print-btn:hover svg {
+    transform: scale(1.1);
+}
+
+.header-print-btn:active {
+    transform: scale(0.96);
+}
+
+/* Header Dropdown Actions */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-menu-container {
+    position: relative;
+}
+
+.header-menu-btn {
+    background: transparent;
+    border: none;
+    color: #333;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.header-menu-btn:hover {
+    background: #f0f0f0;
+}
+
+.header-menu-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+.header-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    min-width: 240px;
+    z-index: 1001;
+    display: none;
+    flex-direction: column;
+    padding: 8px;
+    border: 1px solid #eaeaea;
+}
+
+.header-dropdown.show {
+    display: flex;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #f8f9fa;
+}
+
+.dropdown-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dropdown-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.dropdown-details h4 {
+    font-size: 0.9rem;
+    margin: 0;
+    color: #111;
+}
+
+.dropdown-details p {
+    font-size: 0.75rem;
+    margin: 2px 0 0 0;
+    color: #666;
+}
+
+/* Print Container Hidden from UI */
+#printReportTemplate {
+    display: none;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+}
+
+/* Wide Action Button - in-flow at bottom of register container */
+.wide-add-btn {
+    width: calc(100% - 40px);
+    max-width: 450px;
+    height: 52px;
+    background-color: #8b5cf6;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(27, 38, 59, 0.25);
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    align-self: center;
+    margin: 8px auto 10px auto;
+}
+
+.wide-add-btn:hover {
+    background-color: #2c3e50;
+}
+
+.wide-add-btn:active {
+    transform: scale(0.98);
+}
+
+/* Content Area */
+.admin-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    padding-bottom: 220px;
+    /* Increased to accommodate both fixed footer and button */
+}
+
+/* Bottom Bar */
+.admin-bottom-bar {
+    background-color: #ffffff;
+    height: 60px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.bottom-bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #999;
+    font-size: 0.75rem;
+    font-weight: 500;
+    gap: 4px;
+    flex: 1;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.bottom-bar-item svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.bottom-bar-item.active,
+.bottom-bar-item:hover {
+    color: #8b5cf6;
+}
+
+
+

@@ -1,0 +1,383 @@
+<!-- Nested Modal for User Info (id="muUserInfoModal") -->
+<div class="admin-modal-overlay nested-modal" id="muUserInfoModal">
+    <div class="admin-modal-content info-modal">
+        <div class="admin-modal-header">
+            <h3>User Information</h3>
+            <button class="admin-modal-close" onclick="closeUserInfoModal()">✕</button>
+        </div>
+        <div class="admin-modal-body" id="muUserInfoBody">
+            <!-- User details injected here -->
+        </div>
+    </div>
+</div>
+<style>
+    .nested-modal {
+        z-index: 100050 !important;
+        /* Higher than manageUsersModal (3000) */
+    }
+
+    .info-modal {
+        height: 70vh !important;
+        /* Slightly smaller for visual hierarchy */
+    }
+
+    .user-detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 14px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .user-detail-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .user-detail-value {
+        font-size: 1rem;
+        color: #1e293b;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .user-detail-header {
+        text-align: center;
+        padding-bottom: 24px;
+        margin-bottom: 24px;
+        border-bottom: 2px solid #8b5cf6;
+    }
+
+    .user-detail-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 24px;
+        background: #8b5cf6;
+        color: white;
+        margin: 0 auto 12px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 800;
+    }
+
+    .mu-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .mu-stat-box {
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid #f1f5f9;
+        text-align: center;
+    }
+
+    .mu-stat-box.highlight {
+        background: #f0f4f8;
+        border-color: #edf1f7;
+    }
+
+    .mu-stat-label {
+        display: block;
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 700;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+    }
+
+    .mu-stat-box.highlight .mu-stat-label {
+        color: #2c3e50;
+    }
+
+    .mu-stat-value {
+        display: block;
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .mu-stat-box.highlight .mu-stat-value {
+        color: #8b5cf6;
+    }
+
+    .mu-history-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .mu-history-btn {
+        background: #8b5cf6;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: 0.2s;
+        box-shadow: 0 4px 10px rgba(27, 38, 59, 0.2);
+    }
+
+    .mu-history-btn:hover {
+        background: #2c3e50;
+    }
+
+    .mu-history-panel {
+        display: none;
+        margin-top: 16px;
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .mu-history-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        /* Space for scrollbar if needed */
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        /* Hide scrollbar Firefox */
+    }
+
+    .mu-history-tabs::-webkit-scrollbar {
+        display: none;
+        /* Hide scrollbar Chrome/Safari */
+    }
+
+    .mu-history-tabs button {
+        background: white;
+        border: 1px solid #e2e8f0;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #64748b;
+        cursor: pointer;
+        flex-shrink: 0;
+        /* Stop buttons from crushing */
+        white-space: nowrap;
+    }
+
+    .mu-history-tabs button.active {
+        background: #1e293b;
+        color: white;
+        border-color: #1e293b;
+    }
+
+    .mu-history-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .mu-history-item:last-child {
+        border-bottom: none;
+    }
+
+    .mu-hi-icon {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .mu-hi-icon.approved {
+        background: #8b5cf6;
+        box-shadow: 0 0 8px rgba(27, 38, 59, 0.4);
+    }
+
+    .mu-hi-icon.pending {
+        background: #8b5cf6;
+        box-shadow: 0 0 8px rgba(27, 38, 59, 0.4);
+    }
+
+    .mu-hi-icon.declined {
+        background: #ef4444;
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+    }
+
+    .mu-hi-details {
+        flex-grow: 1;
+    }
+
+    .mu-hi-details .name {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 0.95rem;
+        margin-bottom: 2px;
+    }
+
+    .mu-hi-details .meta {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .mu-hi-status {
+        font-size: 0.75rem;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+
+    .mu-hi-status.approved {
+        background: #edf1f7;
+        color: #8b5cf6;
+    }
+
+    .mu-hi-status.pending {
+        background: #f0f4f8;
+        color: #2c3e50;
+    }
+
+    .mu-hi-status.declined {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    /* Match Payout Modal Styles */
+    .mu-payout-modal-content {
+        background: #fff;
+        width: 100%;
+        max-width: 500px;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        max-height: 85vh;
+        align-self: flex-end;
+        /* Slides from bottom */
+    }
+
+    .mu-payout-modal-overlay.show .mu-payout-modal-content {
+        transform: translateY(0);
+    }
+
+    .mu-payout-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        padding: 20px 24px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .mu-payout-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: #1e293b;
+        font-weight: 800;
+    }
+
+    .mu-payout-close {
+        position: absolute;
+        right: 24px;
+        font-size: 1.8rem;
+        color: #888;
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.2s;
+        user-select: none;
+    }
+
+    .mu-payout-close:hover {
+        color: #333;
+    }
+
+    .mu-payout-body {
+        padding: 24px;
+        overflow-y: auto;
+    }
+
+    .mu-payout-amount-section {
+        text-align: center;
+        margin-bottom: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .mu-payout-amount-wrapper {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mu-payout-plus {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #8b5cf6;
+    }
+
+    .mu-payout-amount {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .mu-payout-details-list {
+        background-color: #f9f9f9;
+        border-radius: 16px;
+        padding: 16px 20px;
+    }
+
+    .mu-payout-detail-item {
+        display: flex;
+        flex-direction: column;
+        padding: 14px 0;
+        border-bottom: 1px dashed #e0e0e0;
+        gap: 6px;
+    }
+
+    .mu-payout-detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .mu-payout-label {
+        color: #888;
+        font-size: 0.90rem;
+    }
+
+    .mu-payout-value {
+        color: #333;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    /* Responsive Desktop Centering */
+    @media(min-width: 768px) {
+        .mu-payout-modal-content {
+            border-radius: 12px;
+            transform: translateY(0) scale(0.9);
+            align-self: center; /* Center horizontally/vertically */
+            height: auto;
+            max-height: 85vh;
+        }
+        .mu-payout-modal-overlay.show .mu-payout-modal-content {
+            transform: translateY(0) scale(1);
+        }
+    }
+</style>
+
+
+
+
+

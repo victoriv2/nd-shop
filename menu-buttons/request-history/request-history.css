@@ -1,0 +1,98 @@
+.rh-tab {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #64748b;
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+    transition: 0.2s;
+}
+
+.rh-tab.active {
+    background: #1e293b;
+    color: white;
+    border-color: #1e293b;
+}
+
+.rh-sort-option {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f8fafc;
+    color: #64748b;
+    transition: 0.2s;
+}
+
+.rh-sort-option:hover {
+    background: #f1f5f9;
+}
+
+.rh-sort-option.active {
+    font-weight: 700;
+    color: #1e293b;
+    background: #f8fafc;
+}
+
+.rh-card {
+    background: #fff;
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+
+.rh-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.rh-status {
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+
+.rh-status.pending { background: #f0f4f8; color: #8b5cf6; }
+.rh-status.approved { background: #edf1f7; color: #8b5cf6; }
+.rh-status.declined { background: #fee2e2; color: #ef4444; }
+
+.rh-date {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.rh-product-name {
+    font-weight: 800;
+    color: #1e293b;
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+}
+
+.rh-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.rh-total {
+    font-weight: 800;
+    color: #8b5cf6;
+    font-size: 1rem;
+}
+
+
+

@@ -1,0 +1,48 @@
+<div id="filterModal" class="filter-modal-overlay">
+    <div class="filter-modal-content">
+        <div class="fm-header">
+            <h3>Filter</h3>
+            <span class="fm-close" id="fmClose">&times;</span>
+        </div>
+        <div class="fm-body">
+
+            <div class="fm-section">
+                <div class="fm-section-title">Sort By Price</div>
+                <div class="fm-sort-options">
+                    <button class="fm-sort-btn active" data-sort="recommended">Recommended</button>
+                    <button class="fm-sort-btn" data-sort="desc">Highest to Lowest</button>
+                    <button class="fm-sort-btn" data-sort="asc">Lowest to Highest</button>
+                </div>
+            </div>
+
+            <div class="fm-section">
+                <div class="fm-section-title">Price Range</div>
+
+                <div class="fm-price-slider-container">
+                    <div class="fm-slider-track"></div>
+                    <div class="fm-slider-fill" id="sliderFill"></div>
+                    <input type="range" class="fm-range-input" id="minRange" min="0" max="50000" value="0" step="500">
+                    <input type="range" class="fm-range-input" id="maxRange" min="0" max="50000" value="50000"
+                        step="500">
+                </div>
+
+                <div class="fm-price-inputs">
+                    <div class="fm-input-wrapper">
+                        <span class="fm-currency">Min ₦</span>
+                        <input type="number" id="minPriceInput" value="0" min="0" max="50000">
+                    </div>
+                    <div class="fm-input-divider">-</div>
+                    <div class="fm-input-wrapper">
+                        <span class="fm-currency">Max ₦</span>
+                        <input type="number" id="maxPriceInput" value="50000" min="0" max="50000">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="fm-footer">
+            <button class="fm-action-btn" id="fmResetBtn">Clear All</button>
+            <button class="fm-action-btn fm-btn-primary" id="fmApplyBtn">Show Results</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,35 @@
+<div class="admin-modal-overlay" id="systemBackupModal">
+    <div class="admin-modal-content">
+        <div class="admin-modal-header">
+            <h3>System Backup</h3>
+            <button class="admin-modal-close" onclick="closeSystemBackup()">✕</button>
+        </div>
+        <div class="admin-modal-body" style="text-align: center;">
+            <div class="sb-hero">
+                <div class="sb-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                        <path d="M12 8v4M12 16h.01"></path>
+                    </svg>
+                </div>
+                <h4>Secure Your Data</h4>
+                <p>Export all sales, users, and settings to a JSON file. Keep this safe to prevent data loss.</p>
+            </div>
+            <button class="admin-modern-btn primary sb-export-btn" onclick="executeBackup()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Full Backup
+            </button>
+            <div class="sb-note">
+                Last backup: <span id="sbLastDate" style="font-weight: 700; color: #8b5cf6;">Never</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+

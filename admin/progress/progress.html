@@ -1,0 +1,154 @@
+<div class="progress-page-wrapper">
+    <div class="progress-header">
+        <h2 class="progress-title">Progress Report</h2>
+        <div class="progress-selectors" id="progressDateTrigger">
+            <div class="date-selector-trigger" id="monthTrigger">
+                <span id="selectedMonthName">February</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m6 9 6 6 6-6" />
+                </svg>
+            </div>
+            <div class="date-selector-trigger" id="yearTrigger">
+                <span id="selectedYearDisplay">2026</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m6 9 6 6 6-6" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row -->
+    <div class="kpi-container">
+        <div class="kpi-card orange">
+            <div class="kpi-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Items Sold</span>
+                <span class="kpi-value" id="kpiItemsSold">0</span>
+                <span class="kpi-trend">Monthly total</span>
+            </div>
+        </div>
+
+        <div class="kpi-card green">
+            <div class="kpi-icon">
+                <svg viewBox="0 0 496.262 496.262" fill="currentColor">
+                    <path d="M477.832,274.28h-67.743v-65.106h67.743c10.179,0,18.43-8.243,18.43-18.424c0-10.182-8.251-18.43-18.43-18.43h-67.743 V81.982c0-13.187-2.606-22.866-7.743-28.762c-4.882-5.609-11.301-8.219-20.19-8.219c-8.482,0-14.659,2.592-19.447,8.166 c-5.077,5.902-7.654,15.599-7.654,28.821v90.343H227.627l-54.181-81.988c-4.637-7.317-8.997-14.171-13.231-20.75 c-3.812-5.925-7.53-10.749-11.042-14.351c-3.109-3.189-6.652-5.657-10.796-7.554c-3.91-1.785-8.881-2.681-14.762-2.681 c-7.501,0-14.31,2.055-20.83,6.277c-6.452,4.176-10.912,9.339-13.636,15.785c-2.391,6.126-3.656,15.513-3.656,27.63v77.626h-67.07 C8.246,172.326,0,180.574,0,190.755c0,10.181,8.246,18.424,18.424,18.424h67.07v65.113h-67.07C8.246,274.292,0,282.538,0,292.722 C0,302.9,8.246,311.14,18.424,311.14h67.07v103.143c0,12.797,2.689,22.378,8.015,28.466c5.065,5.805,11.487,8.5,20.208,8.5 c8.414,0,14.786-2.707,20.07-8.523c5.411-5.958,8.148-15.533,8.148-28.442V311.14h115.308l62.399,95.683 c4.339,6.325,8.819,12.709,13.287,18.969c4.031,5.621,8.429,10.574,13.069,14.711c4.179,3.742,8.659,6.484,13.316,8.157 c4.794,1.726,10.397,2.601,16.615,2.601c16.875,0,34.158-5.166,34.158-43.479V311.14h67.743c10.179,0,18.43-8.252,18.43-18.43 C496.262,282.532,488.011,274.28,477.832,274.28z M355.054,209.173v65.106h-60.041l-43.021-65.106H355.054z M141.936,134.364 l24.76,37.956h-24.76V134.364z M141.936,274.28v-65.106h48.802l42.466,65.106H141.936z M355.054,365.153l-35.683-54.013h35.683 V365.153z"/>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Total Sales</span>
+                <span class="kpi-value" id="kpiTotalSales">₦0.00</span>
+                <span class="kpi-trend">Revenue</span>
+            </div>
+        </div>
+
+        <div class="kpi-card payout">
+            <div class="kpi-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Total Payout</span>
+                <span class="kpi-value" id="kpiTotalPayout">₦0.00</span>
+                <span class="kpi-trend">Reward Earnings</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="chart-section">
+        <div class="chart-header">
+            <h3 class="chart-title">Daily Performance</h3>
+            <div class="chart-controls">
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="dot sale"></span>Sales</span>
+                </div>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" id="chartZoomOut" title="Zoom Out">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
+                    <button class="zoom-btn" id="chartZoomReset" title="Reset Zoom">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                        </svg>
+                    </button>
+                    <button class="zoom-btn" id="chartZoomIn" title="Zoom In">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="11" y1="8" x2="11" y2="14"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="chart-viewport">
+            <canvas id="salesChart"></canvas>
+        </div>
+        <!-- Draggable Scrollbar Slider -->
+        <div class="chart-swipe-track" id="chartSwipeTrack">
+            <div class="chart-swipe-handle" id="chartSwipeHandle"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Selection Modal -->
+<div id="progressDateModal" class="admin-modal-overlay">
+    <div class="admin-modal-content">
+        <div class="admin-modal-header">
+            <h3>Select Month & Year</h3>
+            <button class="admin-modal-close" id="closeProgressModal">✕</button>
+        </div>
+        <div class="admin-modal-body selections-container" style="padding: 0; display:flex; height: 350px; overflow:hidden;">
+            <div class="selection-column" id="monthCol" style="flex:1; width: 100%; overflow-y:auto; padding: 10px;">
+                <div class="selection-list" id="monthSelectionList">
+                    <!-- Months injected here -->
+                </div>
+            </div>
+            <div class="selection-column" id="yearCol" style="flex:1; width: 100%; overflow-y:auto; padding: 10px;">
+                <div class="selection-list" id="yearSelectionList">
+                    <!-- Years injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Detail Pop-up -->
+<div id="progressDetailPopup" class="admin-modal-overlay">
+    <div class="admin-modal-content" style="max-width: 380px; overflow: hidden;">
+        <div style="background: #8b5cf6; padding: 40px 24px; text-align: center; position: relative;">
+            <button id="closeDetailPopup" style="position: absolute; right: 20px; top: 20px; color: white; background: rgba(255,255,255,0.2); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">✕</button>
+            <div id="popupDayBadge" style="width: 80px; height: 80px; background: white; color: #8b5cf6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 2.2rem; font-weight: 800; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">14</div>
+            <div id="popupFullDate" style="color: white; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.9;">February 14, 2026</div>
+        </div>
+        <div class="admin-modal-body" style="padding: 32px 24px; text-align: center;">
+            <span style="display: block; font-size: 0.85rem; color: #64748b; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;">Daily Revenue</span>
+            <div id="popupSalesValue" style="font-size: 2.5rem; font-weight: 800; color: #1e293b; margin-bottom: 24px;">₦0.00</div>
+            <button onclick="document.getElementById('progressDetailPopup').classList.remove('show'); document.body.classList.remove('modal-open');" class="admin-modern-btn" style="width: 100%; background: #f1f5f9; color: #64748b;">Close Details</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+

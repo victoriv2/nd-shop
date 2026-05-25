@@ -1,0 +1,1759 @@
+<div class="restock-page" id="restockPage">
+    <div class="rs-header">
+        <button class="rs-back-btn" onclick="closeRestockModal()">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </button>
+        <div class="rs-header-title-wrap" id="rsTitleWrap">
+            <div class="rs-marquee-container" id="rsTitleContent">Goods Registration/Cost of Good</div>
+        </div>
+        <button class="use-ai-btn" onclick="window._aiPageContext='restock'; openAiChat()">Use AI</button>
+    </div>
+    <div class="rs-body" style="display: flex; flex-direction: column; padding: 0; flex: 1; overflow: hidden;">
+        <!-- Search & Filter Controls -->
+        <div style="padding: 20px 24px 10px;">
+            <div class="restock-controls" style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                <input type="text" id="restockSearchInput" placeholder="Search products..." autocomplete="off" readonly
+                    onfocus="this.removeAttribute('readonly');"
+                    style="flex: 1; min-width: 150px; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 0.95rem; outline: none;">
+
+                <div style="position: relative;">
+                    <button
+                        onclick="const dd = document.getElementById('restockSortDropdown'); dd.style.display = dd.style.display === 'none' ? 'block' : 'none'; event.stopPropagation();"
+                        style="padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        Sort
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </button>
+                    <div id="restockSortDropdown"
+                        style="display: none; position: absolute; right: 0; top: 110%; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 180px; z-index: 100; overflow: hidden; border: 1px solid #eee;">
+                        <div class="restock-sort-option active" data-sort="newest"
+                            onclick="setRestockSort('newest', this)">Newest to Oldest</div>
+                        <div class="restock-sort-option" data-sort="oldest" onclick="setRestockSort('oldest', this)">
+                            Oldest to Newest</div>
+                        <div class="restock-sort-option" data-sort="highest" onclick="setRestockSort('highest', this)">
+                            Highest to Lowest Price</div>
+                        <div class="restock-sort-option" data-sort="lowest" onclick="setRestockSort('lowest', this)">
+                            Lowest to Highest Price</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="restock-tabs-wrapper" style="margin-bottom: 12px; margin-top: 5px;">
+                <div class="restock-tabs"
+                    style="background-color: #f1f5f9; border-radius: 12px; display: flex; padding: 4px; gap: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); overflow-x: auto; scrollbar-width: none;">
+                    <button class="rs-tab-btn active" data-tab="all"
+                        style="flex: 1; min-width: fit-content; padding: 10px 16px; border: none; background: white; border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: #8b5cf6; cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 8px rgba(0,0,0,0.08); white-space: nowrap;">All</button>
+                    <button class="rs-tab-btn" data-tab="special"
+                        style="flex: 1; min-width: fit-content; padding: 10px 16px; border: none; background: transparent; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.25s; white-space: nowrap;">Analytic</button>
+                    <button class="rs-tab-btn" data-tab="default"
+                        style="flex: 1; min-width: fit-content; padding: 10px 16px; border: none; background: transparent; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.25s; white-space: nowrap;">Default</button>
+                    <button class="rs-tab-btn" data-tab="flexible"
+                        style="flex: 1; min-width: fit-content; padding: 10px 16px; border: none; background: transparent; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.25s; white-space: nowrap;">Flexible</button>
+                    <button class="rs-tab-btn" data-tab="custom"
+                        style="flex: 1; min-width: fit-content; padding: 10px 16px; border: none; background: transparent; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.25s; white-space: nowrap;">Custom</button>
+                </div>
+            </div>
+
+            <!-- Month/Year Selectors -->
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <div onclick="openRestockDateModal('month')"
+                    style="display: flex; align-items: center; gap: 6px; padding: 10px 16px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; cursor: pointer; font-weight: 700; color: #8b5cf6;">
+                    <span id="rsSelMonth">March</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </div>
+                <div onclick="openRestockDateModal('year')"
+                    style="display: flex; align-items: center; gap: 6px; padding: 10px 16px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; cursor: pointer; font-weight: 700; color: #8b5cf6;">
+                    <span id="rsSelYear">2026</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table (no Qty column) -->
+        <div style="flex: 1; overflow-y: auto; padding: 0 24px;">
+            <table class="restock-table">
+                <thead>
+                    <tr>
+                        <th>S/N</th>
+                        <th>Item Name</th>
+                        <th style="text-align: right;">Cost (₦)</th>
+                        <th style="text-align: center; width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="restockTableBody">
+                    <!-- Rows injected by JS -->
+                </tbody>
+            </table>
+            <div id="restockEmptyState" style="display: none; text-align: center; padding: 40px 20px; color: #94a3b8;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                    style="margin-bottom: 12px; opacity: 0.5;">
+                    <path d="M3 3v18h18"></path>
+                    <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+                </svg>
+                <h4 style="margin: 0; color: #475569;">No products registered this month</h4>
+            </div>
+        </div>
+
+        <!-- Bottom Button -->
+        <div style="padding: 15px 24px; border-top: 1px solid #eee; background: white;">
+            <div id="restockTotalsContainer"
+                style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%); padding: 16px 20px; border-radius: 12px; border: 1px solid #bfdbfe; margin-bottom: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); color: #0F172A;">
+                <div style="display: flex; flex-direction: column;">
+                    <span
+                        style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; opacity: 0.8;">Total
+                        Products</span>
+                    <span id="restockTotalSn" style="font-size: 1.25rem; font-weight: 800;">0</span>
+                </div>
+                <div style="display: flex; flex-direction: column; text-align: right;">
+                    <span
+                        style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; opacity: 0.8;">Total
+                        Cost</span>
+                    <span id="restockTotalPrice"
+                        style="font-size: 1.25rem; font-weight: 800; color: #8b5cf6;">₦0.00</span>
+                </div>
+            </div>
+            <button class="wide-add-btn" style="width: 100%; max-width: none; margin: 0;"
+                onclick="openAddRestockModal()">Register new goods</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Add New Product Modal (full form matching Products tab) -->
+<div class="admin-modal-overlay" id="addRestockModal">
+    <div class="admin-modal-content">
+        <div class="admin-modal-header">
+            <h3>Register New Goods</h3>
+            <button class="admin-modal-close" onclick="closeAddRestockModal()">✕</button>
+        </div>
+        <div class="admin-modal-body" style="padding: 24px; max-height: 80vh; overflow-y: auto;">
+
+            <!-- IMAGE UPLOAD CONTAINER -->
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label style="display: block; font-weight: 700; color: #1e293b; margin-bottom: 10px;">Product Image
+                    (Optional)</label>
+                <div id="rsNewImageUploadContainer" class="admin-image-upload-area">
+                    <input type="file" id="rsNewImageInput" accept="image/*" style="display: none;">
+                    <div class="admin-image-placeholder upload-placeholder">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                            stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <span>Click or drag to add image</span>
+                        <button type="button" id="rsSnapPhotoBtn" onclick="event.stopPropagation();window.openCameraCapture(function(b64){document.getElementById('rsNewImageData').value=b64;var p=document.getElementById('rsNewImagePreview');if(p)p.src=b64;var pc=document.getElementById('rsNewImagePreviewContainer');var pl=pc?pc.previousElementSibling:null;if(pc)pc.style.display='block';if(pl)pl.style.display='none';});" style="margin-top:10px;padding:8px 18px;background:#8b5cf6;color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                            Snap Photo
+                        </button>
+                    </div>
+                    <div id="rsNewImagePreviewContainer" class="admin-image-preview-container" style="display: none;">
+                        <img id="rsNewImagePreview" src="" alt="Preview">
+                        <div class="admin-image-preview-actions">
+                            <button type="button" id="rsNewImageReplaceBtn" class="admin-img-action-btn"
+                                title="Replace">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21l-5.94-5.94" />
+                                </svg>
+                            </button>
+                            <button type="button" id="rsNewImageRemoveBtn" class="admin-img-action-btn remove"
+                                title="Remove">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="rsNewImageData" value="">
+            </div>
+
+            <!-- Product Type Toggle -->
+            <div
+                style="display: flex; gap: 10px; margin-bottom: 24px; background: #f1f5f9; padding: 6px; border-radius: 12px; overflow-x: auto;">
+                <button type="button" id="rsTypeSpecialBtn"
+                    style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 700; background: white; color: #8b5cf6; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s; white-space: nowrap;">Analytical</button>
+                <button type="button" id="rsTypeDefaultBtn"
+                    style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; white-space: nowrap;">Default</button>
+                <button type="button" id="rsTypeFlexibleBtn"
+                    style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; white-space: nowrap;">Flexible</button>
+                <button type="button" id="rsTypeCustomBtn"
+                    style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; white-space: nowrap;">Custom</button>
+            </div>
+
+            <input type="hidden" id="rsProductType" value="special">
+
+            <!-- DEFAULT PRODUCT FORM -->
+            <div id="rsDefaultProductForm" style="display: none;">
+                <div class="form-group"
+                    style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px dashed #e2e8f0;">
+                    <label style="color: #8b5cf6;">Pre-fill from Existing (Optional)</label>
+                    <div class="custom-dropdown-wrapper" id="rsImportDropdownWrapper">
+                        <div class="custom-dropdown-trigger" id="rsImportDropdownTrigger"
+                            style="background: #f0f8ff; border-color: #bfdbfe;">
+                            <span class="trigger-text">Select product to copy details...</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </div>
+                        <div class="custom-dropdown-menu" id="rsImportDropdownMenu">
+                            <!-- Search and options will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Item Name</label>
+                    <input type="text" id="rsNewProductName" class="form-input" placeholder="e.g. Rice">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Bulk Container Type</label>
+                        <div class="custom-dropdown-wrapper" id="rsBulkDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="rsBulkDropdownTrigger">
+                                <span class="trigger-text" style="font-weight: 600;">Carton</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="rsBulkDropdownMenu">
+                                <div class="custom-dropdown-option active" data-value="Carton">Carton</div>
+                                <div class="custom-dropdown-option" data-value="Pack">Pack</div>
+                                <div class="custom-dropdown-option" data-value="Crate">Crate</div>
+                                <div class="custom-dropdown-option" data-value="Container 1">Container 1</div>
+                                <div class="custom-dropdown-option" data-value="Sack">Sack</div>
+                                <div class="custom-dropdown-option" data-value="Box">Box</div>
+                                <div class="custom-dropdown-option" data-value="Roll">Roll</div>
+                                <div class="custom-dropdown-option" data-value="Bundle">Bundle</div>
+                                <div class="custom-dropdown-option custom-unit-create-option"
+                                    data-value="__custom_bulk__"
+                                    style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                    <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            style="margin-right: 6px; vertical-align: middle;">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>Create Custom</span>
+                                </div>
+                                <!-- Custom Bulk Input -->
+                                <div class="custom-unit-input-row" id="rsCustomBulkRow"
+                                    style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                    <input type="text" id="rsCustomBulkInput" class="form-input" placeholder="e.g. Can"
+                                        style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;">
+                                    <button type="button" id="rsCustomBulkConfirmBtn"
+                                        style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Add
+                                        Container</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="rsBulkUnitSelect" value="Carton">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Retail Selling Unit</label>
+                        <div class="custom-dropdown-wrapper" id="rsUnitDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="rsUnitDropdownTrigger">
+                                <span class="trigger-text">per piece</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="m6 9 6 6 6-6"></path>
+                                </svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="rsUnitDropdownMenu">
+                                <div class="custom-dropdown-option" data-value="per cup">per cup</div>
+                                <div class="custom-dropdown-option" data-value="per kg">per kg</div>
+                                <div class="custom-dropdown-option" data-value="per bag">per bag</div>
+                                <div class="custom-dropdown-option" data-value="per carton">per carton</div>
+                                <div class="custom-dropdown-option active" data-value="per piece">per piece</div>
+                                <div class="custom-dropdown-option" data-value="per bottle">per bottle</div>
+                                <div class="custom-dropdown-option" data-value="per pack">per pack</div>
+                                <div class="custom-dropdown-option custom-unit-create-option" data-value="__custom__"
+                                    style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                    <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            style="margin-right: 6px; vertical-align: middle;">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>Create Custom Unit</span>
+                                </div>
+                                <!-- Custom Unit Input (hidden by default) -->
+                                <div class="custom-unit-input-row" id="rsCustomUnitRow"
+                                    style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                    <input type="text" id="rsCustomUnitInput" class="form-input"
+                                        placeholder="e.g. per gallon"
+                                        style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;">
+                                    <button type="button" id="rsCustomUnitConfirmBtn"
+                                        style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Add
+                                        Unit</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="rsNewProductUnit" value="per piece">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Cost per <span class="rs-lbl-bulk-unit">Carton</span> (₦)</label>
+                        <input type="number" id="rsNewProductPurchaseCost" class="form-input" placeholder="e.g. 5000"
+                            min="0" step="0.01">
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Quantity Bought</label>
+                        <input type="number" id="rsNewProductQuantity" class="form-input" placeholder="e.g. 5" min="1"
+                            step="1" value="1">
+                    </div>
+                </div>
+
+                <div
+                    style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
+                    Total Cost: <span id="rsNewProductTotalCostVal" style="color: #16a34a;">₦0</span>
+                </div>
+
+                <div style="font-size: 0.95rem; color: #1e293b; margin: 16px 0 16px 0; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+                    Wholesale Pricing <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">(Optional)</span>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Wholesale Profit per <span class="rs-lbl-bulk-unit">Carton</span> (₦)</label>
+                        <input type="number" id="rsNewProductWholesaleProfit" class="form-input" placeholder="e.g. 500" min="0" step="0.01">
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Wholesale Margin (%)</label>
+                        <input type="number" id="rsNewProductWholesaleProfitPercent" class="form-input" placeholder="e.g. 5" min="0" step="0.01" style="font-weight: 600;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label>Final Wholesale Price per <span class="rs-lbl-bulk-unit">Carton</span> (₦)</label>
+                    <input type="number" id="rsNewProductWholesalePrice" class="form-input" placeholder="0" readonly style="background: #f8fafc; font-weight: 700; color: #8b5cf6; cursor: not-allowed;">
+                </div>
+
+                <div style="font-size: 0.95rem; color: #1e293b; margin: 24px 0 16px 0; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+                    Retail Pricing
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div class="form-group" style="width: 100%; margin-bottom: 0;">
+                        <label><span class="rs-lbl-retail-unit" style="text-transform: capitalize;">Pieces</span> inside
+                            ONE <span class="rs-lbl-bulk-unit">Carton</span></label>
+                        <input type="number" id="rsNewProductPieces" class="form-input" placeholder="e.g. 40" min="1"
+                            step="1">
+                    </div>
+                </div>
+
+                <div
+                    style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">
+                    Retail Cost per <span class="rs-lbl-retail-unit">piece</span>: <span id="rsNewProductRetailCostVal"
+                        style="color: #8b5cf6;">₦0</span>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Retail Profit per <span class="rs-lbl-retail-unit">piece</span> (₦)</label>
+                        <input type="number" id="rsNewProductProfit" class="form-input" placeholder="100" min="0"
+                            step="0.01">
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label style="display: flex; align-items: center; gap: 6px;">
+                            Profit Margin (%)
+                        </label>
+                        <input type="number" id="rsNewProductProfitPercent" class="form-input" placeholder="e.g. 10"
+                            min="0" step="0.01" style="font-weight: 600;">
+                        <span id="rsProfitPercentBadge"
+                            style="font-size: 0.7rem; background: #e0f2fe; color: #8b5cf6; padding: 2px 8px; border-radius: 20px; font-weight: 700; display: none; margin-top: 4px;"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Final Unit Price (₦)</label>
+                    <input type="number" id="rsNewProductPrice" class="form-input" placeholder="0" readonly
+                        style="background: #f8fafc; font-weight: 700; color: #8b5cf6; cursor: not-allowed;">
+                </div>
+
+                <!-- New Stock Indicator Toggle -->
+                <div class="form-group"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 12px;">
+                    <div>
+                        <label style="margin-bottom: 2px; color: #047857; font-weight: 800;">Mark as New Stock</label>
+                        <div style="font-size: 0.75rem; color: #059669;">Adds 'NEW STOCK' tag to this restock payload
+                            (Admin view only)</div>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="rsDefNewStockSwitch" style="opacity: 0; width: 0; height: 0;" checked
+                            onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#10b981':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                        <span class="slider round"
+                            style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10b981; transition: .4s; border-radius: 34px;">
+                            <span class="knob"
+                                style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(20px);"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Live Payout Preview -->
+                <div class="admin-apm-payout-preview" id="rsDefaultPayoutPreviewParent">
+                    <span class="admin-apm-payout-label">App Purchase Payout Return</span>
+                    <span class="admin-apm-payout-value" id="rsPayoutValue"></span>
+                    <span
+                        style="font-size: 0.75rem; color: #64748b; text-align: center; margin-top: 6px; line-height: 1.3;">
+                        <strong>Note:</strong> Payout applies <em>only</em> if the user orders via the App.
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="admin-product-submit-btn" id="rsProductSubmitBtn" style="flex: 1;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Create Product
+                    </button>
+                    <button class="admin-product-submit-btn" id="rsAddExistingBtn"
+                        style="flex: 1; background: #f59e0b; display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5v14"></path>
+                        </svg>
+                        Top Up Stock
+                    </button>
+                </div>
+            </div>
+
+            <!-- SPECIAL PRODUCT FORM -->
+            <div id="rsSpecialProductForm" style="display: block;">
+                <div class="form-group"
+                    style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px dashed #e2e8f0;">
+                    <label style="color: #8b5cf6;">Pre-fill from Existing (Optional)</label>
+                    <div class="custom-dropdown-wrapper" id="rsSpecImportDropdownWrapper">
+                        <div class="custom-dropdown-trigger" id="rsSpecImportDropdownTrigger"
+                            style="background: #f0f8ff; border-color: #bfdbfe;">
+                            <span class="trigger-text">Select analytical product to copy...</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </div>
+                        <div class="custom-dropdown-menu" id="rsSpecImportDropdownMenu">
+                            <!-- Search and options will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Analytical Product Name</label>
+                    <input type="text" id="rsSpecProductName" class="form-input" placeholder="e.g. Rice">
+                </div>
+
+                <!-- Bag Section -->
+                <div
+                    style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                    <h4
+                        style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span
+                            style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">1</span>
+                        <input type="text" id="rsSpecBagTitle" value="Container 1"
+                            style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;"
+                            onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Purchased <span id="lblRsSpecBagCost">Container 1</span> Cost (₦)</label>
+                            <input type="number" id="rsSpecBagCost" class="form-input" placeholder="e.g. 50000" min="0"
+                                step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Quantity Bought</label>
+                            <input type="number" id="rsSpecBagQuantity" class="form-input" placeholder="e.g. 5" min="1"
+                                step="1" value="1">
+                        </div>
+                    </div>
+                    <div
+                        style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
+                        Total Cost: <span id="rsSpecBagTotalCostVal" style="color: #16a34a;">₦0</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label><span id="lblRsSpecBagProfit">Container 1</span> Profit (₦)</label>
+                            <input type="number" id="rsSpecBagProfit" class="form-input" placeholder="5000" min="0"
+                                step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="rsSpecBagProfitPercent" class="form-input" placeholder="10" min="0"
+                                step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Final Selling Price per <span id="lblRsSpecBagPrice">Container 1</span> (₦)</label>
+                        <input type="number" id="rsSpecBagPrice" class="form-input" readonly
+                            style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                    </div>
+                </div>
+
+                <!-- Custard Section -->
+                <div
+                    style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                    <h4
+                        style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span
+                            style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">2</span>
+                        <input type="text" id="rsSpecCustardTitle" value="Container 2"
+                            style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;"
+                            onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>How many of this size in the primary unit above?</label>
+                        <input type="number" id="rsSpecCustardsPerBag" class="form-input" placeholder="e.g. 10" min="1"
+                            step="1">
+                        <div
+                            style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">
+                            Cost per unit: <span id="rsSpecCustardCostVal" style="color: #8b5cf6;">₦0</span></div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label><span id="lblRsSpecCustardProfit">Container 2</span> Profit (₦)</label>
+                            <input type="number" id="rsSpecCustardProfit" class="form-input" placeholder="1000" min="0"
+                                step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="rsSpecCustardProfitPercent" class="form-input" placeholder="20"
+                                min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Final Selling Price per <span id="lblRsSpecCustardPrice">Container 2</span> (₦)</label>
+                        <input type="number" id="rsSpecCustardPrice" class="form-input" readonly
+                            style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                    </div>
+                </div>
+
+                <!-- Cup Section -->
+                <div
+                    style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+                    <h4
+                        style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span
+                            style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">3</span>
+                        <input type="text" id="rsSpecCupTitle" value="Container 3"
+                            style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;"
+                            onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>How many of this size in the secondary unit above?</label>
+                        <input type="number" id="rsSpecCupsPerCustard" class="form-input" placeholder="e.g. 20" min="1"
+                            step="1">
+                        <div
+                            style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">
+                            Cost per unit: <span id="rsSpecCupCostVal" style="color: #8b5cf6;">₦0</span></div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label><span id="lblRsSpecCupProfit">Container 3</span> Profit (₦)</label>
+                            <input type="number" id="rsSpecCupProfit" class="form-input" placeholder="50" min="0"
+                                step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="rsSpecCupProfitPercent" class="form-input" placeholder="20" min="0"
+                                step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Final Selling Price per <span id="lblRsSpecCupPrice">Container 3</span> (₦)</label>
+                        <input type="number" id="rsSpecCupPrice" class="form-input" readonly
+                            style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                    </div>
+                </div>
+
+                <!-- New Stock Indicator Toggle -->
+                <div class="form-group"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 12px;">
+                    <div>
+                        <label style="margin-bottom: 2px; color: #047857; font-weight: 800;">Mark as New Stock</label>
+                        <div style="font-size: 0.75rem; color: #059669;">Adds 'NEW STOCK' tag to this restock payload
+                            (Admin view only)</div>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="rsSpecNewStockSwitch" style="opacity: 0; width: 0; height: 0;"
+                            checked
+                            onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#10b981':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                        <span class="slider round"
+                            style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10b981; transition: .4s; border-radius: 34px;">
+                            <span class="knob"
+                                style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(20px);"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Live Payout Preview -->
+                <div class="admin-apm-payout-preview">
+                    <span class="admin-apm-payout-label" style="text-transform: capitalize;">App Purchase Payout
+                        Return</span>
+                    <div style="display:flex; flex-direction: column; gap:4px; margin-top: 5px;"
+                        id="rsSpecPayoutPreviewParent">
+                        <span class="admin-apm-payout-value" style="font-size: 0.95rem;">Container 1: <span
+                                id="rsSpecBagPayoutValue"></span></span>
+                        <span class="admin-apm-payout-value" style="font-size: 0.95rem;">Container 2: <span
+                                id="rsSpecCustardPayoutValue"></span></span>
+                        <span class="admin-apm-payout-value" style="font-size: 0.95rem;">Container 3: <span
+                                id="rsSpecCupPayoutValue"></span></span>
+                    </div>
+                    <span
+                        style="font-size: 0.75rem; color: #64748b; text-align: center; margin-top: 6px; line-height: 1.3;">
+                        <strong>Note:</strong> Payout applies <em>only</em> if the user orders via the App.
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="admin-product-submit-btn" id="rsSpecProductSubmitBtn" style="flex: 1;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Create Product
+                    </button>
+                    <button class="admin-product-submit-btn" id="rsSpecAddExistingBtn"
+                        style="flex: 1; background: #f59e0b; display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5v14"></path>
+                        </svg>
+                        Top Up Stock
+                    </button>
+                </div>
+            </div>
+
+            <!-- CUSTOM PRODUCT FORM -->
+            <div id="rsCustomProductForm" style="display: none;">
+                <div class="form-group"
+                    style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px dashed #e2e8f0;">
+                    <label style="color: #8b5cf6;">Pre-fill from Existing (Optional)</label>
+                    <div class="custom-dropdown-wrapper" id="rsCustomImportDropdownWrapper">
+                        <div class="custom-dropdown-trigger" id="rsCustomImportDropdownTrigger"
+                            style="background: #f0f8ff; border-color: #bfdbfe;">
+                            <span class="trigger-text">Select custom product to copy...</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </div>
+                        <div class="custom-dropdown-menu" id="rsCustomImportDropdownMenu">
+                            <!-- Search and options will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Custom Item Name</label>
+                    <input type="text" id="rsCustomProductName" class="form-input" placeholder="e.g. Special Bulk Rice">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Bulk Container Type</label>
+                        <div class="custom-dropdown-wrapper" id="rsCustomBulkDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="rsCustomBulkDropdownTrigger">
+                                <span class="trigger-text" style="font-weight: 600;">Carton</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="rsCustomBulkDropdownMenu">
+                                <div class="custom-dropdown-option active" data-value="Carton">Carton</div>
+                                <div class="custom-dropdown-option" data-value="Pack">Pack</div>
+                                <div class="custom-dropdown-option" data-value="Sack">Sack</div>
+                                <div class="custom-dropdown-option custom-unit-create-option"
+                                    data-value="__custom_bulk__"
+                                    style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                    <span>Create Custom</span>
+                                </div>
+                                <div class="custom-unit-input-row" id="rsCustomFormBulkRow"
+                                    style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                    <input type="text" id="rsCustomFormBulkInput" class="form-input"
+                                        placeholder="e.g. Bundle"
+                                        style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;">
+                                    <button type="button" id="rsCustomFormBulkConfirmBtn"
+                                        style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700;">Add</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="rsCustomBulkUnitSelect" value="Carton">
+                        </div>
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Retail Selling Unit</label>
+                        <div class="custom-dropdown-wrapper" id="rsCustomUnitDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="rsCustomUnitDropdownTrigger">
+                                <span class="trigger-text">per piece</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="rsCustomUnitDropdownMenu">
+                                <div class="custom-dropdown-option active" data-value="per piece">per piece</div>
+                                <div class="custom-dropdown-option" data-value="per cup">per cup</div>
+                                <div class="custom-dropdown-option" data-value="per bag">per bag</div>
+                                <div class="custom-dropdown-option custom-unit-create-option" data-value="__custom__"
+                                    style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                    <span>Create Custom Unit</span>
+                                </div>
+                                <div class="custom-unit-input-row" id="rsCustomFormUnitRow"
+                                    style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                    <input type="text" id="rsCustomFormUnitInput" class="form-input"
+                                        placeholder="e.g. per wrap"
+                                        style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;">
+                                    <button type="button" id="rsCustomFormUnitConfirmBtn"
+                                        style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700;">Add
+                                        Unit</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="rsCustomNewProductUnit" value="per piece">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Cost per <span class="lbl-rs-custom-bulk">Carton</span> (₦)</label>
+                        <input type="number" id="rsCustomProductPurchaseCost" class="form-input" placeholder="e.g. 5000"
+                            min="0" step="0.01">
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Quantity Bought</label>
+                        <input type="number" id="rsCustomProductQuantity" class="form-input" placeholder="e.g. 5"
+                            min="1" step="1" value="1">
+                    </div>
+                </div>
+
+                <div
+                    style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
+                    Total Cost: <span id="rsCustomProductTotalCostVal" style="color: #16a34a;">₦0</span>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                    <div class="form-group" style="width: 100%; margin-bottom: 0;">
+                        <label><span class="lbl-rs-custom-retail" style="text-transform: capitalize;">Pieces</span>
+                            inside ONE <span class="lbl-rs-custom-bulk">Carton</span></label>
+                        <input type="number" id="rsCustomProductPieces" class="form-input" placeholder="e.g. 40" min="1"
+                            step="1">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label>Retail Price per <span class="lbl-rs-custom-retail">piece</span> (₦)</label>
+                    <input type="number" id="rsCustomProductPrice" class="form-input" placeholder="e.g. 1500" min="0"
+                        step="0.01" style="background: #f8fafc; font-weight: 700; color: #0f172a;">
+                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 6px;">This is the price customers will
+                        pay per <span class="lbl-rs-custom-retail">piece</span>.</div>
+                </div>
+
+                <!-- New Stock Indicator Toggle -->
+                <div class="form-group"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 12px;">
+                    <div>
+                        <label style="margin-bottom: 2px; color: #047857; font-weight: 800;">Mark as New Stock</label>
+                        <div style="font-size: 0.75rem; color: #059669;">Adds 'NEW STOCK' tag to this restock payload
+                            (Admin view only)</div>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="rsCustomNewStockSwitch" style="opacity: 0; width: 0; height: 0;"
+                            checked
+                            onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#10b981':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                        <span class="slider round"
+                            style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10b981; transition: .4s; border-radius: 34px;">
+                            <span class="knob"
+                                style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(20px);"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Live Payout Preview -->
+                <div class="admin-apm-payout-preview" id="rsCustomPayoutPreviewParent" style="margin-bottom: 16px;">
+                    <span class="admin-apm-payout-label" style="text-transform: capitalize;">App Purchase Payout
+                        Return</span>
+                    <span class="admin-apm-payout-value" id="rsCustomPayoutValue"
+                        style="font-size: 1.1rem;">Calculating...</span>
+                    <span
+                        style="font-size: 0.75rem; color: #64748b; text-align: center; margin-top: 6px; line-height: 1.3;">
+                        <strong>Note:</strong> Payout applies <em>only</em> if the user orders via the App.
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="admin-product-submit-btn" id="rsCustomProductSubmitBtn" style="flex: 1;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Create Custom Product
+                    </button>
+                    <button class="admin-product-submit-btn" id="rsCustomAddExistingBtn"
+                        style="flex: 1; background: #f59e0b; display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5v14"></path>
+                        </svg>
+                        Top Up Stock
+                    </button>
+                </div>
+            </div>
+
+            <!-- FLEXIBLE PRODUCT FORM -->
+            <div id="rsFlexibleProductForm" style="display: none;">
+                <div class="form-group"
+                    style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px dashed #e2e8f0;">
+                    <label style="color: #8b5cf6;">Pre-fill from Existing (Optional)</label>
+                    <div class="custom-dropdown-wrapper" id="rsFlexImportDropdownWrapper">
+                        <div class="custom-dropdown-trigger" id="rsFlexImportDropdownTrigger"
+                            style="background: #f0f8ff; border-color: #bfdbfe;">
+                            <span class="trigger-text">Select flexible product to copy...</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </div>
+                        <div class="custom-dropdown-menu" id="rsFlexImportDropdownMenu">
+                            <!-- Search and options will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Flexible Item Name</label>
+                    <input type="text" id="rsFlexProductName" class="form-input" placeholder="e.g. Variable Bulk Item">
+                </div>
+
+                <!-- C1 Section -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">1</span>
+                        <input type="text" id="rsFlexC1Title" value="Container 1" style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Purchased <span id="lblRsFlexC1Cost">Container 1</span> Cost (₦)</label>
+                            <input type="number" id="rsFlexC1Cost" class="form-input" placeholder="e.g. 50000" min="0" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Quantity Bought</label>
+                            <input type="number" id="rsFlexC1Quantity" class="form-input" placeholder="e.g. 5" min="1" step="1" value="1">
+                        </div>
+                    </div>
+                    <div style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
+                        Total Cost: <span id="rsFlexC1TotalCostVal" style="color: #16a34a;">₦0</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label><span id="lblRsFlexC1Profit">Container 1</span> Profit (₦)</label>
+                            <input type="number" id="rsFlexC1Profit" class="form-input" placeholder="5000" min="0" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="rsFlexC1ProfitPercent" class="form-input" placeholder="10" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Final Selling Price per <span id="lblRsFlexC1Price">Container 1</span> (₦)</label>
+                        <input type="number" id="rsFlexC1Price" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                    </div>
+                </div>
+
+                <!-- C2 Section -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">2</span>
+                        <input type="text" id="rsFlexC2Title" value="Container 2" style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>How many of this size in the primary unit above?</label>
+                        <input type="number" id="rsFlexC2Qty" class="form-input" placeholder="e.g. 10" min="1" step="1">
+                        <div style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">Cost per unit: <span id="rsFlexC2CostVal" style="color: #8b5cf6;">₦0</span></div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label><span id="lblRsFlexC2Profit">Container 2</span> Profit (₦)</label>
+                            <input type="number" id="rsFlexC2Profit" class="form-input" placeholder="1000" min="0" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="rsFlexC2ProfitPercent" class="form-input" placeholder="20" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Final Selling Price per <span id="lblRsFlexC2Price">Container 2</span> (₦)</label>
+                        <input type="number" id="rsFlexC2Price" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                    </div>
+                </div>
+
+                <!-- C3 Section -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+                    <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">3</span>
+                        <input type="text" id="rsFlexC3Title" value="Container 3" style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>How many of this size in the secondary unit above?</label>
+                        <input type="number" id="rsFlexC3Qty" class="form-input" placeholder="e.g. 20" min="1" step="1">
+                    </div>
+                    
+                    <div style="padding: 12px; background: #e0e7ff; border: 1px solid #c7d2fe; border-radius: 8px;">
+                        <p style="margin:0; font-size: 0.85rem; color: #3730a3;"><strong>Flexible Level:</strong> No fixed retail cost or price required. You will type the exact money collected at the time of sale for this unit.</p>
+                    </div>
+                </div>
+
+                <!-- New Stock Indicator Toggle -->
+                <div class="form-group"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 12px;">
+                    <div>
+                        <label style="margin-bottom: 2px; color: #047857; font-weight: 800;">Mark as New Stock</label>
+                        <div style="font-size: 0.75rem; color: #059669;">Adds 'NEW STOCK' tag to this restock payload
+                            (Admin view only)</div>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="rsFlexNewStockSwitch" style="opacity: 0; width: 0; height: 0;"
+                            checked
+                            onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#10b981':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                        <span class="slider round"
+                            style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10b981; transition: .4s; border-radius: 34px;">
+                            <span class="knob"
+                                style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(20px);"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="admin-product-submit-btn" id="rsFlexProductSubmitBtn" style="flex: 1;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Create Flexible Product
+                    </button>
+                    <button class="admin-product-submit-btn" id="rsFlexAddExistingBtn"
+                        style="flex: 1; background: #f59e0b; display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5v14"></path>
+                        </svg>
+                        Top Up Stock
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- Product Detail Modal -->
+<div class="admin-modal-overlay" id="restockDetailModal">
+    <div class="admin-modal-content"
+        style="max-width: 400px; padding: 0; display: flex; flex-direction: column; overflow: hidden;">
+        <!-- VIEW 1: Details -->
+        <div id="rsDetailView" style="display: flex; flex-direction: column; overflow: hidden; min-height: 0; flex: 1;">
+            <div class="admin-modal-header">
+                <h3 id="rdName" style="font-size: 1.1rem; font-weight: 800; color: #1e293b;"></h3>
+                <button class="admin-modal-close" onclick="closeRestockDetailModal()">✕</button>
+            </div>
+            <div class="admin-modal-body"
+                style="padding: 24px; overflow-y: auto; padding-bottom: calc(24px + env(safe-area-inset-bottom, 20px));">
+                <div id="rsDynamicDetails" style="display: flex; flex-direction: column; gap: 14px;">
+                    <!-- Dynamic Rows will be injected here -->
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 24px;">
+                    <button id="rsInitTopUpBtn" class="admin-modern-btn"
+                        style="font-size: 0.9rem; background: #8b5cf6; color: white; border: none;">Top Up
+                        Stock</button>
+                    <button id="rsUndoTopUpBtn" class="admin-modern-btn"
+                        style="font-size: 0.9rem; background: #f59e0b; color: white; border: none; display: none;">Undo
+                        Last Top Up</button>
+                    <button id="rsInitStockBtn" class="admin-modern-btn"
+                        style="font-size: 0.9rem; background: #8b5cf6; color: white; border: none;">Check Stock
+                        Levels</button>
+                    <button id="rsInitEditImageBtn" class="admin-modern-btn"
+                        style="font-size: 0.9rem; background: #8b5cf6; color: white; border: none;">Edit Image</button>
+                    <button id="rsInitDeleteBtn" class="admin-modern-btn danger"
+                        style="font-size: 0.9rem;">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: Stock Levels -->
+        <div id="rsStockView" style="display: none; flex-direction: column; overflow: hidden; min-height: 0; flex: 1;">
+            <div class="admin-modal-header" style="flex-shrink: 0;">
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: #1e293b;">Stock Levels</h3>
+                <button class="admin-modal-close" onclick="_rsCloseStockView()">✕</button>
+            </div>
+            <div class="admin-modal-body" style="padding: 24px; overflow-y: auto; flex: 1;">
+                <div id="rsStockDynamicContent">
+                    <!-- Stock analytics injected by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: PIN Confirm -->
+        <div id="rsActionConfirmView" style="display: none; flex-direction: column;">
+            <div class="admin-modal-header" style="justify-content: center; border-bottom: none; padding-top: 30px;">
+                <div id="rsActionIcon"
+                    style="width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.06);">
+                    <svg id="rsActionSvgDelete" viewBox="0 0 24 24" width="30" height="30" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                        style="display:none;">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        <line x1="10" y1="11" x2="10" y2="17" />
+                        <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                    <svg id="rsActionSvgClear" viewBox="0 0 24 24" width="30" height="30" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                        style="display:none;">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                        <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    <svg id="rsActionSvgEdit" viewBox="0 0 24 24" width="30" height="30" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                        style="display:none;">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="admin-modal-body" style="text-align: center; padding-top: 10px;">
+                <h3 id="rsActionTitle" style="margin: 0 0 10px 0; font-size: 1.4rem; color: #1e293b; font-weight: 800;">
+                </h3>
+                <p id="rsActionDesc"
+                    style="margin: 0 0 24px 0; color: #64748b; font-size: 0.95rem; line-height: 1.5; font-weight: 500;">
+                </p>
+                <div class="form-group" style="margin-bottom: 24px; text-align: left;">
+                    <label style="color: #ef4444; font-size: 0.85rem; font-weight: 700;">Admin PIN Required</label>
+                    <input type="tel" id="rsActionPasswordInput" class="form-input" placeholder="Enter 4-digit PIN"
+                        style="border-color: #fca5a5; background: #fff; -webkit-text-security:disc;" maxlength="4"
+                        inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off"
+                        data-lpignore="true" data-form-type="other">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button id="rsCancelActionBtn" class="admin-modern-btn"
+                        style="flex: 1; background: #f1f5f9; color: #64748b;">Cancel</button>
+                    <button id="rsConfirmActionBtn" class="admin-modern-btn danger" style="flex: 1;">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: Edit Form -->
+        <div id="rsEditFormView"
+            style="display: none; flex-direction: column; max-height: 85vh; width: 100%; overflow: hidden; min-height: 0;">
+            <div class="admin-modal-header" style="flex-shrink: 0;">
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: #1e293b;">Edit Product</h3>
+                <button class="admin-modal-close" onclick="closeRestockDetailModal()">✕</button>
+            </div>
+            <div class="admin-modal-body" style="padding: 24px; overflow-y: auto; flex: 1; min-height: 0;">
+
+                <!-- DEFAULT PRODUCT EDIT FORM -->
+                <div id="rsEditDefaultContainer" style="display: flex; flex-direction: column;">
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" id="rsEditDefName" class="form-input" placeholder="Product name">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <!-- Bulk Container -->
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Stock Container</label>
+                            <div class="custom-dropdown-wrapper" id="rsEditBulkDropdownWrapper">
+                                <div class="custom-dropdown-trigger" id="rsEditBulkDropdownTrigger">
+                                    <span class="trigger-text" style="font-weight: 600;">Carton</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                </div>
+                                <div class="custom-dropdown-menu" id="rsEditBulkDropdownMenu">
+                                    <div class="custom-dropdown-option active" data-value="Carton">Carton</div>
+                                    <div class="custom-dropdown-option" data-value="Pack">Pack</div>
+                                    <div class="custom-dropdown-option" data-value="Crate">Crate</div>
+                                    <div class="custom-dropdown-option" data-value="Container 1">Container 1</div>
+                                    <div class="custom-dropdown-option" data-value="Sack">Sack</div>
+                                    <div class="custom-dropdown-option" data-value="Box">Box</div>
+                                    <div class="custom-dropdown-option" data-value="Roll">Roll</div>
+                                    <div class="custom-dropdown-option" data-value="Bundle">Bundle</div>
+                                    <div class="custom-dropdown-option custom-unit-create-option"
+                                        data-value="__custom_bulk__"
+                                        style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                        <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                style="margin-right: 6px; vertical-align: middle;">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>Create Custom</span>
+                                    </div>
+                                    <div class="custom-unit-input-row" id="rsEditCustomBulkRow"
+                                        style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                        <input type="text" id="rsEditCustomBulkInput" class="form-input"
+                                            placeholder="e.g. Jug"
+                                            style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;">
+                                        <button type="button" id="rsEditCustomBulkConfirmBtn"
+                                            style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Add
+                                            Container</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="rsEditBulkUnitSelect" value="Carton">
+                            </div>
+                        </div>
+                        <!-- Retail Selling Unit -->
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Retail Selling Unit</label>
+                            <div class="custom-dropdown-wrapper" id="rsEditUnitDropdownWrapper">
+                                <div class="custom-dropdown-trigger" id="rsEditUnitDropdownTrigger">
+                                    <span class="trigger-text">per piece</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                </div>
+                                <div class="custom-dropdown-menu" id="rsEditUnitDropdownMenu">
+                                    <div class="custom-dropdown-option" data-value="per cup">per cup</div>
+                                    <div class="custom-dropdown-option" data-value="per kg">per kg</div>
+                                    <div class="custom-dropdown-option" data-value="per bag">per bag</div>
+                                    <div class="custom-dropdown-option" data-value="per carton">per carton</div>
+                                    <div class="custom-dropdown-option active" data-value="per piece">per piece</div>
+                                    <div class="custom-dropdown-option" data-value="per bottle">per bottle</div>
+                                    <div class="custom-dropdown-option" data-value="per pack">per pack</div>
+                                    <div class="custom-dropdown-option custom-unit-create-option"
+                                        data-value="__custom__"
+                                        style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                        <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                style="margin-right: 6px; vertical-align: middle;">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>Create Custom Unit</span>
+                                    </div>
+                                    <div class="custom-unit-input-row" id="rsEditCustomUnitRow"
+                                        style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                        <input type="text" id="rsEditCustomUnitInput" class="form-input"
+                                            placeholder="e.g. per gallon"
+                                            style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;">
+                                        <button type="button" id="rsEditCustomUnitConfirmBtn"
+                                            style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Add
+                                            Unit</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="rsEditNewProductUnit" value="per piece">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Cost per <span id="rsEditDefBulkLabel">Carton</span> (₦)</label>
+                            <input type="number" id="rsEditDefBulkCost" class="form-input" placeholder="e.g. 5000"
+                                min="0" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Quantity Bought</label>
+                            <input type="number" id="rsEditDefQuantity" class="form-input" placeholder="e.g. 5" min="1"
+                                step="1" value="1">
+                        </div>
+                    </div>
+
+                    <div
+                        style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
+                        Total Cost: <span id="rsEditDefTotalCostVal" style="color: #16a34a;">₦0</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span id="rsEditDefRetailUnitLabel" style="text-transform: capitalize;">Pieces</span>
+                            inside ONE <span id="rsEditDefBulkLabel2">Carton</span></label>
+                        <input type="number" id="rsEditDefPieces" class="form-input" placeholder="e.g. 40" min="1"
+                            step="1">
+                    </div>
+
+                    <div
+                        style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">
+                        Retail Cost per <span id="rsEditDefRetailUnitLabel2">piece</span>: <span
+                            id="rsEditDefRetailCostVal" style="color: #8b5cf6;">₦0</span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Retail Profit per <span id="rsEditDefRetailUnitLabel3">piece</span> (₦)</label>
+                            <input type="number" id="rsEditDefProfit" class="form-input" placeholder="100" min="0"
+                                step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="rsEditDefProfitPercent" class="form-input" placeholder="e.g. 10"
+                                min="0" step="0.01" style="font-weight: 600;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Final Unit Price (₦)</label>
+                        <input type="number" id="rsEditDefPrice" class="form-input" readonly
+                            style="background: #f8fafc; font-weight: 700; color: #8b5cf6; cursor: not-allowed;">
+                    </div>
+                </div>
+
+                <!-- ANALYTICAL PRODUCT EDIT FORM -->
+                <div id="rsEditAnalyticalContainer" style="display: none; flex-direction: column;">
+                    <div class="form-group">
+                        <label>Analytical Product Name</label>
+                        <input type="text" id="rsEditAnaName" class="form-input" placeholder="e.g. Rice">
+                    </div>
+
+                    <!-- Bag/Tier 1 Section -->
+                    <div
+                        style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                        <h4
+                            style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                            <span
+                                style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">1</span>
+                            <input type="text" id="rsEditAnaBagTitle" value="Container 1"
+                                style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;"
+                                onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'">
+                            Size
+                        </h4>
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Purchased <span id="rsEditAnaBagCostLbl">Container 1</span> Cost (₦)</label>
+                                <input type="number" id="rsEditAnaBagCost" class="form-input" placeholder="e.g. 50000"
+                                    min="0" step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Quantity Bought</label>
+                                <input type="number" id="rsEditAnaBagQty" class="form-input" placeholder="e.g. 5"
+                                    min="1" step="1" value="1">
+                            </div>
+                        </div>
+                        <div
+                            style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
+                            Total Cost: <span id="rsEditAnaBagTotalCostVal" style="color: #16a34a;">₦0</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label><span id="rsEditAnaBagProfitLbl">Container 1</span> Profit (₦)</label>
+                                <input type="number" id="rsEditAnaBagProfit" class="form-input" placeholder="5000"
+                                    min="0" step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Profit Margin (%)</label>
+                                <input type="number" id="rsEditAnaBagProfitPct" class="form-input" placeholder="10"
+                                    min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Final Selling Price per <span id="rsEditAnaBagPriceLbl">Container 1</span>
+                                (₦)</label>
+                            <input type="number" id="rsEditAnaBagPrice" class="form-input" readonly
+                                style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                        </div>
+                    </div>
+
+                    <!-- Custard/Tier 2 Section -->
+                    <div
+                        style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                        <h4
+                            style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                            <span
+                                style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">2</span>
+                            <input type="text" id="rsEditAnaCustardTitle" value="Container 2"
+                                style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;"
+                                onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'">
+                            Size
+                        </h4>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label>How many of this size in the primary unit above?</label>
+                            <input type="number" id="rsEditAnaCustardsPerBag" class="form-input" placeholder="e.g. 10"
+                                min="1" step="1">
+                            <div
+                                style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">
+                                Cost per unit: <span id="rsEditAnaCustardCostVal" style="color: #8b5cf6;">₦0</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label><span id="rsEditAnaCustardProfitLbl">Container 2</span> Profit (₦)</label>
+                                <input type="number" id="rsEditAnaCustardProfit" class="form-input" placeholder="1000"
+                                    min="0" step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Profit Margin (%)</label>
+                                <input type="number" id="rsEditAnaCustardProfitPct" class="form-input" placeholder="20"
+                                    min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Final Selling Price per <span id="rsEditAnaCustardPriceLbl">Container 2</span>
+                                (₦)</label>
+                            <input type="number" id="rsEditAnaCustardPrice" class="form-input" readonly
+                                style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                        </div>
+                    </div>
+
+                    <!-- Cup/Tier 3 Section -->
+                    <div
+                        style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+                        <h4
+                            style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                            <span
+                                style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">3</span>
+                            <input type="text" id="rsEditAnaCupTitle" value="Container 3"
+                                style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;"
+                                onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'">
+                            Size
+                        </h4>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label>How many of this size in the secondary unit above?</label>
+                            <input type="number" id="rsEditAnaCupsPerCustard" class="form-input" placeholder="e.g. 20"
+                                min="1" step="1">
+                            <div
+                                style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">
+                                Cost per unit: <span id="rsEditAnaCupCostVal" style="color: #8b5cf6;">₦0</span></div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label><span id="rsEditAnaCupProfitLbl">Container 3</span> Profit (₦)</label>
+                                <input type="number" id="rsEditAnaCupProfit" class="form-input" placeholder="50" min="0"
+                                    step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Profit Margin (%)</label>
+                                <input type="number" id="rsEditAnaCupProfitPct" class="form-input" placeholder="20"
+                                    min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Final Selling Price per <span id="rsEditAnaCupPriceLbl">Container 3</span>
+                                (₦)</label>
+                            <input type="number" id="rsEditAnaCupPrice" class="form-input" readonly
+                                style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="rsSaveEditBtn" class="admin-modern-btn"
+                    style="width: 100%; margin-top: 20px; background: #8b5cf6; color: white; font-weight: 700;">Save
+                    Changes</button>
+            </div>
+        </div>
+
+        <!-- VIEW 5: Edit Price Form -->
+        <div id="rsEditPriceFormView"
+            style="display: none; flex-direction: column; max-height: 85vh; width: 100%; overflow: hidden; min-height: 0;">
+            <div class="admin-modal-header" style="flex-shrink: 0;">
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: #1e293b;">Edit Retail Price</h3>
+                <button class="admin-modal-close" onclick="_rsCloseEditPriceForm()">✕</button>
+            </div>
+            <div class="admin-modal-body" style="padding: 24px; overflow-y: auto; flex: 1; min-height: 0;">
+
+                <!-- DEFAULT PRODUCT EDIT PRICE FORM -->
+                <div id="rsEditPriceDefaultContainer" style="display: none; flex-direction: column;">
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" id="rsEditPriceDefName" class="form-input" placeholder="Product name">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <!-- Bulk Container -->
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Stock Container</label>
+                            <div class="custom-dropdown-wrapper" id="rsEditPriceBulkDropdownWrapper">
+                                <div class="custom-dropdown-trigger" id="rsEditPriceBulkDropdownTrigger">
+                                    <span class="trigger-text" style="font-weight: 600;">Carton</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                </div>
+                                <div class="custom-dropdown-menu" id="rsEditPriceBulkDropdownMenu">
+                                    <div class="custom-dropdown-option active" data-value="Carton">Carton</div>
+                                    <div class="custom-dropdown-option" data-value="Pack">Pack</div>
+                                    <div class="custom-dropdown-option" data-value="Crate">Crate</div>
+                                    <div class="custom-dropdown-option" data-value="Container 1">Container 1</div>
+                                    <div class="custom-dropdown-option" data-value="Sack">Sack</div>
+                                    <div class="custom-dropdown-option" data-value="Box">Box</div>
+                                    <div class="custom-dropdown-option" data-value="Roll">Roll</div>
+                                    <div class="custom-dropdown-option" data-value="Bundle">Bundle</div>
+                                    <div class="custom-dropdown-option custom-unit-create-option"
+                                        data-value="__custom_bulk__"
+                                        style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                        <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                style="margin-right: 6px; vertical-align: middle;">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>Create Custom</span>
+                                    </div>
+                                    <div class="custom-unit-input-row" id="rsEditPriceCustomBulkRow"
+                                        style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                        <input type="text" id="rsEditPriceCustomBulkInput" class="form-input"
+                                            placeholder="e.g. Jug"
+                                            style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;">
+                                        <button type="button" id="rsEditPriceCustomBulkConfirmBtn"
+                                            style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Add
+                                            Container</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="rsEditPriceBulkUnitSelect" value="Carton">
+                            </div>
+                        </div>
+                        <!-- Retail Selling Unit -->
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Retail Selling Unit</label>
+                            <div class="custom-dropdown-wrapper" id="rsEditPriceUnitDropdownWrapper">
+                                <div class="custom-dropdown-trigger" id="rsEditPriceUnitDropdownTrigger">
+                                    <span class="trigger-text">per piece</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                </div>
+                                <div class="custom-dropdown-menu" id="rsEditPriceUnitDropdownMenu">
+                                    <div class="custom-dropdown-option" data-value="per cup">per cup</div>
+                                    <div class="custom-dropdown-option" data-value="per kg">per kg</div>
+                                    <div class="custom-dropdown-option" data-value="per bag">per bag</div>
+                                    <div class="custom-dropdown-option" data-value="per carton">per carton</div>
+                                    <div class="custom-dropdown-option active" data-value="per piece">per piece</div>
+                                    <div class="custom-dropdown-option" data-value="per bottle">per bottle</div>
+                                    <div class="custom-dropdown-option" data-value="per pack">per pack</div>
+                                    <div class="custom-dropdown-option custom-unit-create-option"
+                                        data-value="__custom__"
+                                        style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                        <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                style="margin-right: 6px; vertical-align: middle;">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>Create Custom Unit</span>
+                                    </div>
+                                    <div class="custom-unit-input-row" id="rsEditPriceCustomUnitRow"
+                                        style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                        <input type="text" id="rsEditPriceCustomUnitInput" class="form-input"
+                                            placeholder="e.g. per gallon"
+                                            style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;">
+                                        <button type="button" id="rsEditPriceCustomUnitConfirmBtn"
+                                            style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Add
+                                            Unit</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="rsEditPriceUnitSelect" value="per piece">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>Cost per <span id="rsEditPriceDefBulkLabel">Carton</span> (₦)</label>
+                        <input type="number" id="rsEditPriceDefBulkCost" class="form-input" placeholder="e.g. 5000"
+                            min="0" step="0.01">
+                    </div>
+
+                    <div class="form-group">
+                        <label><span id="rsEditPriceDefRetailUnitLabel"
+                                style="text-transform: capitalize;">Pieces</span> inside ONE <span
+                                id="rsEditPriceDefBulkLabel2">Carton</span></label>
+                        <input type="number" id="rsEditPriceDefPieces" class="form-input" placeholder="e.g. 40" min="1"
+                            step="1">
+                    </div>
+
+                    <div
+                        style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">
+                        Retail Cost per <span id="rsEditPriceDefRetailUnitLabel2">piece</span>: <span
+                            id="rsEditPriceDefRetailCostVal" style="color: #8b5cf6;">₦0</span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Retail Profit per <span id="rsEditPriceDefRetailUnitLabel3">piece</span> (₦)</label>
+                            <input type="number" id="rsEditPriceDefProfit" class="form-input" placeholder="100" min="0"
+                                step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="rsEditPriceDefProfitPercent" class="form-input"
+                                placeholder="e.g. 10" min="0" step="0.01" style="font-weight: 600;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Final Unit Price (₦)</label>
+                        <input type="number" id="rsEditPriceDefPrice" class="form-input" readonly
+                            style="background: #f8fafc; font-weight: 700; color: #8b5cf6; cursor: not-allowed;">
+                    </div>
+                </div>
+
+                <!-- ANALYTICAL PRODUCT EDIT PRICE FORM -->
+                <div id="rsEditPriceAnalyticalContainer" style="display: none; flex-direction: column;">
+                    <div class="form-group">
+                        <label>Analytical Product Name</label>
+                        <input type="text" id="rsEditPriceAnaName" class="form-input" placeholder="e.g. Rice">
+                    </div>
+
+                    <!-- Bag/Tier 1 Section -->
+                    <div
+                        style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                        <h4
+                            style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                            <span
+                                style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">1</span>
+                            <input type="text" id="rsEditPriceAnaBagTitleText" value="Container 1"
+                                style="border: 1px dashed #cbd5e1; background: #fff; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;"
+                                onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'">
+                            Size
+                        </h4>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label>Purchased <span class="rsEditPriceAnaBagLbl">Container 1</span> Cost (₦)</label>
+                            <input type="number" id="rsEditPriceAnaBagCost" class="form-input" placeholder="e.g. 50000"
+                                min="0" step="0.01">
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label><span class="rsEditPriceAnaBagLbl">Container 1</span> Profit (₦)</label>
+                                <input type="number" id="rsEditPriceAnaBagProfit" class="form-input" placeholder="5000"
+                                    min="0" step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Profit Margin (%)</label>
+                                <input type="number" id="rsEditPriceAnaBagProfitPct" class="form-input" placeholder="10"
+                                    min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Final Selling Price per <span class="rsEditPriceAnaBagLbl">Container 1</span>
+                                (₦)</label>
+                            <input type="number" id="rsEditPriceAnaBagPrice" class="form-input" readonly
+                                style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                        </div>
+                    </div>
+
+                    <!-- Custard/Tier 2 Section -->
+                    <div
+                        style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                        <h4
+                            style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                            <span
+                                style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">2</span>
+                            <input type="text" id="rsEditPriceAnaCustardTitleText" value="Container 2"
+                                style="border: 1px dashed #cbd5e1; background: #fff; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;"
+                                onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'">
+                            Size
+                        </h4>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label>How many of this size in the primary unit above?</label>
+                            <input type="number" id="rsEditPriceAnaCustardsPerBag" class="form-input"
+                                placeholder="e.g. 10" min="1" step="1">
+                            <div
+                                style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">
+                                Cost per unit: <span id="rsEditPriceAnaCustardCostVal" style="color: #8b5cf6;">₦0</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label><span class="rsEditPriceAnaCustardLbl">Container 2</span> Profit (₦)</label>
+                                <input type="number" id="rsEditPriceAnaCustardProfit" class="form-input"
+                                    placeholder="1000" min="0" step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Margin (%)</label>
+                                <input type="number" id="rsEditPriceAnaCustardProfitPct" class="form-input"
+                                    placeholder="20" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Final Selling Price per <span class="rsEditPriceAnaCustardLbl">Container 2</span> (₦)</label>
+                            <input type="number" id="rsEditPriceAnaCustardPrice" class="form-input" readonly
+                                style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                        </div>
+                    </div>
+
+                    <!-- Cup/Tier 3 Section -->
+                    <div
+                        style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+                        <h4
+                            style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                            <span
+                                style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">3</span>
+                            <input type="text" id="rsEditPriceAnaCupTitleText" value="Container 3"
+                                style="border: 1px dashed #cbd5e1; background: #fff; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;"
+                                onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'">
+                            Size
+                        </h4>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label>How many of this size in the secondary unit above?</label>
+                            <input type="number" id="rsEditPriceAnaCupsPerCustard" class="form-input"
+                                placeholder="e.g. 20" min="1" step="1">
+                            <div
+                                style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">
+                                Cost per unit: <span id="rsEditPriceAnaCupCostVal" style="color: #8b5cf6;">₦0</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label><span class="rsEditPriceAnaCupLbl">Container 3</span> Profit (₦)</label>
+                                <input type="number" id="rsEditPriceAnaCupProfit" class="form-input" placeholder="50"
+                                    min="0" step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Margin (%)</label>
+                                <input type="number" id="rsEditPriceAnaCupProfitPct" class="form-input" placeholder="20"
+                                    min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Final Selling Price per <span class="rsEditPriceAnaCupLbl">Container 3</span> (₦)</label>
+                            <input type="number" id="rsEditPriceAnaCupPrice" class="form-input" readonly
+                                style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="rsSaveEditPriceBtn" class="admin-modern-btn primary"
+                    style="width: 100%; margin-top: 10px; background-color: #8b5cf6;">Update New Price</button>
+            </div>
+        </div>
+
+
+        <!-- VIEW 4: Success -->
+        <div id="rsActionSuccessView"
+            style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center;">
+            <div
+                style="width: 72px; height: 72px; background: #f0fdf4; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#16a34a" stroke-width="2.5">
+                    <path d="M20 6 9 17l-5-5" />
+                </svg>
+            </div>
+            <h3 id="rsSuccessTitle" style="font-size: 1.3rem; font-weight: 800; color: #1e293b; margin: 0 0 10px 0;">
+            </h3>
+            <p id="rsSuccessDesc" style="color: #64748b; font-size: 0.95rem; margin: 0 0 28px 0;"></p>
+            <button id="rsActionDoneBtn" class="admin-modern-btn"
+                style="background: #8b5cf6; color: white; width: 100%; font-weight: 700;"
+                onclick="closeRestockDetailModal()">Done</button>
+        </div>
+
+        <!-- VIEW 5: Edit Image -->
+        <div id="rsEditImageView"
+            style="display: none; flex-direction: column; max-height: 85vh; width: 100%; overflow: hidden; min-height: 0;">
+            <div class="admin-modal-header" style="flex-shrink: 0;">
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: #1e293b;">Edit Product Image</h3>
+                <button class="admin-modal-close" id="rsEditImageClose">✕</button>
+            </div>
+            <div class="admin-modal-body" style="padding: 24px; overflow-y: auto; flex: 1; min-height: 0;">
+                <div class="admin-image-upload-area" id="rsDetailImageUploadContainer">
+                    <input type="file" id="rsDetailImageInput" accept="image/*" style="display: none;">
+                    <div class="admin-image-placeholder upload-placeholder">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                            stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <span>Click or drag to add image</span>
+                        <button type="button" id="rsDetailSnapBtn" onclick="event.stopPropagation();window.openCameraCapture(function(b64){document.getElementById('rsDetailImageData').value=b64;var p=document.getElementById('rsDetailImagePreview');if(p)p.src=b64;var pc=document.getElementById('rsDetailImagePreviewContainer');var pl=pc?pc.previousElementSibling:null;if(pc)pc.style.display='block';if(pl)pl.style.display='none';});" style="margin-top:10px;padding:8px 18px;background:#8b5cf6;color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                            Snap Photo
+                        </button>
+                    </div>
+                    <div id="rsDetailImagePreviewContainer" class="admin-image-preview-container"
+                        style="display: none;">
+                        <img id="rsDetailImagePreview" src="" alt="Preview">
+                        <div class="admin-image-preview-actions">
+                            <button type="button" id="rsDetailImageReplaceBtn" class="admin-img-action-btn"
+                                title="Replace">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21l-5.94-5.94" />
+                                </svg>
+                            </button>
+                            <button type="button" id="rsDetailImageRemoveBtn" class="admin-img-action-btn remove"
+                                title="Remove">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="rsDetailImageData" value="">
+
+                <button id="rsSaveDetailImageBtn" class="admin-modern-btn primary"
+                    style="width: 100%; margin-top: 16px; background-color: #8b5cf6;">Save Image</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- Restock Date Selector Modal -->
+<div id="restockDateSelModal" class="admin-modal-overlay">
+    <div class="admin-modal-content">
+        <div class="admin-modal-header">
+            <h3 id="rsDateModalTitle">Select Month</h3>
+            <button class="admin-modal-close" onclick="closeRestockDateModal()">✕</button>
+        </div>
+        <div class="admin-modal-body selections-container"
+            style="padding: 0; display:flex; height: 350px; overflow:hidden;">
+            <div id="rsMonthCol" class="selection-column" style="flex:1;"></div>
+            <div id="rsYearCol" class="selection-column" style="flex:1; display:none;"></div>
+        </div>
+    </div>
+
+
+

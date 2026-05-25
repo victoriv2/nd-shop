@@ -1,0 +1,43 @@
+<div class="menu-modal-overlay" id="requestHistoryModal">
+    <div class="menu-modal-content request-history-modal-content" style="max-height: 90vh;">
+        <div class="menu-modal-header">
+            <h3>Request History</h3>
+            <span class="m-close" onclick="document.getElementById('requestHistoryModal').classList.remove('show'); document.body.classList.remove('modal-open');">&times;</span>
+        </div>
+        <div class="menu-modal-body" style="padding: 0; display: flex; flex-direction: column;">
+            
+            <div style="padding: 15px 20px;">
+                <!-- Search & Sort -->
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div style="position: relative; flex: 1;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="rhSearchInput" placeholder="Search product name..." style="width: 100%; padding: 10px 10px 10px 36px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 0.95rem; outline: none;" oninput="renderRequestHistory()">
+                    </div>
+                    
+                    <div style="position: relative;">
+                        <button onclick="const dd = document.getElementById('rhSortDropdown'); dd.style.display = dd.style.display === 'none' ? 'block' : 'none'; event.stopPropagation();" style="padding: 10px 14px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            Sort
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                        </button>
+                        <div id="rhSortDropdown" style="display: none; position: absolute; right: 0; top: 110%; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 180px; z-index: 100; overflow: hidden; border: 1px solid #eee;">
+                            <div class="rh-sort-option active" data-sort="newest" onclick="setRhSort('newest', this)">Newest to Oldest</div>
+                            <div class="rh-sort-option" data-sort="oldest" onclick="setRhSort('oldest', this)">Oldest to Newest</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs for Filter -->
+                <div class="rh-tabs" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none;">
+                    <button class="rh-tab active" data-filter="All" onclick="setRhFilter('All', this)">All</button>
+                    <button class="rh-tab" data-filter="Pending" onclick="setRhFilter('Pending', this)">Pending</button>
+                    <button class="rh-tab" data-filter="Approved" onclick="setRhFilter('Approved', this)">Approved</button>
+                    <button class="rh-tab" data-filter="Declined" onclick="setRhFilter('Declined', this)">Declined</button>
+                </div>
+            </div>
+
+            <div id="rhList" style="padding: 0 20px 20px; overflow-y: auto; flex: 1;">
+                <!-- History Items Injected Here -->
+            </div>
+        </div>
+    </div>
+</div>

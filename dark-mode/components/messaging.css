@@ -1,0 +1,468 @@
+/* =============================================
+   nd shop — Dark Mode: Messaging & Inbox
+   ============================================= */
+
+/* ─── Messaging Page & Inbox Page ─── */
+[data-theme="dark"] .messaging-page,
+[data-theme="dark"] .admin-inbox-page {
+    background: var(--bg-primary);
+}
+
+/* ─── Headers ─── */
+[data-theme="dark"] .msg-header,
+[data-theme="dark"] .inbox-header {
+    background: var(--bg-surface);
+    border-bottom-color: var(--border-light);
+}
+
+[data-theme="dark"] .msg-back-btn,
+[data-theme="dark"] .inbox-back-btn {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .msg-back-btn:active,
+[data-theme="dark"] .inbox-back-btn:active {
+    background: var(--bg-surface-hover);
+}
+
+[data-theme="dark"] .msg-name,
+[data-theme="dark"] .inbox-title,
+[data-theme="dark"] .inbox-conv-name {
+    color: var(--text-heading);
+}
+
+[data-theme="dark"] .msg-status {
+    color: var(--brand-orange);
+}
+
+[data-theme="dark"] .inbox-subtitle {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .msg-header-icon-btn {
+    color: var(--text-faint);
+}
+
+[data-theme="dark"] .msg-header-icon-btn:active {
+    background: var(--bg-surface-hover);
+}
+
+[data-theme="dark"] .msg-header-icon-btn.active {
+    color: var(--brand-orange);
+    background: var(--brand-orange-light);
+}
+
+/* ─── Search Bar ─── */
+[data-theme="dark"] .msg-search-bar,
+[data-theme="dark"] .inbox-search-wrapper {
+    background: var(--bg-surface);
+    border-bottom-color: var(--border-light);
+}
+
+[data-theme="dark"] .msg-search-bar input,
+[data-theme="dark"] .inbox-search-input {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .inbox-search-input {
+    background-color: var(--bg-input);
+    border-color: var(--border-input);
+}
+
+[data-theme="dark"] .inbox-search-input:focus {
+    border-color: var(--brand-orange);
+    background-color: var(--bg-input-focus);
+}
+
+[data-theme="dark"] .msg-search-close,
+[data-theme="dark"] .msg-search-bar input::placeholder,
+[data-theme="dark"] .inbox-search-input::placeholder {
+    color: var(--text-faint);
+}
+
+/* ─── Pinned Panel ─── */
+[data-theme="dark"] .msg-pinned-panel {
+    background: var(--bg-surface-alt);
+    border-bottom-color: var(--border-primary);
+}
+
+[data-theme="dark"] .msg-pinned-header {
+    color: var(--brand-orange);
+}
+
+[data-theme="dark"] .msg-pinned-close {
+    color: var(--text-faint);
+}
+
+[data-theme="dark"] .msg-pinned-item {
+    background: var(--bg-surface);
+    border-color: var(--border-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .msg-pinned-item:active {
+    background: var(--bg-surface-hover);
+}
+
+[data-theme="dark"] .msg-pinned-item-icon {
+    color: var(--brand-orange);
+}
+
+/* ─── Message List ─── */
+[data-theme="dark"] .msg-list {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .msg-date-separator span {
+    background: var(--bg-surface-alt);
+    color: var(--text-secondary);
+}
+
+/* ─── Message Bubbles ─── */
+[data-theme="dark"] .msg-other .msg-bubble {
+    background: var(--bg-surface);
+    border-color: var(--border-light);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .msg-me .msg-bubble {
+    background: var(--brand-orange);
+    color: #ffffff;
+    border-color: transparent;
+}
+
+[data-theme="dark"] .msg-pin-indicator {
+    color: var(--brand-orange);
+}
+[data-theme="dark"] .msg-me .msg-pin-indicator {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .msg-me .msg-pin-indicator svg {
+    stroke: #ffffff;
+}
+
+[data-theme="dark"] .msg-highlight {
+    background: var(--brand-orange-light);
+    color: var(--text-heading);
+}
+[data-theme="dark"] .msg-me .msg-highlight {
+    background: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+}
+
+/* ─── Inline Editor ─── */
+[data-theme="dark"] .msg-other .msg-inline-textarea {
+    background: var(--bg-input);
+    border-color: var(--border-input);
+}
+[data-theme="dark"] .msg-me .msg-inline-textarea {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .msg-other .msg-inline-cancel {
+    color: var(--text-secondary);
+}
+[data-theme="dark"] .msg-other .msg-inline-cancel:hover {
+    background: var(--bg-surface-hover);
+}
+[data-theme="dark"] .msg-other .msg-inline-save {
+    background: var(--brand-orange);
+    color: white;
+}
+
+/* ─── Media / Files ─── */
+[data-theme="dark"] .msg-file {
+    background: var(--bg-surface-alt);
+    border: 1px solid var(--border-primary);
+}
+[data-theme="dark"] .msg-file:active {
+    background: var(--bg-surface-hover);
+}
+
+/* ─── Audio Player ─── */
+[data-theme="dark"] .msg-other .msg-audio-play {
+    background: var(--bg-surface-alt);
+    color: var(--text-primary);
+}
+[data-theme="dark"] .msg-me .msg-audio-play {
+    background: rgba(255, 255, 255, 0.2);
+}
+[data-theme="dark"] .msg-audio-play:hover {
+    background: var(--bg-surface-hover);
+}
+[data-theme="dark"] .msg-me .msg-audio-play:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ─── Scroll to bottom ─── */
+[data-theme="dark"] .msg-scroll-bottom {
+    background: var(--bg-surface);
+    border-color: var(--border-light);
+    color: var(--text-primary);
+}
+
+/* ─── Reply / Edit Bar ─── */
+[data-theme="dark"] .msg-reply-bar {
+    background: var(--bg-surface);
+    border-top-color: var(--border-light);
+    border-left-color: var(--brand-orange);
+}
+
+[data-theme="dark"] .msg-reply-label {
+    color: var(--brand-orange);
+}
+
+[data-theme="dark"] .msg-reply-text {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .msg-reply-cancel {
+    color: var(--text-faint);
+}
+
+[data-theme="dark"] .msg-reply-cancel:hover {
+    color: var(--text-primary);
+}
+
+/* ─── Attach Menu ─── */
+[data-theme="dark"] .msg-attach-menu {
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-light);
+}
+
+[data-theme="dark"] .msg-attach-item:hover {
+    background: var(--bg-surface-hover);
+}
+
+[data-theme="dark"] .msg-attach-icon {
+    background: var(--bg-surface-alt) !important;
+}
+
+[data-theme="dark"] .msg-attach-label {
+    color: var(--text-primary);
+}
+
+/* ─── Pending File Preview Bar ─── */
+[data-theme="dark"] .msg-pending-file-bar {
+    background: var(--bg-surface);
+    border-top-color: var(--border-light);
+    border-left-color: var(--brand-orange);
+}
+
+[data-theme="dark"] .msg-pending-name {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .msg-pending-hint {
+    color: var(--brand-orange);
+}
+
+[data-theme="dark"] .msg-pending-remove {
+    color: var(--text-faint);
+}
+
+[data-theme="dark"] .msg-pending-remove:active {
+    background: var(--bg-surface-hover);
+}
+
+[data-theme="dark"] .msg-pending-thumb {
+    border-color: var(--border-light);
+}
+
+/* ─── Footer / Input ─── */
+[data-theme="dark"] .msg-footer {
+    background: var(--bg-surface);
+    border-top-color: var(--border-light);
+}
+
+[data-theme="dark"] .msg-footer-btn {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .msg-footer-btn:active {
+    background: var(--bg-surface-hover);
+}
+
+[data-theme="dark"] .msg-input-wrapper {
+    background: var(--bg-input);
+}
+
+[data-theme="dark"] #msgTextInput {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #msgTextInput::placeholder {
+    color: var(--text-placeholder);
+}
+
+[data-theme="dark"] .msg-send-btn {
+    background: var(--brand-orange);
+}
+
+/* ─── Context Menu ─── */
+[data-theme="dark"] .msg-context-menu {
+    background: var(--bg-surface);
+    border-color: var(--border-light);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .msg-ctx-item {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .msg-ctx-item:active,
+[data-theme="dark"] .msg-ctx-item:hover {
+    background: var(--bg-surface-hover);
+}
+
+[data-theme="dark"] .msg-ctx-item.text-danger {
+    color: var(--brand-red);
+}
+
+[data-theme="dark"] .msg-ctx-item.text-danger svg {
+    stroke: var(--brand-red);
+}
+
+[data-theme="dark"] .msg-ctx-divider {
+    background: var(--border-light);
+}
+
+/* ─── Recording Overlay ─── */
+[data-theme="dark"] .msg-recording-overlay {
+    background: var(--bg-surface);
+    border-top-color: var(--border-light);
+}
+
+[data-theme="dark"] .msg-rec-timer {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .msg-rec-cancel {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .msg-rec-send {
+    background: var(--brand-red);
+}
+
+/* ─── Admin Inbox ─── */
+[data-theme="dark"] .inbox-empty {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .inbox-empty-icon {
+    background: var(--bg-surface-alt);
+}
+
+[data-theme="dark"] .inbox-empty h3 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .inbox-conv-card {
+    border-bottom-color: var(--border-light);
+}
+
+[data-theme="dark"] .inbox-conv-card:active {
+    background: var(--bg-surface-hover);
+}
+
+[data-theme="dark"] .inbox-conv-time {
+    color: var(--text-faint);
+}
+
+[data-theme="dark"] .inbox-conv-preview {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .inbox-conv-dots {
+    color: var(--text-faint);
+}
+
+[data-theme="dark"] .inbox-conv-dots:active {
+    background: var(--bg-surface-alt);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .inbox-conv-card.is-pinned {
+    background: var(--brand-orange-light);
+    border-left-color: var(--brand-orange);
+}
+
+[data-theme="dark"] .inbox-conv-card.has-unread .inbox-conv-name {
+    color: var(--text-heading);
+}
+
+[data-theme="dark"] .inbox-conv-card.has-unread .inbox-conv-preview {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .inbox-dots-menu {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .inbox-dots-item {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .inbox-dots-item:active,
+[data-theme="dark"] .inbox-dots-item:hover {
+    background: var(--bg-surface-hover);
+}
+
+[data-theme="dark"] .inbox-dots-separator {
+    background: var(--border-light);
+}
+
+/* ─── Confirm Modal ─── */
+[data-theme="dark"] .msg-confirm-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .msg-confirm-modal {
+    background: var(--modal-content-bg);
+    border: 1px solid var(--border-light);
+}
+
+[data-theme="dark"] .msg-confirm-icon {
+    background: var(--brand-red-bg);
+    color: var(--brand-red);
+}
+
+[data-theme="dark"] .msg-confirm-title {
+    color: var(--text-heading);
+}
+
+[data-theme="dark"] .msg-confirm-text {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .msg-confirm-cancel {
+    background: var(--bg-surface-alt);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .msg-confirm-cancel:active {
+    background: var(--bg-surface-hover);
+}
+
+[data-theme="dark"] .msg-confirm-delete {
+    background: var(--brand-red);
+}
+
+[data-theme="dark"] .msg-confirm-delete:active {
+    background: var(--brand-red-hover-bg);
+}
+
+/* ─── Reply preview quote in bubble ─── */
+[data-theme="dark"] .msg-other .msg-reply-quote {
+    background: var(--bg-surface-alt) !important;
+}
+
+[data-theme="dark"] .msg-other .msg-reply-quote div:last-child {
+    color: var(--text-secondary) !important;
+}

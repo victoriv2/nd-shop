@@ -1,0 +1,100 @@
+<div class="admin-modal-overlay" id="maintenanceModal">
+    <div class="admin-modal-content">
+        <div class="admin-modal-header">
+            <h3>Maintenance</h3>
+            <button class="admin-modal-close" onclick="closeMaintenance()">✕</button>
+        </div>
+        <div class="admin-modal-body">
+
+            <div class="maint-card" style="border-color: #8b5cf6; background: #f0f4f8;">
+                <div class="maint-info">
+                    <h4 style="color: #8b5cf6;">Maintenance Mode</h4>
+                    <p>Temporarily disable shop access for users. Admins can still log in.</p>
+                </div>
+                <button class="maint-action-btn" id="btnToggleMaint" onclick="toggleMaintenanceMode()" style="background: #8b5cf6; color: white;">Enable Maintenance</button>
+            </div>
+
+
+
+            <div class="maint-card warning" style="margin-top: 24px;">
+                <div class="maint-info">
+                    <h4>Clear Processed Requests</h4>
+                    <p>Remove old Approved / Declined requests to free up space. Does not delete sales history.</p>
+                </div>
+                <button class="maint-action-btn" onclick="clearProcessedRequests()">Optimize Storage</button>
+            </div>
+
+            <!-- NEW: Reset (preserves user accounts) -->
+            <div class="maint-card" style="margin-top: 24px; border-color: #fdba74; background: #fff7ed;">
+                <div class="maint-info">
+                    <h4 style="color: #ea580c;">Reset</h4>
+                    <p>Wipes all business data — products, sales, restocks, expenses, debts, etc. — but <strong>keeps all user accounts and admin credentials</strong> intact.</p>
+                </div>
+                <!-- Messages toggle -->
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(0,0,0,0.03);border-radius:10px;">
+                    <div>
+                        <div style="font-weight:700;color:#1e293b;font-size:0.88rem;">Also wipe messages</div>
+                        <div style="font-size:0.75rem;color:#64748b;">Chat, community &amp; AI threads</div>
+                    </div>
+                    <label style="position:relative;display:inline-block;width:44px;height:24px;margin:0;">
+                        <input type="checkbox" id="maintResetWipeMessages" style="opacity:0;width:0;height:0;">
+                        <span id="maintResetSlider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;transition:.3s;border-radius:24px;" onclick="this.style.background=document.getElementById('maintResetWipeMessages').checked?'#cbd5e1':'#ea580c';"></span>
+                        <span id="maintResetKnob" style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;transition:.3s;border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,0.2);pointer-events:none;"></span>
+                    </label>
+                </div>
+                <button class="maint-action-btn" style="background:#ea580c;color:white;box-shadow:0 4px 10px rgba(234,88,12,0.25);" onclick="factoryResetSafe()">Reset App</button>
+            </div>
+
+            <!-- OLD: Wipe Everything (nukes everything including users) -->
+            <div class="maint-card danger" style="margin-top: 24px;">
+                <div class="maint-info" style="margin-bottom: 12px;">
+                    <h4 style="color: #ef4444;">Wipe Everything</h4>
+                    <p>WARNING: This permanently deletes ALL app data, users, products, and sales history. Backup your data first!</p>
+                </div>
+                <button class="maint-action-btn solid-danger" onclick="factoryReset()">Wipe Everything</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Reset Confirmation Modal -->
+<div class="admin-modal-overlay" id="maintResetModal" style="display:none;z-index:100002;align-items:center;justify-content:center;">
+    <div class="admin-modal-content" style="max-width:380px;padding:0;">
+        <div class="admin-modal-header" style="padding:20px;border-bottom:1px solid #fed7aa;background:#fff7ed;">
+            <h3 style="color:#ea580c;">Confirm Reset</h3>
+            <button class="admin-modal-close" onclick="closeMaintResetModal()">✕</button>
+        </div>
+        <div class="admin-modal-body" style="padding:24px;">
+            <!-- Step 1: PIN -->
+            <div id="maintResetStep1">
+                <p style="font-size:0.9rem;color:#64748b;margin-bottom:20px;">Enter your Master PIN to authorise.</p>
+                <div style="display:flex;justify-content:center;gap:10px;margin-bottom:16px;">
+                    <input type="tel" id="mrPin1" maxlength="1" inputmode="numeric" oninput="moveMrPin(this,0)" style="width:45px;height:50px;text-align:center;font-size:1.2rem;font-weight:bold;border:1px solid #e2e8f0;border-radius:8px;outline:none;-webkit-text-security:disc;">
+                    <input type="tel" id="mrPin2" maxlength="1" inputmode="numeric" oninput="moveMrPin(this,1)" style="width:45px;height:50px;text-align:center;font-size:1.2rem;font-weight:bold;border:1px solid #e2e8f0;border-radius:8px;outline:none;-webkit-text-security:disc;">
+                    <input type="tel" id="mrPin3" maxlength="1" inputmode="numeric" oninput="moveMrPin(this,2)" style="width:45px;height:50px;text-align:center;font-size:1.2rem;font-weight:bold;border:1px solid #e2e8f0;border-radius:8px;outline:none;-webkit-text-security:disc;">
+                    <input type="tel" id="mrPin4" maxlength="1" inputmode="numeric" oninput="moveMrPin(this,3)" style="width:45px;height:50px;text-align:center;font-size:1.2rem;font-weight:bold;border:1px solid #e2e8f0;border-radius:8px;outline:none;-webkit-text-security:disc;">
+                </div>
+                <p id="mrPinError" style="color:#dc2626;font-size:0.85rem;text-align:center;display:none;margin-bottom:10px;">Incorrect PIN.</p>
+                <button onclick="verifyMrPin()" style="width:100%;padding:14px;background:#ea580c;color:white;border:none;border-radius:12px;font-weight:800;font-size:1rem;cursor:pointer;">Verify PIN</button>
+            </div>
+            <!-- Step 2: Type RESET -->
+            <div id="maintResetStep2" style="display:none;">
+                <div style="text-align:center;margin-bottom:16px;">
+                    <div style="width:52px;height:52px;background:#fff7ed;border:2px solid #fdba74;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ea580c" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <p style="font-size:0.9rem;color:#64748b;margin-bottom:4px;">User accounts will be <strong style="color:#16a34a;">preserved</strong>.</p>
+                    <p style="font-size:0.85rem;color:#94a3b8;">Type <strong>RESET</strong> to confirm.</p>
+                </div>
+                <input type="text" id="mrConfirmInput" placeholder="Type RESET here" autocomplete="off" oninput="this.value=this.value.toUpperCase();" style="width:100%;padding:12px;text-align:center;font-weight:700;letter-spacing:2px;border:1px solid #e2e8f0;border-radius:10px;font-size:1rem;margin-bottom:12px;box-sizing:border-box;outline:none;">
+                <p id="mrConfirmError" style="color:#dc2626;font-size:0.85rem;text-align:center;display:none;margin-bottom:10px;">Please type RESET exactly.</p>
+                <button onclick="executeMaintReset()" style="width:100%;padding:14px;background:#ea580c;color:white;border:none;border-radius:12px;font-weight:800;font-size:1rem;cursor:pointer;">Reset App</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+

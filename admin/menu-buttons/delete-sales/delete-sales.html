@@ -1,0 +1,123 @@
+<div id="deleteSalesPage" class="delete-sales-page">
+    
+    <!-- Passcode Gateway Overlay -->
+    <div id="dsPasscodeGateway" class="ds-passcode-gateway" style="display: flex;">
+        <div class="ds-passcode-container">
+            <h2 class="ds-pass-title">Admin Auth</h2>
+            <p class="ds-pass-subtitle">Enter 4-digit passcode to access sales deletion.</p>
+            
+            <div class="ds-pass-inputs" id="dsPassInputs">
+                <input type="tel" class="ds-pass-char" maxlength="1" data-index="0" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-form-type="other" style="-webkit-text-security:disc;" autofocus>
+                <input type="tel" class="ds-pass-char" maxlength="1" data-index="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-form-type="other" style="-webkit-text-security:disc;">
+                <input type="tel" class="ds-pass-char" maxlength="1" data-index="2" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-form-type="other" style="-webkit-text-security:disc;">
+                <input type="tel" class="ds-pass-char" maxlength="1" data-index="3" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-form-type="other" style="-webkit-text-security:disc;">
+            </div>
+            
+            <div id="dsPassError" class="ds-pass-error"></div>
+            
+            <button id="dsPassCancel" style="background: transparent; color: #94a3b8; border: none; font-weight: 700; cursor: pointer; padding: 10px;">Cancel Return to Menu</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="ds-header">
+        <button id="closeDeleteSalesBtn" class="ds-back-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        </button>
+        <h2 class="ds-title">Delete Sales</h2>
+        <div style="width: 32px;"></div> <!-- Spacer -->
+    </div>
+
+    <!-- Day Navigation & Metrics -->
+    <div class="ds-metrics-section">
+        <!-- Monthly Summary -->
+        <div class="ds-month-summary">
+            <div class="ds-month-label">Monthly Total Sales:</div>
+            <div class="ds-month-value" id="dsMonthTotalBalance">₦0.00</div>
+            <div class="ds-month-label" style="margin-left: 10px;">Monthly Payout:</div>
+            <div class="ds-month-value ds-month-payout" id="dsMonthTotalPayout">₦0.00</div>
+        </div>
+
+        <div class="ds-day-nav">
+            <button id="dsPrevDayBtn" class="ds-nav-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="ds-current-date-display" id="dsDateDisplay" style="cursor: pointer;" title="Select specific day">
+                Today
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px;"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <button id="dsNextDayBtn" class="ds-nav-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        </div>
+
+        <div class="ds-balance-cards">
+            <div class="ds-metric-card" style="border-left: 4px solid #8b5cf6; background: #f0f4f8;">
+                <div class="ds-metric-label">Daily Balance</div>
+                <div class="ds-metric-value" id="dsTotalBalance" style="color: #8b5cf6;">₦0.00</div>
+            </div>
+            <div class="ds-metric-card" style="border-left: 4px solid #10b981; background: #ecfdf5;">
+                <div class="ds-metric-label">Daily Payout</div>
+                <div class="ds-metric-value" id="dsTotalPayout" style="color: #10b981;">₦0.00</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Sort Bar -->
+    <div class="ds-filter-bar">
+        <div class="ds-search-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="dsSearchInput" placeholder="Search item...">
+        </div>
+        
+        <div class="ds-sort-container" id="dsSortContainer">
+            <div class="ds-sort-toggle" id="dsSortToggle">
+                <span class="ds-sort-text" id="dsSortText">Sort</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M6 9l6 6 6-6" /></svg>
+            </div>
+            <div class="ds-sort-menu" id="dsSortMenu">
+                <div class="ds-sort-option active" data-val="newest">Newest to Oldest</div>
+                <div class="ds-sort-option" data-val="oldest">Oldest to Newest</div>
+                <div class="ds-sort-option" data-val="high">Highest to Lowest</div>
+                <div class="ds-sort-option" data-val="low">Lowest to Highest</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ds-list-container" id="dsItemsList">
+        <!-- Rendered by JS -->
+    </div>
+
+    <!-- Custom Delete Confirmation Modal -->
+    <div id="dsConfirmModal" class="ds-confirm-overlay" style="display: none;">
+        <div class="ds-confirm-box centered-modal">
+            <div class="ds-confirm-icon-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+            </div>
+            <h3 class="ds-confirm-title">Delete Sale Record?</h3>
+            <p class="ds-confirm-msg" id="dsConfirmMsgText">Are you sure you want to permanently delete this sale?</p>
+            <div class="ds-confirm-actions">
+                <button id="dsCancelDeleteBtn" class="ds-confirm-btn ds-btn-cancel">Cancel</button>
+                <button id="dsExecuteDeleteBtn" class="ds-confirm-btn ds-btn-danger">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Day Picker Modal -->
+    <div id="dsDayPickerModal" class="ds-confirm-overlay" style="display: none; padding: 20px;">
+        <div class="ds-confirm-box centered-modal" style="width: 100%; max-width: 380px; padding: 20px;">
+            <h3 class="ds-confirm-title" style="margin-bottom: 20px;">Select Day</h3>
+            <div id="dsDayPickerGrid" class="ds-day-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-height: 300px; overflow-y: auto;">
+                <!-- Days populated softly here -->
+            </div>
+            <div class="ds-confirm-actions" style="margin-top: 20px;">
+                <button id="dsCloseDayPickerBtn" class="ds-confirm-btn ds-btn-cancel" style="padding: 12px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+

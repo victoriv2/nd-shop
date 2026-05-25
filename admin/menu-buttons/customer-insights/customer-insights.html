@@ -1,0 +1,86 @@
+<div class="admin-modal-overlay" id="customerInsightsModal">
+    <div class="admin-modal-content full-page">
+        <div class="admin-modal-header">
+            <h3>Customer Insights</h3>
+            <button class="admin-modal-close" onclick="closeCustomerInsights()">✕</button>
+        </div>
+        <div class="admin-modal-body" id="ciBody">
+            <div class="ci-search" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="ciSearchInput" placeholder="Search by name, ID, email, phone..."
+                    style="flex: 1; min-width: 0;">
+                <div style="position: relative;">
+                    <button id="ciSortToggleBtn"
+                        onclick="const dd = document.getElementById('ciSortDropdown'); dd.style.display = (dd.style.display === 'none' ? 'block' : 'none'); event.stopPropagation();"
+                        style="padding: 14px 18px; border-radius: 16px; border: 1px solid #e2e8f0; background: white; font-weight: 600; font-size: 0.95rem; color: #444; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 8px; transition: 0.2s; height: 100%;"
+                        onmouseover="this.style.borderColor='#8b5cf6'" onmouseout="this.style.borderColor='#e2e8f0'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="4" y1="6" x2="20" y2="6"></line>
+                            <line x1="4" y1="12" x2="16" y2="12"></line>
+                            <line x1="4" y1="18" x2="10" y2="18"></line>
+                        </svg>
+                        Sort
+                    </button>
+                    <div id="ciSortDropdown"
+                        style="display: none; position: absolute; right: 0; top: 110%; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 220px; z-index: 100; overflow: hidden; border: 1px solid #f1f5f9;">
+                        <div class="ci-sort-option active" data-sort="recent"
+                            onclick="setCiSort('recent', this)"
+                            style="padding: 14px 18px; font-size: 0.9rem; cursor: pointer; border-bottom: 1px solid #f8fafc; font-weight: 700; color: #1e293b;">
+                            Recently Active</div>
+                        <div class="ci-sort-option" data-sort="most-active"
+                            onclick="setCiSort('most-active', this)"
+                            style="padding: 14px 18px; font-size: 0.9rem; cursor: pointer; border-bottom: 1px solid #f8fafc; color: #64748b;">
+                            Most Active First</div>
+                        <div class="ci-sort-option" data-sort="least-active"
+                            onclick="setCiSort('least-active', this)"
+                            style="padding: 14px 18px; font-size: 0.9rem; cursor: pointer; border-bottom: 1px solid #f8fafc; color: #64748b;">
+                            Least Active First</div>
+                        <div class="ci-sort-option" data-sort="az"
+                            onclick="setCiSort('az', this)"
+                            style="padding: 14px 18px; font-size: 0.9rem; cursor: pointer; border-bottom: 1px solid #f8fafc; color: #64748b;">
+                            A - Z</div>
+                        <div class="ci-sort-option" data-sort="za"
+                            onclick="setCiSort('za', this)"
+                            style="padding: 14px 18px; font-size: 0.9rem; cursor: pointer; color: #64748b;">
+                            Z - A</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Stats Cards -->
+            <div class="ci-summary-cards" id="ciSummaryCards">
+                <div class="ci-stat-card ci-active-card">
+                    <span class="ci-stat-number" id="ciActiveCount">0</span>
+                    <span class="ci-stat-label">Active</span>
+                </div>
+                <div class="ci-stat-card ci-inactive-card">
+                    <span class="ci-stat-number" id="ciInactiveCount">0</span>
+                    <span class="ci-stat-label">Inactive</span>
+                </div>
+                <div class="ci-stat-card ci-total-card">
+                    <span class="ci-stat-number" id="ciTotalCount">0</span>
+                    <span class="ci-stat-label">Total</span>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="ci-filter-tabs" id="ciFilterTabs">
+                <button class="ci-tab active" onclick="setCiFilter('all', this)">All</button>
+                <button class="ci-tab" onclick="setCiFilter('active', this)">Active</button>
+                <button class="ci-tab" onclick="setCiFilter('inactive', this)">Inactive</button>
+            </div>
+
+            <!-- Customer List -->
+            <div id="ciCustomerList" class="ci-customer-list">
+                <!-- Cards are injected here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Extra container for nested user info modal -->
+<div id="nested-modal-container"></div>
+
+
+
+

@@ -1,0 +1,33 @@
+#YearlyOverviewPage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    background: #f8fafc;
+    flex-direction: column;
+    animation: enSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: none;
+}
+
+
+/* Locked icon pulse animation */
+#yoLockedView {
+    animation: yoFadeIn 0.4s ease;
+}
+
+@keyframes yoFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Stats reveal animation */
+#yoStatsView {
+    animation: yoFadeIn 0.4s ease;
+}
+
+/* Center the title absolutely in the header */
+#YearlyOverviewPage .en-header h2 {
+    flex: none;
+}

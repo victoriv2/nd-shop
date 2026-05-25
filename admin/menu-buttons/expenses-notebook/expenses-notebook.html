@@ -1,0 +1,115 @@
+<div class="db-page" id="expensesNotebookPage">
+    <div class="db-header">
+        <div class="db-header-left">
+             <button class="db-back-btn" onclick="closeExpensesNotebook()">
+                 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>
+             </button>
+             <h2>Expenses Notebook</h2>
+        </div>
+    </div>
+    
+    <div class="en-content">
+         <div class="en-controls-section">
+             <div class="en-search-wrap">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="m21 21-4.34-4.34" />
+                      <circle cx="11" cy="11" r="8" />
+                  </svg>
+                  <input type="text" id="enSearchInput" placeholder="Search expenses everywhere..." oninput="renderExpenses()">
+             </div>
+             
+             <div class="sort-container" id="enSortContainer">
+                 <div class="sort-btn" id="enSortToggle" onclick="toggleEnSortDropdown(event)">
+                     <span class="sort-text" id="enSortText">Newest to Oldest</span>
+                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px; pointer-events: none;">
+                         <path d="M6 9l6 6 6-6" />
+                     </svg>
+                 </div>
+                 <div class="sort-dropdown" id="enSortDropdown">
+                     <div class="sort-option active" onclick="selectEnSort('newest', this)">Newest to Oldest<span class="sort-check"></span></div>
+                     <div class="sort-option" onclick="selectEnSort('oldest', this)">Oldest to Newest<span class="sort-check"></span></div>
+                     <div class="sort-option" onclick="selectEnSort('highest', this)">Highest to Lowest<span class="sort-check"></span></div>
+                     <div class="sort-option" onclick="selectEnSort('lowest', this)">Lowest to Highest<span class="sort-check"></span></div>
+                 </div>
+             </div>
+         </div>
+
+         <div class="en-date-triggers-wrapper" style="padding: 15px 20px 0 20px;">
+             <div class="en-date-triggers" style="display:flex; gap:10px;">
+                 <div class="en-trigger-btn" onclick="openEnDateModal('month')">
+                     <span id="enSelMonth" style="color: #8b5cf6; font-weight:700;">March</span>
+                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                 </div>
+                 <div class="en-trigger-btn" onclick="openEnDateModal('year')">
+                     <span id="enSelYear" style="color: #8b5cf6; font-weight:700;">2026</span>
+                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                 </div>
+             </div>
+         </div>
+
+         <div class="en-summary-card">
+              <div class="en-summary-item">
+                  <span>Total Revenue</span>
+                  <strong id="enTotalRevenue">₦0</strong>
+              </div>
+              <div class="en-summary-item en-profit" id="enNetProfitItem">
+                  <span>Gross Profit</span>
+                  <strong id="enNetProfit">₦0</strong>
+              </div>
+              <div class="en-summary-item">
+                  <span>Total Expenses</span>
+                  <strong id="enTotalExpenses">₦0</strong>
+              </div>
+         </div>
+
+         <div id="en-sales-table-wrapper" class="en-table-wrapper-clean">
+             <div class="en-table-header-container">
+                  <table class="en-data-table en-header-table">
+                      <thead>
+                          <tr>
+                              <th>S/N</th>
+                              <th>Date & Time</th>
+                              <th>Expense Title</th>
+                              <th>Amount (₦)</th>
+                              <th>Action</th>
+                          </tr>
+                      </thead>
+                  </table>
+             </div>
+             <div class="en-table-body-container" id="enTableBodyContainer">
+                  <table class="en-data-table en-body-table">
+                      <tbody id="enTableBody">
+                          <!-- Rendered via JS -->
+                      </tbody>
+                  </table>
+             </div>
+         </div>
+    </div>
+
+    <button class="wide-add-btn" onclick="openAddExpenseModal()" style="margin-top: auto; margin-bottom: 20px; align-self: center; flex-shrink: 0;">Add New Expense</button>
+</div>
+
+<!-- Inner Add Expense Modal -->
+<div class="admin-modal-overlay" id="enAddExpenseModal">
+    <div class="admin-modal-content" style="max-width: 400px; height: auto;">
+        <div class="admin-modal-header">
+            <h3>Add New Expense</h3>
+            <button class="admin-modal-close" onclick="closeAddExpenseModal()">&times;</button>
+        </div>
+        <div class="admin-modal-body">
+            <div class="en-form-group">
+                <label>Expense Title / Description</label>
+                <input type="text" id="enNewTitle" placeholder="e.g. Fuel, Transport, Packaging">
+            </div>
+            <div class="en-form-group">
+                <label>Amount (₦)</label>
+                <input type="number" id="enNewAmount" placeholder="e.g. 15000">
+            </div>
+            <button class="admin-modern-btn primary" style="margin-top: 15px; background: #8b5cf6; box-shadow: 0 4px 15px rgba(27, 38, 59, 0.2);" onclick="saveNewExpense()">Save Expense</button>
+        </div>
+    </div>
+</div>
+
+
+
+

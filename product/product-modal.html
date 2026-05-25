@@ -1,0 +1,94 @@
+<div id="productModal" class="product-modal-overlay">
+    <div class="product-modal-content">
+        <div class="pm-header">
+            <h3>Product Details</h3>
+            <span class="pm-close" id="pmClose">&times;</span>
+        </div>
+        <div class="pm-body">
+            <!-- Standard View -->
+            <div class="pm-hero-section" id="pmStandardHero">
+                <div class="pm-product-name" id="pmProductNameValue">Rice</div>
+                <div class="pm-product-price-row">
+                    <span class="pm-price" id="pmProductPriceValue">₦400</span>
+                    <span class="pm-unit" id="pmProductUnitValue">per cup</span>
+                </div>
+            </div>
+            
+            <!-- User Flexible Price Toggle -->
+            <div id="pmFlexPriceToggleWrapper" style="display:none; justify-content:space-between; align-items:center; padding:12px 16px; margin: 0 16px 12px 16px; background:#fdf4ff; border:1px solid #f0abfc; border-radius:12px;">
+                <div>
+                    <span style="display:block; margin-bottom:2px; color:#a21caf; font-weight:800; font-size:0.9rem; line-height:1.2;">Flexible Price Mode</span>
+                    <span style="display:block; font-size:0.75rem; color:#d946ef; line-height:1.2;">Allows you to propose your own price</span>
+                </div>
+                <div style="position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0; cursor:pointer;" onclick="var cb=document.getElementById('pmFlexPriceToggle'); cb.checked=!cb.checked; cb.dispatchEvent(new Event('change'));">
+                    <input type="checkbox" id="pmFlexPriceToggle" style="opacity:0; width:0; height:0; position:absolute;">
+                    <span id="pmFlexPriceSlider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#cbd5e1; transition:background-color .4s; border-radius:34px;">
+                        <span id="pmFlexPriceKnob" style="position:absolute; height:16px; width:16px; left:4px; top:50%; transform:translateY(-50%); background-color:white; transition:left .4s; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Variants Selection -->
+            <div id="pmVariantsSection" style="display:none; padding: 0 16px 12px 16px;">
+                <span class="pm-label" style="display:block; margin-bottom: 8px; font-weight: 700; color: #64748b; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Select Option</span>
+                <div id="pmVariantsContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Radio options injected dynamically -->
+                </div>
+            </div>
+
+
+
+            <!-- Quantity Selector -->
+            <div class="pm-quantity-section">
+                <span class="pm-quantity-label">Quantity</span>
+                <div class="pm-quantity-controls">
+                    <button class="pm-qty-btn" id="pmQtyMinus">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                    <span class="pm-qty-value" id="pmQtyValue">1</span>
+                    <button class="pm-qty-btn" id="pmQtyPlus">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="pm-details-list">
+                <div class="pm-detail-item">
+                    <span class="pm-label">Availability</span>
+                    <span class="pm-value pm-available-text">In Stock</span>
+                </div>
+                <div class="pm-detail-item">
+                    <span class="pm-label">Total Estimate</span>
+                    <span class="pm-value" id="pmTotalPriceDetail">₦400</span>
+                    <span class="pm-value" id="pmFlexPriceInputWrapper" style="display:none; align-items:center; gap:4px;">
+                        <span style="font-weight:800; color:#334155;">₦</span>
+                        <input type="number" id="pmFlexPriceInput" min="0" placeholder="0"
+                            style="width:90px; border:none; border-bottom:2px solid #8b5cf6; outline:none; font-size:1rem; font-weight:800; color:#334155; background:transparent; padding:2px 4px; text-align:right;">
+                    </span>
+                </div>
+
+                <!-- Notice the highlighted styling for the payout return! -->
+                <div class="pm-detail-item pm-highlight-item" id="pmPayoutDetailContainer">
+                    <span class="pm-label">Expected Reward</span>
+                    <span class="pm-value pm-green-text" id="pmPayoutDetail">Reward (+₦8)</span>
+                </div>
+            </div>
+        </div>
+        <div class="pm-footer">
+            <button class="pm-action-btn" id="pmReportBtn">Report Issue</button>
+            <button class="pm-action-btn pm-btn-primary" id="pmShareBtn">Add to Cart</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+

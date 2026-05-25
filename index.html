@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Redirect to login immediately if not authenticated to prevent page flash
+        if (!localStorage.getItem('nd_logged_in_user')) {
+            window.location.href = 'auth/login.html';
+        }
+        
+        // Maintenance Mode Guard
+        const isMaint = localStorage.getItem('nd_maintenance_mode') === 'true';
+        if (isMaint) {
+            const user = JSON.parse(localStorage.getItem('nd_logged_in_user') || '{}');
+            // If they are not an admin, redirect them to a simple maintenance page (or show an alert/body replace)
+            if (user.id !== '00000ND' && user.id !== 'ADMIN') { // assuming 00000ND or ADMIN is admin
+                document.documentElement.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; text-align:center; padding:20px;"><div><h1 style="color:#8b5cf6;">Shop under maintenance</h1><p>We are currently updating our shop. Please check back later.</p><button onclick="localStorage.removeItem(\'nd_logged_in_user\'); window.location.reload();" style="margin-top:20px; padding:10px 20px; border:none; background:#8b5cf6; color:white; border-radius:8px; cursor:pointer;">Log Out</button></div></div>';
+                // Stop further execution
+                throw new Error("Maintenance mode active");
+            }
+        }
+    </script>
+    <title>nd shop</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="payout/payout.css">
+    <link rel="stylesheet" href="modal.css">
+    <link rel="stylesheet" href="payout/card-modal.css">
+    <link rel="stylesheet" href="styles.css?v=1.1">
+    <link rel="stylesheet" href="payout/payout.css?v=1.1">
+    <link rel="stylesheet" href="modal.css?v=1.1">
+    <link rel="stylesheet" href="payout/card-modal.css?v=1.1">
+    <link rel="stylesheet" href="payout-desktop/styles-desktop.css?v=1.1">
+    <link rel="stylesheet" href="product/product.css?v=1.1">
+    <link rel="stylesheet" href="product-desktop/styles-desktop.css?v=1.1">
+    <link rel="stylesheet" href="product/product-modal.css?v=1.1">
+    <link rel="stylesheet" href="product/filter-modal.css?v=1.1">
+    <link rel="stylesheet" href="product/cart.css?v=1.1">
+    <link rel="stylesheet" href="menu/menu.css?v=1.1">
+    <link rel="stylesheet" href="menu-desktop/styles-desktop.css?v=1.1">
+
+    <!-- Menu Buttons Modals CSS -->
+    <link rel="stylesheet" href="menu-buttons/menu-modal.css?v=1.1">
+    <link rel="stylesheet" href="menu-buttons/edit-profile/edit-profile.css?v=1.1">
+    <link rel="stylesheet" href="menu-buttons/request-history/request-history.css?v=1.1">
+    <link rel="stylesheet" href="menu-buttons/pay-debt/pay-debt.css?v=1.1">
+    <link rel="stylesheet" href="menu-buttons/contact-owner/contact-owner.css?v=1.1">
+    <link rel="stylesheet" href="menu-buttons/user-ai/user-ai.css?v=2.0">
+    <link rel="stylesheet" href="menu-buttons/security/security.css?v=1.1">
+    <link rel="stylesheet" href="menu-buttons/notifications/notifications.css?v=1.1">
+    <link rel="stylesheet" href="menu-buttons/appearance/appearance.css?v=1.1">
+    <link rel="stylesheet" href="menu-buttons/about/about.css?v=1.1">
+    <link rel="stylesheet" href="menu-buttons/logout/logout.css?v=1.1">
+
+    <!-- Dark Mode Theme System -->
+    <link rel="stylesheet" href="dark-mode/core/variables.css">
+    <link rel="stylesheet" href="dark-mode/core/base.css">
+    <link rel="stylesheet" href="dark-mode/components/payout.css">
+    <link rel="stylesheet" href="dark-mode/components/product.css">
+    <link rel="stylesheet" href="dark-mode/components/menu.css">
+    <link rel="stylesheet" href="dark-mode/components/messaging.css">
+    <link rel="stylesheet" href="dark-mode/components/community.css">
+
+    <script src="custom-alert.js"></script>
+    <script src="modal-persistence.js"></script>
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+</head>
+
+<body>
+    <header class="top-bar">
+        <div class="container">
+            <div class="logo">
+                <span id="shopLogoText" class="shop-logo-text">Nd shop</span>
+            </div>
+            <nav class="top-nav">
+                <button class="community-btn" id="btnCommunity">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-megaphone-icon lucide-megaphone">
+                        <path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" />
+                        <path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" />
+                        <path d="M8 6v8" />
+                    </svg>
+                    <span class="community-text">Community</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="slider-viewport">
+        <div class="slider-track" id="sliderTrack">
+            <div id="payout-container"></div>
+            <div id="product-container" style="display:none;"></div>
+            <div id="menu-container" style="display:none;"></div>
+        </div>
+    </div>
+    <div id="modal-container"></div>
+
+    <!-- Payout Filter Modal (Global Level to Overlay All) -->
+    <div id="payoutFilterModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="payoutFilterModalTitle">Select</h3>
+                <span class="close-modal" id="closePayoutFilterModal">&times;</span>
+            </div>
+            <div class="modal-body" id="payoutFilterModalList">
+                <!-- List items dynamically injected by payout.js -->
+            </div>
+        </div>
+    </div>
+
+    <main class="content">
+        <div class="orange-bar">
+            <div class="tab-indicator" id="tabIndicator"></div>
+            <span class="bar-item item-reward active" data-tab="payout">Reward</span>
+            <div class="divider"></div>
+            <span class="bar-item" data-tab="product">Product</span>
+            <div class="divider"></div>
+            <span class="bar-item item-menu" data-tab="menu">Menu</span>
+        </div>
+    </main>
+    <script src="dark-mode/theme-manager.js"></script>
+    <script src="real-time-sync.js"></script>
+    <script src="script.js"></script>
+    <script src="global-fixes.js"></script>
+    <script src="last-seen-tracker.js"></script>
+    <script src="payout/payout.js"></script>
+    <script src="modal.js"></script>
+    <script src="payout/card-modal.js"></script>
+    <script src="product/product.js"></script>
+    <script src="product/product-modal.js"></script>
+    <script src="product/filter-modal.js"></script>
+    <script src="product/add-product-modal.js"></script>
+    <script src="product/cart.js"></script>
+    <script src="menu/menu.js"></script>
+
+    <!-- Menu Buttons Modals JS -->
+    <script src="menu-buttons/edit-profile/naija-data.js"></script>
+    <script src="menu-buttons/edit-profile/edit-profile.js"></script>
+    <script src="menu-buttons/request-history/request-history.js"></script>
+    <script src="menu-buttons/pay-debt/pay-debt.js"></script>
+    <script src="menu-buttons/contact-owner/contact-owner.js"></script>
+    <script src="menu-buttons/user-ai/user-ai.js"></script>
+    <script src="menu-buttons/security/security.js"></script>
+    <script src="menu-buttons/appearance/appearance.js"></script>
+    <script src="menu-buttons/about/about.js"></script>
+    <script src="menu-buttons/logout/logout.js"></script>
+
+    <!-- Messaging System -->
+    <script src="messaging/messaging.js"></script>
+
+    <!-- Community System -->
+    <script src="community/community.js"></script>
+
+    <!-- Real-Time Sync System -->
+    <script src="real-time-listeners.js"></script>
+
+    <!-- Real-Time Sync Testing Utility (Optional - for development) -->
+    <script src="real-time-sync-tester.js"></script>
+    <!-- Cart FAB — lives in index.html so script.js always controls its visibility -->
+    <div class="product-cart-btn" id="fabCartBtn" style="display:none;" onclick="if(typeof renderCartItems === 'function') { renderCartItems(); document.getElementById('cartModalContainer').classList.add('show'); document.getElementById('cartOverlay').classList.add('show'); document.body.classList.add('modal-open'); }">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <span class="product-cart-text">Cart</span>
+        <span id="fabCartBadge" class="fab-cart-badge">0</span>
+    </div>
+
+    <style>
+        .product-cart-btn {
+            position: fixed;
+            bottom: 85px;
+            right: 5%;
+            width: auto;
+            min-width: 50px;
+            height: 50px;
+            background-color: #8b5cf6;
+            color: white;
+            padding: 0 15px;
+            border-radius: 12px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(27, 38, 59, 0.4);
+            z-index: 600;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .product-cart-text {
+            display: inline-block;
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-left: 8px;
+            white-space: nowrap;
+            transition: width 0.5s ease, opacity 0.3s ease, margin 0.3s ease;
+        }
+        .product-cart-btn.minimized {
+            width: 50px;
+            padding: 0;
+        }
+        .product-cart-btn.minimized .product-cart-text {
+            width: 0;
+            opacity: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        .product-cart-btn:active { transform: scale(0.95); }
+        .product-cart-btn:hover { background-color: #8b5cf6; }
+        .fab-cart-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ef4444;
+            color: white;
+            border-radius: 12px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 800;
+            border: 2px solid white;
+            box-shadow: 0 0 8px rgba(239,68,68,0.4);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Branding Styles */
+        .shop-logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #8b5cf6;
+            text-transform: capitalize;
+            letter-spacing: -0.5px;
+            background: #8b5cf6;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .shop-logo-text:hover {
+            transform: scale(1.05);
+        }
+        [data-theme="dark"] .shop-logo-text {
+            background: linear-gradient(135deg, #E0E1DD 0%, #778DA9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+
+</body>
+
+</html>
+
+
+
+

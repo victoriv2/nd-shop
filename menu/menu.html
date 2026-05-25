@@ -1,0 +1,74 @@
+<div class="menu-page-wrapper">
+    <div class="menu-profile-header">
+        <div class="profile-avatar"></div>
+        <div class="profile-info">
+            <h2 class="profile-name"></h2>
+            <p class="profile-id"></p>
+        </div>
+    </div>
+
+    <div class="menu-items-container">
+        <!-- Edit Profile -->
+        <button class="menu-action-btn outline-btn" id="editProfileBtn">
+            <span class="btn-text">Edit Profile</span>
+            <span class="chevron">&rsaquo;</span>
+        </button>
+
+        <!-- Request History -->
+        <button class="menu-action-btn outline-btn" id="requestHistoryBtn">
+            <span class="btn-text">Request History</span>
+            <span class="chevron">&rsaquo;</span>
+        </button>
+
+        <!-- Shopping Cart -->
+        <button class="menu-action-btn outline-btn" id="menuCartBtn" onclick="if(typeof renderCartItems === 'function') { renderCartItems(); document.getElementById('cartModalContainer').classList.add('show'); document.getElementById('cartOverlay').classList.add('show'); document.body.classList.add('modal-open'); }">
+            <span class="btn-text" style="display: flex; align-items: center; gap: 8px;">
+                Shopping Cart 
+                <span id="menuCartBadge" style="background: #ef4444; color: white; border-radius: 12px; padding: 2px 6px; font-size: 0.7rem; font-weight: bold; opacity: 0;">0</span>
+            </span>
+            <span class="chevron">&rsaquo;</span>
+        </button>
+
+        <!-- Pay Your Debt -->
+        <button class="menu-action-btn outline-btn" id="payDebtBtn">
+            <span class="btn-text">Pay Your Debt</span>
+            <span class="chevron">&rsaquo;</span>
+        </button>
+
+        <!-- Contact Shop Owner -->
+        <button class="menu-action-btn outline-btn" id="contactOwnerBtn">
+            <span class="btn-text">Contact Shop Owner</span>
+            <span class="chevron">&rsaquo;</span>
+        </button>
+
+        <!-- AI Mode -->
+        <button class="menu-action-btn outline-btn" id="userAiModeBtn">
+            <span class="btn-text">AI Mode</span>
+            <span class="chevron">&rsaquo;</span>
+        </button>
+
+        <!-- Purchase with Reward -->
+        <button class="menu-action-btn outline-btn" id="menuPurchaseWithRewardBtn">
+            <span class="btn-text">Purchase with Reward</span>
+            <span class="chevron">&rsaquo;</span>
+        </button>
+
+        <!-- Security -->
+        <button class="menu-action-btn outline-btn" id="securityBtn">
+            <span class="btn-text">Security</span>
+            <span class="chevron">&rsaquo;</span>
+        </button>
+
+        <!-- About -->
+        <button class="menu-action-btn outline-btn" id="aboutBtn">
+            <span class="btn-text">About</span>
+            <span class="chevron">&rsaquo;</span>
+        </button>
+
+        <!-- Log Out -->
+        <button class="menu-action-btn outline-btn logout-btn" id="logoutBtn">
+            <span class="btn-text">Log Out</span>
+            <span class="chevron">&rsaquo;</span>
+        </button>
+    </div>
+</div>

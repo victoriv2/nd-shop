@@ -1,0 +1,150 @@
+<div class="debtor-book-page" id="debtorBookPage">
+    <div class="db-header">
+        <button class="db-back-btn" onclick="closeDebtorBook()">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <h2>Debtor Book</h2>
+        <div style="display:flex; gap:10px;">
+            <button onclick="openDbAccountSettings()" style="background:none; border:none; color:#8b5cf6; cursor: pointer; padding:0; display:flex; align-items:center;" title="Bank Account Details">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+            <button class="use-ai-btn" onclick="window._aiPageContext='debtor_book'; openAiChat()">Use AI</button>
+        </div>
+    </div>
+    
+    <div class="db-search-wrapper" style="display: flex; gap: 10px; align-items: center;">
+        <input type="text" id="dbSearchInput" class="db-search-input" placeholder="Search notes..." oninput="renderDebtorNotes()" style="flex: 1;">
+        <div style="position: relative;">
+            <button onclick="const dd = document.getElementById('dbSortDropdown'); dd.style.display = dd.style.display === 'none' ? 'block' : 'none'; event.stopPropagation();" style="padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; color: #475569;">
+                Sort
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div id="dbSortDropdown" style="display: none; position: absolute; right: 0; top: 110%; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 180px; z-index: 100; overflow: hidden; border: 1px solid #eee;">
+                <div class="db-sort-option active" data-sort="newest" onclick="setDbSort('newest', this)">Newest to Oldest</div>
+                <div class="db-sort-option" data-sort="oldest" onclick="setDbSort('oldest', this)">Oldest to Newest</div>
+                <div class="db-sort-option" data-sort="az" onclick="setDbSort('az', this)">A - Z</div>
+                <div class="db-sort-option" data-sort="za" onclick="setDbSort('za', this)">Z - A</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="db-notes-list" id="dbNotesList">
+        <!-- Notes rendered here -->
+    </div>
+
+    <button class="db-fab" onclick="openNoteEditor()">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    </button>
+</div>
+
+<!-- Note Editor Page -->
+<div class="db-editor-page" id="dbEditorPage">
+    <div class="db-header" style="flex-wrap: nowrap; overflow-x: auto; padding-right: 10px; gap: 4px;">
+        <button class="db-back-btn" onclick="closeNoteEditor()" style="flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <input type="text" id="dbNoteTitle" class="db-note-title-input" placeholder="Note Title..." style="flex: 1; min-width: 60px; margin: 0 4px; padding: 6px;">
+        <div class="db-header-actions" style="display: flex; gap: 2px; align-items: center; flex-shrink: 0;">
+            <button class="db-tool-btn" onclick="undoDbNote()" title="Undo" style="background:none; border:none; width:30px; height:30px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#94a3b8;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>
+            </button>
+            <button class="db-tool-btn" onclick="redoDbNote()" title="Redo" style="background:none; border:none; width:30px; height:30px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#94a3b8;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path></svg>
+            </button>
+            <button class="admin-modern-btn primary" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; margin-left: 2px;" onclick="saveNoteAndClose()">Save</button>
+        </div>
+    </div>
+    <div class="db-editor-body" style="display: flex; flex-direction: column; height: calc(100vh - 60px);">
+        <textarea id="dbNoteContent" class="db-note-textarea" placeholder="Start typing your note here..." oninput="handleDbNoteInput()" style="flex: 1; resize: none;"></textarea>
+        <div style="padding: 15px 20px; background: var(--bg-primary); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+            <button class="admin-modern-btn" onclick="generateTotalFromAI()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; display: flex; align-items: center; gap: 8px; border-radius: 12px; font-weight: 600; padding: 12px 20px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+                Generate Total
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Rename Modal -->
+<div class="admin-modal-overlay" id="dbRenameModal">
+    <div class="admin-modal-content" style="max-width: 380px;" id="dbRenameBox">
+        <div class="admin-modal-header">
+            <h3 style="font-size: 1.15rem;">Rename Note</h3>
+            <button class="admin-modal-close" onclick="closeDbRenameModal()">✕</button>
+        </div>
+        <div class="admin-modal-body">
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase;">Note Title</label>
+                <input type="text" id="dbRenameInput" style="width: 100%; padding: 14px 18px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 1rem; outline: none; background: #f8fafc; font-family: inherit; color: #1e293b;" placeholder="Enter new title">
+            </div>
+            <button class="admin-modern-btn primary" onclick="confirmDbRename()" style="width: 100%;">Save Title</button>
+        </div>
+    </div>
+</div>
+
+<!-- AI Total Generation Modal -->
+<div class="admin-modal-overlay" id="dbAiTotalModal" style="z-index: 100002">
+    <div class="admin-modal-content" style="max-width: 380px; text-align: center; padding: 25px;">
+        <div style="width: 50px; height: 50px; background: #e0e7ff; color: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        </div>
+        <h3 style="margin-top: 0; color: #1e293b; font-size: 1.25rem;">AI Calculation</h3>
+        <p id="dbAiTotalText" style="font-size: 1rem; color: #64748b; margin: 15px 0 20px 0;"></p>
+        
+        <div id="dbAiInputArea" style="display: none; margin-bottom: 24px;">
+            <input type="number" id="dbAiEditInput" style="width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1.5rem; font-weight: 800; text-align: center; color: #1e293b; outline: none;">
+        </div>
+
+        <div id="dbAiActionButtons" style="display:none; gap: 12px; justify-content: center;">
+            <button onclick="closeDbAiModal()" class="admin-modern-btn" style="background:#f1f5f9; color:#475569; width: 45%;">Decline</button>
+            <button onclick="acceptAiTotal()" class="admin-modern-btn primary" style="width: 55%;">Accept</button>
+        </div>
+        <div id="dbAiCloseBtnArea" style="display:none;">
+            <button onclick="closeDbAiModal()" class="admin-modern-btn primary" style="width:100%;">Okay</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="admin-modal-overlay" id="dbDeleteModal" style="z-index: 100002">
+    <div class="admin-modal-content" style="max-width: 380px; text-align: center; padding: 25px;">
+        <div style="width: 50px; height: 50px; background: #fee2e2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </div>
+        <h3 style="margin-top: 0; color: #1e293b; font-size: 1.25rem;">Delete Note?</h3>
+        <p style="font-size: 0.95rem; color: #64748b; margin: 15px 0 20px 0;">Are you sure you want to delete this note? This action cannot be undone.</p>
+        
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button onclick="closeDbDeleteModal()" class="admin-modern-btn" style="background:#f1f5f9; color:#475569; width: 45%;">Cancel</button>
+            <button onclick="confirmDbDelete()" class="admin-modern-btn danger" style="width: 55%;">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Debtor Account Details Modal -->
+<div class="admin-modal-overlay" id="dbAccountSettingsModal" style="z-index: 100003">
+    <div class="admin-modal-content" style="max-width: 380px;">
+        <div class="admin-modal-header">
+            <h3 style="font-size: 1.15rem;">Debt Payment Details</h3>
+            <button class="admin-modal-close" onclick="closeDbAccountSettings()">✕</button>
+        </div>
+        <div class="admin-modal-body">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 8px;">Account Number</label>
+                <input type="text" id="dbAccNumInput" style="width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 1rem; outline: none;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 8px;">Account Name</label>
+                <input type="text" id="dbAccNameInput" style="width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 1rem; outline: none;">
+            </div>
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 8px;">Bank Name</label>
+                <input type="text" id="dbBankNameInput" style="width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 1rem; outline: none;">
+            </div>
+            <button class="admin-modern-btn primary" onclick="saveDbAccountSettings()" style="width: 100%;">Save Details</button>
+        </div>
+    </div>
+</div>
+
+
+

@@ -1,0 +1,757 @@
+<div class="product-page-wrapper">
+    <h2 class="admin-product-title">Shop Products</h2>
+    <div class="search-filter-container">
+        <div class="search-wrapper" id="adminProductSearchWrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21 21-4.34-4.34" />
+                <circle cx="11" cy="11" r="8" />
+            </svg>
+            <input type="text" id="adminProductSearchInput" placeholder="Search Products" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
+        </div>
+
+            <div class="sort-container" id="adminProductSortContainer">
+                <div class="sort-btn" id="adminProductSortToggle">
+                    <span class="sort-text">Sort</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="margin-left: 4px; pointer-events: none;">
+                        <path d="M6 9l6 6 6-6" />
+                    </svg>
+                </div>
+                <div class="sort-dropdown" id="adminProductSortDropdown">
+                    <div class="sort-option active">Newest to Oldest<span class="sort-check"></span></div>
+                    <div class="sort-option">Oldest to Newest<span class="sort-check"></span></div>
+                    <div class="sort-option">A → Z<span class="sort-check"></span></div>
+                    <div class="sort-option">Z → A<span class="sort-check"></span></div>
+                    <div class="sort-option">Price: High → Low<span class="sort-check"></span></div>
+                    <div class="sort-option">Price: Low → High<span class="sort-check"></span></div>
+                </div>
+            </div>
+    </div>
+    
+    <!-- Product Category Tabs -->
+    <div class="admin-product-tabs-wrapper">
+        <div class="admin-product-tabs">
+            <button class="ap-tab-btn active" data-tab="all">All</button>
+            <button class="ap-tab-btn" data-tab="special">Analytic</button>
+            <button class="ap-tab-btn" data-tab="default">Default</button>
+            <button class="ap-tab-btn" data-tab="flexible">Flexible</button>
+            <button class="ap-tab-btn" data-tab="custom">Custom</button>
+        </div>
+    </div>
+</div>
+
+<!-- Scrollable Product List -->
+<div class="admin-product-list-wrapper" id="adminProductListWrapper">
+    <div class="admin-product-list" id="adminProductList">
+        <!-- Products rendered by JS -->
+    </div>
+</div>
+
+<!-- Add to Product Action -->
+<button class="wide-add-btn" id="adminAddProductBtn">Add old goods</button>
+
+<!-- Add Product Modal -->
+<div id="adminAddProductModal" class="admin-modal-overlay">
+    <div class="admin-modal-content">
+        <div class="admin-modal-header">
+            <h3>Add Old Goods</h3>
+            <button class="admin-modal-close" id="adminAddProductClose">✕</button>
+        </div>
+        <div class="admin-modal-body" style="padding: 24px; max-height: 80vh; overflow-y: auto;">
+            <!-- Product Type Toggle -->
+            <div style="display: flex; gap: 10px; margin-bottom: 24px; background: #f1f5f9; padding: 6px; border-radius: 12px; overflow-x: auto;">
+                <button type="button" id="adminTypeSpecialBtn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 700; background: white; color: #8b5cf6; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s; white-space: nowrap;">Analytical</button>
+                <button type="button" id="adminTypeDefaultBtn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; white-space: nowrap;">Default</button>
+                <button type="button" id="adminTypeFlexibleBtn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; white-space: nowrap;">Flexible</button>
+                <button type="button" id="adminTypeCustomBtn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; white-space: nowrap;">Custom</button>
+            </div>
+            <input type="hidden" id="adminProductType" value="special">
+            
+            <!-- Global Image Upload for all product types -->
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label>Product Image</label>
+                <div id="adminProductImageUploadArea" class="admin-image-upload-area">
+                    <input type="file" id="adminProductImageInput" accept="image/*" style="display: none;">
+                    <div id="adminProductImagePlaceholder" class="admin-image-placeholder">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        <span>Click or drag to add image</span>
+                        <button type="button" id="adminProductSnapBtn" onclick="event.stopPropagation();window.openCameraCapture(function(b64){document.getElementById('adminProductImageData').value=b64;var p=document.getElementById('adminProductImagePreview');if(p)p.src=b64;var pc=document.getElementById('adminProductImagePreviewContainer');var pl=document.getElementById('adminProductImagePlaceholder');if(pc)pc.style.display='block';if(pl)pl.style.display='none';});" style="margin-top:10px;padding:8px 18px;background:#8b5cf6;color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                            Snap Photo
+                        </button>
+                    </div>
+                    <div id="adminProductImagePreviewContainer" class="admin-image-preview-container" style="display: none;">
+                        <img id="adminProductImagePreview" src="" alt="Preview">
+                        <div class="admin-image-preview-actions">
+                            <button type="button" id="adminProductImageReplaceBtn" class="admin-img-action-btn" title="Replace">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21l-5.94-5.94"/></svg>
+                            </button>
+                            <button type="button" id="adminProductImageRemoveBtn" class="admin-img-action-btn admin-img-remove" title="Remove">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="adminProductImageData" value="">
+                </div>
+            </div>
+
+            <!-- DEFAULT PRODUCT FORM -->
+            <div id="adminDefaultProductForm" style="display: none;">
+            <div class="form-group" style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px dashed #e2e8f0;">
+                <label style="color: #8b5cf6;">Pre-fill from Existing (Optional)</label>
+                <div class="custom-dropdown-wrapper" id="adminImportDropdownWrapper">
+                    <div class="custom-dropdown-trigger" id="adminImportDropdownTrigger" style="background: #f0f8ff; border-color: #bfdbfe;">
+                        <span class="trigger-text">Select product to copy details...</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m6 9 6 6 6-6" />
+                        </svg>
+                    </div>
+                    <div class="custom-dropdown-menu" id="adminImportDropdownMenu">
+                        <!-- Search and options will be injected by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" id="adminNewProductName" class="form-input" placeholder="e.g. Rice" autocomplete="new-password">
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>Bulk Container Type</label>
+                    <div class="custom-dropdown-wrapper" id="adminBulkDropdownWrapper">
+                        <div class="custom-dropdown-trigger" id="adminBulkDropdownTrigger">
+                            <span class="trigger-text" style="color: #94a3b8;">— Select —</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                        </div>
+                        <div class="custom-dropdown-menu" id="adminBulkDropdownMenu">
+                            <div class="custom-dropdown-option" data-value="Carton">Carton</div>
+                            <div class="custom-dropdown-option" data-value="Pack">Pack</div>
+                            <div class="custom-dropdown-option" data-value="Crate">Crate</div>
+                            <div class="custom-dropdown-option" data-value="Container 1">Container 1</div>
+                            <div class="custom-dropdown-option" data-value="Sack">Sack</div>
+                            <div class="custom-dropdown-option" data-value="Box">Box</div>
+                            <div class="custom-dropdown-option" data-value="Roll">Roll</div>
+                            <div class="custom-dropdown-option" data-value="Bundle">Bundle</div>
+                            <div class="custom-dropdown-option custom-unit-create-option" data-value="__custom_bulk__" style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Create Custom</span>
+                            </div>
+                            <div class="custom-unit-input-row" id="adminCustomBulkRow" style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                <input type="text" id="adminCustomBulkInput" class="form-input" placeholder="e.g. Can" style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;" autocomplete="new-password">
+                                <button type="button" id="adminCustomBulkConfirmBtn" style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Add Container</button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="adminBulkUnitSelect" value="">
+                    </div>
+                </div>
+                <!-- Retail unit -->
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>Retail Selling Unit</label>
+                    <div class="custom-dropdown-wrapper" id="adminUnitDropdownWrapper">
+                        <div class="custom-dropdown-trigger" id="adminUnitDropdownTrigger">
+                            <span class="trigger-text" style="color: #94a3b8;">— Select —</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                        </div>
+                        <div class="custom-dropdown-menu" id="adminUnitDropdownMenu">
+                            <div class="custom-dropdown-option" data-value="per cup">per cup</div>
+                            <div class="custom-dropdown-option" data-value="per kg">per kg</div>
+                            <div class="custom-dropdown-option" data-value="per bag">per bag</div>
+                            <div class="custom-dropdown-option" data-value="per carton">per carton</div>
+                            <div class="custom-dropdown-option" data-value="per piece">per piece</div>
+                            <div class="custom-dropdown-option" data-value="per bottle">per bottle</div>
+                            <div class="custom-dropdown-option" data-value="per pack">per pack</div>
+                            <div class="custom-dropdown-option custom-unit-create-option" data-value="__custom__" style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Create Custom Unit</span>
+                            </div>
+                            <div class="custom-unit-input-row" id="adminCustomUnitRow" style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                <input type="text" id="adminCustomUnitInput" class="form-input" placeholder="e.g. per gallon" style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;" autocomplete="new-password">
+                                <button type="button" id="adminCustomUnitConfirmBtn" style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Add Unit</button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="adminNewProductUnit" value="">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>Cost per <span class="lbl-bulk-unit">Carton</span> (₦)</label>
+                    <input type="number" id="adminNewProductPurchaseCost" class="form-input" placeholder="e.g. 5000" min="0" step="0.01">
+                </div>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>Quantity Bought</label>
+                    <input type="number" id="adminNewProductQuantity" class="form-input" placeholder="e.g. 5" min="1" step="1" value="1">
+                </div>
+            </div>
+
+            <div style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
+                Total Cost: <span id="adminNewProductTotalCostVal" style="color: #16a34a;">₦0</span>
+            </div>
+
+            <div style="font-size: 0.95rem; color: #1e293b; margin: 16px 0 16px 0; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+                Wholesale Pricing <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">(Optional)</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>Wholesale Profit per <span class="lbl-bulk-unit">Carton</span> (₦)</label>
+                    <input type="number" id="adminNewProductWholesaleProfit" class="form-input" placeholder="e.g. 500" min="0" step="0.01">
+                </div>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>Wholesale Margin (%)</label>
+                    <input type="number" id="adminNewProductWholesaleProfitPercent" class="form-input" placeholder="e.g. 5" min="0" step="0.01" style="font-weight: 600;">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label>Final Wholesale Price per <span class="lbl-bulk-unit">Carton</span> (₦)</label>
+                <input type="number" id="adminNewProductWholesalePrice" class="form-input" placeholder="0" readonly style="background: #f8fafc; font-weight: 700; color: #8b5cf6; cursor: not-allowed;">
+            </div>
+
+            <div style="font-size: 0.95rem; color: #1e293b; margin: 24px 0 16px 0; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+                Retail Pricing
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <div class="form-group" style="width: 100%; margin-bottom: 0;">
+                    <label><span class="lbl-retail-unit" style="text-transform: capitalize;">Pieces</span> inside ONE <span class="lbl-bulk-unit">Carton</span></label>
+                    <input type="number" id="adminNewProductPieces" class="form-input" placeholder="e.g. 40" min="1" step="1">
+                </div>
+            </div>
+
+            <div style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">
+                Retail Cost per <span class="lbl-retail-unit">piece</span>: <span id="adminNewProductRetailCostVal" style="color: #8b5cf6;">₦0</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>Retail Profit per <span class="lbl-retail-unit">piece</span> (₦)</label>
+                    <input type="number" id="adminNewProductProfit" class="form-input" placeholder="100" min="0" step="0.01">
+                </div>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label style="display: flex; align-items: center; gap: 6px;">
+                        Profit Margin (%)
+                    </label>
+                    <input type="number" id="adminNewProductProfitPercent" class="form-input" placeholder="e.g. 10" min="0" step="0.01" style="font-weight: 600;">
+                    <span id="adminProfitPercentBadge" style="font-size: 0.7rem; background: #e0f2fe; color: #8b5cf6; padding: 2px 8px; border-radius: 20px; font-weight: 700; display: none; margin-top: 4px;"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Final Unit Price (₦)</label>
+                <input type="number" id="adminNewProductPrice" class="form-input" placeholder="0" readonly style="background: #f8fafc; font-weight: 700; color: #8b5cf6; cursor: not-allowed;">
+            </div>
+
+            <!-- Allow User Flexible Pricing Toggle -->
+            <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #fdf4ff; border: 1px solid #f0abfc; border-radius: 12px;">
+                <div>
+                    <label style="margin-bottom: 2px; color: #a21caf; font-weight: 800;">Allow User Flexible Pricing</label>
+                    <div style="font-size: 0.75rem; color: #d946ef;">Allows customers to negotiate/input their own price</div>
+                </div>
+                <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                    <input type="checkbox" id="adminDefFlexiblePricingSwitch" style="opacity: 0; width: 0; height: 0;" onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#c026d3':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;">
+                        <span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(0);"></span>
+                    </span>
+                </label>
+            </div>
+
+            <!-- Old Stock Indicator Toggle -->
+            <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;">
+                <div>
+                    <label style="margin-bottom: 2px; color: #b45309; font-weight: 800;">Mark as Old Stock</label>
+                    <div style="font-size: 0.75rem; color: #d97706;">Adds 'OLD STOCK' tag to this batch (Admin view only)</div>
+                </div>
+                <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                    <input type="checkbox" id="adminDefOldStockSwitch" style="opacity: 0; width: 0; height: 0;" checked onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#f59e0b':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #f59e0b; transition: .4s; border-radius: 34px;">
+                        <span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(20px);"></span>
+                    </span>
+                </label>
+            </div>
+
+            <!-- Live Payout Preview -->
+            <div class="admin-apm-payout-preview" id="adminDefaultPayoutPreviewParent">
+                <span class="admin-apm-payout-label">App Purchase Payout Return</span>
+                <span class="admin-apm-payout-value" id="adminApmPayoutValue"></span>
+                <span style="font-size: 0.75rem; color: #64748b; text-align: center; margin-top: 6px; line-height: 1.3;">
+                    <strong>Note:</strong> Default payout applies <em>only</em> if the user orders via the App. Walk-in/Manual sales do not earn this payout.
+                </span>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="admin-product-submit-btn" id="adminApmSubmitBtn" style="flex: 1;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Create Product
+                </button>
+                <button class="admin-product-submit-btn" id="adminApmAddExistingBtn" style="flex: 1; background: #f59e0b; display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                    Top Up Stock
+                </button>
+            </div>
+            </div>
+
+            <!-- SPECIAL PRODUCT FORM -->
+            <div id="adminSpecialProductForm" style="display: block;">
+                <div class="form-group" style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px dashed #e2e8f0;">
+                    <label style="color: #8b5cf6;">Pre-fill from Existing (Optional)</label>
+                    <div class="custom-dropdown-wrapper" id="adminSpecImportDropdownWrapper">
+                        <div class="custom-dropdown-trigger" id="adminSpecImportDropdownTrigger" style="background: #f0f8ff; border-color: #bfdbfe;">
+                            <span class="trigger-text">Select analytical product to copy...</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </div>
+                        <div class="custom-dropdown-menu" id="adminSpecImportDropdownMenu">
+                            <!-- Search and options will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Analytical Product Name</label>
+                    <input type="text" id="adminSpecProductName" class="form-input" placeholder="e.g. Rice">
+                </div>
+
+                <!-- Bag Section -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">1</span>
+                        <input type="text" id="adminSpecBagTitle" value="Container 1" style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Purchased <span id="lblAdminSpecBagCost">Container 1</span> Cost (₦)</label>
+                            <input type="number" id="adminSpecBagCost" class="form-input" placeholder="e.g. 50000" min="0" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Quantity Bought</label>
+                            <input type="number" id="adminSpecBagQuantity" class="form-input" placeholder="e.g. 5" min="1" step="1" value="1">
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
+                        Total Cost: <span id="adminSpecBagTotalCostVal" style="color: #16a34a;">₦0</span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label><span id="lblAdminSpecBagProfit">Container 1</span> Profit (₦)</label>
+                            <input type="number" id="adminSpecBagProfit" class="form-input" placeholder="5000" min="0" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="adminSpecBagProfitPercent" class="form-input" placeholder="10" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Final Selling Price per <span id="lblAdminSpecBagPrice">Container 1</span> (₦)</label>
+                        <input type="number" id="adminSpecBagPrice" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                    </div>
+                </div>
+
+                <!-- Custard Section -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">2</span>
+                        <input type="text" id="adminSpecCustardTitle" value="Container 2" style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>How many of this size in the primary unit above?</label>
+                        <input type="number" id="adminSpecCustardsPerBag" class="form-input" placeholder="e.g. 10" min="1" step="1">
+                        <div style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">Cost per unit: <span id="adminSpecCustardCostVal" style="color: #8b5cf6;">₦0</span></div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label><span id="lblAdminSpecCustardProfit">Container 2</span> Profit (₦)</label>
+                            <input type="number" id="adminSpecCustardProfit" class="form-input" placeholder="1000" min="0" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="adminSpecCustardProfitPercent" class="form-input" placeholder="20" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Final Selling Price per <span id="lblAdminSpecCustardPrice">Container 2</span> (₦)</label>
+                        <input type="number" id="adminSpecCustardPrice" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                    </div>
+                </div>
+
+                <!-- Cup Section -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+                    <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">3</span>
+                        <input type="text" id="adminSpecCupTitle" value="Container 3" style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>How many of this size in the secondary unit above?</label>
+                        <input type="number" id="adminSpecCupsPerCustard" class="form-input" placeholder="e.g. 20" min="1" step="1">
+                        <div style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">Cost per unit: <span id="adminSpecCupCostVal" style="color: #8b5cf6;">₦0</span></div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label><span id="lblAdminSpecCupProfit">Container 3</span> Profit (₦)</label>
+                            <input type="number" id="adminSpecCupProfit" class="form-input" placeholder="50" min="0" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="adminSpecCupProfitPercent" class="form-input" placeholder="20" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Final Selling Price per <span id="lblAdminSpecCupPrice">Container 3</span> (₦)</label>
+                        <input type="number" id="adminSpecCupPrice" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                    </div>
+                </div>
+
+                <!-- Allow User Flexible Pricing Toggle -->
+                <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #fdf4ff; border: 1px solid #f0abfc; border-radius: 12px;">
+                    <div>
+                        <label style="margin-bottom: 2px; color: #a21caf; font-weight: 800;">Allow User Flexible Pricing</label>
+                        <div style="font-size: 0.75rem; color: #d946ef;">Allows customers to negotiate/input their own price</div>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="adminSpecFlexiblePricingSwitch" style="opacity: 0; width: 0; height: 0;" onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#c026d3':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;">
+                            <span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(0);"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Old Stock Indicator Toggle -->
+                <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;">
+                    <div>
+                        <label style="margin-bottom: 2px; color: #b45309; font-weight: 800;">Mark as Old Stock</label>
+                        <div style="font-size: 0.75rem; color: #d97706;">Adds 'OLD STOCK' tag to this batch (Admin view only)</div>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="adminSpecOldStockSwitch" style="opacity: 0; width: 0; height: 0;" checked onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#f59e0b':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #f59e0b; transition: .4s; border-radius: 34px;">
+                            <span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(20px);"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Live Payout Preview -->
+                <div class="admin-apm-payout-preview">
+                    <span class="admin-apm-payout-label" style="text-transform: capitalize;">App Purchase Payout Return</span>
+                    <div style="display:flex; flex-direction: column; gap:4px; margin-top: 5px;" id="adminSpecPayoutPreviewParent">
+                        <span class="admin-apm-payout-value" style="font-size: 0.95rem;">Container 1: <span id="adminSpecBagPayoutValue"></span></span>
+                        <span class="admin-apm-payout-value" style="font-size: 0.95rem;">Container 2: <span id="adminSpecCustardPayoutValue"></span></span>
+                        <span class="admin-apm-payout-value" style="font-size: 0.95rem;">Container 3: <span id="adminSpecCupPayoutValue"></span></span>
+                    </div>
+                    <span style="font-size: 0.75rem; color: #64748b; text-align: center; margin-top: 6px; line-height: 1.3;">
+                        <strong>Note:</strong> Payout applies <em>only</em> if the user orders via the App.
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="admin-product-submit-btn" id="adminSpecProductSubmitBtn" style="flex: 1;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Create Product
+                    </button>
+                    <button class="admin-product-submit-btn" id="adminSpecAddExistingBtn" style="flex: 1; background: #f59e0b; display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                        Top Up Stock
+                    </button>
+                </div>
+            </div>
+            <!-- CUSTOM PRODUCT FORM -->
+            <div id="adminCustomProductForm" style="display: none;">
+                <div class="form-group" style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px dashed #e2e8f0;">
+                    <label style="color: #8b5cf6;">Pre-fill from Existing (Optional)</label>
+                    <div class="custom-dropdown-wrapper" id="adminCustomImportDropdownWrapper">
+                        <div class="custom-dropdown-trigger" id="adminCustomImportDropdownTrigger" style="background: #f0f8ff; border-color: #bfdbfe;">
+                            <span class="trigger-text">Select custom product to copy...</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </div>
+                        <div class="custom-dropdown-menu" id="adminCustomImportDropdownMenu">
+                            <!-- Search and options will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Custom Item Name</label>
+                    <input type="text" id="adminCustomProductName" class="form-input" placeholder="e.g. Special Bulk Rice">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Bulk Container Type</label>
+                        <div class="custom-dropdown-wrapper" id="adminCustomBulkDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="adminCustomBulkDropdownTrigger">
+                                <span class="trigger-text" style="color: #94a3b8;">— Select —</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="adminCustomBulkDropdownMenu">
+                                <div class="custom-dropdown-option" data-value="Carton">Carton</div>
+                                <div class="custom-dropdown-option" data-value="Pack">Pack</div>
+                                <div class="custom-dropdown-option" data-value="Sack">Sack</div>
+                                <div class="custom-dropdown-option custom-unit-create-option" data-value="__custom_bulk__" style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                    <span>Create Custom</span>
+                                </div>
+                                <div class="custom-unit-input-row" id="adminCustomFormBulkRow" style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                    <input type="text" id="adminCustomFormBulkInput" class="form-input" placeholder="e.g. Bundle" style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;">
+                                    <button type="button" id="adminCustomFormBulkConfirmBtn" style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700;">Add</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="adminCustomBulkUnitSelect" value="">
+                        </div>
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Retail Selling Unit</label>
+                        <div class="custom-dropdown-wrapper" id="adminCustomUnitDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="adminCustomUnitDropdownTrigger">
+                                <span class="trigger-text" style="color: #94a3b8;">— Select —</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="adminCustomUnitDropdownMenu">
+                                <div class="custom-dropdown-option" data-value="per piece">per piece</div>
+                                <div class="custom-dropdown-option" data-value="per cup">per cup</div>
+                                <div class="custom-dropdown-option" data-value="per bag">per bag</div>
+                                <div class="custom-dropdown-option custom-unit-create-option" data-value="__custom__" style="color: #8b5cf6; border-top: 1px dashed #eee; margin-top: 4px; padding-top: 14px;">
+                                    <span>Create Custom Unit</span>
+                                </div>
+                                <div class="custom-unit-input-row" id="adminCustomFormUnitRow" style="display: none; padding: 10px 14px; border-top: 1px solid #f0f0f0;">
+                                    <input type="text" id="adminCustomFormUnitInput" class="form-input" placeholder="e.g. per wrap" style="font-size: 0.9rem; padding: 10px; margin-bottom: 8px;">
+                                    <button type="button" id="adminCustomFormUnitConfirmBtn" style="width: 100%; padding: 10px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700;">Add Unit</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="adminCustomNewProductUnit" value="">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Cost per <span class="lbl-custom-bulk">Carton</span> (₦)</label>
+                        <input type="number" id="adminCustomProductPurchaseCost" class="form-input" placeholder="e.g. 5000" min="0" step="0.01">
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Quantity Bought</label>
+                        <input type="number" id="adminCustomProductQuantity" class="form-input" placeholder="e.g. 5" min="1" step="1" value="1">
+                    </div>
+                </div>
+
+                <div style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
+                    Total Cost: <span id="adminCustomProductTotalCostVal" style="color: #16a34a;">₦0</span>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                    <div class="form-group" style="width: 100%; margin-bottom: 0;">
+                        <label><span class="lbl-custom-retail" style="text-transform: capitalize;">Pieces</span> inside ONE <span class="lbl-custom-bulk">Carton</span></label>
+                        <input type="number" id="adminCustomProductPieces" class="form-input" placeholder="e.g. 40" min="1" step="1">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label>Retail Price per <span class="lbl-custom-retail">piece</span> (₦)</label>
+                    <input type="number" id="adminCustomProductPrice" class="form-input" placeholder="e.g. 1500" min="0" step="0.01" style="background: #f8fafc; font-weight: 700; color: #0f172a;">
+                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 6px;">This is the price customers will pay per <span class="lbl-custom-retail">piece</span>.</div>
+                </div>
+
+                <!-- Allow User Flexible Pricing Toggle -->
+                <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #fdf4ff; border: 1px solid #f0abfc; border-radius: 12px;">
+                    <div>
+                        <label style="margin-bottom: 2px; color: #a21caf; font-weight: 800;">Allow User Flexible Pricing</label>
+                        <div style="font-size: 0.75rem; color: #d946ef;">Allows customers to negotiate/input their own price</div>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="adminCustomFlexiblePricingSwitch" style="opacity: 0; width: 0; height: 0;" onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#c026d3':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;">
+                            <span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(0);"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Old Stock Indicator Toggle -->
+                <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;">
+                    <div>
+                        <label style="margin-bottom: 2px; color: #b45309; font-weight: 800;">Mark as Old Stock</label>
+                        <div style="font-size: 0.75rem; color: #d97706;">Adds 'OLD STOCK' tag to this batch</div>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="adminCustomOldStockSwitch" style="opacity: 0; width: 0; height: 0;" checked onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#f59e0b':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #f59e0b; transition: .4s; border-radius: 34px;">
+                            <span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(20px);"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="admin-apm-payout-preview" id="adminCustomPayoutPreviewParent" style="margin-bottom: 16px;">
+                    <span class="admin-apm-payout-label" style="text-transform: capitalize;">App Purchase Payout Return</span>
+                    <span class="admin-apm-payout-value" id="adminCustomPayoutValue" style="font-size: 1.1rem;">Calculating...</span>
+                    <span style="font-size: 0.75rem; color: #64748b; text-align: center; margin-top: 6px; line-height: 1.3;">
+                        <strong>Note:</strong> Payout applies <em>only</em> if the user orders via the App.
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="admin-product-submit-btn" id="adminCustomProductSubmitBtn" style="flex: 1;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Create Custom Product
+                    </button>
+                    <button class="admin-product-submit-btn" id="adminCustomAddExistingBtn" style="flex: 1; background: #f59e0b; display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                        Top Up Stock
+                    </button>
+                </div>
+            </div>
+
+            <!-- FLEXIBLE PRODUCT FORM -->
+            <div id="adminFlexibleProductForm" style="display: none;">
+                <div class="form-group" style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px dashed #e2e8f0;">
+                    <label style="color: #8b5cf6;">Pre-fill from Existing (Optional)</label>
+                    <div class="custom-dropdown-wrapper" id="adminFlexImportDropdownWrapper">
+                        <div class="custom-dropdown-trigger" id="adminFlexImportDropdownTrigger" style="background: #f0f8ff; border-color: #bfdbfe;">
+                            <span class="trigger-text">Select flexible product to copy...</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </div>
+                        <div class="custom-dropdown-menu" id="adminFlexImportDropdownMenu">
+                            <!-- Search and options will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Flexible Item Name</label>
+                    <input type="text" id="adminFlexProductName" class="form-input" placeholder="e.g. Variable Bulk Item">
+                </div>
+
+                <!-- C1 Section -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">1</span>
+                        <input type="text" id="adminFlexC1Title" value="Container 1" style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Purchased <span id="lblAdminFlexC1Cost">Container 1</span> Cost (₦)</label>
+                            <input type="number" id="adminFlexC1Cost" class="form-input" placeholder="e.g. 50000" min="0" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Quantity Bought</label>
+                            <input type="number" id="adminFlexC1Quantity" class="form-input" placeholder="e.g. 5" min="1" step="1" value="1">
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
+                        Total Cost: <span id="adminFlexC1TotalCostVal" style="color: #16a34a;">₦0</span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label><span id="lblAdminFlexC1Profit">Container 1</span> Profit (₦)</label>
+                            <input type="number" id="adminFlexC1Profit" class="form-input" placeholder="5000" min="0" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="adminFlexC1ProfitPercent" class="form-input" placeholder="10" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Final Selling Price per <span id="lblAdminFlexC1Price">Container 1</span> (₦)</label>
+                        <input type="number" id="adminFlexC1Price" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                    </div>
+                </div>
+
+                <!-- C2 Section -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">2</span>
+                        <input type="text" id="adminFlexC2Title" value="Container 2" style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>How many of this size in the primary unit above?</label>
+                        <input type="number" id="adminFlexC2Qty" class="form-input" placeholder="e.g. 10" min="1" step="1">
+                        <div style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">Cost per unit: <span id="adminFlexC2CostVal" style="color: #8b5cf6;">₦0</span></div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label><span id="lblAdminFlexC2Profit">Container 2</span> Profit (₦)</label>
+                            <input type="number" id="adminFlexC2Profit" class="form-input" placeholder="1000" min="0" step="0.01">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Profit Margin (%)</label>
+                            <input type="number" id="adminFlexC2ProfitPercent" class="form-input" placeholder="20" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Final Selling Price per <span id="lblAdminFlexC2Price">Container 2</span> (₦)</label>
+                        <input type="number" id="adminFlexC2Price" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
+                    </div>
+                </div>
+
+                <!-- C3 Section -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+                    <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">3</span>
+                        <input type="text" id="adminFlexC3Title" value="Container 3" style="border: 1px dashed #cbd5e1; background: transparent; font-weight: 700; color: #0f172a; padding: 2px 6px; border-radius: 4px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#cbd5e1'"> Size
+                    </h4>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>How many of this size in the secondary unit above?</label>
+                        <input type="number" id="adminFlexC3Qty" class="form-input" placeholder="e.g. 20" min="1" step="1">
+                    </div>
+                </div>
+
+                <!-- Allow User Flexible Pricing Toggle -->
+                <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #fdf4ff; border: 1px solid #f0abfc; border-radius: 12px;">
+                    <div>
+                        <label style="margin-bottom: 2px; color: #a21caf; font-weight: 800;">Allow User Flexible Pricing</label>
+                        <div style="font-size: 0.75rem; color: #d946ef;">Allows customers to negotiate/input their own price</div>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="adminFlexFlexiblePricingSwitch" style="opacity: 0; width: 0; height: 0;" onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#c026d3':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;">
+                            <span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(0);"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Old Stock Indicator Toggle -->
+                <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;">
+                    <div>
+                        <label style="margin-bottom: 2px; color: #b45309; font-weight: 800;">Mark as Old Stock</label>
+                        <div style="font-size: 0.75rem; color: #d97706;">Adds 'OLD STOCK' tag to this batch</div>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="adminFlexOldStockSwitch" style="opacity: 0; width: 0; height: 0;" checked onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#f59e0b':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)'">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #f59e0b; transition: .4s; border-radius: 34px;">
+                            <span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(20px);"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="admin-product-submit-btn" id="adminFlexProductSubmitBtn" style="flex: 1;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Create Flexible Product
+                    </button>
+                    <button class="admin-product-submit-btn" id="adminFlexAddExistingBtn" style="flex: 1; background: #f59e0b; display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                        Top Up Stock
+                    </button>
+                </div>
+            </div>
+
+        </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+

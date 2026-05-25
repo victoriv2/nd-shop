@@ -1,0 +1,386 @@
+/* ========================================
+   Admin Product Page Styles
+   Uses the same structure as Register page
+   ======================================== */
+
+/* Sticky header section (title + search + sort) */
+.product-page-wrapper {
+    background-color: #f8f9fa;
+    z-index: 150;
+    padding: 2px 5% 0 5%;
+    flex-shrink: 0;
+}
+
+.admin-product-title {
+    color: #8b5cf6;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+/* Scrollable product list area - fills remaining space */
+.admin-product-list-wrapper {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 5% 120px 5%;
+}
+
+/* Product Cards */
+.admin-product-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-product-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.admin-product-card:hover {
+    border-color: #cce4ff;
+    box-shadow: 0 4px 18px rgba(27, 38, 59, 0.08);
+}
+
+.admin-product-card:active {
+    transform: scale(0.985);
+}
+
+.admin-product-card-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-product-card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.admin-product-card-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    background-color: #f1f5f9;
+    flex-shrink: 0;
+}
+
+.admin-product-card-img-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.admin-product-card-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a202c;
+}
+
+.admin-product-card-price {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.admin-product-card-price strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.admin-product-card-right {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.admin-product-card-payout {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #8b5cf6;
+}
+
+.admin-product-card-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #8b5cf6;
+    background: #edf1f7;
+    padding: 3px 10px;
+    border-radius: 10px;
+    line-height: 1;
+}
+
+/* Empty State */
+.admin-product-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #a0aec0;
+}
+
+.admin-product-empty svg {
+    width: 64px;
+    height: 64px;
+    stroke: #cbd5e0;
+    margin-bottom: 16px;
+}
+
+.admin-product-empty p {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* ========================================
+   Payout Preview Box (inside modal)
+   ======================================== */
+.admin-apm-payout-preview {
+    background: #edf1f7;
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(27, 38, 59, 0.15);
+    margin-top: 16px;
+    margin-bottom: 20px;
+}
+
+.admin-apm-payout-label {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.admin-apm-payout-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #8b5cf6;
+}
+
+/* ========================================
+   Submit Button INSIDE modal
+   (separate class so it doesn't get fixed position)
+   ======================================== */
+.admin-product-submit-btn {
+    width: 100%;
+    height: 52px;
+    background-color: #8b5cf6;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(27, 38, 59, 0.25);
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+}
+
+.admin-product-submit-btn:hover {
+    background-color: #2c3e50;
+}
+
+.admin-product-submit-btn:active {
+    transform: scale(0.98);
+}
+
+/* ========================================
+   Custom Unit Removal
+   ======================================== */
+.custom-added-unit {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-right: 15px !important;
+}
+
+.custom-added-unit span {
+    flex: 1;
+}
+
+.remove-unit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    color: #8b5cf6;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+.remove-unit-btn:hover {
+    background: #edf1f7;
+    color: #2c3e50;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.custom-added-unit.active .remove-unit-btn {
+    color: #8b5cf6;
+    background: white;
+}
+
+/* ========================================
+   Admin Image Upload Styles
+   ======================================== */
+.admin-image-upload-area {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    background-color: #f8fafc;
+    text-align: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-image-upload-area:hover {
+    border-color: #8b5cf6;
+    background-color: #f0f4f8;
+}
+
+.admin-image-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 0.9rem;
+    padding: 20px;
+}
+
+.admin-image-preview-container {
+    width: 100%;
+    height: 160px;
+    position: relative;
+}
+
+.admin-image-preview-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.admin-image-preview-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 6px;
+}
+
+.admin-img-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.2s;
+}
+
+.admin-img-action-btn:hover {
+    background: white;
+    transform: scale(1.05);
+}
+
+.admin-img-remove {
+    color: #ef4444;
+}
+
+.admin-img-remove:hover {
+    background: #fee2e2;
+}
+
+/* ========================================
+   Admin Product Category Tabs
+   ======================================== */
+.admin-product-tabs-wrapper {
+    padding: 0 5%;
+    margin-bottom: 12px;
+    margin-top: 8px;
+}
+
+.admin-product-tabs {
+    background-color: #f1f5f9;
+    border-radius: 12px;
+    display: flex;
+    padding: 4px;
+    gap: 4px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+}
+
+.admin-product-tabs::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+.ap-tab-btn {
+    flex: 1;
+    min-width: fit-content;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.ap-tab-btn.active {
+    background: white;
+    color: #8b5cf6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.ap-tab-btn:active:not(.active) {
+    background: #e2e8f0;
+}
+
+
+
+

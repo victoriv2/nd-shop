@@ -1,0 +1,64 @@
+<div class="menu-modal-overlay" id="downloadAppModal">
+    <div class="download-app-modal-content menu-modal-content">
+        <div class="menu-modal-header">
+            <h3>Download App</h3>
+            <span class="m-close" id="downloadAppClose">&times;</span>
+        </div>
+        <div class="menu-modal-body">
+            <div class="download-app-hero-section">
+                <div class="download-app-icon" id="dAppMainIcon"><svg xmlns="http://www.w3.org/2000/svg" width="1em"
+                        height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg></div>
+                <div class="download-app-title">Get the <span class="dynamic-shop-name">nd shop</span> App</div>
+                <div class="download-app-desc" id="dAppDesc">Experience faster browsing, instant notifications, and
+                    exclusive features by downloading our mobile app.</div>
+            </div>
+
+            <div class="download-app-links">
+                <!-- Interactive Android Download Button -->
+                <div class="d-download-wrapper" id="androidDownloadWrapper">
+                    <button class="d-app-btn" id="btnAndroid">
+                        <div class="d-app-text">
+                            <small>Download for</small>
+                            <strong>Android (APK)</strong>
+                        </div>
+                    </button>
+
+                    <!-- Hidden Progress State -->
+                    <div class="d-progress-container hidden" id="androidProgressContainer">
+                        <div class="d-progress-header">
+                            <span class="d-progress-title">Downloading APK...</span>
+                            <span class="d-progress-percent" id="androidPercent">0%</span>
+                        </div>
+                        <div class="d-progress-track">
+                            <div class="d-progress-fill" id="androidFill"></div>
+                        </div>
+                        <div class="d-progress-footer">
+                            <span class="d-progress-speed" id="androidSpeed">Calculating...</span>
+                            <span class="d-progress-cancel" id="androidCancel">Cancel</span>
+                        </div>
+                    </div>
+
+                    <!-- Hidden Success State -->
+                    <div class="d-success-container hidden" id="androidSuccessContainer">
+                        <div class="d-success-icon"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg></div>
+                        <div class="d-success-text">
+                            <strong>Download Complete</strong>
+                            <small>Tap to Install Application</small>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>

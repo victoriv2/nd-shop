@@ -1,0 +1,530 @@
+<!-- Receipt Generator Full Page from Admin Menu -->
+<style>
+    .rg-responsive-container {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        padding: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+        box-sizing: border-box;
+        overflow-y: auto;
+        height: 100%;
+    }
+
+    .rg-pane {
+        width: 100%;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+        padding: 24px;
+        box-sizing: border-box;
+    }
+
+    .rg-preview-pane {
+        background: #e2e8f0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 40px 20px;
+        border: 1px solid #cbd5e1;
+    }
+
+    @media (min-width: 900px) {
+        .rg-responsive-container {
+            flex-direction: row;
+        }
+        .rg-pane {
+            flex: 1;
+        }
+        .rg-preview-pane {
+            flex: 1.2;
+            overflow-y: auto;
+            max-height: calc(100vh - 120px);
+        }
+        .rg-left-scroll {
+            overflow-y: auto;
+            max-height: calc(100vh - 120px);
+        }
+    }
+
+    .rg-header {
+        background: white; 
+        border-bottom: 1px solid #e2e8f0; 
+        padding: 15px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+
+    .rg-input-group {
+        margin-bottom: 15px;
+    }
+
+    .rg-input-group label {
+        display: block; 
+        font-size: 0.85rem; 
+        font-weight: 600; 
+        color: #64748b; 
+        margin-bottom: 6px;
+    }
+
+    .rg-input-group input {
+        width: 100%; 
+        padding: 10px; 
+        border: 1px solid #cbd5e1; 
+        border-radius: 8px; 
+        font-family: inherit; 
+        font-size: 0.95rem; 
+        box-sizing: border-box;
+    }
+
+    .rg-selected-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    .rg-selected-table th, .rg-selected-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.9rem;
+    }
+
+    .rg-selected-table th {
+        background: #f8fafc;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .rg-remove-btn {
+        background: #fee2e2;
+        color: #ef4444;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+    }
+
+    /* Modal Styles */
+    .rg-sale-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .rg-sale-item:hover {
+        background: #f8fafc;
+    }
+
+    .rg-sale-checkbox {
+        margin-right: 15px;
+        width: 18px;
+        height: 18px;
+        accent-color: #8b5cf6;
+    }
+
+    .rg-date-nav {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        background: #f1f5f9;
+        padding: 14px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        flex-wrap: wrap;
+    }
+
+    .rg-date-nav-btn {
+        background: white;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-weight: 500;
+        color: #334155;
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .rg-date-nav-btn:hover:not(:disabled) {
+        background: #f8fafc;
+        border-color: #94a3b8;
+        color: #0f172a;
+    }
+
+    .rg-date-nav-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #e2e8f0;
+    }
+
+    .rg-date-nav-title {
+        font-weight: 800;
+        font-size: 1.25rem;
+        color: #0f172a;
+        min-width: 140px;
+        text-align: center;
+        letter-spacing: -0.5px;
+    }
+
+    .rg-date-input {
+        padding: 7px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 0.95rem;
+        color: #334155;
+        outline: none;
+        transition: border-color 0.2s;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        background: white;
+        cursor: pointer;
+    }
+
+    .rg-date-input:focus {
+        border-color: #8b5cf6;
+    }
+
+    /* Custom Picker Modals */
+    .rg-picker-col::-webkit-scrollbar { display: none; }
+    .rg-picker-item {
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: background 0.2s;
+        user-select: none;
+    }
+    .rg-picker-item:hover { background: #f1f5f9; }
+    .rg-picker-item.selected { background: #8b5cf6; color: white; font-weight: bold; }
+
+    /* Mode Toggle Buttons */
+    .rg-mode-toggle {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 18px;
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+    .rg-mode-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border: none;
+        border-radius: 10px;
+        background: transparent;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.9rem;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+    .rg-mode-btn:hover { background: rgba(255,255,255,0.6); color: #334155; }
+    .rg-mode-btn.active {
+        background: white;
+        color: #1e293b;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    /* User Search Results */
+    .rg-user-results {
+        max-height: 220px;
+        overflow-y: auto;
+        border-radius: 10px;
+    }
+    .rg-user-result-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    .rg-user-result-item:hover { background: #f0f4f8; border-color: #93c5fd; }
+    .rg-user-result-avatar {
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        background: #8b5cf6;
+        color: white;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+    .rg-user-result-info { flex: 1; min-width: 0; }
+    .rg-user-result-info h4 { margin: 0; font-size: 0.95rem; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rg-user-result-info p { margin: 2px 0 0; font-size: 0.8rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Selected User Badge */
+    .rg-selected-badge {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        background: linear-gradient(135deg, #f0f4f8, #e0e7ff);
+        border: 1px solid #93c5fd;
+        border-radius: 12px;
+        margin-bottom: 8px;
+    }
+    .rg-selected-badge .rg-badge-info { flex: 1; }
+    .rg-selected-badge .rg-badge-info h4 { margin: 0; font-size: 0.95rem; color: #1e293b; }
+    .rg-selected-badge .rg-badge-info p { margin: 2px 0 0; font-size: 0.8rem; color: #8b5cf6; }
+    .rg-badge-remove {
+        background: #fee2e2; color: #ef4444; border: none;
+        width: 28px; height: 28px; border-radius: 50%;
+        cursor: pointer; font-size: 1rem; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s;
+    }
+    .rg-badge-remove:hover { background: #fca5a5; }
+
+    /* User Confirm Modal */
+    .rg-confirm-body {
+        text-align: center;
+        padding: 24px;
+    }
+    .rg-confirm-avatar {
+        width: 64px; height: 64px; border-radius: 50%;
+        background: #8b5cf6;
+        color: white; font-size: 1.6rem; font-weight: 800;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 16px;
+    }
+    .rg-confirm-name { font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+    .rg-confirm-id { font-size: 0.85rem; color: #64748b; margin-bottom: 20px; }
+    .rg-confirm-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        text-align: left;
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+    .rg-confirm-grid .rg-cg-label { font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .rg-confirm-grid .rg-cg-value { font-size: 0.9rem; color: #1e293b; font-weight: 500; margin-bottom: 8px; word-break: break-word; }
+    .rg-confirm-actions { display: flex; gap: 10px; }
+    .rg-confirm-actions button {
+        flex: 1; padding: 12px; border: none; border-radius: 10px;
+        font-weight: 700; font-size: 0.95rem; cursor: pointer;
+        font-family: inherit; transition: all 0.2s;
+    }
+</style>
+
+<div class="admin-modal-overlay" id="receiptGenOverlay">
+    <div class="admin-modal-content full-page" style="background: #f8fafc; display: flex; flex-direction: column;">
+        
+        <div class="rg-header">
+            <h2 class="admin-modal-title" style="margin:0; font-size: 1.4rem;">Generate Receipt</h2>
+            <div style="display: flex; gap: 10px;">
+                <button class="use-ai-btn" onclick="printReceiptGen()" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">Print Layout</button>
+                <button class="admin-modal-close" onclick="closeReceiptGen()">&times;</button>
+            </div>
+        </div>
+
+        <div class="rg-responsive-container">
+            
+            <!-- Left Pane: Configuration -->
+            <div class="rg-pane rg-left-scroll">
+                <h3 style="margin-top: 0; color: #1e293b; font-size: 1.1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">1. Customer Details (Optional)</h3>
+                
+                <!-- Mode Toggle: Customer vs User -->
+                <div class="rg-mode-toggle">
+                    <button class="rg-mode-btn active" id="rgModeUser" onclick="setRgMode('user')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Registered User
+                    </button>
+                    <button class="rg-mode-btn" id="rgModeCustomer" onclick="setRgMode('customer')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Customer
+                    </button>
+                </div>
+
+                <!-- User Mode: Search Registered Users (default) -->
+                <div id="rgUserFields">
+                    <div class="rg-input-group">
+                        <label>Search by ID, Name, Email or Phone</label>
+                        <input type="text" id="rgUserSearch" placeholder="e.g. ND00001 or John or 08012345678" oninput="searchRgUsers()">
+                    </div>
+                    <div id="rgUserSearchResults" class="rg-user-results"></div>
+                    <!-- Selected user badge (shown after confirmation) -->
+                    <div id="rgSelectedUserBadge" style="display: none;"></div>
+                </div>
+
+                <!-- Customer Mode: Manual Input -->
+                <div id="rgCustomerFields" style="display: none;">
+                    <div class="rg-input-group">
+                        <label>Customer Name</label>
+                        <input type="text" id="rgCustomerName" placeholder="Enter name" oninput="updateRgPreview()">
+                    </div>
+                    <div class="rg-input-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="rgCustomerPhone" placeholder="Enter phone" oninput="updateRgPreview()">
+                    </div>
+                    <div class="rg-input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="rgCustomerEmail" placeholder="Enter email" oninput="updateRgPreview()">
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px; color: #1e293b; font-size: 1.1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    2. Receipt Items
+                    <button class="admin-modern-btn primary" onclick="openRgSaleModal()" style="padding: 6px 12px; font-size: 0.85rem; height: auto;">+ Select Sales</button>
+                </h3>
+                
+                <table class="rg-selected-table" id="rgSelectedTable">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Qty</th>
+                            <th style="text-align: right;">Amount(₦)</th>
+                            <th style="width: 50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="rgSelectedTbody">
+                        <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">No items selected. Click "Select Sales" to add items.</td></tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; margin-top: 15px; font-weight: bold; font-size: 1.1rem; color: #1e293b;">
+                    Total: ₦<span id="rgConfigTotal">0.00</span>
+                </div>
+            </div>
+
+            <!-- Right Pane: Live Preview -->
+            <div class="rg-pane rg-preview-pane">
+                <div id="rgPreviewDoc" style="background: white; width: 100%; max-width: 450px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); font-family: 'Courier New', Courier, monospace; color: #000; box-sizing: border-box;">
+                    
+                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px dashed #ccc; padding-bottom: 15px;">
+                        <h2 style="margin: 0 0 5px 0; font-size: 1.8rem; text-transform: uppercase; font-family: 'Outfit', sans-serif; font-weight: 900; color: #8b5cf6;" id="rgPreviewShopName">Nd shop STORE</h2>
+                        <p style="margin: 0; font-size: 0.85rem;" id="rgPreviewStorePhone">Tel: 0000000000</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; font-size: 0.85rem;">
+                        <div style="margin-bottom: 5px;"><strong>Date:</strong> <span id="rPreviewDate">--</span></div>
+                        <div style="margin-bottom: 5px;"><strong>Receipt #:</strong> <span id="rPreviewId">--</span></div>
+                        <div style="margin-top: 15px; border: 1px solid #eee; padding: 8px;">
+                            <strong>Customer Info:</strong>
+                            <div id="rPreviewName" style="margin-top: 4px; font-weight: bold;">--</div>
+                            <div id="rPreviewPhone" style="margin-top: 2px;"></div>
+                            <div id="rPreviewEmail" style="margin-top: 2px;"></div>
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.85rem;">
+                        <thead style="border-bottom: 1px solid #000;">
+                            <tr>
+                                <th style="text-align: left; padding: 8px 0;">Item</th>
+                                <th style="text-align: center; padding: 8px 0;">Qty</th>
+                                <th style="text-align: right; padding: 8px 0;">Price(₦)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rPreviewItems" style="border-bottom: 1px dashed #ccc;">
+                        </tbody>
+                    </table>
+
+                    <div style="text-align: right; font-size: 1.2rem; font-weight: bold; border-top: 2px solid #000; padding-top: 10px;">
+                        TOTAL: ₦<span id="rPreviewGrandTotal">0.00</span>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 40px; font-size: 0.75rem; color: #666;">
+                        <p>Thank you for shopping with us!</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Selecting Sales -->
+<div class="admin-modal-overlay" id="rgSelectSalesModal" style="z-index: 100005;">
+    <div class="admin-modal-content" style="max-width: 600px; height: 80vh; display: flex; flex-direction: column;">
+        <div class="admin-modal-header">
+            <h3>Select Sales for Receipt</h3>
+            <button class="admin-modal-close" onclick="closeRgSaleModal()">✕</button>
+        </div>
+        <div class="admin-modal-body" style="flex: 1; overflow-y: hidden; display: flex; flex-direction: column; padding: 20px;">
+            
+            <div class="rg-date-nav">
+                <button class="rg-date-nav-btn" onclick="changeRgDate(-1)">← Prev</button>
+                <div class="rg-date-nav-title" id="rgDateDisplay">Loading...</div>
+                <button class="rg-date-nav-btn" onclick="changeRgDate(1)" id="rgNextDateBtn">Next →</button>
+                
+                <button class="rg-date-nav-btn" onclick="openRgCustomDatePicker()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="margin-right: 6px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Choose Date
+                </button>
+            </div>
+
+            <div style="flex: 1; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px;" id="rgSaleListContainer">
+                <!-- Sales list populated here -->
+            </div>
+
+            <button class="admin-modern-btn primary" style="width: 100%; padding: 15px; font-size: 1.1rem;" onclick="addSelectedSalesToReceipt()">Add Selected Items</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Scroll Date Picker Modal -->
+<div class="admin-modal-overlay" id="rgCustomDatePickerModal" style="z-index: 100010;">
+    <div class="admin-modal-content" style="max-width: 380px;">
+        <div class="admin-modal-header">
+            <h3>Choose Date</h3>
+            <button class="admin-modal-close" onclick="closeRgCustomDatePicker()">✕</button>
+        </div>
+        <div class="admin-modal-body">
+            <div style="display: flex; gap: 10px; height: 210px;">
+                <!-- Day -->
+                <div style="flex: 1; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px;" class="rg-picker-col" id="rgPickerDayCol"></div>
+                <!-- Month -->
+                <div style="flex: 1; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px;" class="rg-picker-col" id="rgPickerMonthCol"></div>
+                <!-- Year -->
+                <div style="flex: 1; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px;" class="rg-picker-col" id="rgPickerYearCol"></div>
+            </div>
+            <button class="admin-modern-btn primary" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 1rem;" onclick="applyRgCustomPicker()">Done</button>
+        </div>
+    </div>
+</div>
+
+<!-- User Confirmation Modal -->
+<div class="admin-modal-overlay" id="rgUserConfirmModal" style="z-index: 100015;">
+    <div class="admin-modal-content" style="max-width: 420px;">
+        <div class="admin-modal-header">
+            <h3>Confirm User</h3>
+            <button class="admin-modal-close" onclick="closeRgUserConfirm()">✕</button>
+        </div>
+        <div class="rg-confirm-body" id="rgUserConfirmBody">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+</div>
+
+
+
+

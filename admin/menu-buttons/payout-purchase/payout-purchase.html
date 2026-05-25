@@ -1,0 +1,308 @@
+<!-- Purchase with Payout Modal -->
+<div class="admin-modal-overlay" id="payoutPurchaseModal" style="z-index: 100050;">
+    <div class="admin-modal-content" style="max-height: 90vh;">
+        <div class="admin-modal-header">
+            <h3>Purchase with Payout</h3>
+            <button class="admin-modal-close" onclick="closePayoutPurchaseModal()">✕</button>
+        </div>
+        <div class="admin-modal-body" style="padding-bottom: 24px;">
+            
+            <!-- User ID Input & Validation -->
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Find Customer</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="ppUserId" class="form-input" placeholder="User ID, Email or Phone" style="flex: 1;">
+                    <button class="admin-modern-btn primary" id="ppVerifyBtn" style="width: auto; padding: 0 16px; font-size: 0.9rem;">Verify</button>
+                </div>
+                <div id="ppUserInfo" style="display: none; margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+                    <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem;" id="ppUserName">Unknown User</div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 4px; align-items: center;">
+                        <span style="font-size: 0.85rem; color: #64748b;">Available Payout: <strong id="ppUserBalance" style="color: #8b5cf6; font-size: 1rem;">₦0.00</strong></span>
+                        <button id="ppViewUserInfoBtn" style="background: none; border: none; color: #8b5cf6; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-decoration: underline;">View Profile</button>
+                    </div>
+                </div>
+                <div id="ppUserError" style="display: none; margin-top: 8px; color: #ef4444; font-size: 0.85rem; font-weight: 600;">User not found!</div>
+            </div>
+
+            <!-- Purchase Form (shown after user verified) -->
+            <!-- Purchase Form (shown after user verified) -->
+            <div id="ppPurchaseForm" style="display: none; border-top: 1px dashed #e2e8f0; padding-top: 20px;">
+                
+                <!-- TABS (Like in Salesbook) -->
+                <div style="display: flex; gap: 8px; margin-bottom: 20px; background: #f1f5f9; padding: 6px; border-radius: 12px; font-size: 0.85rem; overflow-x: auto;">
+                    <button type="button" class="pp-sale-tab-btn active" data-target="ppSpecialItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: white; color: #8b5cf6; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s; min-width: max-content;">Analytical</button>
+                    <button type="button" class="pp-sale-tab-btn" data-target="ppExistingItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; min-width: max-content;">Default</button>
+                    <button type="button" class="pp-sale-tab-btn" data-target="ppFlexItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; min-width: max-content;">Flexible</button>
+                    <button type="button" class="pp-sale-tab-btn" data-target="ppCustomItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; min-width: max-content;">Custom</button>
+                </div>
+
+                <!-- Existing Item Form (Default) -->
+                <form id="ppExistingItemForm" class="pp-add-sale-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Select Native Product</label>
+                        <div class="custom-dropdown-wrapper" id="ppItemDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="ppItemDropdownTrigger">
+                                <span class="trigger-text">Select an Item</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="ppItemDropdownMenu">
+                                <!-- Options will be injected here -->
+                            </div>
+                            <input type="hidden" id="ppExistingItemSelect" required>
+                        </div>
+                    </div>
+                    <div class="form-group" id="ppDefaultVariantContainer" style="display: none; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                        <label>Select Type</label>
+                        <div style="display: flex; gap: 8px;">
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="pp-default-variant-label">
+                                <input type="radio" name="ppDefaultVariant" value="retail" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="ppDefaultVariantRetailLabelTxt">Retail</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="ppDefaultVariantRetailPrice">₦0</div>
+                            </label>
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="pp-default-variant-label">
+                                <input type="radio" name="ppDefaultVariant" value="wholesale" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="ppDefaultVariantWholesaleLabelTxt">Wholesale</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="ppDefaultVariantWholesalePrice">₦0</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group" id="ppExistingPriceContainer">
+                        <label id="lblPpExistingPrice">Unit Price (₦)</label>
+                        <input type="text" id="ppExistingItemPrice" disabled class="form-input disabled-input"
+                            placeholder="0.00">
+                    </div>
+                    <div id="ppExistingFlexPriceToggleWrapper" style="display:none; justify-content:space-between; align-items:center; padding:12px 16px; margin: 0 0 12px 0; background:#fdf4ff; border:1px solid #f0abfc; border-radius:12px;">
+                        <div>
+                            <span style="display:block; margin-bottom:2px; color:#a21caf; font-weight:800; font-size:0.9rem; line-height:1.2;">Flexible Price Mode</span>
+                            <span style="display:block; font-size:0.75rem; color:#d946ef; line-height:1.2;">Allows you to input a custom amount</span>
+                        </div>
+                        <div style="position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0; cursor:pointer;" onclick="var cb=document.getElementById('ppExistingFlexToggle'); cb.checked=!cb.checked; cb.dispatchEvent(new Event('change'));">
+                            <input type="checkbox" id="ppExistingFlexToggle" style="opacity:0; width:0; height:0; position:absolute;">
+                            <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#e2e8f0; transition:.4s; border-radius:24px;" id="ppExistingFlexToggleBg"></span>
+                            <span id="ppExistingFlexToggleKnob" style="position:absolute; content:''; height:18px; width:18px; left:3px; bottom:3px; background-color:white; transition:.4s; border-radius:50%;"></span>
+                        </div>
+                    </div>
+                    <div class="form-group" id="ppExistingFlexPriceContainer" style="display: none;">
+                        <label id="lblPpExistingFlexPrice">Flexible Unit Price (₦)</label>
+                        <input type="number" id="ppExistingFlexPrice" class="form-input" min="0" step="0.01" placeholder="e.g. 500">
+                    </div>
+                    <div class="form-group">
+                        <label id="lblPpExistingQty">Quantity</label>
+                        <input type="number" id="ppExistingItemQty" min="1" required class="form-input" placeholder="Qty"
+                            value="1" step="1">
+                    </div>
+                    <button type="submit" class="add-to-list-btn" id="ppAddBasketDefault">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add to List
+                    </button>
+                </form>
+
+                <!-- Special Item Form (Analytical) -->
+                <form id="ppSpecialItemForm" class="pp-add-sale-form active" style="display: block;">
+                    <div class="form-group">
+                        <label>Select Special Product</label>
+                        <div class="custom-dropdown-wrapper" id="ppSpecDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="ppSpecDropdownTrigger">
+                                <span class="trigger-text">Select an Analytical Product</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="ppSpecDropdownMenu">
+                                <!-- Options will be injected here -->
+                            </div>
+                            <input type="hidden" id="ppSpecItemSelect" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="ppSpecVariantContainer" style="display: none; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                        <label>Select Type</label>
+                        <div style="display: flex; gap: 8px;">
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="pp-spec-variant-label">
+                                <input type="radio" name="ppSpecVariant" value="bag" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="ppSpecVariantBagLabelTxt">Container 1</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="ppSpecVariantBagPrice">₦0</div>
+                            </label>
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="pp-spec-variant-label">
+                                <input type="radio" name="ppSpecVariant" value="custard" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="ppSpecVariantCustardLabelTxt">Container 2</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="ppSpecVariantCustardPrice">₦0</div>
+                            </label>
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="pp-spec-variant-label">
+                                <input type="radio" name="ppSpecVariant" value="cup" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="ppSpecVariantCupLabelTxt">Container 3</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="ppSpecVariantCupPrice">₦0</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="ppSpecFlexPriceToggleWrapper" style="display:none; justify-content:space-between; align-items:center; padding:12px 16px; margin: 0 0 12px 0; background:#fdf4ff; border:1px solid #f0abfc; border-radius:12px;">
+                        <div>
+                            <span style="display:block; margin-bottom:2px; color:#a21caf; font-weight:800; font-size:0.9rem; line-height:1.2;">Flexible Price Mode</span>
+                            <span style="display:block; font-size:0.75rem; color:#d946ef; line-height:1.2;">Allows you to input a custom amount</span>
+                        </div>
+                        <div style="position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0; cursor:pointer;" onclick="var cb=document.getElementById('ppSpecFlexToggle'); cb.checked=!cb.checked; cb.dispatchEvent(new Event('change'));">
+                            <input type="checkbox" id="ppSpecFlexToggle" style="opacity:0; width:0; height:0; position:absolute;">
+                            <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#e2e8f0; transition:.4s; border-radius:24px;" id="ppSpecFlexToggleBg"></span>
+                            <span id="ppSpecFlexToggleKnob" style="position:absolute; content:''; height:18px; width:18px; left:3px; bottom:3px; background-color:white; transition:.4s; border-radius:50%;"></span>
+                        </div>
+                    </div>
+                    <div class="form-group" id="ppSpecFlexPriceContainer" style="display: none;">
+                        <label id="lblPpSpecFlexPrice">Flexible Unit Price (₦)</label>
+                        <input type="number" id="ppSpecFlexPrice" class="form-input" min="0" step="0.01" placeholder="e.g. 500">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="number" id="ppSpecItemQty" min="1" required class="form-input" placeholder="Qty" value="1" step="1">
+                    </div>
+                    <button type="submit" class="add-to-list-btn" id="ppAddBasketSpecial">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Add to List
+                    </button>
+                </form>
+
+                <!-- Custom Item Form -->
+                <form id="ppCustomItemForm" class="pp-add-sale-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Select Custom Product</label>
+                        <div class="custom-dropdown-wrapper" id="ppCustomDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="ppCustomDropdownTrigger">
+                                <span class="trigger-text">Select a Product</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="ppCustomDropdownMenu">
+                                <!-- Options will be injected here -->
+                            </div>
+                            <input type="hidden" id="ppCustomItemSelect" required>
+                        </div>
+                    </div>
+                    <div class="form-group" id="ppCustomPriceContainer">
+                        <label id="lblPpCustomPrice">Unit Price (₦)</label>
+                        <input type="text" id="ppCustomItemPrice" disabled class="form-input disabled-input"
+                            placeholder="0.00">
+                    </div>
+                    <div id="ppCustomFlexPriceToggleWrapper" style="display:none; justify-content:space-between; align-items:center; padding:12px 16px; margin: 0 0 12px 0; background:#fdf4ff; border:1px solid #f0abfc; border-radius:12px;">
+                        <div>
+                            <span style="display:block; margin-bottom:2px; color:#a21caf; font-weight:800; font-size:0.9rem; line-height:1.2;">Flexible Price Mode</span>
+                            <span style="display:block; font-size:0.75rem; color:#d946ef; line-height:1.2;">Allows you to input a custom amount</span>
+                        </div>
+                        <div style="position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0; cursor:pointer;" onclick="var cb=document.getElementById('ppCustomFlexToggle'); cb.checked=!cb.checked; cb.dispatchEvent(new Event('change'));">
+                            <input type="checkbox" id="ppCustomFlexToggle" style="opacity:0; width:0; height:0; position:absolute;">
+                            <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#e2e8f0; transition:.4s; border-radius:24px;" id="ppCustomFlexToggleBg"></span>
+                            <span id="ppCustomFlexToggleKnob" style="position:absolute; content:''; height:18px; width:18px; left:3px; bottom:3px; background-color:white; transition:.4s; border-radius:50%;"></span>
+                        </div>
+                    </div>
+                    <div class="form-group" id="ppCustomFlexPriceContainer" style="display: none;">
+                        <label id="lblPpCustomFlexPrice">Flexible Unit Price (₦)</label>
+                        <input type="number" id="ppCustomFlexPrice" class="form-input" min="0" step="0.01" placeholder="e.g. 500">
+                    </div>
+                    <div class="form-group">
+                        <label id="lblPpCustomQty">Quantity</label>
+                        <input type="number" id="ppCustomItemQty" min="1" required class="form-input" placeholder="Qty"
+                            value="1" step="1">
+                    </div>
+                    <button type="submit" class="add-to-list-btn" id="ppAddBasketCustom">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Add to List
+                    </button>
+                </form>
+
+                <!-- Flexible Item Form -->
+                <form id="ppFlexItemForm" class="pp-add-sale-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Select Flexible Product</label>
+                        <div class="custom-dropdown-wrapper" id="ppFlexDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="ppFlexDropdownTrigger">
+                                <span class="trigger-text">Select a Product</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="ppFlexDropdownMenu">
+                                <!-- Options will be injected here -->
+                            </div>
+                            <input type="hidden" id="ppFlexItemSelect" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="ppFlexVariantContainer" style="display: none; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                        <label>Select Type</label>
+                        <div style="display: flex; gap: 8px;">
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="pp-flex-variant-label">
+                                <input type="radio" name="ppFlexVariant" value="c1" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="ppFlexVariantC1LabelTxt">Container 1</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="ppFlexVariantC1Price">₦0</div>
+                            </label>
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="pp-flex-variant-label">
+                                <input type="radio" name="ppFlexVariant" value="c2" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="ppFlexVariantC2LabelTxt">Container 2</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="ppFlexVariantC2Price">₦0</div>
+                            </label>
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="pp-flex-variant-label">
+                                <input type="radio" name="ppFlexVariant" value="c3" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="ppFlexVariantC3LabelTxt">Container 3</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;">Flexible Price</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="ppFlexFlexPriceToggleWrapper" style="display:none; justify-content:space-between; align-items:center; padding:12px 16px; margin: 0 0 12px 0; background:#fdf4ff; border:1px solid #f0abfc; border-radius:12px;">
+                        <div>
+                            <span style="display:block; margin-bottom:2px; color:#a21caf; font-weight:800; font-size:0.9rem; line-height:1.2;">Flexible Price Mode</span>
+                            <span style="display:block; font-size:0.75rem; color:#d946ef; line-height:1.2;">Allows you to input a custom amount</span>
+                        </div>
+                        <div style="position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0; cursor:pointer;" onclick="var cb=document.getElementById('ppFlexFlexToggle'); cb.checked=!cb.checked; cb.dispatchEvent(new Event('change'));">
+                            <input type="checkbox" id="ppFlexFlexToggle" style="opacity:0; width:0; height:0; position:absolute;">
+                            <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#e2e8f0; transition:.4s; border-radius:24px;" id="ppFlexFlexToggleBg"></span>
+                            <span id="ppFlexFlexToggleKnob" style="position:absolute; content:''; height:18px; width:18px; left:3px; bottom:3px; background-color:white; transition:.4s; border-radius:50%;"></span>
+                        </div>
+                    </div>
+                    <div class="form-group" id="ppFlexCustomPriceContainer" style="display: none;">
+                        <label id="lblPpFlexPrice">Retail Unit Price (₦) - Input Random Price</label>
+                        <input type="number" id="ppFlexItemPrice" class="form-input" min="0" step="0.01" placeholder="e.g. 500">
+                    </div>
+                    <div class="form-group">
+                        <label id="lblPpFlexQty">Quantity</label>
+                        <input type="number" id="ppFlexItemQty" min="1" required class="form-input" placeholder="Qty" value="1" step="1">
+                    </div>
+                    <button type="submit" class="add-to-list-btn" id="ppAddBasketFlex">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Add to List
+                    </button>
+                </form>
+
+
+
+                <!-- Basket Section -->
+                <div class="sale-basket-container" id="ppBasketContainer" style="display: none; margin-top: 20px;">
+                    <div class="basket-header">Items in this Transaction</div>
+                    <div class="basket-items-list" id="ppBasketItemsList">
+                        <!-- Basket items go here -->
+                    </div>
+                    <div class="basket-summary">
+                        <span>Transaction Total</span>
+                        <span id="ppBasketSubtotal">₦0.00</span>
+                    </div>
+                    <div id="ppFundWarning" style="color: #dc2626; font-size: 0.85rem; font-weight: 700; text-align: center; margin-top: 8px; display: none; padding: 10px; background: #fef2f2; border-radius: 10px; border: 1px solid #fee2e2;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        Insufficient Payout Funds!
+                    </div>
+                    <button id="ppFinalizeBtn" class="wide-add-btn save-btn" style="margin-top: 12px;" disabled>Complete Purchase with Payout</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+

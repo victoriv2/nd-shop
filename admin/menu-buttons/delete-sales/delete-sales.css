@@ -1,0 +1,544 @@
+.delete-sales-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: #f8fafc;
+    z-index: 2000;
+    display: none;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.delete-sales-page.show {
+    transform: translateX(0);
+}
+
+.ds-header {
+    background: white;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    justify-content: space-between;
+}
+
+.ds-back-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #1e293b;
+    padding: 5px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.ds-back-btn:active {
+    background: #f1f5f9;
+}
+
+.ds-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* Day Selector & Metrics */
+.ds-metrics-section {
+    background: white;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.ds-month-summary {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 10px 15px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.ds-month-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-right: 6px;
+}
+
+.ds-month-value {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.ds-month-payout {
+    color: #10b981;
+}
+
+.ds-day-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.ds-nav-btn {
+    background: #f1f5f9;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8b5cf6;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ds-nav-btn:active {
+    transform: scale(0.95);
+    background: #e2e8f0;
+}
+
+.ds-nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f8fafc;
+    color: #94a3b8;
+}
+
+.ds-current-date-display {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    letter-spacing: -0.5px;
+}
+
+.ds-balance-cards {
+    display: flex;
+    gap: 15px;
+}
+
+.ds-metric-card {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.ds-metric-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.ds-metric-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+/* Search & Sort Bar */
+.ds-filter-bar {
+    padding: 15px 20px;
+    display: flex;
+    gap: 12px;
+    background: #f8fafc;
+}
+
+.ds-search-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0 12px;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.ds-search-wrapper:focus-within {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(27,38,59,0.1);
+}
+
+.ds-search-wrapper svg {
+    color: #94a3b8;
+}
+
+.ds-search-wrapper input {
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 10px 0;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #0f172a;
+    background: transparent;
+}
+
+.ds-search-wrapper input::placeholder {
+    color: #94a3b8;
+}
+
+.ds-sort-container {
+    position: relative;
+    z-index: 100;
+}
+
+.ds-sort-toggle {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.ds-sort-toggle:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.ds-sort-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 200px;
+    background: white;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 8px;
+    display: none;
+    flex-direction: column;
+}
+
+.ds-sort-menu.show {
+    display: flex;
+    animation: dsFadeDown 0.2s ease forwards;
+}
+
+@keyframes dsFadeDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.ds-sort-option {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.ds-sort-option.active {
+    background: #f0f4f8;
+    color: #8b5cf6;
+}
+
+.ds-sort-option:hover:not(.active) {
+    background: #f1f5f9;
+}
+
+/* Passcode Gateway */
+.ds-passcode-gateway {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #f8fafc;
+    z-index: 2010;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #0f172a;
+}
+
+.ds-passcode-container {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    width: 90%;
+    max-width: 320px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.ds-pass-title {
+    color: #0f172a;
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 0 0 8px 0;
+}
+
+.ds-pass-subtitle {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin: 0 0 20px 0;
+    line-height: 1.4;
+}
+
+.ds-pass-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.ds-pass-char {
+    width: 50px;
+    height: 60px;
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 24px;
+    font-weight: 800;
+    text-align: center;
+    color: #0f172a;
+    background: #f8fafc;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.ds-pass-char:focus {
+    border-color: #8b5cf6;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(27, 38, 59, 0.2);
+}
+
+.ds-pass-error {
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: -12px;
+    margin-bottom: 12px;
+    height: 16px;
+}
+
+/* Sales List */
+.ds-list-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px 20px 20px;
+}
+
+.ds-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.ds-item-info {
+    flex: 1;
+}
+
+.ds-item-action-area {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.ds-item-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ds-badge-user {
+    background: #f0f4f8;
+    color: #8b5cf6;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    border: 1px solid #bfdbfe;
+}
+
+.ds-item-meta {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.ds-item-price {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+    text-align: right;
+}
+
+.ds-delete-btn {
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.ds-delete-btn:active {
+    background: #fecaca;
+    transform: scale(0.96);
+}
+
+.ds-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+}
+
+.ds-empty-state svg {
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.ds-empty-state h3 {
+    margin: 0;
+    color: #475569;
+}
+
+/* Custom Delete Confirmation Modal */
+.ds-confirm-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 2100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ds-confirm-box {
+    background: white;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 20px;
+    padding: 30px 24px;
+    text-align: center;
+    transform: scale(0.95);
+    opacity: 0;
+    animation: dsScaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1) forwards;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+@keyframes dsScaleIn {
+    to { transform: scale(1); opacity: 1; }
+}
+
+.ds-confirm-icon-wrapper {
+    background: #fee2e2;
+    color: #ef4444;
+    width: 64px; height: 64px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px auto;
+}
+
+.ds-confirm-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+}
+
+.ds-confirm-msg {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin: 0 0 24px 0;
+    line-height: 1.4;
+}
+
+.ds-confirm-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.ds-confirm-btn {
+    flex: 1;
+    padding: 16px 0;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ds-btn-cancel {
+    background: #f1f5f9;
+    color: #475569;
+}
+.ds-btn-cancel:active { background: #e2e8f0; }
+
+.ds-btn-danger {
+    background: #ef4444;
+    color: white;
+}
+.ds-btn-danger:active { background: #dc2626; transform: scale(0.98); }
+
+/* Day Picker Modal Grid */
+.ds-day-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 0;
+    font-weight: 700;
+    color: #475569;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.ds-day-btn:hover { border-color: #8b5cf6; color: #8b5cf6; }
+.ds-day-btn.active { background: #8b5cf6; color: white; border-color: #8b5cf6; box-shadow: 0 4px 10px rgba(27,38,59,0.3); }
+
+
+
+

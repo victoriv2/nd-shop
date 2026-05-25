@@ -1,0 +1,231 @@
+1: 11 PM          22747 index.html                                                           
+2: 20 PM          38665 request.js                                                           
+3: 58 AM          22281 menu.html                                                            
+5: if (window.adminExpectedTabId && window.adminExpectedTabId !== 'tab-request') return;
+6: 35:59Z","thinki
+7: 30 AM          14394 register.js                                                          
+8: const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');\r\nc:\\Users\\MFM IKOT 
+9: 47 AM          22006 register.html                                                        
+10: 47 AM          11456 user-details.js                                                      
+11: 12:     container.innerHTML = `
+12: 44 AM           4732 user-details.css                                                     
+13: 15:32Z 
+14: 57:07Z
+15: 04:56Z sender=1d6f745e-e53b-4fd1-9f9a-b839bf1cc172/task-888 priority=MESSAGE_PRIORITY_HIGH content=Task id "1d6f745e-e53b-4fd1-9f9a-b839bf1cc172/task-888" finished with result:
+17: <div class="request-search-wrapper">
+18: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+19: <input type="text" id="requestSearchInput" placeholder="Search customer, item or ID..." oninput="handleRequestSearch(this.value)">
+20: </div>
+21: 22:                 <div class="request-filter-capsules" style="padding-top: 10px; margin-top: -10px;">
+23: <button class="request-filter-btn active" onclick="handleRequestFilter('All', this)">All</button>
+24: <button class="request-filter-btn" id="pendingFilterBtn" onclick="handleRequestFilter('Pending', this)">Pending</button>
+25: <button class="request-filter-btn" id="approvedFilterBtn" onclick="hand
+43: const savedSales = 
+54: const allSales = 
+55: localStorage.setItem('nd_sales_history', JSON.stringify(sampleData));\r\nc:\\Users\\MFM IKOT 
+92: const allSales = JSON.parse(localStorag
+104: try { allSales = 
+134: const savedSales = 
+168: // Calculate Revenue per month from nd_sales_history
+170: const sales = 
+236: allSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+300: if (variants.length > 1 && v.title !== 'Default') {
+301: displayName += ` (${v.title})`;
+302: }
+303: 304:                 const effectivePrice = v.flex ? customPriceInput : v.price;
+305: const total = effectivePrice * currentQty;
+306: 307:                 item.name = displayName;
+308: item.qty = currentQty;
+309: item.unitPrice = effectivePrice;
+310: item.total = total;
+311: item.isFlexible = v.flex;
+312: item.unitCost = v.cost;
+313: item.unit = v.unit || `per ${v.title.toLowerCase()}`;
+314: item.price = v.flex ? 'TBD' : effectivePrice;
+315: 316:                 // Calculate Payout
+317: const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
+318: if (payoutEnabled) {
+319: const globalRate = parseFloat(localStorage.getItem('nd_payout_rate') || 2);
+320: let payoutRate = p.payoutRate !== undefined ? parseFloat(p.payoutRate) : globalRate;
+321: 322:                     if (v.flex || p.isCustom) {
+323: item.payout = 0;
+324: } else {
+325: const totalCost = currentQty * (v.cost || 0);
+326: const profit = total - totalCost;
+327: item.payout = Math.max(0, profit) * (payoutRate / 100);
+328: }
+329: } else {
+330: item.payout = 0;
+331: }
+332: 333:                 saveWorkingItems();
+334: renderRows();
+335: overlay.remove();
+336: };
+337: });
+338: };
+339: The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+373: salesData = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+375: const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+383: localStorage.setItem('nd_sales_history', JSON.stringify(salesData));
+392: const allSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+400: // Show small toast
+401: const toast = document.createElement('div');
+402: toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:10px 20px;border-radius:10px;font-size:0.85rem;font-weight:600;z-index:999999;opacity:0;transition:opacity 0.2s;';
+403: toast.textContent = 'Cannot remove the only item — decline the order instead.';
+404: document.body.appendChild(toast);
+405: requestAnimationFrame(() => { toast.style.opacity = '1'; });
+406: setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+407: return;
+408: }
+409: 410:         _requirePinAndExecute(() => {
+411: workingItems.splice(idx, 1);
+412: saveWorkingItems();
+413: renderRows();
+414: });
+415: };
+416: 417:     window._openAdminItemEditModal = function(idx) {
+417: window._openAdminItemEditModal = function(idx) {
+418: _requirePinAndExecute(() => {
+419: const item = workingItems[idx];
+420: const isFlexible = item.price === 'TBD' || item.isFlexible || (!item.unitPrice && item.total > 0 && !item.price);
+421: 422:             // Find existing unit price or calculate it
+423: let unitPrice = item.unitPrice;
+424: if (!unitPrice) {
+425: unitPrice = item.total / item.qty;
+426: }
+427: 428:             let currentQty = parseFloat(item.qty) || 1;
+429: let currentFlexTotal = parseFloat(item.total) || 0;
+430: 431:             const overlay = document.createElement('div');
+432: overlay.className = 'product-modal-overlay show';
+433: overlay.style.zIndex = '100005';
+434: 435:             overlay.innerHTML = `
+436: <div class="product-modal-content">
+437: <div class="pm-header">
+438: <h3>Edit Requested Item</h3>
+439: <span class="pm-close" onclick="this.closest('.product-modal-overlay').remove()">&times;</span>
+440: </div>
+441: <div class="pm-body">
+442: <div class="pm-hero-section">
+443: <div class="pm-product-name" style="font-size:1.5rem; margin-bottom:8px;">${item.name}</div>
+444: <div class="pm-product-price-row">
+445: <truncated 3269 bytes>
+460: let allSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+490: 491:             const qtyDisp = overlay.querySelector('#admEditQty');
+492: const totDisp = overlay.querySelector('#admEditTotalVal');
+493: const flexInp = overlay.querySelector('#admEditFlexInput');
+494: 495:             function updateAdminEditTotal() {
+496: qtyDisp.textContent = currentQty;
+497: if (!isFlexible && totDisp) {
+498: totDisp.textContent = '₦' + Math.round(unitPrice * currentQty).toLocaleString();
+499: }
+500: }
+501: 502:             overlay.querySelector('#admEditMinus').onclick = () => {
+503: if (currentQty > 1) {
+504: currentQty--;
+505: updateAdminEditTotal();
+506: }
+507: };
+508: 509:             overlay.querySelector('#admEditPlus').onclick = () => {
+510: currentQty++;
+511: updateAdminEditTotal();
+512: };
+513: 514:             if (isFlexible && flexInp) {
+515: flexInp.oninput = (e) => {
+516: currentFlexTotal = parseFloat(e.target.value) || 0;
+517: };
+518: }
+519: 520:             overlay.querySelector('#admEditSaveBtn').onclick = () => {
+521: const finalTotal = isFlexible ? currentFlexTotal : Math.round(unitPrice * currentQty);
+522: item.qty = currentQty;
+523: item.total = finalTotal;
+524: if (!item.unitPrice && !isFlexible) {
+525: item.unitPrice = unitPrice;
+526: }
+527: saveWorkingItems();
+528: renderRows();
+529: overlay.remove();
+530: };
+531: });
+532: };
+533: 534:     renderRows();
+535: }
+566: const cT = prod.packTypes?.custard?.title || prod.packTypes?.c2?.title || 'Container 2';
+567: const cpT = prod.packTypes?.cup?.title || prod.packTypes?.c3?.title || 'Container 3';
+568: 569:                     if (matchStr === bT) return window.getRemainingProductStock(prod.name, 'bag');
+570: if (matchStr === cT) return window.getRemainingProductStock(prod.name, 'custard');
+571: if (matchStr === cpT) return window.getRemainingProductStock(prod.name, 'cup');
+572: }
+573: }
+574: }
+575: return window.getRemainingProductStock(itemName, null);
+576: try { sales = 
+577: 578:     if (request.isGroupedOrder && request.items) {
+579: request.items.forEach(item => {
+580: const remaining = getRemaining(item.name);
+581: if (remaining !== null && remaining < parseFloat(item.qty)) {
+582: issues.push({ name: item.name, ordered: item.qty, remaining: remaining, unit: item.unit || '' });
+583: }
+584: });
+585: } else if (request.product) {
+586: const remaining = getRemaining(request.product.name);
+587: if (remaining !== null && remaining < parseFloat(request.product.qty)) {
+588: issues.push({ name: request.product.name, ordered: request.product.qty, remaining: remaining, unit: request.product.unit || '' });
+589: }
+590: }
+591: 592:     return issues;
+593: }
+594: 595: function showStockWarningAlert(issues) {
+596: // Remove any existing warning overlay
+597: const existing = document.getElementById('stockWarningOverlay');
+598: if (existing) existing.remove();
+599: 600:     const itemLines = issues.map(i => `
+668: const dbSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]').slice(0, 100);
+671: const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');\r\nc:\\Users\\MFM IKOT 
+675: totalPayout += s.payout || 0;
+701: const sales = 
+707: hours = hours % 12 || 12;
+708: const timeStr = `${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()} · ${hours}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`;
+709: 710:     if (req.isGroupedOrder && req.items) {
+710: if (req.isGroupedOrder && req.items) {
+711: // Reverse array initially so after unshifting them all out they remain in logical order
+712: const itemsToProcess = [...req.items].reverse();
+713: itemsToProcess.forEach(item => {
+714: sales.unshift({
+715: date: timeStr,
+716: item: item.name,\r\n717:                 qty: item.qty,\r\n718: 
+717: qty: item.qty,
+718: unitPrice: item.unitPrice,
+719: price: item.total,\r\n720:                 payout: 
+720: payout: req.isRewardPurchase ? -Math.abs(item.total) : (item.payout || 0),
+721: isFlexible: item.isFlexible 
+722: customerID: req.user.id,\r\n723:                 customerName: 
+723: customerName: req.user.name,
+724: type: req.isRewardPurchase ? 'Payout Purchase' : 'Request',\r\n725:             
+725: unit: item.unit || ''
+726: });\r\n727:         });\r\n728:     } else if (req.product) {\r\n729:    
+727: });
+728: } else if (req.product) {
+729: sales.unshift({
+730: date: timeStr,\r\n731:             item: req.product.name,\r\n732:            
+731: item: req.product.name,
+732: qty: req.product.qty,
+733: unitPrice: req.product.total / req.product.qty,\r\n734:             price: 
+734: price: req.product.total,
+735: payout: req.isRewardPurchase ? -Math.abs(req.product.total) : 
+736: isFlexible: req.product.isFlexible || false,\r\n737:             
+737: customerID: req.user.id,
+738: customerName: req.user.name,\r\n739:             type: 
+739: type: req.isRewardPurchase ? 'Payout Purchase' : 'Request',
+740: unit: req.product.unit || ''\r\n741:         
+741: });
+742: }\r\n743: \r\n744:     localStorage.setItem('nd_sales_history', JSON.stringify(sales));\r\n745: 
+743: 744:     localStorage.setItem('nd_sales_history', JSON.stringify(sales));
+744: localStorage.setItem('nd_sales_history', 
+745: }
+746: The above content shows the entire, complete file contents of the requested file.
+1140: sales.unshift(newSale);
+1322: sales.unshift(newSale);
+1326: let sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+1327: sales.unshift(newSale);
+1328: localStorage.setItem('nd_sales_history', JSON.stringify(sales));
+1480: sales.unshift(newSale);

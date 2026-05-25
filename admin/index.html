@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Nd shop</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="register/register.css">
+    <link rel="stylesheet" href="register/date-selector.css">
+    <link rel="stylesheet" href="register/sales-table/sales-table.css">
+    <link rel="stylesheet" href="progress/progress.css">
+    <link rel="stylesheet" href="product/product.css">
+    <link rel="stylesheet" href="product/product-details.css">
+    <link rel="stylesheet" href="request/request.css">
+    <link rel="stylesheet" href="request/order-modal.css">
+    <link rel="stylesheet" href="user-details/user-details.css">
+    <link rel="stylesheet" href="menu/menu.css">
+    <link rel="stylesheet" href="../modal.css">
+    <link rel="stylesheet" href="../product/product-modal.css">
+
+    <!-- Admin Menu Modals CSS -->
+    <link rel="stylesheet" href="menu-buttons/admin-modal-core.css">
+    <link rel="stylesheet" href="menu-buttons/manage-users/manage-users.css">
+    <link rel="stylesheet" href="menu-buttons/debt-requests/debt-requests.css">
+    <link rel="stylesheet" href="menu-buttons/restock/restock.css">
+    <link rel="stylesheet" href="debtor-book/debtor-book.css">
+    <link rel="stylesheet" href="menu-buttons/expenses-notebook/expenses-notebook.css">
+    <link rel="stylesheet" href="menu-buttons/sales-book/sales-book.css">
+    <link rel="stylesheet" href="menu-buttons/delete-sales/delete-sales.css">
+    <link rel="stylesheet" href="menu-buttons/recycle-bin/recycle-bin.css">
+    <link rel="stylesheet" href="menu-buttons/hidden-products/hidden-products.css">
+    <link rel="stylesheet" href="menu-buttons/income-structure/income-structure.css">
+
+    <link rel="stylesheet" href="menu-buttons/system-backup/system-backup.css">
+    <link rel="stylesheet" href="menu-buttons/financial-settings/financial-settings.css">
+    <link rel="stylesheet" href="menu-buttons/admin-security/admin-security.css">
+    <link rel="stylesheet" href="menu-buttons/maintenance/maintenance.css">
+    <link rel="stylesheet" href="menu-buttons/tax-records/tax-records.css">
+    <link rel="stylesheet" href="menu-buttons/ai-chat/ai-chat.css">
+    <link rel="stylesheet" href="menu-buttons/customer-insights/customer-insights.css">
+    <link rel="stylesheet" href="menu-buttons/yearly-overview/yearly-overview.css">
+
+    <!-- Dark Mode Theme System -->
+    <link rel="stylesheet" href="../dark-mode/core/variables.css">
+    <link rel="stylesheet" href="../dark-mode/core/base.css">
+    <link rel="stylesheet" href="../dark-mode/components/messaging.css">
+    <link rel="stylesheet" href="../dark-mode/components/community.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="../custom-alert.js"></script>
+    <script src="modal-persistence.js"></script>
+</head>
+
+<body>
+    <!-- Hidden dummy form to absorb browser autofill/save-password detection -->
+    <form autocomplete="off" style="position:absolute;top:-9999px;left:-9999px;width:0;height:0;overflow:hidden;" aria-hidden="true">
+        <input type="text" name="fakeusernameremember" tabindex="-1" autocomplete="off">
+        <input type="password" name="fakepasswordremember" tabindex="-1" autocomplete="off">
+    </form>
+    <header class="admin-header">
+        <div class="logo-container">
+            <span id="shopLogoText" class="shop-logo-text">Nd shop</span>
+        </div>
+        <div class="header-actions">
+            <button class="header-print-btn" id="headerPrintBtn">Download</button>
+        </div>
+    </header>
+
+    <main class="admin-content">
+        <div id="register-container"></div>
+    </main>
+    <div id="modal-container"></div>
+    
+    <!-- Persistent Admin Modals -->
+    <div id="persistent-modal-container">
+        <!-- App Contact Settings Modal -->
+        <div class="admin-modal-overlay" id="appContactSettingsModal" style="z-index: 2000000; display: none;">
+            <div class="admin-modal-content" style="max-width: 380px;">
+                <div class="admin-modal-header">
+                    <h3 style="font-size: 1.15rem;">Shop Branding & Contact</h3>
+                    <button class="admin-modal-close" onclick="closeAppContactSettings()">✕</button>
+                </div>
+                <div class="admin-modal-body">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 8px;">Shop Name</label>
+                        <input type="text" id="appShopNameInput" style="width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 1rem; outline: none;" placeholder="e.g Nd shop">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 8px;">Shop Owner Phone Number</label>
+                        <input type="text" id="appContactPhoneInput" style="width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 1rem; outline: none;" placeholder="e.g 08109316532">
+                    </div>
+                    <button class="admin-modern-btn primary" onclick="saveAppContactSettings()" style="width: 100%;">Save Branding Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="admin-bottom-bar">
+        <div class="bottom-bar-item active" id="tab-register">
+            <svg viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <span>Salesbook</span>
+        </div>
+        <div class="bottom-bar-item" id="tab-progress">
+            <svg viewBox="0 0 24 24">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+            </svg>
+            <span>Progress</span>
+        </div>
+        <div class="bottom-bar-item" id="tab-product">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                </path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+            <span>Shop Products</span>
+        </div>
+        <div class="bottom-bar-item" id="tab-request">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+            </svg>
+            <span>Request</span>
+        </div>
+        <div class="bottom-bar-item" id="tab-menu">
+            <svg viewBox="0 0 24 24">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            <span>Menu</span>
+        </div>
+    </nav>
+
+    <script src="register/date-selector.js"></script>
+    <script src="register/sales-table/sales-table.js"></script>
+    <script src="progress/progress.js"></script>
+    <script src="product/product.js"></script>
+    <script src="product/product-details.js"></script>
+    <script src="request/request.js"></script>
+    <script src="user-details/user-details.js"></script>
+    <script src="menu/menu.js"></script>
+    <script src="register/register.js"></script>
+
+    <!-- Admin Menu Modals JS -->
+    <script src="menu-buttons/manage-users/manage-users.js"></script>
+    <script src="menu-buttons/debt-requests/debt-requests.js"></script>
+    <script src="menu-buttons/restock/restock.js"></script>
+    <script src="menu-buttons/restock/top-up.js"></script>
+    <script src="menu-buttons/payout-purchase/payout-purchase.js"></script>
+    <script src="debtor-book/debtor-book.js?v=2"></script>
+
+    <!-- Profit Allocation Framework -->
+    <script src="menu-buttons/sales-book/sales-book.js"></script>
+    <script src="menu-buttons/receipt-generator/receipt-generator.js"></script>
+    <script src="menu-buttons/delete-sales/delete-sales.js"></script>
+    <script src="menu-buttons/recycle-bin/recycle-bin.js"></script>
+    <script src="menu-buttons/hidden-products/hidden-products.js"></script>
+    <script src="menu-buttons/expenses-notebook/expenses-notebook.js"></script>
+    <script src="menu-buttons/tax-records/tax-records.js"></script>
+    <script src="menu-buttons/income-structure/income-structure.js"></script>
+
+    <script src="menu-buttons/system-backup/system-backup.js"></script>
+    <script src="menu-buttons/financial-settings/financial-settings.js"></script>
+    <script src="menu-buttons/admin-security/admin-security.js"></script>
+    <script src="menu-buttons/maintenance/maintenance.js"></script>
+    <script src="menu-buttons/ai-chat/ai-chat.js"></script>
+    <script src="menu-buttons/customer-insights/customer-insights.js"></script>
+    <script src="menu-buttons/yearly-overview/yearly-overview.js"></script>
+
+    <!-- Messaging System -->
+    <script src="../messaging/messaging.js"></script>
+
+    <!-- Community System -->
+    <script src="../community/community.js"></script>
+    <script src="../real-time-sync.js"></script>
+    <script src="../real-time-listeners.js"></script>
+    <script src="../real-time-sync-tester.js"></script>
+    <script src="../global-fixes.js"></script>
+    <script src="scratch_auth.js"></script>
+    <script src="login/login.js"></script>
+
+    <script>
+        // Check Admin Login First
+        document.addEventListener("DOMContentLoaded", checkAdminAuth);
+
+        // Simple Admin Router logic
+        const ADMIN_TAB_KEY = 'nd_admin_active_tab';
+
+        // Map page names to tab IDs for restoration
+        window.adminPageRestoreActions = {
+            manageUsers: () => { if (typeof openManageUsers === 'function') openManageUsers(); },
+            adminMessages: () => { if (typeof openAdminInbox === 'function') openAdminInbox(); },
+            restock: () => { if (typeof openRestockModal === 'function') openRestockModal(); },
+            debtorBook: () => { if (typeof openDebtorBook === 'function') openDebtorBook(); },
+            debtPayments: () => { if (typeof openDebtRequests === 'function') openDebtRequests(); },
+            adminCommunity: () => { if (typeof openCommunityChat === 'function') openCommunityChat(); },
+            payoutPurchase: () => { if (typeof openPayoutPurchaseModal === 'function') openPayoutPurchaseModal(); },
+            customerInsights: () => { if (typeof openCustomerInsights === 'function') openCustomerInsights(); },
+            salesBook: () => { if (typeof openSalesBook === 'function') openSalesBook(); },
+            receiptGenerator: () => { if (typeof window.openReceiptGeneratorAdmin === 'function') window.openReceiptGeneratorAdmin(); },
+            expensesNotebook: () => { if (typeof openExpensesNotebook === 'function') openExpensesNotebook(); },
+            taxRecords: () => { if (typeof openTaxRecords === 'function') openTaxRecords(); },
+            deleteSales: () => { if (typeof openDeleteSales === 'function') openDeleteSales(); },
+            recycleBin: () => { if (typeof openRecycleBin === 'function') openRecycleBin(); },
+            hiddenShopProducts: () => { if (typeof openHiddenProducts === 'function') openHiddenProducts(); },
+            incomeStructure: () => { if (typeof openIncomeStructure === 'function') openIncomeStructure(); },
+            yearlyOverview: () => { if (typeof openYearlyOverview === 'function') openYearlyOverview(); },
+            financialSettings: () => { if (typeof openFinancialSettings === 'function') openFinancialSettings(); },
+            adminSecurity: () => { if (typeof openAdminSecurity === 'function') openAdminSecurity(); },
+            maintenance: () => { if (typeof openMaintenance === 'function') openMaintenance(); },
+            appContactSettings: () => { if (typeof openAppContactSettings === 'function') openAppContactSettings(); },
+            systemBackup: () => { if (typeof openSystemBackup === 'function') openSystemBackup(); },
+            aiMode: () => { if (typeof openAiChat === 'function') openAiChat(); }
+        };
+
+        window.openAdminSubpage = function(actionKey) {
+            const action = window.adminPageRestoreActions?.[actionKey];
+            if (typeof action === 'function') {
+                try {
+                    action();
+                } catch (e) {
+                    console.warn('[Admin] Failed to restore subpage:', e);
+                }
+            }
+        };
+
+        window.loadAdminPage = function(pageName, subAction) {
+            const pageMap = {
+                'salesbook': 'tab-register',
+                'progress': 'tab-progress',
+                'product': 'tab-product',
+                'request': 'tab-request',
+                'menu': 'tab-menu'
+            };
+            const tabId = pageMap[pageName];
+            if (tabId) {
+                return activateAdminTab(tabId, subAction);
+            }
+            return Promise.resolve();
+        };
+
+        const ADMIN_TAB_TO_PAGE = {
+            'tab-register': 'salesbook',
+            'tab-progress': 'progress',
+            'tab-product': 'product',
+            'tab-request': 'request',
+            'tab-menu': 'menu'
+        };
+
+        function parseAdminPageState() {
+            try {
+                const saved = localStorage.getItem('nd_admin_page_state');
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    if (state.timestamp && Date.now() - state.timestamp > 86400000) {
+                        localStorage.removeItem('nd_admin_page_state');
+                    } else if (state.page) {
+                        return { page: state.page, subpage: state.subpage || null };
+                    }
+                }
+            } catch (e) {
+                console.warn('[Admin] Failed to parse saved page state', e);
+            }
+
+            const hash = (location.hash || '').replace(/^#/, '');
+            if (hash && ADMIN_TAB_TO_PAGE[hash]) {
+                return { page: ADMIN_TAB_TO_PAGE[hash], subpage: null };
+            }
+
+            const legacyTab = localStorage.getItem(ADMIN_TAB_KEY);
+            if (legacyTab && ADMIN_TAB_TO_PAGE[legacyTab]) {
+                return { page: ADMIN_TAB_TO_PAGE[legacyTab], subpage: null };
+            }
+
+            return null;
+        }
+
+        function activateAdminTab(tabId, pendingSubAction) {
+            return new Promise((resolve) => {
+                window.adminExpectedTabId = tabId;
+                if (window.showGlobalRefreshLoader) window.showGlobalRefreshLoader();
+                
+                // Global Modal Cleanup: Remove all dynamically appended ghost modals to prevent ID duplication across tabs
+                document.querySelectorAll('body > .admin-modal-overlay, body > [id$="Modal"]').forEach(el => {
+                    if (el.id !== 'addSaleModal') {
+                        el.remove();
+                    }
+                });
+                const modalContainer = document.getElementById('modal-container');
+                if (modalContainer) modalContainer.innerHTML = '';
+                document.body.classList.remove('modal-open');
+                
+                document.querySelectorAll('.bottom-bar-item').forEach(i => i.classList.remove('active'));
+                const item = document.getElementById(tabId);
+                if (item) item.classList.add('active');
+
+                const printBtn = document.getElementById('headerPrintBtn');
+
+                // Helper to finalize and save state
+                const finalize = () => {
+                    if (window.hideGlobalRefreshLoader) setTimeout(window.hideGlobalRefreshLoader, 300);
+
+                    try {
+                        localStorage.setItem(ADMIN_TAB_KEY, tabId);
+                    } catch (e) {}
+
+                    if (window.realtimeSync) {
+                        window.realtimeSync.savePageState({
+                            page: ADMIN_TAB_TO_PAGE[tabId],
+                            ...(pendingSubAction ? { subpage: pendingSubAction } : {})
+                        });
+                    }
+
+                    if (tabId && tabId !== (location.hash || '').replace(/^#/, '')) {
+                        history.replaceState({ tab: tabId }, '', location.pathname + location.search + '#' + tabId);
+                    }
+
+                    resolve();
+                };
+
+                if (tabId === 'tab-register') {
+                    if (typeof loadRegister === 'function') loadRegister();
+                    if (printBtn) printBtn.style.display = 'inline-flex';
+                    finalize();
+                } else if (tabId === 'tab-progress') {
+                    if (typeof loadProgress === 'function') loadProgress();
+                    if (printBtn) printBtn.style.display = 'inline-flex';
+                    finalize();
+                } else if (tabId === 'tab-product') {
+                    if (typeof loadProduct === 'function') loadProduct();
+                    if (printBtn) printBtn.style.display = 'none';
+                    finalize();
+                } else if (tabId === 'tab-request') {
+                    if (typeof loadRequest === 'function') loadRequest();
+                    if (printBtn) printBtn.style.display = 'none';
+                    finalize();
+                } else if (tabId === 'tab-menu') {
+                    if (typeof loadMenu === 'function') {
+                        loadMenu().then(() => {
+                            if (pendingSubAction && typeof window.openAdminSubpage === 'function') {
+                                setTimeout(() => {
+                                    if (window.adminExpectedTabId !== 'tab-menu') return;
+                                    try { window.openAdminSubpage(pendingSubAction); } catch(e) { console.warn(e); }
+                                }, 50);
+                            }
+                            if (printBtn) printBtn.style.display = 'none';
+                            finalize();
+                        }).catch(err => {
+                            console.warn('[Admin] Failed to restore menu page after load:', err);
+                            if (printBtn) printBtn.style.display = 'none';
+                            finalize();
+                        });
+                    } else {
+                        if (printBtn) printBtn.style.display = 'none';
+                        finalize();
+                    }
+                } else {
+                    finalize();
+                }
+            });
+        }
+
+        document.querySelectorAll('.bottom-bar-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const locks = JSON.parse(localStorage.getItem('nd_admin_locks') || '{}');
+                const lockKey = item.id; // e.g. "tab-register"
+                if (locks[lockKey]) {
+                    if (typeof _checkModuleAdminAuth === 'function') {
+                        _checkModuleAdminAuth(lockKey, () => activateAdminTab(item.id));
+                    } else {
+                        activateAdminTab(item.id);
+                    }
+                } else {
+                    activateAdminTab(item.id);
+                }
+            });
+        });
+
+
+        // Global Download button routing
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'headerPrintBtn') {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const registerTab = document.getElementById('tab-register');
+                const progressTab = document.getElementById('tab-progress');
+
+                if (registerTab && registerTab.classList.contains('active')) {
+                    if (typeof window.generateRegisterPDF === 'function') {
+                        window.generateRegisterPDF();
+                    }
+                } else if (progressTab && progressTab.classList.contains('active')) {
+                    if (typeof window.generateProgressPDF === 'function') {
+                        window.generateProgressPDF();
+                    }
+                }
+            }
+        }, true);
+
+        // Note: checkProductOutOfStock and getRemainingProductStock are now managed in global-fixes.js for shared access.
+
+
+        function updateRequestNotification() {
+            const requests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
+            const pendingCount = requests.filter(r => r.status === 'Pending').length;
+            const tab = document.getElementById('tab-request');
+
+            if (tab) {
+                if (pendingCount > 0) {
+                    tab.setAttribute('data-badge', pendingCount > 9 ? '9+' : pendingCount);
+                    tab.classList.add('has-notification');
+                } else {
+                    tab.classList.remove('has-notification');
+                    tab.removeAttribute('data-badge');
+                }
+            }
+
+            // Product Out of Stock Badge Notification (Automated Inventory Tracker Option A)
+            const productTab = document.getElementById('tab-product');
+            if (productTab) {
+                const products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+                
+                // Track unique product names that are out of stock
+                const uniqueOut = new Set();
+                products.forEach(p => {
+                    if (!p.isDeleted && !(p.isHidden || p.cleared)) {
+                        if (window.checkProductOutOfStock(p.name)) {
+                            uniqueOut.add(p.name);
+                        }
+                    }
+                });
+                
+                const outOfStockCount = uniqueOut.size;
+                if (outOfStockCount > 0) {
+                    productTab.setAttribute('data-badge', outOfStockCount > 9 ? '9+' : outOfStockCount);
+                    productTab.classList.add('has-notification');
+                } else {
+                    productTab.classList.remove('has-notification');
+                    productTab.removeAttribute('data-badge');
+                }
+            }
+
+            // Also badge the Menu tab with total alerts (requests + messages)
+            const menuTab = document.getElementById('tab-menu');
+            if (menuTab) {
+                const messages = JSON.parse(localStorage.getItem('nd_messages') || '[]');
+                const unreadCount = messages.filter(m => m.senderId !== 'ADMIN' && !(m.readBy || []).includes('ADMIN') && !(m.deletedFor || []).includes('ADMIN')).length;
+                const debtReqs = JSON.parse(localStorage.getItem('nd_debt_requests') || '[]');
+                const debtReqCount = debtReqs.filter(r => r.status === 'Pending').length;
+                const totalAlerts = pendingCount + unreadCount + debtReqCount;
+                
+                if (totalAlerts > 0) {
+                    menuTab.setAttribute('data-badge', totalAlerts > 9 ? '9+' : totalAlerts);
+                    menuTab.classList.add('has-notification');
+                } else {
+                    menuTab.classList.remove('has-notification');
+                    menuTab.removeAttribute('data-badge');
+                }
+            }
+        }
+
+        setInterval(updateRequestNotification, 2000);
+        updateRequestNotification();
+
+        // Initial load — single restore path (realtime-sync skips admin when this flag is set)
+        window.__adminPageRestoreHandled = true;
+        const restoreState = parseAdminPageState();
+
+        if (restoreState && restoreState.page && typeof window.loadAdminPage === 'function') {
+            window.__pageStateRestored = true;
+            window.loadAdminPage(restoreState.page, restoreState.subpage).catch(e => {
+                console.warn('[Admin] Failed to restore saved page state', e);
+                activateAdminTab('tab-register');
+            });
+        } else {
+            activateAdminTab('tab-register');
+            window.__pageStateRestored = true;
+        }
+
+        // Prevent number inputs from changing value on scroll
+        document.addEventListener('wheel', function(e) {
+            if (document.activeElement && document.activeElement.type === 'number') {
+                document.activeElement.blur();
+            }
+        }, { passive: true });
+
+
+    </script>
+
+    <style>
+        .bottom-bar-item {
+            position: relative;
+        }
+
+        .has-notification::after {
+            content: attr(data-badge);
+            position: absolute;
+            top: 5px;
+            right: 15%;
+            background: #ff4d4d;
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(255, 77, 77, 0.4);
+        }
+
+        /* Branding Styles */
+        .shop-logo-text {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #8b5cf6;
+            text-transform: capitalize;
+            letter-spacing: -0.5px;
+            background: #8b5cf6;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .shop-logo-text:hover {
+            transform: scale(1.05);
+        }
+        [data-theme="dark"] .shop-logo-text {
+            background: linear-gradient(135deg, #E0E1DD 0%, #778DA9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</body>
+
+</html>
+
+
+
+

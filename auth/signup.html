@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nd shop - Create Account</title>
+    <!-- Use the main app's font and basic resets -->
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="auth.css">
+
+    <!-- Dark Mode Theme System -->
+    <link rel="stylesheet" href="../dark-mode/core/variables.css">
+    <link rel="stylesheet" href="../dark-mode/core/base.css">
+    <link rel="stylesheet" href="../dark-mode/components/auth.css">
+    <script src="../dark-mode/theme-manager.js"></script>
+    <script src="../custom-alert.js"></script>
+    <script src="../global-fixes.js"></script>
+</head>
+
+<body class="auth-body">
+    <!-- Decorative background elements -->
+    <div class="auth-bg-circle circle-1"></div>
+    <div class="auth-bg-circle circle-2"></div>
+
+    <div class="auth-container signup-container">
+        <div class="auth-header">
+            <h1 class="auth-title">Join <span id="shopLogoText">Nd shop</span></h1>
+            <p class="auth-subtitle">Create your account in just a few quick steps.</p>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="signup-progress-bar">
+            <div class="progress-step active" id="dot-1"></div>
+            <div class="progress-step" id="dot-2"></div>
+            <div class="progress-step" id="dot-3"></div>
+            <div class="progress-step" id="dot-4"></div>
+        </div>
+
+        <form class="auth-form" id="signupForm" autocomplete="off">
+            <!-- Sliding Track that holds all steps -->
+            <div class="signup-track" id="signupTrack">
+
+                <!-- STEP 1: Name -->
+                <div class="signup-step" id="step-1">
+                    <div class="auth-input-group">
+                        <label for="firstName">First Name</label>
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                            </div>
+                            <input type="text" id="firstName" autocomplete="off" class="auth-input" placeholder="e.g. Victor" required>
+                        </div>
+                    </div>
+
+                    <div class="auth-input-group">
+                        <label for="middleName">Middle Name</label>
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                            </div>
+                            <input type="text" id="middleName" autocomplete="off" class="auth-input" placeholder="e.g. Ugo">
+                        </div>
+                    </div>
+
+                    <div class="auth-input-group">
+                        <label for="lastName">Last Name</label>
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                            </div>
+                            <input type="text" id="lastName" autocomplete="off" class="auth-input" placeholder="e.g. Iv" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Contact -->
+                <div class="signup-step" id="step-2">
+                    <div class="auth-input-group">
+                        <label for="phone">Phone Number</label>
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path
+                                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <input type="tel" id="phone" autocomplete="off" class="auth-input" placeholder="08012345678"
+                                required>
+                        </div>
+                    </div>
+
+                    <div class="auth-input-group">
+                        <label for="email">Email Address</label>
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                    <polyline points="22,6 12,13 2,6" />
+                                </svg>
+                            </div>
+                            <input type="email" id="email" autocomplete="off" class="auth-input"
+                                placeholder="hello@nd.shop" required>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- STEP 3: Location -->
+                <div class="signup-step" id="step-3">
+                    <div class="auth-input-group">
+                        <label for="address">Address</label>
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                            </div>
+                            <input type="text" id="address" autocomplete="off" class="auth-input"
+                                placeholder="Your street address" required>
+                        </div>
+                    </div>
+
+                    <div class="auth-row inline-row">
+                        <!-- Custom JS dropdown logic from edit-profile can hook into these same wrappers if needed -->
+                        <div class="auth-input-group">
+                            <label>State</label>
+                            <div class="auth-dropdown-wrapper" id="suStateWrapper">
+                                <div class="input-wrapper">
+                                    <div class="input-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                                            <line x1="4" y1="22" x2="4" y2="15"></line>
+                                        </svg>
+                                    </div>
+                                    <div class="auth-input auth-dropdown-toggle" id="suStateToggle">
+                                        <span id="suStateText" class="truncate">Select State</span>
+                                        <span class="dropdown-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="1em"
+                                                height="1em" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M7 10l5 5 5-5z" />
+                                            </svg></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="auth-input-group">
+                            <label>LGA</label>
+                            <div class="auth-dropdown-wrapper disabled" id="suLgaWrapper">
+                                <div class="input-wrapper">
+                                    <div class="input-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                                            <line x1="8" y1="2" x2="8" y2="18"></line>
+                                            <line x1="16" y1="6" x2="16" y2="22"></line>
+                                        </svg>
+                                    </div>
+                                    <div class="auth-input auth-dropdown-toggle" id="suLgaToggle">
+                                        <span id="suLgaText" class="truncate">Select LGA</span>
+                                        <span class="dropdown-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="1em"
+                                                height="1em" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M7 10l5 5 5-5z" />
+                                            </svg></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 4: Security -->
+                <div class="signup-step" id="step-4">
+                    <div class="auth-input-group">
+                        <label for="signupPassword">Password</label>
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                            </div>
+                            <input type="password" id="signupPassword" autocomplete="new-password" class="auth-input"
+                                placeholder="Create a strong password" required>
+                            <button type="button" class="password-toggle" data-target="signupPassword">
+                                <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <svg class="eye-closed hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="auth-input-group">
+                        <label for="signupConfirmPass">Confirm Password</label>
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                            </div>
+                            <input type="password" id="signupConfirmPass" autocomplete="new-password" class="auth-input"
+                                placeholder="Re-type your password" required>
+                            <button type="button" class="password-toggle" data-target="signupConfirmPass">
+                                <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <svg class="eye-closed hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div> <!-- /signup-track -->
+
+            <div class="wizard-actions">
+                <button type="button" class="auth-secondary-btn hidden" id="btnBack">Back</button>
+                <button type="button" class="auth-submit-btn" id="btnNext">
+                    <span>Next</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                </button>
+            </div>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="login.html">Sign In</a></p>
+        </div>
+    </div>
+
+    <!-- Global Selection Modal for State/LGA -->
+    <div class="auth-modal-overlay" id="selectionModal">
+        <div class="auth-modal-content">
+            <div class="auth-modal-header">
+                <h3 id="selectionModalTitle">Select Option</h3>
+                <span class="auth-modal-close" id="selectionModalClose">&times;</span>
+            </div>
+            <div class="auth-modal-body" id="selectionModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Verification Container Card (Hidden initially) -->
+    <div class="auth-container verify-container hidden" id="verifyContainer">
+        <div class="auth-header" style="margin-bottom: 10px;">
+            <div class="auth-logo-wrapper">
+                <div id="verifyIconWrapper"
+                    style="font-size: 2.5rem; color: #8b5cf6; background-color: rgba(27, 38, 59, 0.1); width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 10px;">
+                    <svg id="verifyIconSvg" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <h1 class="auth-title">Verify Account</h1>
+            <p class="auth-subtitle" id="verifySubtitle">A 6-digit code has been sent to your email address. Enter it below to verify your account.</p>
+        </div>
+
+
+
+        <div class="auth-otp-container">
+            <input type="text" class="auth-otp-input" autocomplete="off" maxlength="1" pattern="[0-9]*"
+                inputmode="numeric">
+            <input type="text" class="auth-otp-input" autocomplete="off" maxlength="1" pattern="[0-9]*"
+                inputmode="numeric">
+            <input type="text" class="auth-otp-input" autocomplete="off" maxlength="1" pattern="[0-9]*"
+                inputmode="numeric">
+            <input type="text" class="auth-otp-input" autocomplete="off" maxlength="1" pattern="[0-9]*"
+                inputmode="numeric">
+            <input type="text" class="auth-otp-input" autocomplete="off" maxlength="1" pattern="[0-9]*"
+                inputmode="numeric">
+            <input type="text" class="auth-otp-input" autocomplete="off" maxlength="1" pattern="[0-9]*"
+                inputmode="numeric">
+        </div>
+
+        <div style="text-align: center; margin-bottom: 15px;">
+            <a href="#" style="font-size: 0.85rem; font-weight: 600; color: #8b5cf6; text-decoration: none;" id="btnResendSignup">Resend Code</a>
+        </div>
+
+        <div class="wizard-actions">
+            <button type="button" class="auth-submit-btn" id="btnVerifySignup">
+                <span>Verify Account</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="../menu-buttons/edit-profile/naija-data.js"></script>
+
+    <!-- Auth Method Modal -->
+    <div class="auth-method-modal-overlay" id="authMethodModal">
+        <div class="auth-method-modal">
+            <div class="auth-method-header">
+                <div class="auth-method-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <h3>Secure Verification</h3>
+                <p>How would you like to receive your 6-digit code?</p>
+            </div>
+            
+            <div class="auth-method-options">
+                <button type="button" class="auth-method-btn" onclick="selectAuthMethod('email')" id="btnMethodEmail">
+                    <div class="method-icon email">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    </div>
+                    <div class="method-text">
+                        <span class="method-title">Send to Email</span>
+                        <span class="method-desc">Get a code sent to your inbox</span>
+                    </div>
+                </button>
+
+                <button type="button" class="auth-method-btn" onclick="selectAuthMethod('sms')" id="btnMethodSms">
+                    <div class="method-icon sms">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    </div>
+                    <div class="method-text">
+                        <span class="method-title">Send via SMS</span>
+                        <span class="method-desc">Get a text message to your phone</span>
+                    </div>
+                </button>
+            </div>
+            
+            <button type="button" class="auth-method-cancel" onclick="closeAuthMethodModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabaseClient.js"></script>
+
+    <script src="auth.js"></script>
+</body>
+
+</html>
+
+
+
+

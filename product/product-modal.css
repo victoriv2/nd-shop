@@ -1,0 +1,324 @@
+.product-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 100000;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.product-modal-overlay.show {
+    display: flex;
+    opacity: 1;
+}
+
+.product-modal-content {
+    background-color: #fff;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 20px 20px 0 0;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.product-modal-overlay.show .product-modal-content {
+    transform: translateY(0);
+}
+
+@media (min-width: 768px) {
+    .product-modal-overlay {
+        align-items: center;
+    }
+
+    .product-modal-content {
+        border-radius: 20px;
+        transform: translateY(50px) scale(0.95);
+        transition: transform 0.3s ease;
+    }
+
+    .product-modal-overlay.show .product-modal-content {
+        transform: translateY(0) scale(1);
+    }
+}
+
+.pm-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 20px 24px;
+    border-bottom: 1px solid #eee;
+}
+
+.pm-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+    font-weight: 700;
+}
+
+.pm-close {
+    position: absolute;
+    right: 24px;
+    font-size: 1.8rem;
+    color: #888;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+    user-select: none;
+}
+
+.pm-close:hover {
+    color: #333;
+}
+
+.pm-body {
+    padding: 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.pm-hero-section {
+    text-align: center;
+    margin-bottom: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pm-product-icon {
+    font-size: 3.5rem;
+    background-color: #f7f9fa;
+    width: 85px;
+    height: 85px;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 2px solid #e8e8e8;
+}
+
+.pm-product-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.pm-product-price-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 6px;
+    background-color: #f8f9fa;
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid #eee;
+}
+
+.pm-price {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #8b5cf6;
+    display: inline-block;
+    transform: translateY(-5%);
+}
+
+.pm-unit {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #666;
+    display: inline-block;
+    transform: translateY(-25%);
+}
+
+.pm-quantity-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    padding: 18px 20px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+
+.pm-quantity-label {
+    font-weight: 700;
+    color: #333;
+    font-size: 1.05rem;
+}
+
+.pm-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #f8f9fa;
+    padding: 6px;
+    border-radius: 40px;
+    border: 1px solid #eee;
+}
+
+.pm-qty-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: #ffffff;
+    color: #8b5cf6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.pm-qty-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.pm-qty-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(27, 38, 59, 0.15);
+}
+
+.pm-qty-btn:active {
+    transform: scale(0.95);
+}
+
+.pm-qty-value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #333;
+    min-width: 25px;
+    text-align: center;
+}
+
+.pm-details-list {
+    background-color: #fcfcfc;
+    border-radius: 16px;
+    padding: 16px 20px;
+    border: 1px solid #f0f0f0;
+}
+
+.pm-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px dashed #e0e0e0;
+}
+
+.pm-detail-item:last-child {
+    border-bottom: none;
+}
+
+.pm-label {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.pm-value {
+    color: #333;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+.pm-available-text {
+    color: #8b5cf6;
+}
+
+/* Beautiful highlight specific for payout modular detail */
+.pm-highlight-item {
+    background-color: #edf1f7;
+    margin: 5px -12px;
+    padding: 16px 12px;
+    border-radius: 12px;
+    border-bottom: none;
+    box-shadow: inset 0 0 0 1px rgba(27, 38, 59, 0.2);
+}
+
+.pm-highlight-item+.pm-detail-item {
+    border-top: 1px dashed #e0e0e0;
+}
+
+.pm-green-text {
+    color: #8b5cf6;
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.pm-footer {
+    display: flex;
+    gap: 15px;
+    padding: 20px 24px;
+    border-top: 1px solid #eee;
+}
+
+.pm-action-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    color: #444;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.pm-action-btn:hover {
+    background-color: #e4e4e4;
+}
+
+.pm-btn-primary {
+    background-color: #8b5cf6;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.pm-btn-primary:hover {
+    background-color: #2c3e50;
+}
+
+.pm-btn-primary:active {
+    transform: none;
+}
+
+/* Add a subtle glow pulse for primary actions */
+/* Glow pulse effect removed */
+.pm-btn-primary::after {
+    display: none;
+}
+
+/* Pending State Feedback Override */
+.pm-btn-primary.pending {
+    background-color: #8b5cf6;
+    cursor: wait;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+
+
+

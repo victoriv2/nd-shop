@@ -1,0 +1,67 @@
+/* hidden-products.css */
+#hiddenProductsPage.show {
+    transform: translateY(0) !important;
+}
+
+.rb-empty {
+    text-align: center;
+    padding: 50px 20px;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+}
+
+.rb-item {
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.rb-header {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rb-sub {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.rb-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.rb-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.rb-btn:active {
+    transform: scale(0.95);
+}
+
+.rb-btn.restore {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+.rb-btn.restore:hover {
+    background: #c7d2fe;
+}

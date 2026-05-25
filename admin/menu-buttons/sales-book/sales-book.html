@@ -1,0 +1,125 @@
+<div id="salesBookPage" class="sb-page-wrapper" style="display: none;">
+    <!-- Header Area -->
+    <div class="sb-page-header">
+        <button class="sb-back-btn" onclick="closeSalesBook()">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>
+        </button>
+        <h2 class="register-title">Sales Book</h2>
+        <button class="use-ai-btn" onclick="window._aiPageContext='sales_book'; openAiChat()">Use AI</button>
+    </div>
+
+    <div class="sb-page-content">
+        <!-- Summary strip - making it clean and minimal right below the title -->
+        <div class="sb-summary-strip">
+            <div class="sb-stat-card sb-stat-revenue">
+                <span class="sb-stat-label">Monthly Revenue</span>
+                <span class="sb-stat-value" id="sbTotalSales">₦0.00</span>
+            </div>
+            <div class="sb-stat-card sb-stat-payout">
+                <span class="sb-stat-label">Monthly Payout</span>
+                <span class="sb-stat-value" id="sbTotalPayout">₦0.00</span>
+            </div>
+        </div>
+        
+        <!-- Month/Year Title -->
+        <div class="sb-period-title" id="sbMonthYearTitle">March 2026</div>
+
+        <div class="search-filter-container">
+            <div class="search-wrapper" id="sbSearchWrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m21 21-4.34-4.34" />
+                    <circle cx="11" cy="11" r="8" />
+                </svg>
+                <input type="text" id="sbSearchInput" placeholder="Search sales entries...">
+            </div>
+
+            <div class="sort-container" id="sbSortContainer">
+                <div class="sort-btn" id="sbSortToggle">
+                    <span class="sort-text" id="sbSortText">Newest to Oldest</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="margin-left: 4px; pointer-events: none;">
+                        <path d="M6 9l6 6 6-6" />
+                    </svg>
+                </div>
+                <div class="sort-dropdown" id="sbSortDropdown">
+                    <div class="sort-option active" data-sort="newest">Newest to Oldest<span class="sort-check"></span></div>
+                    <div class="sort-option" data-sort="oldest">Oldest to Newest<span class="sort-check"></span></div>
+                    <div class="sort-option" data-sort="highest">Highest to Lowest<span class="sort-check"></span></div>
+                    <div class="sort-option" data-sort="lowest">Lowest to Highest<span class="sort-check"></span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date Selection Row -->
+        <div id="sb-date-selector-wrapper">
+            <div class="date-navigation-row">
+                <button class="date-nav-btn prev-btn" onclick="sbChangeDate(-1)">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                </button>
+
+                <div class="date-pickers-group">
+                    <div class="date-picker-item" onclick="openSbDateModal('day')">
+                        <div class="selector-display" id="sbDayDisp">01</div>
+                        <svg class="picker-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" /></svg>
+                    </div>
+                    <div class="date-picker-item" onclick="openSbDateModal('month')">
+                        <div class="selector-display" id="sbMonthDisp"><span class="month-full">January</span><span class="month-short">Jan</span></div>
+                        <svg class="picker-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" /></svg>
+                    </div>
+                    <div class="date-picker-item" onclick="openSbDateModal('year')">
+                        <div class="selector-display" id="sbYearDisp">2026</div>
+                        <svg class="picker-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" /></svg>
+                    </div>
+                </div>
+
+                <button class="date-nav-btn next-btn" id="sbDateNextBtn" onclick="sbChangeDate(1)">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sales Table -->
+        <div id="sales-table-wrapper" class="sb-table-wrapper-clean">
+            <div class="sb-table-header-container">
+                <table class="sb-data-table sb-header-table">
+                    <thead>
+                        <tr>
+                            <th>S/N</th>
+                            <th>Date & Time</th>
+                            <th>Description</th>
+                            <th>Qty</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <div class="sb-table-body-container" id="sbTableBodyContainer">
+                <table class="sb-data-table sb-body-table">
+                    <tbody id="sbTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 30px; color: #94a3b8;">Loading sales...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Footer Summary (Daily Total) -->
+        <div class="sb-table-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 10px 10px 10px; flex-shrink: 0;">
+            <span class="sb-footer-label" id="sbDailyTotalLabel" style="color: #64748b; font-size: 0.85rem; font-weight: 600;">Today</span>
+            <span class="sb-footer-value sb-footer-highlight" id="sbDailyTotalValue" style="color: #8b5cf6; font-size: 1.25rem; font-weight: 800;">₦0.00</span>
+        </div>
+
+        <!-- Add to Sales Book Action -->
+        <button class="wide-add-btn" onclick="openSbAddModal()" style="margin-top: 5px; margin-bottom: 20px;">Record</button>
+    </div>
+</div>
+
+<!-- Nested Modal Container for Add to Sales Book -->
+<div id="sbNestedModalContainer"></div>
+
+
+
+

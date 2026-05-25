@@ -1,0 +1,175 @@
+<!-- Messaging Chat View (shared between user & admin) -->
+<div class="messaging-page" id="messagingPage">
+    <!-- Top Header -->
+    <div class="msg-header">
+        <button class="msg-back-btn" id="msgBackBtn">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </button>
+        <div class="msg-user-info">
+            <span class="msg-name" id="msgHeaderName">Chat</span>
+            <span class="msg-status" id="msgHeaderStatus">Online</span>
+        </div>
+        <div class="msg-header-actions">
+            <button class="msg-header-icon-btn" id="msgSearchToggle" title="Search messages">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+            
+            <!-- Admin Chat Options Menu -->
+            <div id="msgAdminMenuWrapper" style="position:relative; display:none;">
+                <button class="msg-header-icon-btn" id="msgAdminMenuToggle" title="Chat Options">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="none">
+                        <circle cx="12" cy="5" r="2.5"></circle>
+                        <circle cx="12" cy="12" r="2.5"></circle>
+                        <circle cx="12" cy="19" r="2.5"></circle>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar (hidden by default) -->
+    <div class="msg-search-bar" id="msgSearchBar">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#94a3b8" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="msgSearchInput" placeholder="Search in conversation..." />
+        <button class="msg-search-close" id="msgSearchClose">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Pinned Messages Panel (hidden by default) -->
+    <div class="msg-pinned-panel" id="msgPinnedPanel">
+        <div class="msg-pinned-header">
+            <span>Pinned Messages</span>
+            <button class="msg-pinned-close" id="msgPinnedClose">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="msg-pinned-list" id="msgPinnedList">
+            <!-- Pinned messages rendered here -->
+        </div>
+    </div>
+
+    <!-- Message List -->
+    <div class="msg-list" id="msgList">
+        <!-- Messages will be injected here -->
+    </div>
+
+    <!-- Scroll to bottom FAB -->
+    <button class="msg-scroll-bottom" id="msgScrollBottom" style="display:none;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    </button>
+
+    <!-- Reply / Edit indicator -->
+    <div class="msg-reply-bar" id="msgReplyBar" style="display:none;">
+        <div class="msg-reply-info">
+            <span class="msg-reply-label" id="msgReplyLabel">Editing</span>
+            <span class="msg-reply-text" id="msgReplyText"></span>
+        </div>
+        <button class="msg-reply-cancel" id="msgReplyCancel">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Recording Overlay (hidden by default) -->
+    <div class="msg-recording-overlay" id="msgRecordingOverlay" style="display:none;">
+        <div class="msg-rec-indicator" id="msgRecIndicator"></div>
+        <div class="msg-rec-timer" id="msgRecTimer">0:00</div>
+        <div style="display:flex; gap:10px; margin-left:auto; align-items:center;">
+            <button class="msg-rec-action-btn" id="msgRecPause" style="background:none; border:none; color:#8b5cf6; font-weight:700; cursor:pointer; font-size:0.9rem;">Pause</button>
+            <button class="msg-rec-cancel" id="msgRecCancel">Cancel</button>
+            <button class="msg-rec-send" id="msgRecSend">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </button>
+        </div>
+    </div>
+
+    <!-- Readonly Banner -->
+    <div class="msg-readonly-banner" id="msgReadonlyBanner" style="display:none; text-align:center; padding:12px; font-size:0.85rem; font-weight:600; color:#ef4444; background:#fef2f2; border-bottom:1px solid #fca5a5; flex-shrink:0;">
+        You have been blocked from sending messages.
+    </div>
+
+    <!-- Footer / Input -->
+    <div class="msg-footer" id="msgFooter">
+        <input type="file" id="msgFileInput" style="display: none;"
+            accept="image/*,video/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,audio/mpeg,audio/wav,audio/mp4,audio/ogg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt">
+        
+        <input type="file" id="msgCameraInput" style="display: none;" accept="image/*" capture="user">
+        
+        <!-- Custom Attachment Menu -->
+        <div class="msg-attach-menu" id="msgAttachMenu">
+            <div class="msg-attach-item" data-type="camera">
+                <span class="msg-attach-icon" style="background:#f1f5f9; color:#ef4444;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></span>
+                <span class="msg-attach-label">Camera</span>
+            </div>
+            <div class="msg-attach-item" data-type="gallery">
+                <span class="msg-attach-icon" style="background:#f1f5f9; color:#8b5cf6;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></span>
+                <span class="msg-attach-label">Gallery</span>
+            </div>
+            <div class="msg-attach-item" data-type="audio">
+                <span class="msg-attach-icon" style="background:#f1f5f9; color:#8b5cf6;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></span>
+                <span class="msg-attach-label">Audio</span>
+            </div>
+            <div class="msg-attach-item" data-type="files">
+                <span class="msg-attach-icon" style="background:#f1f5f9; color:#8b5cf6;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></span>
+                <span class="msg-attach-label">Document</span>
+            </div>
+        </div>
+
+        <button class="msg-footer-btn" id="msgAttachBtn" title="Attach file">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                    d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
+                </path>
+            </svg>
+        </button>
+
+        <div class="msg-input-wrapper">
+            <textarea id="msgTextInput" rows="1" placeholder="Type a message..."></textarea>
+        </div>
+
+        <button class="msg-footer-btn" id="msgMicBtn" title="Record voice note">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+        </button>
+
+        <button class="msg-send-btn" id="msgSendBtn">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </button>
+    </div>
+</div>
+
+
+
+

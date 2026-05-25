@@ -1,0 +1,205 @@
+/* admin/menu-buttons/income-structure/income-structure.css */
+
+#incomeStructurePage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: none;
+    background: #f8fafc;
+    flex-direction: column;
+    animation: isSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes isSlideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.is-header {
+    background: #ffffff;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid #e8e8e8;
+    justify-content: space-between;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.is-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1e293b;
+    text-align: center;
+}
+
+.is-back-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.is-back-btn:active {
+    background: #f0f0f0;
+}
+
+.is-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.is-controls-section {
+    padding: 15px 20px;
+    background: white;
+    display: flex;
+    gap: 15px;
+    border-bottom: 1px solid #e2e8f0;
+    justify-content: space-between; /* separate edit btn and date triggers */
+    flex-wrap: wrap;
+}
+
+.is-summary-card {
+    margin: 15px 20px;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    gap: 15px;
+    text-align: center;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+.is-summary-card::-webkit-scrollbar {
+    height: 6px;
+}
+.is-summary-card::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.is-summary-card::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.is-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 15px;
+    background: #fdfdfd;
+    border-radius: 12px;
+    border: 2px solid #8b5cf6;
+    flex: 1;
+    min-width: 220px;
+}
+
+.is-summary-item span {
+    font-size: 0.85rem;
+    color: #8b5cf6;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.is-summary-item strong {
+    font-size: 1.25rem;
+    color: #0f172a;
+}
+
+.is-table-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px 80px 20px;
+}
+
+.is-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.is-table th, .is-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+}
+
+.is-table th {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.is-table tr:hover {
+    background-color: #f8fafc;
+}
+
+.is-trigger-btn {
+    background: #ffffff;
+    padding: 10px 14px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border: 1px solid #cbd5e1;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.is-trigger-btn:active {
+    transform: scale(0.96);
+}
+
+.is-trigger-btn span {
+    font-size: 0.95rem;
+}
+
+@media (max-width: 600px) {
+    .is-controls-section {
+        flex-direction: column;
+        align-items: stretch;
+        flex-wrap: nowrap;
+    }
+    .is-controls-section > .is-trigger-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .en-date-triggers {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        flex-shrink: 0;
+        justify-content: space-between;
+    }
+    .en-date-triggers .is-trigger-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+
+
+

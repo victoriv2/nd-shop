@@ -1,0 +1,256 @@
+.transaction-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 100000;
+    display: none;
+    align-items: flex-end;
+    /* Slides from bottom on mobile */
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.transaction-modal-overlay.show {
+    display: flex;
+    opacity: 1;
+}
+
+.transaction-modal-content {
+    background-color: #fff;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 20px 20px 0 0;
+    /* Rounds only top corners */
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    /* Don't exceed screen height */
+}
+
+/* Animations Trigger */
+.transaction-modal-overlay.show .transaction-modal-content {
+    transform: translateY(0);
+}
+
+@media (min-width: 768px) {
+    .transaction-modal-overlay {
+        align-items: center;
+        /* Center vertically on desktop */
+    }
+
+    .transaction-modal-content {
+        border-radius: 20px;
+        /* Fully rounded on desktop */
+        transform: translateY(50px) scale(0.95);
+        transition: transform 0.3s ease;
+    }
+
+    .transaction-modal-overlay.show .transaction-modal-content {
+        transform: translateY(0) scale(1);
+    }
+}
+
+.tm-header {
+    display: flex;
+    justify-content: center;
+    /* Center the title */
+    align-items: center;
+    position: relative;
+    /* Allow absolute positioning of close button */
+    padding: 20px 24px;
+    border-bottom: 1px solid #eee;
+}
+
+.tm-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+    font-weight: 700;
+}
+
+.tm-close {
+    position: absolute;
+    right: 24px;
+    /* Fix to right side */
+    font-size: 1.8rem;
+    color: #888;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+    user-select: none;
+}
+
+.tm-close:hover {
+    color: #333;
+}
+
+.tm-body {
+    padding: 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.tm-amount-section {
+    text-align: center;
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.tm-amount-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-plus {
+    color: #8b5cf6;
+    /* Signature Green */
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.tm-amount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.tm-status {
+    display: inline-block;
+    background-color: #edf1f7;
+    color: #8b5cf6;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.tm-details-list {
+    background-color: #f9f9f9;
+    border-radius: 16px;
+    padding: 16px 20px;
+}
+
+.tm-detail-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 14px 0;
+    border-bottom: 1px dashed #e0e0e0;
+    gap: 6px;
+}
+
+.tm-detail-item:last-child {
+    border-bottom: none;
+}
+
+.tm-label {
+    color: #888;
+    font-size: 0.90rem;
+}
+
+.tm-value {
+    color: #333;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-align: left;
+    max-width: 100%;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+#tmTransactionId {
+    text-align: left;
+}
+
+.tm-footer {
+    display: flex;
+    gap: 15px;
+    padding: 20px 24px;
+    border-top: 1px solid #eee;
+}
+
+.tm-action-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    color: #444;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.tm-action-btn:hover {
+    background-color: #e4e4e4;
+}
+
+.tm-btn-primary {
+    background-color: #8b5cf6;
+    /* Signature Orange */
+    color: white;
+}
+
+.tm-btn-primary:hover {
+    background-color: #2c3e50;
+}
+
+/* Creative Download Button Styles */
+.download-btn-creative {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+
+.download-btn-creative.downloading {
+    background-color: #8b5cf6;
+    pointer-events: none;
+    transform: scale(0.96);
+}
+
+.download-btn-creative.downloading .dl-icon svg {
+    animation: bounceDown 1s infinite alternate;
+}
+
+.download-btn-creative.success {
+    background-color: #8b5cf6;
+    color: white;
+}
+
+.download-btn-creative.success .dl-icon svg {
+    /* Modify svg to checkmark shape or just animate scale */
+    transform: scale(1.2);
+    transition: transform 0.3s ease;
+}
+
+@keyframes bounceDown {
+    0% {
+        transform: translateY(-3px);
+    }
+
+    100% {
+        transform: translateY(3px);
+    }
+}
+
+
+
+

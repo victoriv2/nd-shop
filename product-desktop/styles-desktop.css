@@ -1,0 +1,19 @@
+/* Desktop overrides for product page */
+@media (min-width: 1024px) {
+    #product-container {
+        position: absolute !important;
+        width: 50% !important;
+        left: 25% !important;
+        padding-bottom: 40px !important;
+    }
+
+    .product-page-wrapper {
+        margin: 0 -30px !important;
+        padding: 10px 30px 10px 30px !important;
+    }
+
+    .product-card {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+}

@@ -1,0 +1,285 @@
+<div class="register-page-wrapper">
+    <h2 class="register-title">Sales record book</h2>
+    <div class="search-filter-container">
+        <div class="search-wrapper" id="registerSearchWrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-search-icon lucide-search">
+                <path d="m21 21-4.34-4.34" />
+                <circle cx="11" cy="11" r="8" />
+            </svg>
+            <input type="text" id="registerSearchInput" placeholder="Search Salesbook">
+        </div>
+
+        <div class="sort-container" id="registerSortContainer">
+            <div class="sort-btn" id="registerSortToggle">
+                <span class="sort-text">Sort</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    style="margin-left: 4px; pointer-events: none;">
+                    <path d="M6 9l6 6 6-6" />
+                </svg>
+            </div>
+            <div class="sort-dropdown" id="registerSortDropdown">
+                <div class="sort-option active">Newest to Oldest<span class="sort-check"></span></div>
+                <div class="sort-option">Oldest to Newest<span class="sort-check"></span></div>
+                <div class="sort-option">Highest to Lowest<span class="sort-check"></span></div>
+                <div class="sort-option">Lowest to Highest<span class="sort-check"></span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Selection Row -->
+<div id="date-selector-wrapper"></div>
+
+<!-- Sales Table -->
+<div id="sales-table-wrapper"></div>
+
+<!-- Add to Register Action -->
+<button class="wide-add-btn" id="addBtn">Record</button>
+
+<!-- Add Sale Modal -->
+<div id="addSaleModal" class="admin-modal-overlay">
+    <div class="admin-modal-content">
+        <div class="admin-modal-header">
+            <h3>Record</h3>
+            <button class="admin-modal-close" id="closeAddSaleModal">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 24px;">
+
+            <!-- Form content follows -->
+
+            <div class="add-sale-form-container">
+                
+                <!-- TABS -->
+                <div style="display: flex; gap: 8px; margin-bottom: 20px; background: #f1f5f9; padding: 6px; border-radius: 12px; font-size: 0.85rem; overflow-x: auto;">
+                    <button type="button" class="sale-tab-btn active" data-target="specialItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: white; color: #8b5cf6; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s; min-width: max-content;">Analytical</button>
+                    <button type="button" class="sale-tab-btn" data-target="existingItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; min-width: max-content;">Default</button>
+                    <button type="button" class="sale-tab-btn" data-target="flexItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; min-width: max-content;">Flexible</button>
+                    <button type="button" class="sale-tab-btn" data-target="customItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; min-width: max-content;">Custom</button>
+                </div>
+
+                <!-- Existing Item Form (Default) -->
+                <form id="existingItemForm" class="add-sale-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Select Native Product</label>
+                        <div class="custom-dropdown-wrapper" id="itemDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="itemDropdownTrigger">
+                                <span class="trigger-text">Select an Item</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="itemDropdownMenu">
+                                <!-- Options will be injected here -->
+                            </div>
+                            <input type="hidden" id="existingItemSelect" required>
+                        </div>
+                    </div>
+                    <div class="form-group" id="defaultVariantContainer" style="display: none; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                        <label>Select Type</label>
+                        <div style="display: flex; gap: 8px;">
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="default-variant-label">
+                                <input type="radio" name="defaultVariant" value="retail" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="defaultVariantRetailLabelTxt">Retail</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="defaultVariantRetailPrice">₦0</div>
+                            </label>
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="default-variant-label">
+                                <input type="radio" name="defaultVariant" value="wholesale" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="defaultVariantWholesaleLabelTxt">Wholesale</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="defaultVariantWholesalePrice">₦0</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label id="lblExistingPrice">Unit Price (₦)</label>
+                        <input type="text" id="existingItemPrice" disabled class="form-input disabled-input"
+                            placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label id="lblExistingQty">Quantity</label>
+                        <input type="number" id="existingItemQty" min="1" required class="form-input" placeholder="Qty"
+                            value="1" step="1">
+                    </div>
+                    <button type="submit" class="add-to-list-btn" id="addToBasketDefault">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add to List
+                    </button>
+                </form>
+
+                <!-- Special Item Form -->
+                <form id="specialItemForm" class="add-sale-form active" style="display: block;">
+                    <div class="form-group">
+                        <label>Select Special Product</label>
+                        <div class="custom-dropdown-wrapper" id="specDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="specDropdownTrigger">
+                                <span class="trigger-text">Select an Analytical Product</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="specDropdownMenu">
+                                <!-- Options will be injected here -->
+                            </div>
+                            <input type="hidden" id="specItemSelect" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="specVariantContainer" style="display: none; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                        <label>Select Type</label>
+                        <div style="display: flex; gap: 8px;">
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="spec-variant-label">
+                                <input type="radio" name="specVariant" value="bag" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="specVariantBagLabelTxt">Container 1</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="specVariantBagPrice">₦0</div>
+                            </label>
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="spec-variant-label">
+                                <input type="radio" name="specVariant" value="custard" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="specVariantCustardLabelTxt">Container 2</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="specVariantCustardPrice">₦0</div>
+                            </label>
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="spec-variant-label">
+                                <input type="radio" name="specVariant" value="cup" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="specVariantCupLabelTxt">Container 3</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="specVariantCupPrice">₦0</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Flexible Price toggle and custom input -->
+                    <div id="specFlexibleContainer" style="display: none; background: #faf5ff; padding: 12px; border-radius: 12px; border: 1px solid #d8b4fe; margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <label style="margin-bottom: 2px; color: #6b21a8; font-weight: 800; font-size: 0.9rem;">Flexible Price Mode</label>
+                                <div style="font-size: 0.75rem; color: #7c3aed;">Enable to input a custom selling price for this sale</div>
+                            </div>
+                            <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px; margin-bottom: 0;">
+                                <input type="checkbox" id="specFlexiblePriceToggle" style="opacity: 0; width: 0; height: 0;" onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#7c3aed':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)';document.getElementById('specCustomPriceGroup').style.display=this.checked?'block':'none';">
+                                <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;">
+                                    <span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(0);"></span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="form-group" id="specCustomPriceGroup" style="display: none; margin-top: 12px; margin-bottom: 0;">
+                            <label style="color: #6b21a8; font-weight: 700;">Custom Selling Price per Unit (₦)</label>
+                            <input type="number" id="specItemPrice" class="form-input" placeholder="e.g. 1500" min="0" step="0.01" style="border-color: #d8b4fe;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="number" id="specItemQty" min="1" required class="form-input" placeholder="Qty" value="1" step="1">
+                    </div>
+                    <button type="submit" class="add-to-list-btn" id="addToBasketSpecial">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Add to List
+                    </button>
+                </form>
+
+                <!-- Custom Item Form -->
+                <form id="customItemForm" class="add-sale-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Select Custom Product</label>
+                        <div class="custom-dropdown-wrapper" id="customDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="customDropdownTrigger">
+                                <span class="trigger-text">Select a Product</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="customDropdownMenu">
+                                <!-- Options will be injected here -->
+                            </div>
+                            <input type="hidden" id="customItemSelect" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label id="lblCustomPrice">Unit Price (₦)</label>
+                        <input type="text" id="customItemPrice" disabled class="form-input disabled-input"
+                            placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label id="lblCustomQty">Quantity</label>
+                        <input type="number" id="customItemQty" min="1" required class="form-input" placeholder="Qty"
+                            value="1" step="1">
+                    </div>
+                    <button type="submit" class="add-to-list-btn" id="addToBasketCustom">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Add to List
+                    </button>
+                </form>
+
+                <!-- Flexible Item Form -->
+                <form id="flexItemForm" class="add-sale-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Select Flexible Product</label>
+                        <div class="custom-dropdown-wrapper" id="flexDropdownWrapper">
+                            <div class="custom-dropdown-trigger" id="flexDropdownTrigger">
+                                <span class="trigger-text">Select a Product</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                            <div class="custom-dropdown-menu" id="flexDropdownMenu">
+                                <!-- Options will be injected here -->
+                            </div>
+                            <input type="hidden" id="flexItemSelect" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="flexVariantContainer" style="display: none; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                        <label>Select Type</label>
+                        <div style="display: flex; gap: 8px;">
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="flex-variant-label">
+                                <input type="radio" name="flexVariant" value="c1" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="flexVariantC1LabelTxt">Container 1</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="flexVariantC1Price">₦0</div>
+                            </label>
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="flex-variant-label">
+                                <input type="radio" name="flexVariant" value="c2" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="flexVariantC2LabelTxt">Container 2</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;" id="flexVariantC2Price">₦0</div>
+                            </label>
+                            <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="flex-variant-label">
+                                <input type="radio" name="flexVariant" value="c3" style="display:none;" required>
+                                <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="flexVariantC3LabelTxt">Container 3</div>
+                                <div style="font-size: 0.8rem; color: #8b5cf6;">Flexible Price</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="flexCustomPriceContainer" style="display: none;">
+                        <label id="lblFlexPrice">Retail Unit Price (₦) - Input Random Price</label>
+                        <input type="number" id="flexItemPrice" class="form-input" min="0" step="0.01" placeholder="e.g. 500">
+                    </div>
+                    <div class="form-group">
+                        <label id="lblFlexQty">Quantity</label>
+                        <input type="number" id="flexItemQty" min="1" required class="form-input" placeholder="Qty" value="1" step="1">
+                    </div>
+                    <button type="submit" class="add-to-list-btn" id="addToBasketFlex">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Add to List
+                    </button>
+                </form>
+
+                <!-- Basket Section -->
+                <div class="sale-basket-container" id="saleBasketContainer" style="display: none;">
+                    <div class="basket-header">Items in this Transaction</div>
+                    <div class="basket-items-list" id="basketItemsList">
+                        <!-- Basket items go here -->
+                    </div>
+                    <div class="basket-summary">
+                        <span>Transaction Total</span>
+                        <span id="basketSubtotal">₦0.00</span>
+                    </div>
+                    <button id="finalizeSaleBtn" class="wide-add-btn save-btn">Finalize & Record</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+

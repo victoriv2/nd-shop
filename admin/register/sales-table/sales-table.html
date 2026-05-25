@@ -1,0 +1,51 @@
+<div class="sales-table-wrapper">
+    <!-- Split Table: Header part -->
+    <div class="table-header-container" id="tableHeaderContainer">
+        <table class="sales-table header-table">
+            <thead>
+                <tr>
+                    <th>S/N</th>
+                    <th>Date & Time</th>
+                    <th>Item Description</th>
+                    <th>Qty</th>
+                    <th>Unit Price</th>
+                    <th>Total</th>
+                    <th>Payout (Payout)</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+    <!-- Split Table: Scrollable Body part -->
+    <div class="table-body-container" id="tableBodyContainer">
+        <table class="sales-table body-table" id="salesTable">
+            <tbody id="salesTableBody">
+                <!-- Rows injected dynamically by JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Empty State -->
+    <div class="table-empty-state" id="tableEmptyState">
+        <h3 class="empty-state-title">No Sales Yet</h3>
+        <p class="empty-state-text">Your salesbook is empty for this period. Click the '+ Add' button to record a new
+            sale.</p>
+    </div>
+
+    <!-- Table Footer Summary -->
+    <div class="table-footer" id="tableFooter">
+        <div class="footer-stat">
+            <span class="footer-label">Total Items</span>
+            <span class="footer-value" id="footerTotalItems">0</span>
+        </div>
+        <div class="footer-stat">
+            <span class="footer-label">Total Sales</span>
+            <span class="footer-value footer-highlight" id="footerTotalSales">₦0.00</span>
+        </div>
+        <div class="footer-stat">
+            <span class="footer-label">Total Payout</span>
+            <span class="footer-value footer-payout" id="footerTotalPayout">₦0.00</span>
+        </div>
+    </div>
+</div>
+

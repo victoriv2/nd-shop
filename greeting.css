@@ -1,0 +1,273 @@
+#greeting-container {
+    width: 100%;
+    position: absolute;
+    top: 60px;
+    /* Matches the top-bar height so it rests directly underneath */
+    left: 0;
+    z-index: 10;
+}
+
+.greeting-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+}
+
+.greeting-text {
+    font-size: 1.12rem;
+    /* Increased by another 10% */
+    color: #333;
+    padding-left: 2%;
+    /* Aligns with the logo's desktop padding */
+    font-weight: 500;
+}
+
+.user-id-text {
+    font-size: 1.12rem;
+    color: #333;
+    padding-right: 2%;
+    /* Same padding to match the logic on right side */
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .greeting-text {
+        padding-left: 5%;
+        /* Aligns with the logo's mobile padding */
+    }
+
+    .user-id-text {
+        padding-right: 5%;
+    }
+
+    .dashboard-card {
+        margin: 15px 5%;
+        /* Adjusts margin for mobile width */
+    }
+
+    .filter-section {
+        padding-left: 5%;
+    }
+}
+
+.dashboard-card {
+    margin: 10px 2%;
+    /* Reduced top/bottom margin from 20px to 10px (50%) */
+    height: auto;
+    /* Height adapts to text naturally */
+    border-radius: 20px;
+    /* Round edges */
+    /* 
+       Creates an orange background (80%) with a curved green section at the bottom right (20%).
+       The radial gradient originates at the bottom right corner (100% 100%).
+    */
+    background: radial-gradient(circle at 100% 100%, #28a745 0, #28a745 35%, #ff6600 35.5%, #ff6600 100%);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    /* Soft shadow for elevation */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 9px 18px;
+    /* Height padding reduced by another 50% */
+    color: white;
+    /* Text color inside orange card */
+}
+
+.card-item {
+    font-size: 1.375rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    /* Reduced to squeeze height further */
+    line-height: 1.2;
+}
+
+.cashback-label {
+    text-align: center;
+    width: 100%;
+    font-weight: 700;
+    color: #28a745;
+    /* Green color */
+    font-size: 1.5rem;
+    /* Increased font size */
+    padding: 0 0 10px 0;
+    /* Reduced top padding to raise it up */
+    margin-top: -5px;
+    /* Pull it slightly closer to the card */
+}
+
+.filter-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 2%;
+    padding-right: 5%;
+    /* Adds space on the right so the button isn't touching the edge */
+    /* Aligns with greeting text and card */
+    margin-top: -5px;
+    /* Bring it up slightly closer to the cashback label */
+}
+
+.sort-container {
+    position: relative;
+    transform: translateX(5%);
+}
+
+.sort-btn {
+    background-color: #28a745;
+    /* Green color */
+    color: white;
+    padding: 4px 18px;
+    /* Reduced by 30% (from 6px) */
+    border-radius: 20px;
+    /* Pill shaped */
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sort-text {
+    display: inline-block;
+    transform: translateY(-2%);
+    /* Raised up by 2% */
+}
+
+.sort-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background-color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    width: 180px;
+    z-index: 100;
+    padding: 8px 0;
+    border: 1px solid #f0f0f0;
+}
+
+.sort-dropdown.show {
+    display: block;
+}
+
+.sort-option {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    color: #333;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.sort-option:hover {
+    background-color: #f9f9f9;
+    color: #28a745;
+}
+
+.sort-option:not(:last-child) {
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.date-selectors {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    transform: translateX(8%);
+    /* Shifted right by an additional 5% */
+}
+
+.filter-item {
+    font-size: 1rem;
+    color: #333;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.triangle {
+    font-size: 0.6rem;
+    color: #666;
+}
+
+.regular-card {
+    background-color: #ffffff;
+    /* White color */
+    margin: 15px 2%;
+    /* Same margin alignment as dashboard-card */
+    border-radius: 12px;
+    /* Slight rounding for a clean look */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    /* Soft shadow to pop out from the #f5f5f5 background */
+    padding: 6px 20px 12px 20px;
+    /* Reduced vertical padding further, especially the top side */
+    height: auto;
+    /* Let the height adjust tightly to its text */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.regular-card:active {
+    transform: scale(0.98);
+}
+
+.card-main-amount {
+    font-size: 1.8rem;
+    /* Biggest text */
+    font-weight: 500;
+    /* Reduced thickness as requested */
+    color: #333;
+    margin-bottom: 5.5px;
+    /* Reduced by 30% from 8px */
+    transform: translateX(-3%);
+    /* Shifted text to the left */
+}
+
+.green-plus {
+    color: #28a745;
+    /* Green plus sign */
+}
+
+.card-cashback-text {
+    font-size: 1.2rem;
+    /* Second biggest text */
+    font-weight: 600;
+    color: #555;
+    margin-left: 4px;
+}
+
+.card-details-row {
+    display: flex;
+    justify-content: space-between;
+    /* Distributes space so 'time' is pushed to the far right */
+    align-items: center;
+    font-size: 0.95rem;
+    /* Smaller text */
+    color: #666;
+}
+
+.card-buying-text {
+    font-weight: 500;
+    transform: translateX(-3%);
+    /* Shifted text to the left */
+}
+
+.card-time-text {
+    font-weight: 400;
+    color: #888;
+    /* Slightly lighter to distinguish from 'buying' text */
+    transform: translateX(5%);
+    /* Shifted text further to the right */
+}

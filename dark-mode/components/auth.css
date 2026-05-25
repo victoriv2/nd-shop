@@ -1,0 +1,223 @@
+/* =============================================
+   nd shop — Dark Mode: Auth Pages
+   =============================================
+   Overrides for login and signup pages including
+   form inputs, cards, dropdowns, modals, and
+   OTP inputs.
+   ============================================= */
+
+/* ─── Auth Body ─── */
+[data-theme="dark"] .auth-body {
+    background-color: var(--auth-body-bg);
+}
+
+/* ─── Decorative Circles (muted in dark) ─── */
+[data-theme="dark"] .auth-bg-circle {
+    opacity: 0.25;
+}
+
+/* ─── Auth Card ─── */
+[data-theme="dark"] .auth-container {
+    background: var(--auth-card-bg);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .auth-title {
+    color: var(--text-heading);
+}
+
+[data-theme="dark"] .auth-subtitle {
+    color: var(--auth-subtitle-color);
+}
+
+/* ─── Input Fields ─── */
+[data-theme="dark"] .auth-input-group label {
+    color: var(--auth-label-color);
+}
+
+[data-theme="dark"] .auth-input {
+    background-color: var(--auth-input-bg);
+    border-color: var(--border-input);
+    color: var(--auth-input-color);
+}
+
+[data-theme="dark"] .auth-input::placeholder {
+    color: var(--auth-input-placeholder);
+}
+
+[data-theme="dark"] .auth-input:focus {
+    border-color: #8b5cf6;
+    box-shadow: none;
+}
+
+[data-theme="dark"] .input-icon {
+    color: var(--auth-icon-color);
+}
+
+[data-theme="dark"] .auth-input:focus+.input-icon,
+[data-theme="dark"] .input-wrapper:focus-within .input-icon {
+    color: #8b5cf6;
+}
+
+/* ─── Password Toggle ─── */
+[data-theme="dark"] .password-toggle {
+    color: var(--auth-icon-color);
+}
+
+[data-theme="dark"] .password-toggle:hover {
+    color: var(--text-secondary);
+}
+
+/* ─── Links ─── */
+[data-theme="dark"] .forgot-link {
+    color: #8b5cf6;
+}
+
+[data-theme="dark"] .forgot-link:hover {
+    color: #2c3e50;
+}
+
+/* ─── Submit Button ─── */
+[data-theme="dark"] .auth-submit-btn {
+    background-color: #8b5cf6;
+    box-shadow: none;
+}
+
+[data-theme="dark"] .auth-submit-btn:hover {
+    background-color: #2c3e50;
+}
+
+/* ─── Secondary Button ─── */
+[data-theme="dark"] .auth-secondary-btn {
+    border-color: var(--border-primary);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .auth-secondary-btn:hover {
+    background-color: var(--bg-surface-alt);
+    border-color: var(--text-faint);
+}
+
+/* ─── Footer ─── */
+[data-theme="dark"] .auth-footer {
+    border-top-color: var(--auth-footer-border);
+}
+
+[data-theme="dark"] .auth-footer p {
+    color: var(--auth-footer-text);
+}
+
+[data-theme="dark"] .auth-footer a {
+    color: #8b5cf6;
+}
+
+[data-theme="dark"] .auth-footer a:hover {
+    color: #2c3e50;
+}
+
+/* ─── Progress Steps ─── */
+[data-theme="dark"] .progress-step {
+    background-color: var(--border-primary);
+}
+
+[data-theme="dark"] .progress-step.active {
+    background-color: #8b5cf6;
+}
+
+/* ─── Dropdowns (State & LGA) ─── */
+[data-theme="dark"] .auth-dropdown-toggle {
+    border-color: var(--border-input);
+    background-color: var(--auth-input-bg);
+    color: var(--auth-input-color);
+}
+
+[data-theme="dark"] .auth-dropdown-wrapper.open .auth-dropdown-toggle {
+    border-color: #8b5cf6;
+    box-shadow: none;
+}
+
+[data-theme="dark"] .auth-dropdown-wrapper.disabled .auth-dropdown-toggle {
+    background-color: var(--bg-surface-alt);
+    color: var(--text-faint);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .dropdown-arrow {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .auth-dropdown-menu {
+    background: var(--dropdown-bg);
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .auth-dropdown-option {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .auth-dropdown-option:hover {
+    background-color: var(--dropdown-hover);
+}
+
+[data-theme="dark"] .auth-dropdown-option.active {
+    background-color: #141c26;
+    color: #8b5cf6;
+}
+
+/* ─── Auth Selection Modal ─── */
+[data-theme="dark"] .auth-modal-overlay {
+    background: var(--bg-modal-overlay);
+    backdrop-filter: blur(4px);
+}
+
+[data-theme="dark"] .auth-modal-content {
+    background: var(--auth-modal-bg);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .auth-modal-header {
+    border-bottom-color: var(--border-primary);
+}
+
+[data-theme="dark"] .auth-modal-header h3 {
+    color: var(--text-heading);
+}
+
+[data-theme="dark"] .auth-modal-close {
+    color: var(--text-faint);
+}
+
+[data-theme="dark"] .auth-modal-close:hover {
+    color: var(--text-secondary);
+}
+
+/* ─── OTP Inputs ─── */
+[data-theme="dark"] .auth-otp-input {
+    border-color: var(--otp-border);
+    background-color: var(--otp-bg);
+    color: var(--text-heading);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .auth-otp-input:focus {
+    border-color: #8b5cf6;
+    background-color: var(--bg-input-focus);
+    box-shadow: none;
+}
+
+/* Override focus text color for auth inputs in dark mode */
+[data-theme='dark'] .auth-input:focus {
+    background-color: var(--bg-input-focus) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Force input text color override */
+[data-theme='dark'] .auth-input {
+    background-color: var(--auth-input-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+
+
+

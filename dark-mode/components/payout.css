@@ -1,0 +1,230 @@
+/* =============================================
+   nd shop — Dark Mode: Payout Component
+   =============================================
+   Overrides for payout page, dashboard card,
+   regular cards, filters, sort dropdown, and
+   the transaction detail modal.
+   ============================================= */
+
+/* ─── Payout Page ─── */
+[data-theme="dark"] .payout-text,
+[data-theme="dark"] .user-id-text {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .sticky-filter-wrapper {
+    background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .payout-label {
+    color: #8b5cf6;
+}
+
+/* ─── Dashboard Card ─── */
+[data-theme="dark"] .dashboard-card {
+    background: radial-gradient(circle at 100% 100%, #8b5cf6 0, #8b5cf6 35%, #8b5cf6 35.5%, #8b5cf6 100%);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ─── Filter Chips ─── */
+[data-theme="dark"] .filter-chip {
+    background: var(--bg-surface, #1e1e1e);
+    border-color: var(--border-light, #333);
+    color: var(--text-secondary, #aaa);
+}
+
+[data-theme="dark"] .filter-chip:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 2px 10px rgba(27, 38, 59, 0.2);
+}
+
+[data-theme="dark"] .filter-chip.filter-active {
+    background: linear-gradient(135deg, rgba(27, 38, 59, 0.15), rgba(27, 38, 59, 0.08));
+    border-color: #8b5cf6;
+    color: #8b5cf6;
+}
+
+[data-theme="dark"] .filter-chip-icon {
+    color: var(--text-muted, #666);
+}
+
+[data-theme="dark"] .filter-chip.filter-active .filter-chip-icon {
+    color: #8b5cf6;
+}
+
+[data-theme="dark"] .filter-chip-arrow {
+    color: var(--text-muted, #666);
+}
+
+[data-theme="dark"] .filter-chip.filter-active .filter-chip-arrow {
+    color: #8b5cf6;
+}
+
+/* ─── Clear Filter Button (dark) ─── */
+[data-theme="dark"] .clear-filter-btn {
+    box-shadow: 0 2px 10px rgba(27, 38, 59, 0.3);
+}
+
+/* ─── Active Filter Badge (dark) ─── */
+[data-theme="dark"] .active-filter-badge {
+    background: linear-gradient(135deg, rgba(27, 38, 59, 0.15), rgba(27, 38, 59, 0.08));
+    border-color: rgba(27, 38, 59, 0.3);
+    color: #8b5cf6;
+}
+
+[data-theme="dark"] .active-filter-badge svg {
+    color: #8b5cf6;
+}
+
+/* ─── Regular Transaction Cards ─── */
+[data-theme="dark"] .regular-card {
+    background-color: var(--bg-surface);
+    box-shadow: var(--shadow-card);
+}
+
+[data-theme="dark"] .card-main-amount {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .green-plus {
+    color: #8b5cf6;
+}
+
+[data-theme="dark"] .card-payout-text {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .card-details-row {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .card-buying-text {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .card-time-text {
+    color: var(--text-faint);
+}
+
+/* ─── Filter Section ─── */
+[data-theme="dark"] .filter-item {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .triangle {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .sort-btn {
+    background-color: #8b5cf6;
+    box-shadow: none;
+}
+
+/* ─── Sort Dropdown ─── */
+[data-theme="dark"] .sort-dropdown {
+    background: var(--dropdown-bg);
+    box-shadow: var(--shadow-md);
+    border-color: var(--dropdown-border);
+}
+
+[data-theme="dark"] .sort-option {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .sort-option:hover {
+    background-color: var(--dropdown-hover);
+    color: #8b5cf6;
+}
+
+[data-theme="dark"] .sort-option:not(:last-child) {
+    border-bottom-color: var(--border-lighter);
+}
+
+[data-theme="dark"] .sort-option.active {
+    color: #8b5cf6;
+}
+
+[data-theme="dark"] .sort-option.active .sort-check::after {
+    color: #8b5cf6;
+}
+
+/* ─── Transaction Detail Modal ─── */
+[data-theme="dark"] .transaction-modal-overlay {
+    background-color: var(--bg-modal-overlay);
+}
+
+[data-theme="dark"] .transaction-modal-content {
+    background-color: var(--modal-content-bg);
+}
+
+[data-theme="dark"] .tm-header {
+    border-bottom-color: var(--border-light);
+}
+
+[data-theme="dark"] .tm-header h3 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .tm-close {
+    color: var(--text-faint);
+}
+
+[data-theme="dark"] .tm-close:hover {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .tm-amount {
+    color: var(--text-heading);
+}
+
+[data-theme="dark"] .tm-plus {
+    color: #8b5cf6;
+}
+
+[data-theme="dark"] .tm-status {
+    background-color: #141c26;
+    color: #8b5cf6;
+}
+
+[data-theme="dark"] .tm-details-list {
+    background-color: var(--details-list-bg);
+    border-color: var(--border-light);
+}
+
+[data-theme="dark"] .tm-detail-item {
+    border-bottom-color: var(--border-primary);
+}
+
+[data-theme="dark"] .tm-label {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .tm-value {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .tm-footer {
+    border-top-color: var(--border-light);
+}
+
+[data-theme="dark"] .tm-action-btn {
+    background-color: var(--action-btn-bg);
+    color: var(--action-btn-color);
+}
+
+[data-theme="dark"] .tm-action-btn:hover {
+    background-color: var(--action-btn-hover);
+}
+
+[data-theme="dark"] .tm-btn-primary {
+    background-color: #8b5cf6;
+    color: white;
+}
+
+[data-theme="dark"] .tm-btn-primary:hover {
+    background-color: #2c3e50;
+}
+
+
+
+

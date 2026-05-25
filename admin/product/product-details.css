@@ -1,0 +1,268 @@
+/* Product Details Modal Styling */
+.product-details-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.product-details-icon {
+    width: 64px;
+    height: 64px;
+    background-color: #f0f4f8;
+    color: #8b5cf6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px auto;
+}
+
+.pd-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 5px 0;
+}
+
+.pd-price-tag {
+    color: #8b5cf6;
+}
+
+.pd-price {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.pd-unit {
+    font-size: 0.9rem;
+    color: #888;
+    font-weight: 600;
+}
+
+.product-details-stats {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.pd-stat-box {
+    flex: 1;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    border: 1px solid #f0f0f0;
+}
+
+.pd-stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.pd-stat-value {
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.payout-color {
+    color: #8b5cf6;
+}
+
+.active-color {
+    color: #007bff;
+}
+
+.product-details-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pd-edit-btn {
+    width: 100%;
+    padding: 14px;
+    background-color: #f0f0f0;
+    color: #444;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.pd-edit-btn:hover {
+    background-color: #e4e4e4;
+}
+
+.pd-delete-btn {
+    width: 100%;
+    padding: 14px;
+    background-color: #fff0f0;
+    color: #ff4d4d;
+    border: 1px dashed #ff4d4d;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.pd-delete-btn:hover {
+    background-color: #ffe5e5;
+}
+
+
+/* Delete Confirmation Screen */
+#productDeleteConfirmView {
+    text-align: center;
+    padding: 10px 0;
+}
+
+.pd-delete-warning-icon {
+    width: 72px;
+    height: 72px;
+    background-color: #fff0f0;
+    color: #ff4d4d;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+}
+
+.pd-confirm-title {
+    font-size: 1.3rem;
+    color: #333;
+    font-weight: 800;
+    margin: 0 0 10px 0;
+}
+
+.pd-confirm-text {
+    font-size: 0.95rem;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+.pd-confirm-text strong {
+    color: #1a1a1a;
+}
+
+.pd-restore-notice {
+    background-color: #fff9e6;
+    border-left: 4px solid #ffcc00;
+    padding: 12px 15px;
+    border-radius: 8px;
+    text-align: left;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 30px;
+}
+
+.pd-restore-notice svg {
+    color: #cca300;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.pd-restore-notice span {
+    font-size: 0.85rem;
+    color: #665200;
+    line-height: 1.4;
+}
+
+.pd-restore-notice strong {
+    font-weight: 700;
+}
+
+.pd-confirm-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.pd-cancel-btn {
+    flex: 1;
+    padding: 14px;
+    background-color: #f0f0f0;
+    color: #444;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pd-confirm-delete-btn {
+    flex: 1;
+    padding: 14px;
+    background-color: #ff4d4d;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 77, 77, 0.2);
+}
+
+
+/* Internal Success Screen */
+#productDeleteSuccessView {
+    text-align: center;
+    padding: 30px 0;
+}
+
+.pd-success-icon {
+    width: 64px;
+    height: 64px;
+    background-color: #f0f4f8;
+    color: #8b5cf6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+}
+
+.pd-success-title {
+    font-size: 1.3rem;
+    color: #333;
+    font-weight: 800;
+    margin: 0 0 10px 0;
+}
+
+.pd-success-text {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.pd-done-btn {
+    width: 100%;
+    padding: 14px;
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+
+
+

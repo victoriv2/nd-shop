@@ -1,0 +1,436 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+    /* Firefox standard scrollbar properties */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 transparent;
+}
+
+/* =========================================
+   Custom Global Scrollbar Styling
+========================================= */
+
+/* The actual full width of the virtual scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    /* Ultra-slim profile */
+    height: 6px;
+    /* For horizontal scrollbars if any ever appear */
+}
+
+/* The invisible track behind the draggable thumb */
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* The draggable "thumb" or pill */
+::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    /* Elegant light grey matching the app's aesthetic */
+    border-radius: 10px;
+    /* Perfect "Pill" rounded corners */
+    border: 2px solid transparent;
+    /* Required for the background-clip hack */
+    background-clip: content-box;
+    /* Adds visual padding so the thumb doesn't touch the edges */
+}
+
+/* Interactive hover state for the thumb */
+::-webkit-scrollbar-thumb:hover {
+    background-color: #8b5cf6;
+    /* nd shop Brand Orange on hover for premium feedback */
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #f5f5f5;
+    /* A blank/neutral background */
+    min-height: 100vh;
+    overflow-x: hidden;
+    /* Blocks left/right swipe entirely */
+    overflow-y: auto;
+    /* Keeps normal up/down scrolling */
+}
+
+body.modal-open {
+    overflow: hidden;
+    /* Completely lock scrolling when a modal is open */
+}
+
+.top-bar {
+    background-color: #ffffff;
+    /* White for light mode */
+    height: 60px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    /* Shadow to separate from background */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.top-bar .container {
+    max-width: 100%;
+    padding: 0 2%;
+    /* Keep it very close to the edge on desktop */
+}
+
+@media (max-width: 1023px) {
+    .top-bar .container {
+        padding: 0 5%;
+        /* Align logo with the 90% width orange bar */
+    }
+}
+
+
+.content {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: calc(100vh - 60px);
+    /* Subtract top bar height */
+    padding-bottom: 20px;
+}
+
+.orange-bar {
+    width: 90%;
+    height: 48px;
+    background-color: #8b5cf6;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 500;
+}
+
+.tab-indicator {
+    display: none;
+}
+
+.divider {
+    width: 2px;
+    height: 60%;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 1px;
+}
+
+.bar-item {
+    color: white;
+    font-weight: 500;
+    font-size: 0.95rem;
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    transform: translateY(-2.5%);
+}
+
+.bar-item.active {
+    font-weight: 700;
+    font-size: 1.3rem;
+    transform: translateY(-5%);
+}
+
+.item-reward {
+    transform: translate(5%, -2.5%);
+}
+
+.item-reward.active {
+    transform: translate(5%, -5%);
+}
+
+.item-menu {
+    transform: translate(-5%, -2.5%);
+}
+
+.item-menu.active {
+    transform: translate(-5%, -5%);
+}
+
+/* ========================================
+   Mobile Bottom Bar Redesign
+   ======================================== */
+@media (max-width: 1023px) {
+    html, body {
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
+
+    .orange-bar {
+        height: 52px;
+        background-color: #ffffff;
+        border: 2px solid #8b5cf6;
+        border-radius: 26px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        padding: 4px;
+        justify-content: stretch;
+    }
+
+    .divider {
+        display: none;
+    }
+
+    .tab-indicator {
+        display: block;
+        position: absolute;
+        top: 4px;
+        bottom: 4px;
+        left: 4px;
+        width: calc((100% - 8px) / 3);
+        background-color: #8b5cf6;
+        border-radius: 22px;
+        box-shadow: none;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .tab-indicator.animating {
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bar-item {
+        color: #8b5cf6;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 10px 0;
+        border-radius: 22px;
+        position: relative;
+        z-index: 1;
+        transform: none;
+        transition: color 0.3s ease, font-weight 0.3s ease;
+    }
+
+    .bar-item:active {
+        transform: scale(0.95);
+    }
+
+    .bar-item.active {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        background: transparent;
+        box-shadow: none;
+        transform: none;
+    }
+
+    .item-reward,
+    .item-reward.active,
+    .item-menu,
+    .item-menu.active {
+        transform: none;
+    }
+}
+
+.logo img {
+    height: 100px;
+    /* Adjust height as needed */
+    display: block;
+    transform: translate(-7.5%, 5%);
+}
+
+.top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+}
+
+@media (min-width: 1024px) {
+    .top-nav {
+        margin-right: 0;
+    }
+}
+
+/* ========================================
+   Community Button Styles
+   ======================================== */
+.community-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #8b5cf6;
+    border: 1.5px solid #8b5cf6;
+    color: #ffffff;
+    border-radius: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.community-btn svg {
+    width: 20px;
+    height: 20px;
+    color: #ffffff;
+    transition: transform 0.3s ease;
+}
+
+.community-text {
+    display: inline;
+    font-size: 0.85rem;
+}
+
+/* Hide text on very small screens to prevent overlap with logo */
+@media (max-width: 360px) {
+    .community-text {
+        display: none;
+    }
+    .community-btn {
+        padding: 8px 10px;
+    }
+}
+
+.community-btn:hover {
+    background: #2c3e50;
+}
+
+.community-btn:hover svg {
+    transform: rotate(-15deg) scale(1.1);
+    animation: megaphone-shake 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes megaphone-shake {
+    0% { transform: rotate(-15deg) scale(1.1); }
+    100% { transform: rotate(5deg) scale(1.1); }
+}
+
+@media (min-width: 1024px) {
+    .community-text {
+        display: inline;
+    }
+    
+    .community-btn {
+        padding: 8px 20px;
+    }
+}
+
+@media (max-width: 1023px) {
+    .community-btn {
+        margin-right: 3%; /* Shift left by 3% in mobile view */
+    }
+}
+
+@media (min-width: 1024px) {
+    .logo img {
+        transform: translate(-2%, 5%);
+    }
+}
+
+/* ========================================
+   Mobile Carousel / Slider (Mobile Only)
+   ======================================== */
+@media (max-width: 1023px) {
+    .slider-viewport {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: hidden;
+        z-index: 10;
+    }
+
+    .slider-track {
+        display: flex;
+        height: 100%;
+        will-change: transform;
+    }
+
+    .slider-track.animating {
+        transition: transform 0.3s ease;
+    }
+
+    #payout-container,
+    #product-container,
+    #menu-container {
+        flex: 0 0 100%;
+        width: 100% !important;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        display: block !important;
+    }
+
+    /* Sticky headers: top is 0 since each panel scrolls independently */
+    .sticky-filter-wrapper {
+        top: 0 !important;
+    }
+
+    .product-page-wrapper {
+        top: 0 !important;
+    }
+
+    #product-container,
+    #payout-container,
+    #menu-container {
+        padding-top: 0 !important;
+    }
+}
+
+/* Desktop: Slider wrapper is transparent pass-through */
+@media (min-width: 1024px) {
+
+    .slider-viewport,
+    .slider-track {
+        display: contents;
+    }
+}
+
+/* Bottom Navigation Notifications */
+.nav-item.has-notification::after {
+    content: attr(data-badge);
+    position: absolute;
+    top: 5px;
+    right: 15%;
+    background: #ff4d4d;
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 0 10px rgba(255, 77, 77, 0.4);
+}
+
+#modal-container { z-index: 9999999 !important; position: relative !important; }
+
+
+
+
+

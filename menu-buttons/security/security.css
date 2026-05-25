@@ -1,0 +1,236 @@
+/* ========================================
+   Security Modal — Tabbed Design
+   ======================================== */
+.security-hero-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.security-icon {
+    font-size: 2.2rem;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.security-desc {
+    font-size: 0.95rem;
+    color: #666;
+}
+
+/* Segmented Tab Bar */
+.sec-tab-bar {
+    display: flex;
+    position: relative;
+    background-color: #f1f5f9;
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 28px;
+}
+
+.sec-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: color 0.3s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sec-tab.active {
+    color: #fff;
+    font-weight: 700;
+}
+
+.sec-tab-indicator {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    background-color: #8b5cf6;
+    border-radius: 11px;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+}
+
+/* 2-tab layout (default) */
+.sec-tab-bar[data-active="password"]:not(.sec-tab-bar-3) .sec-tab-indicator {
+    left: calc(50% + 0px);
+}
+
+/* 3-tab layout */
+.sec-tab-bar-3 .sec-tab-indicator {
+    width: calc(33.333% - 4px);
+}
+
+.sec-tab-bar-3[data-active="email"] .sec-tab-indicator {
+    left: 4px;
+}
+
+.sec-tab-bar-3[data-active="phone"] .sec-tab-indicator {
+    left: calc(33.333% + 0px);
+}
+
+.sec-tab-bar-3[data-active="password"] .sec-tab-indicator {
+    left: calc(66.666% - 2px);
+}
+
+/* Panels */
+.sec-panel {
+    animation: secFadeIn 0.3s ease;
+}
+
+.sec-panel.hidden {
+    display: none;
+}
+
+@keyframes secFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sec-panel-icon {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.sec-panel-title {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #1a202c;
+    margin-bottom: 4px;
+}
+
+.sec-panel-subtitle {
+    text-align: center;
+    font-size: 0.88rem;
+    color: #718096;
+    margin-bottom: 22px;
+    line-height: 1.4;
+}
+
+.security-form-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.req {
+    color: #dc3545;
+}
+
+/* Password visibility toggle */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-input-wrapper .m-input {
+    width: 100%;
+    padding-right: 44px;
+    box-sizing: border-box;
+}
+
+.password-toggle-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #94a3b8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: color 0.2s;
+    padding: 5px;
+}
+
+.password-toggle-icon:hover {
+    color: #334155;
+}
+
+/* Save Button inside each panel */
+.sec-save-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    background-color: #8b5cf6;
+    color: white;
+    box-shadow: none;
+    transition: all 0.2s;
+    user-select: none;
+    font-family: inherit;
+}
+
+.sec-save-btn:hover {
+    background-color: #2c3e50;
+    box-shadow: none;
+}
+
+.sec-save-btn:active {
+    transform: scale(0.98);
+}
+
+.sec-save-btn.saving {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.sec-save-btn.success {
+    background-color: #8b5cf6;
+    box-shadow: none;
+}
+
+/* ========================================
+   OTP Input Design
+   ======================================== */
+.otp-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.otp-input {
+    width: 45px;
+    height: 55px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background-color: #f8fafc;
+    color: #1e293b;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.otp-input:focus {
+    border-color: #8b5cf6;
+    background-color: #fff;
+    box-shadow: none;
+}
+
+
+
+

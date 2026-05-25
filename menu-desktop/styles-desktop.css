@@ -1,0 +1,9 @@
+/* Desktop overrides for menu page */
+@media (min-width: 1024px) {
+    #menu-container {
+        position: absolute !important;
+        width: 50% !important;
+        left: 25% !important;
+        padding-bottom: 40px !important;
+    }
+}

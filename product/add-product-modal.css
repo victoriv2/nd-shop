@@ -1,0 +1,215 @@
+/* Add Product Modal Form Styles based on auth.css */
+.apm-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.apm-row {
+    display: flex;
+    gap: 15px;
+}
+
+.apm-row.inline-row {
+    flex-direction: row;
+}
+
+@media (max-width: 480px) {
+    .apm-row:not(.inline-row) {
+        flex-direction: column;
+    }
+}
+
+.apm-input-group {
+    flex: 1;
+    min-width: 0;
+}
+
+.apm-input-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 8px;
+    margin-left: 2px;
+}
+
+.apm-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.apm-input-icon {
+    position: absolute;
+    left: 16px;
+    color: #a0aec0;
+    display: flex;
+    transition: color 0.3s;
+}
+
+.apm-input {
+    width: 100%;
+    padding: 14px 16px 14px 44px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    font-size: 1rem;
+    background-color: #ffffff;
+    color: #2d3748;
+    transition: all 0.3s;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.apm-input::placeholder {
+    color: #cbd5e0;
+}
+
+.apm-input:focus {
+    border-color: #8b5cf6;
+    box-shadow: none;
+}
+
+.apm-input:focus+.apm-input-icon,
+.apm-input-wrapper:focus-within .apm-input-icon {
+    color: #8b5cf6;
+}
+
+/* Dropdown */
+.apm-dropdown-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.apm-dropdown-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.apm-dropdown-toggle .truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: calc(100% - 20px);
+}
+
+.apm-dropdown-toggle .dropdown-arrow {
+    transition: transform 0.2s;
+    font-size: 1.1rem;
+    color: #666;
+    display: flex;
+    align-items: center;
+}
+
+.apm-dropdown-wrapper.open .apm-dropdown-toggle {
+    border-color: #8b5cf6;
+}
+
+.apm-dropdown-wrapper.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.apm-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 5px);
+    /* Changed from bottom to top for this modal so it drops down */
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    z-index: 3500;
+    padding: 8px 0;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.apm-dropdown-wrapper.open .apm-dropdown-menu {
+    display: block;
+    animation: apmFadeIn 0.2s ease;
+}
+
+@keyframes apmFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.apm-dropdown-option {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.apm-dropdown-option:hover {
+    background-color: #f1f5f9;
+}
+
+.apm-dropdown-option.active {
+    background-color: #edf1f7;
+    color: #8b5cf6;
+    font-weight: 600;
+}
+
+.apm-dropdown-check {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+}
+
+.apm-dropdown-option.active .apm-dropdown-check {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23399DFA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Submit Button */
+.apm-submit-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    background-color: #8b5cf6;
+    color: white;
+    box-shadow: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-family: inherit;
+    margin-top: 10px;
+}
+
+.apm-submit-btn:hover {
+    background-color: #2c3e50;
+}
+
+.apm-submit-btn:active {
+    transform: scale(0.97);
+}
+
+
+
+

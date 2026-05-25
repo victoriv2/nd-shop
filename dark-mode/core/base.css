@@ -1,0 +1,109 @@
+/* =============================================
+   nd shop — Dark Mode Base Overrides
+   =============================================
+   This file maps CSS variables onto the core layout
+   elements: body, topbar, scrollbar, content areas,
+   and the orange navigation bar.
+   ============================================= */
+
+/* ─── Global / Body ─── */
+[data-theme="dark"] html {
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-hover);
+}
+
+[data-theme="dark"] body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* ─── Top Bar ─── */
+[data-theme="dark"] .top-bar {
+    background-color: var(--topbar-bg);
+    box-shadow: var(--shadow-topbar);
+}
+
+/* ─── Selection Modal ─── */
+[data-theme="dark"] .modal-overlay {
+    background: var(--bg-modal-overlay);
+}
+
+[data-theme="dark"] .modal-content {
+    background: var(--modal-content-bg);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: var(--border-light);
+}
+
+[data-theme="dark"] .modal-header h3 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .close-modal {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .modal-list-item {
+    color: var(--text-primary);
+    border-bottom-color: var(--border-lighter);
+}
+
+[data-theme="dark"] .modal-list-item:hover {
+    background: var(--bg-surface-hover);
+}
+
+/* ─── Orange Bar (Desktop) ─── */
+@media (min-width: 1024px) {
+    [data-theme="dark"] .bar-item {
+        background-color: var(--bar-item-bg) !important;
+        color: var(--bar-item-color) !important;
+        border-color: var(--bar-item-border) !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    [data-theme="dark"] .bar-item:hover {
+        background-color: var(--bar-item-hover-bg) !important;
+        box-shadow: none;
+    }
+
+    [data-theme="dark"] .bar-item.active {
+        background-color: var(--bar-item-active-bg) !important;
+        color: var(--bar-item-active-color) !important;
+        box-shadow: none;
+    }
+
+    [data-theme="dark"] body {
+        background-color: var(--bg-primary);
+    }
+}
+
+/* ─── Orange Bar (Mobile) ─── */
+@media (max-width: 1023px) {
+    [data-theme="dark"] .orange-bar {
+        background-color: var(--mobile-bar-bg);
+        border-color: var(--mobile-bar-border);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="dark"] .bar-item {
+        color: var(--mobile-bar-text);
+    }
+
+    [data-theme="dark"] .bar-item.active {
+        color: var(--mobile-bar-active-text);
+    }
+
+    [data-theme="dark"] .tab-indicator {
+        background-color: var(--mobile-bar-indicator);
+        box-shadow: none;
+    }
+}
