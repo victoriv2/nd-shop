@@ -62,17 +62,32 @@ const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+console.log("DIAGNOSTIC: PORT =", PORT);
+console.log("DIAGNOSTIC: SUPABASE_URL length =", supabaseUrl ? supabaseUrl.length : 0);
+console.log("DIAGNOSTIC: SUPABASE_SERVICE_KEY length =", supabaseKey ? supabaseKey.length : 0);
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error("ERROR: SUPABASE_URL or SUPABASE_SERVICE_KEY environment variable is missing!");
+}
+
 const fetch = require('cross-fetch');
-const supabase = createClient(supabaseUrl, supabaseKey, {
-    auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
-    },
-    global: {
-        fetch: fetch
-    }
-});
+let supabase;
+try {
+    supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseKey || 'placeholder', {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+        },
+        global: {
+            fetch: fetch
+        }
+    });
+    console.log("DIAGNOSTIC: Supabase client created successfully.");
+} catch (err) {
+    console.error("DIAGNOSTIC: Failed to create Supabase client:", err.message);
+}
 
 // Simple in-memory store for OTPs
 // Structure: { "contact@example.com": { code: "1234", expiresAt: 16... } }
