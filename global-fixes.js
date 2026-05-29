@@ -131,7 +131,10 @@
      */
     async function syncUsersFromBackend() {
         try {
-            const response = await fetch(window.API_BASE + '/api/users');
+            const token = localStorage.getItem('nd_token') || '';
+            const response = await fetch(window.API_BASE + '/api/users', {
+                headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+            });
             const data = await response.json();
             if (data.success && data.users) {
                 // Keep nd_users locally updated so that admin tools and security modules keep working

@@ -177,14 +177,16 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-app.get('/api/users', authenticateToken, async (req, res) => {
+app.get('/api/users', optionalToken, async (req, res) => {
     try {
         const { data, error } = await supabase.from('users').select('*');
         if (error) throw error;
 
         const frontendUsers = data.map(u => ({
             id: u.id, name: u.name, firstName: u.first_name, middleName: u.middle_name,
-            lastName: u.last_name, joinDate: u.join_date, is_admin: u.is_admin
+            lastName: u.last_name, email: u.email, phone: u.phone,
+            address: u.address, state: u.state, lga: u.lga,
+            joinDate: u.join_date, is_admin: u.is_admin
         }));
 
         res.json({ success: true, users: frontendUsers });

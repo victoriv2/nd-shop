@@ -127,14 +127,30 @@
     function handleMutation(key, newValueString) {
         try {
             const oldList = stateCache[key] || [];
-            const newList = JSON.parse(newValueString || '[]');
+            let newList = JSON.parse(newValueString || '[]');
             
+            // AUTO-ID: assign stable IDs to items that don't have one
+            // (products are created without id - generate and persist)
+            let needsWriteback = false;
+            newList = newList.map(item => {
+                if (!item.id) {
+                    item.id = key + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    needsWriteback = true;
+                }
+                return item;
+            });
+
+            // Write back with IDs so they persist in localStorage
+            if (needsWriteback) {
+                nativeSetItem.call(localStorage, key, JSON.stringify(newList));
+            }
+
             const tableName = TABLES_TO_SYNC[key];
             const operations = [];
 
-            // Convert to maps for easy lookup
-            const oldMap = new Map(oldList.map(item => [item.id, item]));
-            const newMap = new Map(newList.map(item => [item.id, item]));
+            // Build maps - skip items without id (safety check)
+            const oldMap = new Map(oldList.filter(i => i && i.id).map(item => [String(item.id), item]));
+            const newMap = new Map(newList.filter(i => i && i.id).map(item => [String(item.id), item]));
 
             // Detect Inserts and Updates
             for (const [id, newItem] of newMap.entries()) {
@@ -147,7 +163,7 @@
             }
 
             // Detect Deletes
-            for (const [id, oldItem] of oldMap.entries()) {
+            for (const [id] of oldMap.entries()) {
                 if (!newMap.has(id)) {
                     operations.push({ type: 'DELETE', id: id });
                 }
@@ -162,6 +178,7 @@
                     body: JSON.stringify({ table: tableName, operations })
                 }).then(res => res.json()).then(data => {
                     if (!data.success) console.error('Sync failed', data.error);
+                    else console.log(`[sync] Synced ${operations.length} ops to ${tableName}`);
                 }).catch(err => {
                     console.error('Network error during sync:', err);
                 });
@@ -174,6 +191,7 @@
             console.error('Error handling mutation for', key, e);
         }
     }
+
 
     // Start initialization
     initSync();
