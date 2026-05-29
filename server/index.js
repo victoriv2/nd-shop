@@ -1,6 +1,14 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const dns = require('dns');
 dns.setDefaultResultOrder('ipv4first');
+
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('UNHANDLED REJECTION AT:', promise, 'REASON:', reason);
+});
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -624,6 +632,6 @@ app.get('/api/get-table/:table', optionalToken, async (req, res) => {
 });
 
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
 });
