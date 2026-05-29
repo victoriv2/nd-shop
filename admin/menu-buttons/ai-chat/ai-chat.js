@@ -1726,22 +1726,30 @@ PAYOUT PURCHASES:
             }
         }
 
-        aiChatThreads = aiChatThreads.filter(t => !(t.title === 'New Chat' && !(t.messages || []).length));
+        aiChatThreads = aiChatThreads.filter(t => {
+            if (t.id === currentChatId) return true; // Keep the active chat even if empty
+            return !(t.title === 'New Chat' && !(t.messages || []).length);
+        });
 
         const bestId = pickBestThreadId();
-        if (!bestId) {
-            const t = {
-                id: 'thread-' + Date.now(),
-                title: 'New Chat',
-                isPinned: false,
-                updatedAt: Date.now(),
-                messages: []
-            };
-            aiChatThreads = [t];
-            currentChatId = t.id;
-            persistAiThreads(false);
-        } else {
-            currentChatId = bestId;
+        // If we are currently in an empty "New Chat" and we just cloud synced, don't jump out of it!
+        const currentStillExists = currentChatId && aiChatThreads.find(t => t.id === currentChatId);
+        
+        if (!currentStillExists) {
+            if (!bestId) {
+                const t = {
+                    id: 'thread-' + Date.now(),
+                    title: 'New Chat',
+                    isPinned: false,
+                    updatedAt: Date.now(),
+                    messages: []
+                };
+                aiChatThreads = [t];
+                currentChatId = t.id;
+                persistAiThreads(false);
+            } else {
+                currentChatId = bestId;
+            }
         }
 
         renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
