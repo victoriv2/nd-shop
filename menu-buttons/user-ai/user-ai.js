@@ -186,8 +186,8 @@ function initAiChatLogic() {
     closeBtn.addEventListener('click', () => {
         try {
             if (inputField) inputField.blur();
+            currentChatId = null; // Clear so reopening starts a new chat and empty thread is discarded
             saveActiveHistory();
-            currentChatId = null; // Clear so reopening starts a new chat
             overlay.classList.remove('show');
             setTimeout(() => {
                 try {
@@ -1687,9 +1687,17 @@ ${JSON.stringify(userRequests)}
     }
 
     function saveActiveHistory() {
+        window.__userAiLocalSaveUntil = Date.now() + 3000;
+        persistAiThreads(true);
+        renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
+    }
+
+    function persistAiThreads(pushCloud) {
         if (!Array.isArray(aiChatThreads)) aiChatThreads = [];
 
-        window.__userAiLocalSaveUntil = Date.now() + 3000;
+        // Remove empty threads unless it's the currently active thread
+        aiChatThreads = aiChatThreads.filter(t => t.id === currentChatId || (t.messages && t.messages.length > 0));
+
         const payload = JSON.stringify(aiChatThreads);
         window.__userAiThreadsSnapshot = payload;
 

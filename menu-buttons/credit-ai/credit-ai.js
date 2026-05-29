@@ -171,8 +171,8 @@ function initCreditAiChatLogic() {
     let currentImageBase64 = null;
 
     closeBtn.addEventListener('click', () => {
+        currentCreditChatId = null; // Clear so reopening starts a new chat and empty thread is discarded
         saveActiveHistory();
-        currentCreditChatId = null; // Clear so reopening starts a new chat
         overlay.classList.remove('show');
         setTimeout(() => {
             try { overlay.remove(); } catch(e){}
@@ -1514,6 +1514,11 @@ ${JSON.stringify(userRequests)}
     }
 
     function persistCreditAiThreads(pushCloud) {
+        if (!Array.isArray(creditAiChatThreads)) creditAiChatThreads = [];
+
+        // Remove empty threads unless it's the currently active thread
+        creditAiChatThreads = creditAiChatThreads.filter(t => t.id === currentCreditChatId || (t.messages && t.messages.length > 0));
+
         const payload = JSON.stringify(creditAiChatThreads);
         window.__userAiThreadsSnapshot = payload;
         try {

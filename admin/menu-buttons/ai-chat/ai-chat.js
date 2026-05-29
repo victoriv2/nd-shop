@@ -214,8 +214,8 @@ function initAiChatLogic() {
     closeBtn.addEventListener('click', () => {
         try {
             if (inputField) inputField.blur();
+            currentChatId = null; // Clear so reopening starts a new chat and empty thread is discarded
             saveActiveHistory();
-            currentChatId = null; // Clear so reopening starts a new chat
             overlay.classList.remove('show');
             if (typeof window.clearAdminModalPersistence === 'function') {
                 window.clearAdminModalPersistence();
@@ -1761,6 +1761,9 @@ PAYOUT PURCHASES:
 
     function persistAiThreads(pushCloud) {
         if (!Array.isArray(aiChatThreads)) aiChatThreads = [];
+
+        // Remove empty threads unless it's the currently active thread
+        aiChatThreads = aiChatThreads.filter(t => t.id === currentChatId || (t.messages && t.messages.length > 0));
 
         const payload = JSON.stringify(aiChatThreads);
         window.__adminAiThreadsSnapshot = payload;
