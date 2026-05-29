@@ -7,4 +7,4 @@
  * For local development: 'http://localhost:5000'
  * For production (example): 'https://your-app-server.com'
  */
-window.API_BASE = window.API_BASE || 'https://nd-shop-production-61d4.up.railway.app';
+window.API_BASE = window.API_BASE || 'https://nd-shop-production-2ba4.up.railway.app';
