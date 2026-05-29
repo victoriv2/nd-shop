@@ -184,13 +184,20 @@ function initAiChatLogic() {
     let currentImageBase64 = null;
 
     closeBtn.addEventListener('click', () => {
-        if (inputField) inputField.blur();
-        saveActiveHistory();
-        overlay.classList.remove('show');
-        setTimeout(() => {
-            const wrapper = document.getElementById('ai-modal-wrapper');
-            if (wrapper) wrapper.remove();
-        }, 300);
+        try {
+            if (inputField) inputField.blur();
+            saveActiveHistory();
+            currentChatId = null; // Clear so reopening starts a new chat
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                try {
+                    const wrapper = document.getElementById('ai-modal-wrapper');
+                    if (wrapper) wrapper.remove();
+                } catch (e) { /* ignore */ }
+            }, 300);
+        } catch (e) {
+            console.error('[AI Chat] close error', e);
+        }
     });
 
     toggleHistoryBtn.addEventListener('click', () => {
@@ -1628,16 +1635,22 @@ ${JSON.stringify(userRequests)}
             }
         }
 
-        aiChatThreads = aiChatThreads.filter(t => !(t.title === 'New Chat' && t.messages.length === 0));
+        aiChatThreads = aiChatThreads.filter(t => {
+            if (t.id === currentChatId) return true;
+            return !(t.title === 'New Chat' && (t.messages || []).length === 0);
+        });
 
-        if (aiChatThreads.length === 0) {
-            createNewThread();
-        } else if (!currentChatId || !aiChatThreads.find(t => t.id === currentChatId)) {
-            switchThread(aiChatThreads[0].id);
-        } else {
-            renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
-            renderActiveThread(true);
+        const currentStillExists = currentChatId && aiChatThreads.find(t => t.id === currentChatId);
+
+        if (!currentStillExists) {
+            const t = { id: 'thread-' + Date.now(), title: 'New Chat', isPinned: false, updatedAt: Date.now(), messages: [] };
+            aiChatThreads.unshift(t);
+            currentChatId = t.id;
+            persistAiThreads(false);
         }
+
+        renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
+        renderActiveThread(true);
     }
 
     function createNewThread() {

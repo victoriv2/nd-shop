@@ -172,8 +172,11 @@ function initCreditAiChatLogic() {
 
     closeBtn.addEventListener('click', () => {
         saveActiveHistory();
+        currentCreditChatId = null; // Clear so reopening starts a new chat
         overlay.classList.remove('show');
-        setTimeout(() => overlay.remove(), 300);
+        setTimeout(() => {
+            try { overlay.remove(); } catch(e){}
+        }, 300);
     });
 
     toggleHistoryBtn.addEventListener('click', () => {
@@ -1479,15 +1482,18 @@ ${JSON.stringify(userRequests)}
                 } catch (e) { /* ignore */ }
             }
         }
-        creditAiChatThreads = creditAiChatThreads.filter(t => !(t.title === 'New Chat' && !(t.messages || []).length));
-        const bestId = pickBestCreditThreadId();
-        if (!bestId) {
+        creditAiChatThreads = creditAiChatThreads.filter(t => {
+            if (t.id === currentCreditChatId) return true;
+            return !(t.title === 'New Chat' && !(t.messages || []).length);
+        });
+
+        const currentStillExists = currentCreditChatId && creditAiChatThreads.find(t => t.id === currentCreditChatId);
+
+        if (!currentStillExists) {
             const t = { id: 'thread-' + Date.now(), title: 'New Chat', isPinned: false, updatedAt: Date.now(), messages: [] };
-            creditAiChatThreads = [t];
+            creditAiChatThreads.unshift(t);
             currentCreditChatId = t.id;
             persistCreditAiThreads(false);
-        } else {
-            currentCreditChatId = bestId;
         }
         renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
         renderActiveThread(false);

@@ -340,6 +340,13 @@ function initMessagingLogic() {
             renderMessages();
         }
     });
+
+    // Auto-refresh when cloud sync completes
+    window.addEventListener('nd_sync_complete', () => {
+        if (page && page.classList.contains('show')) {
+            renderMessages();
+        }
+    });
 }
 
 // --- Handle Send ---

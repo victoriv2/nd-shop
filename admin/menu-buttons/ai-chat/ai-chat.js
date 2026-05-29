@@ -215,6 +215,7 @@ function initAiChatLogic() {
         try {
             if (inputField) inputField.blur();
             saveActiveHistory();
+            currentChatId = null; // Clear so reopening starts a new chat
             overlay.classList.remove('show');
             if (typeof window.clearAdminModalPersistence === 'function') {
                 window.clearAdminModalPersistence();
@@ -1727,29 +1728,17 @@ PAYOUT PURCHASES:
         }
 
         aiChatThreads = aiChatThreads.filter(t => {
-            if (t.id === currentChatId) return true; // Keep the active chat even if empty
-            return !(t.title === 'New Chat' && !(t.messages || []).length);
+            if (t.id === currentChatId) return true;
+            return !(t.title === 'New Chat' && (t.messages || []).length === 0);
         });
 
-        const bestId = pickBestThreadId();
-        // If we are currently in an empty "New Chat" and we just cloud synced, don't jump out of it!
         const currentStillExists = currentChatId && aiChatThreads.find(t => t.id === currentChatId);
-        
+
         if (!currentStillExists) {
-            if (!bestId) {
-                const t = {
-                    id: 'thread-' + Date.now(),
-                    title: 'New Chat',
-                    isPinned: false,
-                    updatedAt: Date.now(),
-                    messages: []
-                };
-                aiChatThreads = [t];
-                currentChatId = t.id;
-                persistAiThreads(false);
-            } else {
-                currentChatId = bestId;
-            }
+            const t = { id: 'thread-' + Date.now(), title: 'New Chat', isPinned: false, updatedAt: Date.now(), messages: [] };
+            aiChatThreads.unshift(t);
+            currentChatId = t.id;
+            persistAiThreads(false);
         }
 
         renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
