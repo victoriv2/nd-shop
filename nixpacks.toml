@@ -1,5 +1,4 @@
-[providers]
-node = {}
+providers = ["node"]
 
 [phases.setup]
 nixPkgs = ["nodejs", "npm"]
