@@ -150,7 +150,8 @@ function initProgressLogic() {
 
                         if (sMonth === targetShortMonth && sYear === targetYearStr) {
                             const qty = (sale.qty !== undefined && sale.qty !== null && sale.qty !== '') ? Number(sale.qty) : 1;
-                            const price = (sale.price !== undefined && sale.price !== null && sale.price !== '') ? Number(sale.price) : (sale.isFlexible ? Number(sale.unitPrice || 0) : (Number(sale.unitPrice || 0) * Number(sale.qty || 1)));
+                            const grossPrice = Number(sale.unitPrice || 0) * qty;
+                            const price = (sale.price !== undefined && sale.price !== null && sale.price !== '') ? Number(sale.price) : grossPrice;
 
                             entriesCount++;
                             totalItems += qty;
@@ -168,7 +169,7 @@ function initProgressLogic() {
                             if (payoutEnabled && isRequest) {
                                 // Respect recorded payout, even if 0. Only fallback to dynamic rate if field is missing.
                                 const rate = parseFloat(localStorage.getItem('nd_payout_rate') || 2) / 100;
-                                payout = (sale.payout !== undefined && sale.payout !== null && sale.payout !== '') ? Number(sale.payout) : (price * rate);
+                                payout = (sale.payout !== undefined && sale.payout !== null && sale.payout !== '') ? Number(sale.payout) : (grossPrice * rate);
                             }
                             
                             totalPayout += payout;

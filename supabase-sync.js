@@ -11,7 +11,7 @@
         'nd_products_data': 'products',
         'nd_requests_data': 'requests',
         'nd_messages': 'messages',
-        'nd_community_messages': 'community_messages',
+        'nd_comm_messages': 'community_messages',
         'nd_sales_history': 'sales_history',
         'nd_debtor_notes': 'debtor_notes',
         'nd_debt_requests': 'debt_requests',

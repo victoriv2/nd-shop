@@ -1422,12 +1422,16 @@ function scrollToCommBottom() {
     }
 }
 
+let commLastKnownState = '';
+
 function _startCommPolling() {
     _stopCommPolling();
     commPollingInterval = setInterval(() => {
-        const messages = JSON.parse(localStorage.getItem('nd_comm_messages') || '[]');
-        if (messages.length !== commLastKnownCount) {
-            commLastKnownCount = messages.length;
+        const messagesStr = localStorage.getItem('nd_comm_messages') || '[]';
+        if (messagesStr !== commLastKnownState) {
+            commLastKnownState = messagesStr;
+            const messages = JSON.parse(messagesStr);
+            commLastKnownCount = messages.length; // Keep backward compatibility for other places if needed
             renderCommMessages();
             
             // Check if settings changed (lock status, mute status)
