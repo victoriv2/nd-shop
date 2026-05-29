@@ -709,7 +709,7 @@ function initAiChatLogic() {
         try {
             // === Gather ALL store data for the AI ===
             const dbSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]').slice(0, 100);
-            const dbUsers = JSON.parse(localStorage.getItem('nd_users') || '[]');
+            const dbUsers = JSON.parse(localStorage.getItem('nd_users') || '[]').filter(u => !u.is_admin);
             const dbProducts = typeof adminProducts !== 'undefined' ? adminProducts : JSON.parse(localStorage.getItem('nd_products_data') || '[]');
             const dbProgress = JSON.parse(localStorage.getItem('nd_progress_data') || '[]').slice(0, 30);
             const dbDebtorNotes = JSON.parse(localStorage.getItem('nd_debtor_notes') || '[]');

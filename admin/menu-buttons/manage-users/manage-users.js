@@ -195,7 +195,13 @@ function openUserInfoModal(id) {
     fetch('menu-buttons/manage-users/user-info-modal.html')
         .then(res => res.text())
         .then(html => {
-            document.getElementById('nested-modal-container').innerHTML = html;
+            let container = document.getElementById('nested-modal-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'nested-modal-container';
+                document.body.appendChild(container);
+            }
+            container.innerHTML = html;
 
             // Format basic info
             const name = user.name || 'N/A';
@@ -631,7 +637,12 @@ function openActivityDetails(itemId) {
     `;
 
     // Append to container
-    const container = document.getElementById('nested-modal-container');
+    let container = document.getElementById('nested-modal-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'nested-modal-container';
+        document.body.appendChild(container);
+    }
     const existing = document.getElementById('muActivityDetailModalWrapper');
     if (existing) existing.remove();
 

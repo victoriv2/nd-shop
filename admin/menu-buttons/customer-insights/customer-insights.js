@@ -235,7 +235,7 @@ function renderCustomerInsights() {
     const list = document.getElementById('ciCustomerList');
     if (!list) return;
 
-    const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
+    const users = JSON.parse(localStorage.getItem('nd_users') || '[]').filter(u => !u.is_admin);
     const allSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
 
     // Search filter
@@ -353,7 +353,13 @@ function ciOpenUserInfo(userId) {
     fetch('menu-buttons/manage-users/user-info-modal.html')
         .then(res => res.text())
         .then(html => {
-            document.getElementById('nested-modal-container').innerHTML = html;
+            let container = document.getElementById('nested-modal-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'nested-modal-container';
+                document.body.appendChild(container);
+            }
+            container.innerHTML = html;
 
             const name = user.name || 'N/A';
             const email = user.email || 'N/A';
