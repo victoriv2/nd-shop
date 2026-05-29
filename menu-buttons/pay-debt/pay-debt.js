@@ -503,8 +503,7 @@ async function handlePayDebtSubmit() {
 
     try {
         // 1. Call x.ai API to extract amount from receipt
-        const XAI_API_KEY = 'xai-0Rcj7hvD1iuPzIYQPpi65Iz105iB4357w05JWcEzHXxE6Ff24jp9fobyi0HiOazBXJaUpiBB5hdEhqtI';
-        const XAI_MODEL = 'grok-4-1-fast-reasoning';
+        const XAI_MODEL = 'grok-2-latest';
         
         const systemPrompt = `You are an AI assistant processing bank transfer receipts for a debt payment system.
 Your job is to extract the exact total amount paid from the provided receipt image.
@@ -531,17 +530,17 @@ Examples:
             }
         ];
 
-        const res = await fetch('https://api.x.ai/v1/chat/completions', {
+        const res = await fetch(`${window.API_BASE}/api/ai-chat`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${XAI_API_KEY}` },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('nd_token') || ''}` },
             body: JSON.stringify({ model: XAI_MODEL, messages: messages, temperature: 0.1 })
         });
 
         const data = await res.json();
         let aiResult = null;
 
-        if (data.choices && data.choices.length > 0) {
-            const content = data.choices[0].message.content.trim();
+        if (data.success && data.data && data.data.choices && data.data.choices.length > 0) {
+            const content = data.data.choices[0].message.content.trim();
             try {
                 let cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
                 aiResult = JSON.parse(cleanJson);

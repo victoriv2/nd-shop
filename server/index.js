@@ -338,13 +338,18 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
 app.post('/api/sync-items', authenticateToken, async (req, res) => {
     try {
         const { table, operations } = req.body;
-        // ALL tables now use JSONB storage: { id, data } pattern
-        // products is now JSONB too (id TEXT, data JSONB)
         const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'ai_chat_history', 'community_messages'];
         const settingsTables = ['admin_settings'];
         
         if (![...jsonbTables, ...settingsTables].includes(table)) {
             return res.status(400).json({ success: false, error: 'Invalid table: ' + table });
+        }
+
+        const isAdmin = req.user && req.user.is_admin;
+        const allowedForUser = ['requests', 'messages', 'ai_chat_history', 'community_messages'];
+
+        if (!isAdmin && !allowedForUser.includes(table)) {
+            return res.status(403).json({ success: false, error: 'Access denied: Admin privileges required to modify this table.' });
         }
 
         for (const op of operations) {
@@ -409,8 +414,13 @@ app.get('/api/get-table/:table', optionalToken, async (req, res) => {
         
         let mappedData;
         if (settingsTables.includes(table)) {
-            // admin_settings: return raw rows (frontend reads setting.id and setting.value)
-            mappedData = data;
+            // admin_settings: filter sensitive keys for non-admins
+            const sensitiveKeys = ['nd_admin_pwd', 'nd_delete_pin', 'nd_admin_locks', 'nd_xai_api_key'];
+            if (!isAdmin) {
+                mappedData = data.filter(row => !sensitiveKeys.includes(row.key));
+            } else {
+                mappedData = data;
+            }
         } else {
             // All data tables: unwrap the JSONB data column
             mappedData = data.map(row => row.data).filter(Boolean);
@@ -420,6 +430,32 @@ app.get('/api/get-table/:table', optionalToken, async (req, res) => {
     } catch (err) {
         console.error('[get-table] Fatal error:', err.message);
         res.status(500).json({ success: false, error: 'Internal server error.' });
+    }
+});
+
+app.post('/api/ai-chat', optionalToken, async (req, res) => {
+    try {
+        const { messages, apiKeyOverride, model, temperature } = req.body;
+        // In the future you could check if they have credits here.
+        
+        // Prefer env var, fallback to requested override for backwards compatibility testing
+        const XAI_API_KEY = process.env.XAI_API_KEY || apiKeyOverride || 'xai-0Rcj7hvD1iuPzIYQPpi65Iz105iB4357w05JWcEzHXxE6Ff24jp9fobyi0HiOazBXJaUpiBB5hdEhqtI';
+
+        const response = await axios.post('https://api.x.ai/v1/chat/completions', {
+            model: model || "grok-2-latest",
+            messages: messages,
+            temperature: temperature !== undefined ? temperature : 0.7
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${XAI_API_KEY}`
+            }
+        });
+
+        res.json({ success: true, data: response.data });
+    } catch (err) {
+        console.error('[ai-chat] Error:', err.response?.data || err.message);
+        res.status(500).json({ success: false, error: 'AI failed to respond.' });
     }
 });
 

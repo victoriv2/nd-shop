@@ -1,5 +1,5 @@
-const XAI_API_KEY = 'xai-0Rcj7hvD1iuPzIYQPpi65Iz105iB4357w05JWcEzHXxE6Ff24jp9fobyi0HiOazBXJaUpiBB5hdEhqtI';
-const XAI_MODEL = 'grok-4.20-0309-reasoning';
+// XAI_API_KEY removed for security. Routed through backend.
+const XAI_MODEL = 'grok-2-latest';
 
 const SYSTEM_PROMPT = `
 You are an expert inventory analyst and all-knowing assistant for an admin management system called ${localStorage.getItem('nd_shop_name') || 'Nd shop'}. 
@@ -1011,14 +1011,14 @@ PAYOUT PURCHASES:
             apiMessages.push({ role: "user", content: contentArray });
 
             async function fetchXAI(messages) {
-                const res = await fetch('https://api.x.ai/v1/chat/completions', {
+                const res = await fetch(`${window.API_BASE}/api/ai-chat`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${XAI_API_KEY}` },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('nd_token') || ''}` },
                     body: JSON.stringify({ model: XAI_MODEL, messages: messages, temperature: 0.1 })
                 });
                 const responseData = await res.json();
-                if (responseData.choices && responseData.choices.length > 0) {
-                    return responseData.choices[0].message.content.trim();
+                if (responseData.success && responseData.data && responseData.data.choices && responseData.data.choices.length > 0) {
+                    return responseData.data.choices[0].message.content.trim();
                 }
                 if (responseData.error) {
                     throw new Error(responseData.error.message || 'API error: ' + JSON.stringify(responseData.error));

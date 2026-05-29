@@ -438,17 +438,15 @@ async function generateTotalFromAI() {
     const model  = (typeof XAI_MODEL  !== 'undefined') ? XAI_MODEL  : 'grok-4-1-fast-reasoning';
 
     if (!apiKey) {
-        if (window.hideGlobalRefreshLoader) window.hideGlobalRefreshLoader();
-        showDbAiModal("No AI key found. Please make sure the AI module is loaded.", false);
-        return;
+        // Fallback or warning if we want to enforce backend auth
     }
 
     try {
-        const response = await fetch('https://api.x.ai/v1/chat/completions', {
+        const response = await fetch(`${window.API_BASE}/api/ai-chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + apiKey
+                'Authorization': `Bearer ${localStorage.getItem('nd_token') || ''}`
             },
             body: JSON.stringify({
                 model: model,
@@ -469,7 +467,7 @@ async function generateTotalFromAI() {
 
         if (!response.ok) throw new Error("API failed");
         const data = await response.json();
-        let result = JSON.parse(data.choices[0].message.content);
+        let result = JSON.parse(data.data.choices[0].message.content);
 
         if (window.hideGlobalRefreshLoader) window.hideGlobalRefreshLoader();
 

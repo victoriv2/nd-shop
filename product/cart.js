@@ -162,7 +162,7 @@ function updateCartItemQty(index, delta) {
         if (cart[index].qty <= 0) {
             cart.splice(index, 1);
         } else {
-            cart[index].total = cart[index].qty * cart[index].unitPrice;
+            cart[index].total = cart[index].isFlexible ? cart[index].unitPrice : cart[index].qty * cart[index].unitPrice;
             
             // Recalculate payout if needed
             const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
@@ -210,7 +210,7 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
     
     if (existingIndex > -1) {
         cart[existingIndex].qty += qty;
-        cart[existingIndex].total = cart[existingIndex].qty * cart[existingIndex].unitPrice;
+        cart[existingIndex].total = cart[existingIndex].isFlexible ? cart[existingIndex].unitPrice : cart[existingIndex].qty * cart[existingIndex].unitPrice;
         
         const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
         if (payoutEnabled) {
@@ -222,7 +222,7 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
         }
     } else {
         // Flexible: total is the entered price multiplied by qty
-        const total = qty * unitPrice;
+        const total = isFlexible ? unitPrice : qty * unitPrice;
         let payout = 0;
         const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
         if (payoutEnabled) {
