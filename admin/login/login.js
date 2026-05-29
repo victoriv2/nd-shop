@@ -76,7 +76,8 @@ async function processAdminLogin() {
     try {
         const response = await fetch(`${window.API_BASE}/api/admin-login`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
             body: JSON.stringify({ identifier: inputId, password: inputPwd })
         });
         
@@ -196,7 +197,8 @@ async function _doSendAdminOtp(contact, method) {
     try {
         const response = await fetch(`${window.API_BASE}/api/send-otp`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
             body: JSON.stringify({ method, contact, name: 'Admin' })
         });
         const data = await response.json();
@@ -252,7 +254,8 @@ async function verifyAdminRecovery() {
         const contact = window._adminRecoveryContact || window._adminRecoveryId || '';
         const response = await fetch(`${window.API_BASE}/api/verify-otp`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
             body: JSON.stringify({ contact, code })
         });
         const data = await response.json();

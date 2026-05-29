@@ -3,6 +3,40 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
+
+const otpLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { success: false, error: 'Too many OTP requests from this IP.' }
+});
+
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ success: false, error: 'Access Denied: No token provided.' });
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ success: false, error: 'Access Denied: Invalid token.' });
+        req.user = user;
+        next();
+    });
+};
+
+const optionalToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        req.user = null;
+        return next();
+    }
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        req.user = err ? null : user;
+        next();
+    });
+};
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
@@ -28,7 +62,7 @@ function generateOTP() {
     return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
-app.post('/api/send-otp', async (req, res) => {
+app.post('/api/send-otp', otpLimiter, async (req, res) => {
     const { method, contact, name } = req.body;
 
     if (!contact) {
@@ -80,7 +114,7 @@ app.post('/api/send-otp', async (req, res) => {
     }
 });
 
-app.post('/api/verify-otp', (req, res) => {
+app.post('/api/verify-otp', otpLimiter, (req, res) => {
     const { contact, code } = req.body;
 
     if (!contact || !code) {
@@ -182,7 +216,8 @@ app.post('/api/register', async (req, res) => {
             joinDate: safeUser.join_date
         };
 
-        res.json({ success: true, message: 'User registered successfully.', user: frontendUser });
+        const token = jwt.sign({ id: frontendUser.id, is_admin: false }, JWT_SECRET, { expiresIn: '7d' });
+        res.json({ success: true, message: 'User registered successfully.', user: frontendUser, token });
     } catch (err) {
         console.error('Registration error:', err);
         res.status(500).json({ success: false, error: 'Internal server error.' });
@@ -238,7 +273,8 @@ app.post('/api/login', async (req, res) => {
             joinDate: safeUser.join_date
         };
 
-        res.json({ success: true, user: frontendUser });
+        const token = jwt.sign({ id: frontendUser.id, is_admin: safeUser.is_admin }, JWT_SECRET, { expiresIn: '7d' });
+        res.json({ success: true, user: frontendUser, token });
 
     } catch (err) {
         console.error('Login error:', err);
@@ -277,7 +313,8 @@ app.post('/api/admin-login', async (req, res) => {
             return res.status(401).json({ success: false, error: 'Invalid Admin Credentials' });
         }
 
-        res.json({ success: true, admin: { id: user.id, email: user.email, name: user.name } });
+        const token = jwt.sign({ id: user.id, is_admin: true }, JWT_SECRET, { expiresIn: '7d' });
+        res.json({ success: true, admin: { id: user.id, email: user.email, name: user.name }, token });
 
     } catch (err) {
         console.error('Admin Login error:', err);
@@ -285,7 +322,7 @@ app.post('/api/admin-login', async (req, res) => {
     }
 });
 
-app.post('/api/update-user', async (req, res) => {
+app.post('/api/update-user', authenticateToken, async (req, res) => {
     try {
         const { id, firstName, lastName, address, state, lga, name } = req.body;
 
@@ -317,7 +354,7 @@ app.post('/api/update-user', async (req, res) => {
     }
 });
 
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', authenticateToken, async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('users')
@@ -350,7 +387,7 @@ app.get('/api/users', async (req, res) => {
 // ========================================
 
 // 1. Sync UP: Receives a batch of key-value pairs from the frontend's localStorage and saves them to admin_settings table.
-app.post('/api/sync/up', async (req, res) => {
+app.post('/api/sync/up', authenticateToken, async (req, res) => {
     try {
         const { updates } = req.body; // Array of { key, value }
         
@@ -393,7 +430,7 @@ app.post('/api/sync/up', async (req, res) => {
 });
 
 // 2. Sync DOWN: Sends all data from admin_settings to the frontend to populate localStorage
-app.get('/api/sync/down', async (req, res) => {
+app.get('/api/sync/down', authenticateToken, async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('admin_settings')
@@ -419,7 +456,7 @@ app.get('/api/sync/down', async (req, res) => {
 
 // 3. Upload Media: Upload base64 or file to Supabase Storage and return URL
 // We'll accept base64 payloads since the frontend currently has image data in base64 format.
-app.post('/api/upload', async (req, res) => {
+app.post('/api/upload', authenticateToken, async (req, res) => {
     try {
         const { fileData, fileName, mimeType } = req.body;
         
@@ -475,7 +512,7 @@ app.post('/api/upload', async (req, res) => {
 // PUBLIC-READY ITEM SYNC API
 // ========================================
 
-app.post('/api/sync-items', async (req, res) => {
+app.post('/api/sync-items', authenticateToken, async (req, res) => {
     try {
         // Expected payload: { table: 'products', operations: [ { type: 'INSERT', data: {} }, { type: 'UPDATE', data: {} }, { type: 'DELETE', id: 'uuid' } ] }
         const { table, operations } = req.body;
@@ -522,10 +559,10 @@ app.post('/api/sync-items', async (req, res) => {
     }
 });
 
-app.get('/api/get-table/:table', async (req, res) => {
+app.get('/api/get-table/:table', optionalToken, async (req, res) => {
     try {
         const { table } = req.params;
-        const { userId } = req.query; // Pass userId from frontend
+        const userId = req.user ? req.user.id : null;
 
         const allowedTables = ['products', 'community_messages'];
         const jsonbTables = ['requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'ai_chat_history'];
@@ -545,8 +582,7 @@ app.get('/api/get-table/:table', async (req, res) => {
             }
 
             // Check if user is admin
-            const { data: userData } = await supabase.from('users').select('is_admin').eq('id', userId).single();
-            const isAdmin = userData && userData.is_admin;
+            const isAdmin = req.user && req.user.is_admin;
 
             if (!isAdmin) {
                 // If not admin, only fetch their own records using actual Supabase column names

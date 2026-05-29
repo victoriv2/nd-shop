@@ -101,7 +101,8 @@
             stateCache[key] = value;
             fetch(`${window.API_BASE}/api/sync-items`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     table: 'admin_settings',
                     operations: [{ type: 'UPDATE', data: { id: key, value: value } }]
@@ -143,7 +144,8 @@
                 // Push to server immediately
                 fetch(`${window.API_BASE}/api/sync-items`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
                     body: JSON.stringify({ table: tableName, operations })
                 }).then(res => res.json()).then(data => {
                     if (!data.success) console.error('Sync failed', data.error);

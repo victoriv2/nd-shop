@@ -221,7 +221,8 @@ function initEditProfileLogic() {
 
                         const response = await fetch(`${window.API_BASE}/api/update-user`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
 

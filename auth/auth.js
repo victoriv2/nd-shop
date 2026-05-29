@@ -84,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const response = await fetch(`${window.API_BASE}/api/login`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
                         body: JSON.stringify({ identifier: searchIdentifier, password })
                     });
                     const data = await response.json();
@@ -417,7 +418,8 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(`${window.API_BASE}/api/send-otp`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
                     body: JSON.stringify({ method: selectedMethod, contact, name })
                 });
 
@@ -542,7 +544,8 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(`${window.API_BASE}/api/send-otp`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
                     body: JSON.stringify({ method, contact, name })
                 });
 
@@ -625,7 +628,8 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(`${window.API_BASE}/api/verify-otp`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contact, code })
                 });
 
@@ -679,7 +683,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     try {
                         const regResponse = await fetch(`${window.API_BASE}/api/register`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
                             body: JSON.stringify(newUser)
                         });
                         const regData = await regResponse.json();
