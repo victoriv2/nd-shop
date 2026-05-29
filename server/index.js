@@ -1,4 +1,6 @@
 require('dotenv').config();
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -6,7 +8,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const WebSocket = require('ws');
-global.WebSocket = WebSocket;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
 
@@ -53,11 +54,15 @@ const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+const fetch = require('cross-fetch');
 const supabase = createClient(supabaseUrl, supabaseKey, {
     auth: {
         persistSession: false,
         autoRefreshToken: false,
         detectSessionInUrl: false
+    },
+    global: {
+        fetch: fetch
     }
 });
 
