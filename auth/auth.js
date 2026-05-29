@@ -92,6 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (data.success) {
                         localStorage.setItem('nd_logged_in_user', JSON.stringify(data.user));
+                        if (data.token) {
+                            localStorage.setItem('nd_token', data.token);
+                        }
                         // Record last seen for Customer Insights
                         const lsData = JSON.parse(localStorage.getItem('nd_user_last_seen') || '{}');
                         lsData[data.user.id] = new Date().toISOString();
@@ -703,6 +706,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             const { password: _, ...safeUser } = newUser;
                             safeUser.joinDate = new Date().toISOString();
                             localStorage.setItem('nd_logged_in_user', JSON.stringify(safeUser));
+                            if (regData.token) {
+                                localStorage.setItem('nd_token', regData.token);
+                            }
                             
                             const lsData = JSON.parse(localStorage.getItem('nd_user_last_seen') || '{}');
                             lsData[safeUser.id] = new Date().toISOString();

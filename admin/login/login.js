@@ -88,6 +88,9 @@ async function processAdminLogin() {
             // Store basic non-sensitive admin info
             localStorage.setItem('nd_admin_id', data.admin.id);
             localStorage.setItem('nd_admin_email', data.admin.email);
+            if (data.token) {
+                localStorage.setItem('nd_token', data.token);
+            }
             
             document.getElementById('adminLoginScreen').remove();
             if (typeof customAlert !== 'undefined') {
