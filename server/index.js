@@ -336,32 +336,41 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
 app.post('/api/sync-items', authenticateToken, async (req, res) => {
     try {
         const { table, operations } = req.body;
-        const allowedTables = ['products', 'community_messages'];
-        const jsonbTables = ['requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'ai_chat_history'];
+        // ALL tables now use JSONB storage: { id, data } pattern
+        // products is now JSONB too (id TEXT, data JSONB)
+        const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'ai_chat_history', 'community_messages'];
         const settingsTables = ['admin_settings'];
         
-        if (![...allowedTables, ...jsonbTables, ...settingsTables].includes(table)) {
-            return res.status(400).json({ success: false, error: 'Invalid table' });
+        if (![...jsonbTables, ...settingsTables].includes(table)) {
+            return res.status(400).json({ success: false, error: 'Invalid table: ' + table });
         }
 
         for (const op of operations) {
             if (op.type === 'INSERT' || op.type === 'UPDATE') {
-                let upsertPayload = op.data;
-                if (jsonbTables.includes(table)) {
+                let upsertPayload;
+                if (settingsTables.includes(table)) {
+                    // admin_settings uses { id, value } columns
+                    upsertPayload = { id: op.data.id, value: op.data.value, updated_at: new Date().toISOString() };
+                } else {
+                    // All data tables use { id, data } JSONB pattern
                     upsertPayload = { id: op.data.id, data: op.data };
+                    // Extra indexed columns for filtering
                     if (table === 'requests') upsertPayload.user_id = op.data.user ? op.data.user.id : (op.data.userId || '');
                     else if (table === 'messages') {
                         upsertPayload.sender_id = op.data.senderId || '';
                         upsertPayload.receiver_id = op.data.receiverId || '';
                     }
                 }
-                await supabase.from(table).upsert(upsertPayload);
+                const { error: upsertError } = await supabase.from(table).upsert(upsertPayload);
+                if (upsertError) console.error(`[sync-items] upsert error on ${table}:`, upsertError.message);
             } else if (op.type === 'DELETE') {
-                await supabase.from(table).delete().eq('id', op.id);
+                const { error: deleteError } = await supabase.from(table).delete().eq('id', op.id);
+                if (deleteError) console.error(`[sync-items] delete error on ${table}:`, deleteError.message);
             }
         }
         res.json({ success: true });
     } catch (err) {
+        console.error('[sync-items] Fatal error:', err.message);
         res.status(500).json({ success: false, error: 'Internal server error.' });
     }
 });
@@ -370,33 +379,44 @@ app.get('/api/get-table/:table', optionalToken, async (req, res) => {
     try {
         const { table } = req.params;
         const userId = req.user ? req.user.id : null;
-        const allowedTables = ['products', 'community_messages'];
-        const jsonbTables = ['requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'ai_chat_history'];
+        const isAdmin = req.user && req.user.is_admin;
+        // ALL data tables use JSONB { id, data } pattern including products
+        const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'ai_chat_history', 'community_messages'];
         const settingsTables = ['admin_settings'];
 
-        if (![...allowedTables, ...jsonbTables, ...settingsTables].includes(table)) {
-            return res.status(400).json({ success: false, error: 'Invalid table' });
+        if (![...jsonbTables, ...settingsTables].includes(table)) {
+            return res.status(400).json({ success: false, error: 'Invalid table: ' + table });
         }
 
         let query = supabase.from(table).select('*');
 
-        if (table === 'requests' || table === 'messages') {
+        // Apply user-scoped filtering for private tables
+        if (table === 'requests') {
             if (!userId) return res.json({ success: true, data: [] });
-            const isAdmin = req.user && req.user.is_admin;
-            if (!isAdmin) {
-                if (table === 'requests') query = query.eq('user_id', userId);
-                else if (table === 'messages') query = query.or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
-            }
+            if (!isAdmin) query = query.eq('user_id', userId);
+        } else if (table === 'messages') {
+            if (!userId) return res.json({ success: true, data: [] });
+            if (!isAdmin) query = query.or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
         }
 
         const { data, error } = await query;
-        if (error) throw error;
+        if (error) {
+            console.error(`[get-table] Error reading ${table}:`, error.message);
+            throw error;
+        }
         
-        let mappedData = data;
-        if (jsonbTables.includes(table)) mappedData = data.map(row => row.data);
+        let mappedData;
+        if (settingsTables.includes(table)) {
+            // admin_settings: return raw rows (frontend reads setting.id and setting.value)
+            mappedData = data;
+        } else {
+            // All data tables: unwrap the JSONB data column
+            mappedData = data.map(row => row.data).filter(Boolean);
+        }
 
         res.json({ success: true, data: mappedData });
     } catch (err) {
+        console.error('[get-table] Fatal error:', err.message);
         res.status(500).json({ success: false, error: 'Internal server error.' });
     }
 });

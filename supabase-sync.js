@@ -35,6 +35,7 @@
     async function initSync() {
         // Determine the current user context
         let userId = '';
+        const token = localStorage.getItem('nd_token') || '';
         if (sessionStorage.getItem('nd_admin_logged_in') === 'true') {
             userId = localStorage.getItem('nd_admin_id') || '';
         } else {
@@ -47,14 +48,20 @@
             }
         }
 
+        const authHeaders = token
+            ? { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+            : { 'Content-Type': 'application/json' };
+
         for (const [localKey, tableName] of Object.entries(TABLES_TO_SYNC)) {
             try {
                 // Read what's currently in localStorage
                 const currentLocal = JSON.parse(localStorage.getItem(localKey) || '[]');
                 stateCache[localKey] = currentLocal;
 
-                // Pull absolute truth from server with userId
-                const res = await fetch(`${window.API_BASE}/api/get-table/${tableName}?userId=${userId}`);
+                // Pull absolute truth from server with auth token
+                const res = await fetch(`${window.API_BASE}/api/get-table/${tableName}?userId=${userId}`, {
+                    headers: authHeaders
+                });
                 const data = await res.json();
                 
                 if (data.success && data.data) {
@@ -68,12 +75,18 @@
         }
 
         try {
-            const res = await fetch(`${window.API_BASE}/api/get-table/admin_settings`);
+            const res = await fetch(`${window.API_BASE}/api/get-table/admin_settings`, {
+                headers: authHeaders
+            });
             const data = await res.json();
             if (data.success && data.data) {
                 for (const setting of data.data) {
-                    nativeSetItem.call(localStorage, setting.id, setting.value);
-                    stateCache[setting.id] = setting.value;
+                    // admin_settings rows have { id, value } columns
+                    const val = typeof setting.value === 'object' && setting.value !== null
+                        ? JSON.stringify(setting.value)
+                        : String(setting.value ?? '');
+                    nativeSetItem.call(localStorage, setting.id, val);
+                    stateCache[setting.id] = val;
                 }
             }
         } catch (err) {
