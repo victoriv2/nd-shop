@@ -5,6 +5,8 @@ const axios = require('axios');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
+const WebSocket = require('ws');
+global.WebSocket = WebSocket;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
 
