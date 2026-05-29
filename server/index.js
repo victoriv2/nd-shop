@@ -53,7 +53,13 @@ const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+    }
+});
 
 // Simple in-memory store for OTPs
 // Structure: { "contact@example.com": { code: "1234", expiresAt: 16... } }
