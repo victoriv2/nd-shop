@@ -126,6 +126,47 @@
      * Global App Fixes
      */
 
+    /**
+     * Sync users with Supabase backend
+     */
+    async function syncUsersFromBackend() {
+        try {
+            const response = await fetch(window.API_BASE + '/api/users');
+            const data = await response.json();
+            if (data.success && data.users) {
+                // Keep nd_users locally updated so that admin tools and security modules keep working
+                localStorage.setItem('nd_users', JSON.stringify(data.users));
+                
+                // If a user is logged in, update their local data silently
+                const loggedInRaw = localStorage.getItem('nd_logged_in_user');
+                if (loggedInRaw) {
+                    const loggedIn = JSON.parse(loggedInRaw);
+                    // Match by ID first, then fall back to email or phone in case the ID changed (e.g. after a bulk rename)
+                    let freshUser = data.users.find(u => u.id === loggedIn.id);
+                    if (!freshUser && loggedIn.email) {
+                        freshUser = data.users.find(u => u.email && u.email.toLowerCase() === loggedIn.email.toLowerCase());
+                    }
+                    if (!freshUser && loggedIn.phone) {
+                        freshUser = data.users.find(u => u.phone && u.phone === loggedIn.phone);
+                    }
+                    if (freshUser) {
+                        localStorage.setItem('nd_logged_in_user', JSON.stringify(freshUser));
+                        window.loggedInUser = freshUser;
+                        // Refresh the menu so the new ID shows immediately
+                        if (typeof window.refreshMenu === 'function') {
+                            window.refreshMenu();
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to sync users from backend:', err);
+        }
+    }
+
+    // Call it right away
+    syncUsersFromBackend();
+
     window.showGlobalRefreshLoader = function() {
         let loader = document.getElementById('globalRefreshLoader');
         if (!loader) {
@@ -180,13 +221,18 @@
         } catch(err) { console.warn(err); }
 
         try {
+            // Ignore high-frequency polling keys that don't need a UI reflow
+            if (k === 'nd_storage_poll_cache' || k === 'nd_user_last_seen' || k === 'nd_user_page_state' || k === 'nd_admin_page_state') return;
+
             const trackContainers = document.querySelectorAll('.slider-track > div');
             trackContainers.forEach(c => {
                 if (c.style.display !== 'none') {
                     const originalStr = c.style.display;
+                    const savedScroll = c.scrollTop;
                     c.style.display = 'none';
                     void c.offsetHeight; 
                     c.style.display = originalStr;
+                    if (savedScroll > 0) c.scrollTop = savedScroll;
                 }
             });
         } catch(err) {}
@@ -444,6 +490,119 @@ window.checkProductOutOfStock = function(productName) {
         });
         
         return (totalBoughtPieces - totalSoldPieces) <= 0;
+    }
+};
+
+window.checkProductRunningLow = function(productName) {
+    const products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+    const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+    const p = products.find(item => item.name === productName);
+    if (!p) return false;
+
+    if (p.isSpecial || p.packTypes) {
+        const s = p.structure || {};
+        const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
+        const cpc = parseInt(s.cupsPerCustard || s.c3sPerC2) || 1;
+        const maxCupsPerBag = cpb * cpc;
+        
+        let totalBoughtCups = 0;
+        products.forEach(item => {
+            if (item.name === productName && item.packTypes) {
+                totalBoughtCups += (parseFloat(item.boughtQuantity) || 1) * maxCupsPerBag;
+            }
+        });
+
+        const bTitle = p.packTypes.bag?.title || p.packTypes.c1?.title || 'Container 1';
+        const cTitle = p.packTypes.custard?.title || p.packTypes.c2?.title || 'Container 2';
+        const cpTitle = p.packTypes.cup?.title || p.packTypes.c3?.title || 'Container 3';
+
+        let soldCups = 0, soldCustards = 0, soldBags = 0;
+        sales.forEach(sale => {
+            if (sale.item && sale.item.includes(productName)) {
+                const q = parseFloat(sale.qty) || 0;
+                if (sale.item.includes(`(${cpTitle})`)) soldCups += q;
+                else if (sale.item.includes(`(${cTitle})`)) soldCustards += q;
+                else if (sale.item.includes(`(${bTitle})`)) soldBags += q;
+            }
+        });
+
+        const totalSoldCups = (soldBags * maxCupsPerBag) + (soldCustards * cpc) + soldCups;
+        const remaining = totalBoughtCups - totalSoldCups;
+        return remaining > 0 && remaining <= (totalBoughtCups / 2);
+    } else if (p.isFlexible) {
+        // Flexible: stock tracked in C1 containers (boughtQuantity)
+        const s = p.structure || {};
+        const c2sPerC1 = parseInt(s.c2sPerC1) || 1;
+        const c3sPerC2 = parseInt(s.c3sPerC2) || 1;
+
+        let totalC1Bought = 0;
+        products.forEach(item => {
+            if (item.name === productName && item.isFlexible) {
+                totalC1Bought += parseFloat(item.boughtQuantity) || 0;
+            }
+        });
+
+        const pk = p.packTypes || {};
+        const c1Title = (pk.c1 && pk.c1.title) || 'Container 1';
+        const c2Title = (pk.c2 && pk.c2.title) || 'Container 2';
+        const c3Title = (pk.c3 && pk.c3.title) || 'Container 3';
+
+        // Convert all bought stock to C3 units for comparison
+        const totalC3 = totalC1Bought * c2sPerC1 * c3sPerC2;
+
+        let soldC1 = 0, soldC2 = 0, soldC3 = 0;
+        sales.forEach(sale => {
+            if (sale.item && sale.item.includes(productName)) {
+                const q = parseFloat(sale.qty) || 0;
+                if (sale.item.includes(`(${c3Title})`)) soldC3 += q;
+                else if (sale.item.includes(`(${c2Title})`)) soldC2 += q;
+                else if (sale.item.includes(`(${c1Title})`)) soldC1 += q;
+            }
+        });
+
+        const totalSoldInC3 = (soldC1 * c2sPerC1 * c3sPerC2) + (soldC2 * c3sPerC2) + soldC3;
+        const remaining = totalC3 - totalSoldInC3;
+        return remaining > 0 && remaining <= (totalC3 / 2);
+
+    } else if (p.isCustom) {
+        // Custom: boughtQuantity is the number of pieces (units)
+        let totalBought = 0;
+        products.forEach(item => {
+            if (item.name === productName && item.isCustom) {
+                totalBought += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
+            }
+        });
+
+        let totalSold = 0;
+        sales.forEach(sale => {
+            if (sale.item === productName) {
+                totalSold += parseFloat(sale.qty) || 0;
+            }
+        });
+
+        const remaining = totalBought - totalSold;
+        return remaining > 0 && remaining <= (totalBought / 2);
+
+    } else {
+        // Default: boughtQuantity × pieces
+        let totalBoughtPieces = 0;
+        products.forEach(item => {
+            if (item.name === productName && !item.isSpecial && !item.isFlexible && !item.isCustom) {
+                totalBoughtPieces += (parseFloat(item.boughtQuantity) || 1) * (parseInt(item.pieces) || 1);
+            }
+        });
+        
+        let totalSoldPieces = 0;
+        sales.forEach(sale => {
+            if (sale.item === productName) {
+                totalSoldPieces += parseFloat(sale.qty) || 0;
+            } else if (sale.item === `${productName} (${p.bulkUnit || 'Carton'})`) {
+                totalSoldPieces += (parseFloat(sale.qty) || 0) * (parseInt(p.pieces) || 1);
+            }
+        });
+        
+        const remaining = totalBoughtPieces - totalSoldPieces;
+        return remaining > 0 && remaining <= (totalBoughtPieces / 2);
     }
 };
 
@@ -878,6 +1037,131 @@ window.openCameraCapture = function(onCapture) {
     }
 })();
 
+// Migration: Ensure all sales have an explicit price property for consistency (fixes total calculation for flexible items)
+(function() {
+    try {
+        let priceFixed = localStorage.getItem('nd_sales_history_fixed_price_v3');
+        if (!priceFixed) {
+            let sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+            let modified = false;
+            sales.forEach(s => {
+                if (s.price === undefined || s.price === null || s.price === '') {
+                    s.price = s.isFlexible ? Number(s.unitPrice || 0) : (Number(s.unitPrice || 0) * Number(s.qty || 1));
+                    modified = true;
+                }
+            });
+            if (modified) {
+                localStorage.setItem('nd_sales_history', JSON.stringify(sales));
+            }
+            localStorage.setItem('nd_sales_history_fixed_price_v3', 'true');
+            console.log('Migrated sales history to include explicit total price.');
+        }
+    } catch (e) {
+        console.error('Error fixing sales prices', e);
+    }
+})();
 
+// --- Custom Units Persistence Fix ---
+(function() {
+    // 1. Detect when a new custom unit is created and save it to localStorage
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 1 && node.classList.contains('custom-added-unit')) {
+                    const unitName = node.getAttribute('data-value');
+                    if (unitName) {
+                        let savedUnits = JSON.parse(localStorage.getItem('nd_custom_units') || '[]');
+                        if (!savedUnits.includes(unitName)) {
+                            savedUnits.push(unitName);
+                            localStorage.setItem('nd_custom_units', JSON.stringify(savedUnits));
+                        }
+                    }
+                }
+            });
+            
+            // Detect if a unit was removed
+            mutation.removedNodes.forEach(node => {
+                if (node.nodeType === 1 && node.classList.contains('custom-added-unit')) {
+                    const unitName = node.getAttribute('data-value');
+                    if (unitName) {
+                        let savedUnits = JSON.parse(localStorage.getItem('nd_custom_units') || '[]');
+                        savedUnits = savedUnits.filter(u => u !== unitName);
+                        localStorage.setItem('nd_custom_units', JSON.stringify(savedUnits));
+                    }
+                }
+            });
+        });
+    });
 
+    // We observe the whole body since modals are injected dynamically
+    document.addEventListener('DOMContentLoaded', () => {
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
+    // In case DOM is already loaded:
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
 
+    // 2. Inject saved custom units when any dropdown menu is opened
+    document.addEventListener('click', (e) => {
+        const trigger = e.target.closest('.dropdown-trigger, .custom-dropdown-trigger, [id*="DropdownTrigger"]');
+        if (!trigger) return;
+        
+        const wrapper = trigger.parentElement;
+        const menu = wrapper.querySelector('.dropdown-menu, .custom-dropdown-menu, [id*="DropdownMenu"]');
+        
+        if (!menu) return;
+        
+        // Wait a tick for the menu to process its internal logic, then populate
+        setTimeout(() => {
+            const createBtn = menu.querySelector('.custom-unit-create-option');
+            if (!createBtn) return; // Not a custom unit dropdown
+
+            let savedUnits = JSON.parse(localStorage.getItem('nd_custom_units') || '[]');
+            if (savedUnits.length === 0) return;
+
+            // Get existing options to prevent duplicates
+            const existingOptions = Array.from(menu.querySelectorAll('.custom-added-unit')).map(el => el.getAttribute('data-value'));
+
+            savedUnits.forEach(unitName => {
+                if (!existingOptions.includes(unitName)) {
+                    // Create and inject the missing custom unit option
+                    const newOpt = document.createElement('div');
+                    newOpt.className = 'custom-dropdown-option custom-added-unit';
+                    newOpt.setAttribute('data-value', unitName);
+                    
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = unitName;
+                    newOpt.appendChild(textSpan);
+                    
+                    const removeBtn = document.createElement('div');
+                    removeBtn.className = 'remove-unit-btn custom-delete-btn';
+                    removeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+                    
+                    removeBtn.addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        const isActive = newOpt.classList.contains('active');
+                        newOpt.remove(); // MutationObserver handles removing from localStorage
+                        
+                        if (isActive) {
+                            const firstOpt = menu.querySelector('.custom-dropdown-option');
+                            if (firstOpt) {
+                                firstOpt.classList.add('active');
+                                const val = firstOpt.getAttribute('data-value');
+                                const trigText = trigger.querySelector('.trigger-text');
+                                if(trigText) trigText.textContent = val;
+                                
+                                // Best effort hidden input update
+                                const hidden = wrapper.querySelector('input[type="hidden"]');
+                                if (hidden) hidden.value = val;
+                            }
+                        }
+                    });
+                    
+                    newOpt.appendChild(removeBtn);
+                    menu.insertBefore(newOpt, createBtn);
+                }
+            });
+        }, 10);
+    });
+})();

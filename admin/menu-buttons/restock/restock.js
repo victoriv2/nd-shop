@@ -285,8 +285,17 @@ function renderRestockList(filter = '') {
         const safeName = p.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
         
         const isOutOfStock = window.checkProductOutOfStock && window.checkProductOutOfStock(p.name);
-        const rowBgStyle = isOutOfStock ? 'background-color: #fef2f2;' : '';
-        const nameStyle = isOutOfStock ? 'color: #7f1d1d;' : '';
+        const isRunningLow = !isOutOfStock && window.checkProductRunningLow && window.checkProductRunningLow(p.name);
+        
+        let rowBgStyle = '';
+        let nameStyle = '';
+        if (isOutOfStock) {
+            rowBgStyle = 'background-color: #fef2f2;';
+            nameStyle = 'color: #7f1d1d;';
+        } else if (isRunningLow) {
+            rowBgStyle = 'background-color: #fefce8;';
+            nameStyle = 'color: #a16207;';
+        }
 
         let hasOld = false;
         let hasNew = false;
@@ -350,6 +359,7 @@ function renderRestockList(filter = '') {
                             <div style="font-weight: 700; display:flex; align-items:center; gap:8px; ${nameStyle}">
                                 ${p.name}
                                 ${isOutOfStock ? '<span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; border: 1px solid #dc2626; animation: blink 1.5s infinite;">FINISHED</span>' : ''}
+                                ${isRunningLow ? '<span style="background: #eab308; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; border: 1px solid #ca8a04;">RUNNING LOW</span>' : ''}
                                 ${!isOutOfStock && hasOld ? '<span style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; border: 1px solid #fde68a;">OLD STOCK</span>' : ''}
                                 ${!isOutOfStock && hasNew ? '<span style="background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; border: 1px solid #6ee7b7;">NEW STOCK</span>' : ''}
                             </div>
@@ -3173,13 +3183,14 @@ function _rsCalculateRestockStock(p) {
         const sold   = (sBags * maxCPB) + (sCus * cpc) + sCups;
         const rem    = bought - sold;
         const isOut  = rem <= 0;
+        const isLow  = !isOut && window.checkProductRunningLow && window.checkProductRunningLow(p.name);
         const rB = Math.floor(rem / maxCPB);
         const rC = Math.floor((rem % maxCPB) / cpc);
         const rU = rem % cpc;
 
-        html = '<div style="background:' + (isOut?'#fef2f2':'#f0fdf4') + ';border:1px solid ' + (isOut?'#fecdd3':'#bbf7d0') + ';border-radius:12px;padding:16px;text-align:center;margin-bottom:24px;">'
-             + '<h4 style="margin:0 0 8px 0;color:' + (isOut?'#e11d48':'#16a34a') + ';font-size:1.2rem;font-weight:800;">' + (isOut?'OUT OF STOCK':'IN STOCK') + '</h4>'
-             + '<p style="margin:0;color:' + (isOut?'#be123c':'#15803d') + ';font-size:0.9rem;font-weight:700;">Remaining: '
+        html = '<div style="background:' + (isOut?'#fef2f2':(isLow?'#fefce8':'#f0fdf4')) + ';border:1px solid ' + (isOut?'#fecdd3':(isLow?'#fde047':'#bbf7d0')) + ';border-radius:12px;padding:16px;text-align:center;margin-bottom:24px;">'
+             + '<h4 style="margin:0 0 8px 0;color:' + (isOut?'#e11d48':(isLow?'#a16207':'#16a34a')) + ';font-size:1.2rem;font-weight:800;">' + (isOut?'OUT OF STOCK':(isLow?'RUNNING LOW':'IN STOCK')) + '</h4>'
+             + '<p style="margin:0;color:' + (isOut?'#be123c':(isLow?'#854d0e':'#15803d')) + ';font-size:0.9rem;font-weight:700;">Remaining: '
              + (rB>0?rB+' '+bagT+'(s) ':'') + (rC>0?rC+' '+cusT+'(s) ':'') + (rU>0?rU+' '+cupT+'(s)':'')
              + (rB<=0&&rC<=0&&rU<=0?'0 '+cupT+'(s)':'') + '</p>'
              + '<div style="font-size:0.8rem;font-weight:600;color:#64748b;margin-top:6px;">Total Base Units Remaining: ' + rem + '</div></div>'
@@ -3197,15 +3208,16 @@ function _rsCalculateRestockStock(p) {
 
         const rem    = bought - sold;
         const isOut  = rem <= 0;
+        const isLow  = !isOut && window.checkProductRunningLow && window.checkProductRunningLow(p.name);
         const bulk   = p.bulkUnit || 'Carton';
         const ppb    = parseInt(p.pieces) || 1;
         const unit   = (p.unit || 'piece').replace('per ', '');
         const rB     = Math.floor(rem / ppb);
         const rP     = rem % ppb;
 
-        html = '<div style="background:' + (isOut?'#fef2f2':'#f0fdf4') + ';border:1px solid ' + (isOut?'#fecdd3':'#bbf7d0') + ';border-radius:12px;padding:16px;text-align:center;margin-bottom:24px;">'
-             + '<h4 style="margin:0 0 8px 0;color:' + (isOut?'#e11d48':'#16a34a') + ';font-size:1.2rem;font-weight:800;">' + (isOut?'OUT OF STOCK':'IN STOCK') + '</h4>'
-             + '<p style="margin:0;color:' + (isOut?'#be123c':'#15803d') + ';font-size:0.9rem;font-weight:700;">Remaining: '
+        html = '<div style="background:' + (isOut?'#fef2f2':(isLow?'#fefce8':'#f0fdf4')) + ';border:1px solid ' + (isOut?'#fecdd3':(isLow?'#fde047':'#bbf7d0')) + ';border-radius:12px;padding:16px;text-align:center;margin-bottom:24px;">'
+             + '<h4 style="margin:0 0 8px 0;color:' + (isOut?'#e11d48':(isLow?'#a16207':'#16a34a')) + ';font-size:1.2rem;font-weight:800;">' + (isOut?'OUT OF STOCK':(isLow?'RUNNING LOW':'IN STOCK')) + '</h4>'
+             + '<p style="margin:0;color:' + (isOut?'#be123c':(isLow?'#854d0e':'#15803d')) + ';font-size:0.9rem;font-weight:700;">Remaining: '
              + (rB>0?rB+' '+bulk+'(s) ':'') + (rP>0?rP+' '+unit+'(s)':'') + (rB<=0&&rP<=0?'0 '+unit+'(s)':'') + '</p>'
              + '<div style="font-size:0.8rem;font-weight:600;color:#64748b;margin-top:6px;">Total Base Units Remaining: ' + (Math.round(rem*10)/10) + '</div></div>'
              + '<div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:16px;">'

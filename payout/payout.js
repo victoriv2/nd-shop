@@ -107,25 +107,14 @@ function initDynamicPayoutLogic() {
     let dynamicYears = [];
 
     // --- Pull dynamic years ---
-    async function fetchAvailableYears() {
-        let userSales = [];
-        if (window.supabaseClient) {
-            const { data } = await window.supabaseClient
-                .from('sales')
-                .select('*')
-                .eq('customer_id', user.id);
-            userSales = data || [];
-        } else {
-            const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
-            userSales = sales.filter(s => s.customerID === user.id);
-        }
-        
+    function fetchAvailableYears() {
+        const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+        const userSales = sales.filter(s => s.customerID === user.id);
         const yearsSet = new Set();
         const currentYear = new Date().getFullYear();
         yearsSet.add(currentYear);
         userSales.forEach(s => {
-            const dateVal = s.created_at || s.date;
-            const d = parseSaleDate(dateVal);
+            const d = parseSaleDate(s.date);
             if (d && d.getFullYear() <= currentYear) yearsSet.add(d.getFullYear());
         });
         dynamicYears = Array.from(yearsSet).sort((a, b) => b - a);
@@ -298,41 +287,14 @@ function initDynamicPayoutLogic() {
         });
     }
 
-    async function renderPayouts() {
+    function renderPayouts() {
         if (!listContainer) return;
 
-        let allUserSales = [];
-        let pendingRewardReqs = [];
-        
-        if (window.supabaseClient) {
-            // Fetch sales from Supabase
-            const { data: salesData } = await window.supabaseClient
-                .from('sales')
-                .select('*')
-                .eq('customer_id', user.id);
-            allUserSales = (salesData || []).map(s => ({
-                ...s,
-                date: s.created_at,
-                unitPrice: s.unit_price,
-                isFlexible: s.is_flexible
-            }));
+        // Fetch shared sales data (master ledger)
+        const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
 
-            // Fetch pending reward requests
-            const { data: reqData } = await window.supabaseClient
-                .from('requests')
-                .select('*')
-                .eq('user_id', user.id)
-                .eq('status', 'Pending')
-                .eq('is_reward_purchase', true);
-            pendingRewardReqs = reqData || [];
-        } else {
-            // Fallback to local storage
-            const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
-            allUserSales = sales.filter(s => s.customerID === user.id);
-
-            const requests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
-            pendingRewardReqs = requests.filter(r => r.user && r.user.id === user.id && r.status === 'Pending' && r.isRewardPurchase === true);
-        }
+        // Filter for current user
+        const allUserSales = sales.filter(s => s.customerID === user.id);
 
         // Calculate Totals based on ALL user sales (unaffected by filters)
         let totalPayout = 0;
@@ -343,9 +305,11 @@ function initDynamicPayoutLogic() {
         });
 
         // Calculate pending reward requests deductions
+        const requests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
+        const pendingRewardReqs = requests.filter(r => r.user && r.user.id === user.id && r.status === 'Pending' && r.isRewardPurchase === true);
         let pendingDeductions = 0;
         pendingRewardReqs.forEach(r => {
-            pendingDeductions += r.orderTotal || r.order_total || 0;
+            pendingDeductions += r.orderTotal || 0;
         });
 
         // Update Dashboard with glow effect
@@ -403,7 +367,7 @@ function initDynamicPayoutLogic() {
             const isFiltered = selectedMonth !== 'all' || selectedYear !== 'all';
             const emptyHtml = `
                 <div class="empty-payout-state" style="padding: 60px 20px; text-align: center;">
-                    <div style="width: 80px; height: 80px; background: ${isFiltered ? '#f0f4f8' : '#f0f4f8'}; color: ${isFiltered ? '#8b5cf6' : '#8b5cf6'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; box-shadow: 0 10px 20px ${isFiltered ? 'rgba(27, 38, 59,0.1)' : 'rgba(27, 38, 59,0.1)'};">
+                    <div style="width: 80px; height: 80px; background: ${isFiltered ? '#f0f4f8' : '#f0f4f8'}; color: ${isFiltered ? '#6366f1' : '#6366f1'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; box-shadow: 0 10px 20px ${isFiltered ? 'rgba(27, 38, 59,0.1)' : 'rgba(27, 38, 59,0.1)'};">
                         ${isFiltered ? `
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -584,18 +548,18 @@ if (!document.getElementById('payoutAnimations')) {
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         .modal-active {
-            color: #8b5cf6 !important;
+            color: #6366f1 !important;
             font-weight: 700 !important;
             background: linear-gradient(90deg, #f0f4f8, transparent);
         }
         .modal-active::after {
             content: '✓';
-            color: #8b5cf6;
+            color: #6366f1;
             float: right;
             font-weight: 700;
         }
         [data-theme="dark"] .modal-active {
-            color: #8b5cf6 !important;
+            color: #6366f1 !important;
             background: linear-gradient(90deg, rgba(27, 38, 59, 0.1), transparent);
         }
     `;
@@ -643,11 +607,11 @@ function openUserRewardPurchaseModal() {
             <div class="admin-modal-body" style="padding-bottom: 24px;">
                 
                 <!-- Account Info -->
-                <div style="padding: 14px 18px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #8b5cf6; margin-bottom: 16px;">
+                <div style="padding: 14px 18px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #6366f1; margin-bottom: 16px;">
                     <div style="font-weight: 700; color: #1e293b; font-size: 1rem; margin-bottom: 6px;">${user.firstName} ${user.lastName || ''}</div>
                     <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px;">
                         <span style="color: #64748b;">Reward Balance:</span>
-                        <strong style="color: #8b5cf6;">₦${Math.round(totalPayout).toLocaleString()}</strong>
+                        <strong style="color: #6366f1;">₦${Math.round(totalPayout).toLocaleString()}</strong>
                     </div>
                     ${pendingDeductions > 0 ? `
                     <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px; color: #ef4444;">
@@ -663,7 +627,7 @@ function openUserRewardPurchaseModal() {
 
                 <!-- Tabs (Special, Default, Flexible, Custom) -->
                 <div style="display: flex; gap: 8px; margin-bottom: 20px; background: #f1f5f9; padding: 6px; border-radius: 12px; font-size: 0.85rem; overflow-x: auto;">
-                    <button type="button" class="pp-sale-tab-btn active" data-target="urpSpecialItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: white; color: #8b5cf6; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s; min-width: max-content;">Analytical</button>
+                    <button type="button" class="pp-sale-tab-btn active" data-target="urpSpecialItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: white; color: #6366f1; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s; min-width: max-content;">Analytical</button>
                     <button type="button" class="pp-sale-tab-btn" data-target="urpExistingItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; min-width: max-content;">Default</button>
                     <button type="button" class="pp-sale-tab-btn" data-target="urpFlexibleItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; min-width: max-content;">Flexible</button>
                     <button type="button" class="pp-sale-tab-btn" data-target="urpCustomItemForm" style="flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; background: transparent; color: #64748b; cursor: pointer; transition: all 0.2s; min-width: max-content;">Custom</button>
@@ -691,17 +655,17 @@ function openUserRewardPurchaseModal() {
                                 <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="urp-spec-variant-label">
                                     <input type="radio" name="urpSpecVariant" value="bag" style="display:none;" required>
                                     <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="urpSpecVariantBagLabelTxt">Container 1</div>
-                                    <div style="font-size: 0.8rem; color: #8b5cf6;" id="urpSpecVariantBagPrice">₦0</div>
+                                    <div style="font-size: 0.8rem; color: #6366f1;" id="urpSpecVariantBagPrice">₦0</div>
                                 </label>
                                 <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="urp-spec-variant-label">
                                     <input type="radio" name="urpSpecVariant" value="custard" style="display:none;" required>
                                     <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="urpSpecVariantCustardLabelTxt">Container 2</div>
-                                    <div style="font-size: 0.8rem; color: #8b5cf6;" id="urpSpecVariantCustardPrice">₦0</div>
+                                    <div style="font-size: 0.8rem; color: #6366f1;" id="urpSpecVariantCustardPrice">₦0</div>
                                 </label>
                                 <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="urp-spec-variant-label">
                                     <input type="radio" name="urpSpecVariant" value="cup" style="display:none;" required>
                                     <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="urpSpecVariantCupLabelTxt">Container 3</div>
-                                    <div style="font-size: 0.8rem; color: #8b5cf6;" id="urpSpecVariantCupPrice">₦0</div>
+                                    <div style="font-size: 0.8rem; color: #6366f1;" id="urpSpecVariantCupPrice">₦0</div>
                                 </label>
                             </div>
                         </div>
@@ -751,12 +715,12 @@ function openUserRewardPurchaseModal() {
                                 <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="urp-default-variant-label">
                                     <input type="radio" name="urpDefaultVariant" value="retail" style="display:none;" required>
                                     <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="urpDefaultVariantRetailLabelTxt">Retail</div>
-                                    <div style="font-size: 0.8rem; color: #8b5cf6;" id="urpDefaultVariantRetailPrice">₦0</div>
+                                    <div style="font-size: 0.8rem; color: #6366f1;" id="urpDefaultVariantRetailPrice">₦0</div>
                                 </label>
                                 <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="urp-default-variant-label">
                                     <input type="radio" name="urpDefaultVariant" value="wholesale" style="display:none;" required>
                                     <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="urpDefaultVariantWholesaleLabelTxt">Wholesale</div>
-                                    <div style="font-size: 0.8rem; color: #8b5cf6;" id="urpDefaultVariantWholesalePrice">₦0</div>
+                                    <div style="font-size: 0.8rem; color: #6366f1;" id="urpDefaultVariantWholesalePrice">₦0</div>
                                 </label>
                             </div>
                         </div>
@@ -811,17 +775,17 @@ function openUserRewardPurchaseModal() {
                                 <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="urp-flex-variant-label">
                                     <input type="radio" name="urpFlexVariant" value="c1" style="display:none;" required>
                                     <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="urpFlexVariantC1LabelTxt">Container 1</div>
-                                    <div style="font-size: 0.8rem; color: #8b5cf6;" id="urpFlexVariantC1Price">₦0</div>
+                                    <div style="font-size: 0.8rem; color: #6366f1;" id="urpFlexVariantC1Price">₦0</div>
                                 </label>
                                 <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="urp-flex-variant-label">
                                     <input type="radio" name="urpFlexVariant" value="c2" style="display:none;" required>
                                     <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="urpFlexVariantC2LabelTxt">Container 2</div>
-                                    <div style="font-size: 0.8rem; color: #8b5cf6;" id="urpFlexVariantC2Price">₦0</div>
+                                    <div style="font-size: 0.8rem; color: #6366f1;" id="urpFlexVariantC2Price">₦0</div>
                                 </label>
                                 <label style="flex: 1; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; background: white;" class="urp-flex-variant-label">
                                     <input type="radio" name="urpFlexVariant" value="c3" style="display:none;" required>
                                     <div style="font-weight: 700; color: #0F172A; margin-bottom: 4px;" id="urpFlexVariantC3LabelTxt">Container 3</div>
-                                    <div style="font-size: 0.8rem; color: #8b5cf6;">Flexible Price</div>
+                                    <div style="font-size: 0.8rem; color: #6366f1;">Flexible Price</div>
                                 </label>
                             </div>
                         </div>
@@ -914,7 +878,7 @@ function openUserRewardPurchaseModal() {
                         </svg>
                         Insufficient Spendable Reward Balance!
                     </div>
-                    <button id="urpFinalizeBtn" class="wide-add-btn save-btn" style="margin-top: 12px; width: 100%; border: none; outline: none; border-radius: 10px; padding: 14px; background: #8b5cf6; color: white; font-weight: 700; cursor: pointer;" disabled>Submit Reward Purchase Request</button>
+                    <button id="urpFinalizeBtn" class="wide-add-btn save-btn" style="margin-top: 12px; width: 100%; border: none; outline: none; border-radius: 10px; padding: 14px; background: #6366f1; color: white; font-weight: 700; cursor: pointer;" disabled>Submit Reward Purchase Request</button>
                 </div>
 
             </div>
@@ -1024,7 +988,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 l.style.borderWidth = '1px';
                 l.style.background = 'white';
             });
-            this.style.borderColor = '#8b5cf6';
+            this.style.borderColor = '#6366f1';
             this.style.borderWidth = '2px';
             this.style.background = '#f0f4f8';
             
@@ -1041,7 +1005,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 l.style.borderWidth = '1px';
                 l.style.background = 'white';
             });
-            this.style.borderColor = '#8b5cf6';
+            this.style.borderColor = '#6366f1';
             this.style.borderWidth = '2px';
             this.style.background = '#f0f4f8';
             
@@ -1104,7 +1068,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
             });
             btn.classList.add('active');
             btn.style.background = 'white';
-            btn.style.color = '#8b5cf6';
+            btn.style.color = '#6366f1';
             btn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
             
             forms.forEach(f => { if(f) f.style.display = 'none'; });
@@ -1136,7 +1100,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 l.style.borderWidth = '1px';
                 l.style.background = 'white';
             });
-            this.style.borderColor = '#8b5cf6';
+            this.style.borderColor = '#6366f1';
             this.style.borderWidth = '2px';
             this.style.background = '#f0f4f8';
             
@@ -1943,7 +1907,6 @@ function _submitURPRequest(spendableRewardBalance, user) {
         window.refreshPayouts();
     }
 }
-
 
 
 

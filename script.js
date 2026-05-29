@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // overlap: 1.0 = fully under indicator, 0.0 = fully exposed
             const overlap = Math.max(0, 1 - Math.abs(position - tabIndex));
 
-            // Interpolate from blue (#8b5cf6) to white (#ffffff)
+            // Interpolate from blue (#6366f1) to white (#ffffff)
             const r = Math.round(57 + (255 - 57) * overlap);
             const g = Math.round(157 + (255 - 157) * overlap);
             const b = Math.round(250 + (255 - 250) * overlap);
@@ -410,7 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: true });
     }
 });
-
 
 
 

@@ -16,7 +16,7 @@
             const user = JSON.parse(localStorage.getItem('nd_logged_in_user') || '{}');
             // If they are not an admin, redirect them to a simple maintenance page (or show an alert/body replace)
             if (user.id !== '00000ND' && user.id !== 'ADMIN') { // assuming 00000ND or ADMIN is admin
-                document.documentElement.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; text-align:center; padding:20px;"><div><h1 style="color:#8b5cf6;">Shop under maintenance</h1><p>We are currently updating our shop. Please check back later.</p><button onclick="localStorage.removeItem(\'nd_logged_in_user\'); window.location.reload();" style="margin-top:20px; padding:10px 20px; border:none; background:#8b5cf6; color:white; border-radius:8px; cursor:pointer;">Log Out</button></div></div>';
+                document.documentElement.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; text-align:center; padding:20px;"><div><h1 style="color:#6366f1;">Shop under maintenance</h1><p>We are currently updating our shop. Please check back later.</p><button onclick="localStorage.removeItem(\'nd_logged_in_user\'); window.location.reload();" style="margin-top:20px; padding:10px 20px; border:none; background:#6366f1; color:white; border-radius:8px; cursor:pointer;">Log Out</button></div></div>';
                 // Stop further execution
                 throw new Error("Maintenance mode active");
             }
@@ -64,11 +64,6 @@
 
     <script src="custom-alert.js"></script>
     <script src="modal-persistence.js"></script>
-    
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabaseClient.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -125,10 +120,10 @@
             <span class="bar-item item-menu" data-tab="menu">Menu</span>
         </div>
     </main>
+    <script src="api-config.js"></script>
+    <script src="supabase-sync.js"></script>
     <script src="dark-mode/theme-manager.js"></script>
-    <script src="cloud-sync-config.js"></script>
     <script src="real-time-sync.js"></script>
-    <script src="real-time-sync-handlers.js"></script>
     <script src="script.js"></script>
     <script src="global-fixes.js"></script>
     <script src="last-seen-tracker.js"></script>
@@ -183,7 +178,7 @@
             width: auto;
             min-width: 50px;
             height: 50px;
-            background-color: #8b5cf6;
+            background-color: #6366f1;
             color: white;
             padding: 0 15px;
             border-radius: 12px;
@@ -214,7 +209,7 @@
             overflow: hidden;
         }
         .product-cart-btn:active { transform: scale(0.95); }
-        .product-cart-btn:hover { background-color: #8b5cf6; }
+        .product-cart-btn:hover { background-color: #6366f1; }
         .fab-cart-badge {
             position: absolute;
             top: -6px;
@@ -240,10 +235,10 @@
         .shop-logo-text {
             font-size: 1.5rem;
             font-weight: 800;
-            color: #8b5cf6;
+            color: #6366f1;
             text-transform: capitalize;
             letter-spacing: -0.5px;
-            background: #8b5cf6;
+            background: linear-gradient(135deg, #6366f1 0%, #415A77 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-family: 'Outfit', sans-serif;
@@ -263,7 +258,6 @@
 </body>
 
 </html>
-
 
 
 

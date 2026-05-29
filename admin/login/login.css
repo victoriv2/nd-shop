@@ -268,6 +268,53 @@
     line-height: 1.5;
 }
 
+/* Custom Square Radios for Verify Method */
+.verify-method-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #4a5568;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.verify-method-radio {
+    display: none;
+}
+
+.verify-method-square {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #cbd5e0;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+.verify-method-radio:checked + .verify-method-square {
+    background-color: #8b5cf6;
+    border-color: #8b5cf6;
+}
+
+.verify-method-square svg {
+    color: #fff;
+    width: 14px;
+    height: 14px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.verify-method-radio:checked + .verify-method-square svg {
+    opacity: 1;
+    transform: scale(1);
+}
+
 .auth-method-options {
     display: flex;
     flex-direction: column;

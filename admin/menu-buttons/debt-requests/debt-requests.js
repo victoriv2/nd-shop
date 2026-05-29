@@ -137,6 +137,9 @@ window.closeDebtRequests = function() {
             history.back();
         }
     }, 100);
+    if (typeof window.clearAdminModalPersistence === 'function') {
+        window.clearAdminModalPersistence();
+    }
 }
 
 window.setDrFilter = function(filterType, btnElement) {

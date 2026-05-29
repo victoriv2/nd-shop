@@ -439,4 +439,7 @@ function closeDeleteSales() {
             page.style.display = 'none';
         }, 300);
     }
+    if (typeof window.clearAdminModalPersistence === 'function') {
+        window.clearAdminModalPersistence();
+    }
 }

@@ -22,6 +22,9 @@ function closeSystemBackup() {
         modal.classList.remove('show');
         setTimeout(() => document.getElementById('modal-container').innerHTML = '', 400);
     }
+    if (typeof window.clearAdminModalPersistence === 'function') {
+        window.clearAdminModalPersistence();
+    }
 }
 
 function executeBackup() {

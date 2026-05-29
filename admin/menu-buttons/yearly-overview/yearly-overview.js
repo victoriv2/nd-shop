@@ -120,6 +120,9 @@ window.closeYearlyOverview = function() {
         page.style.display = 'none';
         document.body.classList.remove('modal-open');
     }
+    if (typeof window.clearAdminModalPersistence === 'function') {
+        window.clearAdminModalPersistence();
+    }
 }
 
 window.openYoDateModal = function() {

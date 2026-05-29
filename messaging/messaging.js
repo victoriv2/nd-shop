@@ -82,10 +82,10 @@ function _realOpenChat(targetId, targetName, jumpMsgId = null) {
     if (statusEl) {
         if (targetId === 'ADMIN') {
             statusEl.textContent = 'Support Team';
-            statusEl.style.color = '#8b5cf6';
+            statusEl.style.color = '#6366f1';
         } else {
             statusEl.textContent = 'Customer';
-            statusEl.style.color = '#8b5cf6';
+            statusEl.style.color = '#6366f1';
         }
     }
 
@@ -340,17 +340,6 @@ function initMessagingLogic() {
             renderMessages();
         }
     });
-
-    // Sync across browsers via Supabase app_state / realtime
-    if (window.realtimeSync) {
-        window.realtimeSync.on('nd_messages', () => {
-            if (page && page.classList.contains('show')) renderMessages();
-            if (typeof _renderInboxList === 'function') _renderInboxList();
-        });
-        window.realtimeSync.on('nd_blocked_messaging_users', () => {
-            if (page && page.classList.contains('show')) renderMessages();
-        });
-    }
 }
 
 // --- Handle Send ---
@@ -404,12 +393,8 @@ function _getMyId() {
 }
 
 // --- Send Message ---
-async function sendMessage(content, type, mediaUrl, duration, replyToId) {
+function sendMessage(content, type, mediaUrl, duration, replyToId) {
     if ((!content || !content.trim()) && type === 'text') return;
-
-    if (mediaUrl && mediaUrl.startsWith('data:') && window.uploadBase64ToSupabase) {
-        mediaUrl = await window.uploadBase64ToSupabase(mediaUrl, 'direct');
-    }
 
     const messages = JSON.parse(localStorage.getItem('nd_messages') || '[]');
     const senderId = _getMyId();
@@ -436,20 +421,6 @@ async function sendMessage(content, type, mediaUrl, duration, replyToId) {
     localStorage.setItem('nd_messages', JSON.stringify(messages));
     renderMessages();
     scrollToBottom();
-
-    // Push to Supabase backend if available
-    if (window.supabaseClient) {
-        try {
-            await window.supabaseClient.from('messages').insert({
-                sender_id: senderId,
-                receiver_id: msgCurrentChatId,
-                text: content || '[Media Message]',
-                raw_data: newMsg
-            });
-        } catch(e) {
-            console.error('Supabase message sync failed:', e);
-        }
-    }
 }
 
 // --- Render Messages ---
@@ -528,8 +499,8 @@ function renderMessages(searchQuery) {
             if (repliedMsg) {
                 const replySender = repliedMsg.senderId === myId ? 'You' : (repliedMsg.senderId === 'ADMIN' ? 'Admin' : repliedMsg.senderId);
                 const replyPreview = repliedMsg.type === 'text' ? escapeHtml(repliedMsg.content).substring(0, 60) : `[${repliedMsg.type}]`;
-                replyHtml = `<div class="msg-reply-quote" onclick="event.stopPropagation(); _scrollToMessage('${repliedMsg.id}')" style="background:${isMe ? 'rgba(255,255,255,0.15)' : '#f1f5f9'}; border-left:3px solid #8b5cf6; padding:6px 10px; border-radius:8px; margin-bottom:6px; cursor:pointer; font-size:0.78rem;">
-                    <div style="font-weight:700; color:${isMe ? '#ffffff' : '#8b5cf6'}; font-size:0.72rem;">${replySender}</div>
+                replyHtml = `<div class="msg-reply-quote" onclick="event.stopPropagation(); _scrollToMessage('${repliedMsg.id}')" style="background:${isMe ? 'rgba(255,255,255,0.15)' : '#f1f5f9'}; border-left:3px solid #6366f1; padding:6px 10px; border-radius:8px; margin-bottom:6px; cursor:pointer; font-size:0.78rem;">
+                    <div style="font-weight:700; color:${isMe ? '#ffffff' : '#6366f1'}; font-size:0.72rem;">${replySender}</div>
                     <div style="color:${isMe ? 'rgba(255,255,255,0.8)' : '#64748b'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${replyPreview}</div>
                 </div>`;
             }
@@ -566,7 +537,7 @@ function renderMessages(searchQuery) {
             } else {
                 contentHtml = `
                     <div class="msg-audio-upload-container" onclick="event.stopPropagation(); window._openAudioPlayer('${msg.mediaUrl.replace(/'/g, "\\'")}', '${escapeHtml(msg.content).replace(/'/g, "\\'")}')" style="display:flex; align-items:center; gap:10px; width:100%; cursor:pointer; background:rgba(0,0,0,0.05); padding:10px; border-radius:10px;">
-                        <div style="width:40px; height:40px; border-radius:50%; background:#8b5cf6; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <div style="width:40px; height:40px; border-radius:50%; background:#6366f1; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                         </div>
                         <div style="display:flex; flex-direction:column; overflow:hidden;">
@@ -755,7 +726,7 @@ function _startRecording() {
             const pauseBtn = document.getElementById('msgRecPause');
             if (pauseBtn) {
                 pauseBtn.textContent = 'Pause';
-                pauseBtn.style.color = '#8b5cf6';
+                pauseBtn.style.color = '#6366f1';
             }
             const indicator = document.getElementById('msgRecIndicator');
             if (indicator) {
@@ -798,7 +769,7 @@ window._pauseRecording = function() {
         
         if (pauseBtn) {
             pauseBtn.textContent = 'Resume';
-            pauseBtn.style.color = '#8b5cf6';
+            pauseBtn.style.color = '#6366f1';
         }
         if (indicator) {
             indicator.style.animation = 'none';
@@ -810,7 +781,7 @@ window._pauseRecording = function() {
         
         if (pauseBtn) {
             pauseBtn.textContent = 'Pause';
-            pauseBtn.style.color = '#8b5cf6';
+            pauseBtn.style.color = '#6366f1';
         }
         if (indicator) {
             indicator.style.animation = '';
@@ -1309,7 +1280,7 @@ window._openVideoPlayer = function(src) {
             <div class="msg-fv-skip-indicator" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:1.2rem; font-weight:700; display:none; pointer-events:none; background:rgba(0,0,0,0.5); padding:8px 18px; border-radius:10px;"></div>
         </div>
         <div class="msg-fv-controls" style="width:100%; padding:12px 16px; background:rgba(0,0,0,0.7); display:flex; flex-direction:column; gap:8px;">
-            <input type="range" class="msg-fv-slider" min="0" max="100" value="0" step="0.1" style="width:100%; accent-color:#8b5cf6; height:4px; cursor:pointer;">
+            <input type="range" class="msg-fv-slider" min="0" max="100" value="0" step="0.1" style="width:100%; accent-color:#6366f1; height:4px; cursor:pointer;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                 <div style="display:flex; align-items:center; gap:12px;">
                     <button class="msg-fv-play-btn" style="background:none; border:none; color:white; cursor:pointer; display:flex; align-items:center;">
@@ -1441,14 +1412,14 @@ window._openAudioPlayer = function(src, title) {
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
         <div class="msg-fa-audio-wrap" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; position:relative; padding: 20px;">
-            <div style="width:120px; height:120px; border-radius:50%; background:#8b5cf6; display:flex; align-items:center; justify-content:center; margin-bottom: 30px; box-shadow: 0 10px 25px rgba(27, 38, 59, 0.4);">
+            <div style="width:120px; height:120px; border-radius:50%; background:linear-gradient(135deg, #2c3e50, #6366f1); display:flex; align-items:center; justify-content:center; margin-bottom: 30px; box-shadow: 0 10px 25px rgba(27, 38, 59, 0.4);">
                 <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             </div>
             <h3 style="color:white; margin:0 0 30px 0; font-weight:600; text-align:center; max-width:80%; word-break:break-all;">${title || 'Audio'}</h3>
             <audio src="${src}" class="msg-fa-audio" preload="auto"></audio>
         </div>
         <div class="msg-fa-controls" style="width:100%; padding:20px 40px; background:transparent; display:flex; flex-direction:column; gap:15px; margin-bottom: 40px; max-width:600px;">
-            <input type="range" class="msg-fa-slider" min="0" max="100" value="0" step="0.1" style="width:100%; accent-color:#8b5cf6; height:6px; cursor:pointer;">
+            <input type="range" class="msg-fa-slider" min="0" max="100" value="0" step="0.1" style="width:100%; accent-color:#6366f1; height:6px; cursor:pointer;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                 <div style="display:flex; align-items:center; gap:20px;">
                     <button class="msg-fa-play-btn" style="background:none; border:none; color:white; cursor:pointer; display:flex; align-items:center;">
@@ -1549,7 +1520,7 @@ function _pauseRecording() {
         
         if (pauseBtn) {
             pauseBtn.textContent = 'Resume';
-            pauseBtn.style.color = '#8b5cf6';
+            pauseBtn.style.color = '#6366f1';
         }
         if (indicator) {
             indicator.style.animation = 'none';
@@ -1561,7 +1532,7 @@ function _pauseRecording() {
         
         if (pauseBtn) {
             pauseBtn.textContent = 'Pause';
-            pauseBtn.style.color = '#8b5cf6';
+            pauseBtn.style.color = '#6366f1';
         }
         if (indicator) {
             indicator.style.animation = '';
@@ -1621,7 +1592,7 @@ function _renderPinnedMessage() {
         panel.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                 <div style="display:flex; flex-direction:column; cursor:pointer;" onclick="const msg = document.querySelector('.msg-row[data-id=\\'${pinnedMsg.id}\\']'); if(msg) msg.scrollIntoView({behavior:'smooth', block:'center'});">
-                    <span style="font-size:10px; font-weight:700; color:#8b5cf6; text-transform:uppercase; letter-spacing:0.5px;">Pinned Message</span>
+                    <span style="font-size:10px; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.5px;">Pinned Message</span>
                     <span style="font-size:13px; color:#334155;">${escapeHtml(preview)}</span>
                 </div>
                 <button onclick="_togglePin('${pinnedMsg.id}')" style="background:transparent; border:none; padding:8px; display:flex; align-items:center; justify-content:center; color:#94a3b8; cursor:pointer;">
@@ -1741,7 +1712,7 @@ window._scrollToMessage = function(msgId) {
         const flashInterval = setInterval(() => {
             if (count % 2 === 0) {
                 // Flash ON (Orange)
-                bubble.style.background = '#8b5cf6';
+                bubble.style.background = '#6366f1';
                 bubble.style.color = '#ffffff';
                 bubble.style.transform = 'scale(1.02)';
             } else {
@@ -2045,7 +2016,7 @@ function _renderInboxList() {
         const timeStr = _formatInboxTime(c.timestamp);
         const initial = (c.name || '?').charAt(0).toUpperCase();
         const previewText = c.preview.length > 45 ? c.preview.substring(0, 45) + '...' : c.preview;
-        const pinIcon = c.isPinned ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#8b5cf6" stroke-width="2.5" style="flex-shrink:0;"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"></path></svg>' : '';
+        const pinIcon = c.isPinned ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#6366f1" stroke-width="2.5" style="flex-shrink:0;"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"></path></svg>' : '';
 
         const clickAction = c.jumpId 
             ? `openMessagingChat('${c.otherId}', '${escapeHtml(c.name).replace(/'/g, "\\'")}', '${c.jumpId}')` 
@@ -2326,7 +2297,6 @@ window.getUserUnreadCount = function() {
     const messages = JSON.parse(localStorage.getItem('nd_messages') || '[]');
     return messages.filter(m => m.receiverId === myId && !(m.readBy || []).includes(myId) && !(m.deletedFor || []).includes(myId)).length;
 };
-
 
 
 

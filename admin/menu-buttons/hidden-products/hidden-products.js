@@ -102,4 +102,7 @@ function closeHiddenProducts() {
             document.getElementById('modal-container').innerHTML = '';
         }, 300);
     }
+    if (typeof window.clearAdminModalPersistence === 'function') {
+        window.clearAdminModalPersistence();
+    }
 }

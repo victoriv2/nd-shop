@@ -79,11 +79,11 @@ function initSalesTable() {
 
         data.forEach((row, index) => {
             const isRequest = row.type === 'Request';
-            const baseTotal = row.isFlexible ? (parseFloat(row.unitPrice) || 0) : row.qty * row.unitPrice;
+            const baseTotal = row.qty * row.unitPrice;
             const payout = isRequest ? (row.payout != null ? row.payout : (baseTotal * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100))) : 0; // Payout only counts for app requests
             // Use recorded price (which has payout deducted) if available, otherwise fallback to deduction
             const total = (row.price !== undefined && row.price !== null && row.price !== '') ? Number(row.price) : (baseTotal - payout);
-            totalItems += row.qty;
+            totalItems += Number(row.qty) || 1;
             totalSales += total;
             totalPayout += payout;
 
@@ -92,6 +92,8 @@ function initSalesTable() {
 
             const tr = document.createElement('tr');
             if (isRequest) tr.classList.add('row-request');
+
+            const unitPriceToDisplay = row.unitPrice;
 
             tr.innerHTML = `
                 <td>${index + 1}</td>
@@ -103,7 +105,7 @@ function initSalesTable() {
                     </div>
                 </td>
                 <td>${qtyStr}</td>
-                <td>₦${formatCurrency(row.unitPrice)}</td>
+                <td>₦${formatCurrency(unitPriceToDisplay)}</td>
                 <td>₦${formatCurrency(total)}</td>
                 <td class="payout-cell">${isRequest ? '₦' + formatCurrency(payout) : '-'}</td>
             `;
@@ -187,9 +189,9 @@ function initSalesTable() {
         // 2. Sort the filtered data
         data.sort((a, b) => {
             if (currentSortType === 'high-to-low') {
-                return (b.isFlexible ? b.unitPrice : b.qty * b.unitPrice) - (a.isFlexible ? a.unitPrice : a.qty * a.unitPrice);
+                return (b.qty * b.unitPrice) - (a.qty * a.unitPrice);
             } else if (currentSortType === 'low-to-high') {
-                return (a.isFlexible ? a.unitPrice : a.qty * a.unitPrice) - (b.isFlexible ? b.unitPrice : b.qty * b.unitPrice);
+                return (a.qty * a.unitPrice) - (b.qty * b.unitPrice);
             } else if (currentSortType === 'newest') {
                 return new Date(parseDate(b.date)) - new Date(parseDate(a.date));
             } else if (currentSortType === 'oldest') {
@@ -636,11 +638,29 @@ function initSalesTable() {
                     
                     // Auto-fill price from the product's retail price
                     const customPriceField = document.getElementById('customItemPrice');
+                    const customStaticDisplay = document.getElementById('customStaticPriceDisplay');
+                    const customFlexPriceInputWrapper = document.getElementById('customFlexPriceInputWrapper');
+                    const customFlexPriceInput = document.getElementById('customFlexPriceInput');
                     const unitStr = item.unit ? item.unit : '';
-                    if (customPriceField) {
-                        const priceVal = (typeof item.price === 'number') ? item.price : 0;
-                        customPriceField.value = '₦' + formatCurrency(Number(priceVal)) + (unitStr ? ' ' + unitStr : '');
-                        customPriceField.dataset.price = priceVal;
+                    const priceVal = (typeof item.price === 'number') ? item.price : 0;
+                    
+                    // Always update the hidden field's data-price and the static display
+                    if (customPriceField) customPriceField.dataset.price = priceVal;
+                    if (customStaticDisplay) {
+                        customStaticDisplay.textContent = '₦' + formatCurrency(Number(priceVal)) + (unitStr ? ' ' + unitStr : '');
+                    }
+                    
+                    const flexContainer = document.getElementById('customFlexibleContainer');
+                    const flexToggle = document.getElementById('customFlexiblePriceToggle');
+                    if (item.allowUserFlexiblePricing) {
+                        // Show toggle, reset it to OFF state
+                        if (flexContainer) flexContainer.style.display = 'block';
+                        if (flexToggle) { flexToggle.checked = false; flexToggle.dispatchEvent(new Event('change')); }
+                    } else {
+                        // Hide toggle, always show static price
+                        if (flexContainer) flexContainer.style.display = 'none';
+                        if (customFlexPriceInputWrapper) customFlexPriceInputWrapper.style.display = 'none';
+                        if (customStaticDisplay) customStaticDisplay.style.display = 'flex';
                     }
                     const priceLabel = document.getElementById('lblCustomPrice');
                     if (priceLabel) {
@@ -953,15 +973,16 @@ function initSalesTable() {
             let total = 0;
 
             basketItems.forEach((item, index) => {
-                const itemTotal = item.isFlexible ? item.price : item.qty * item.price;
+                const itemTotal = item.qty * item.price;
                 total += itemTotal;
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'basket-item';
+                const flexLabel = item.isFlexible ? ' <span style="color:#c026d3;font-size:0.7rem;">(Flex)</span>' : '';
                 itemDiv.innerHTML = `
                     <div class="basket-item-info">
                         <span class="basket-item-name">${item.name}</span>
-                        <span class="basket-item-meta">${item.isFlexible ? 'Flexible' : item.qty + ' × ₦' + formatCurrency(item.price)}</span>
+                        <span class="basket-item-meta">${item.qty} × ₦${formatCurrency(item.price)}${flexLabel}</span>
                     </div>
                     <span class="basket-item-total">₦${formatCurrency(itemTotal)}</span>
                     <button class="remove-basket-item" data-index="${index}">
@@ -1170,9 +1191,17 @@ function initSalesTable() {
         if (customForm) customForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const itemName = customItemSelect.value;
-            const customPriceField = document.getElementById('customItemPrice');
-            const price = customPriceField ? customPriceField.dataset.price : '';
-            const qty = document.getElementById('customItemQty').value;
+            const hiddenPriceField = document.getElementById('customItemPrice');
+            const customFlexPriceInput = document.getElementById('customFlexPriceInput');
+            const flexToggle = document.getElementById('customFlexiblePriceToggle');
+            // If toggle is on, use the editable flex input; otherwise use the stored dataset.price
+            let price;
+            if (flexToggle && flexToggle.checked && customFlexPriceInput) {
+                price = parseFloat(customFlexPriceInput.value) || 0;
+            } else {
+                price = Number(hiddenPriceField ? hiddenPriceField.dataset.price : 0);
+            }
+            const qty = Number(document.getElementById('customItemQty').value) || 1;
             if (itemName && price && qty) {
                 const requiredQty = parseFloat(qty);
                 const prod = customInventory.find(p => p.name === itemName);
@@ -1234,7 +1263,8 @@ function initSalesTable() {
                     item: item.name,
                     qty: item.qty,
                     // For flexible items, price is the total entered — store as unitPrice for consistency
-                    unitPrice: item.price,
+                    unitPrice: Number(item.price || 0),
+                    price: (Number(item.qty || 1) * Number(item.price || 0)),
                     unit: item.unit,
                     isFlexible: item.isFlexible || false
                 };

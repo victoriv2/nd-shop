@@ -3,22 +3,6 @@
 // Called after product-details.html is injected into the DOM
 // ============================================================
 
-function _saveProductsToCloud(products) {
-    try {
-        window.__isSupabaseSyncing = true;
-        _saveProductsToCloud(products);
-        window.__isSupabaseSyncing = false;
-        if (typeof window.reloadAdminProducts === 'function') {
-            window.reloadAdminProducts();
-        }
-        if (window.realtimeSync) {
-            window.realtimeSync.syncNow('nd_products_data');
-        }
-    } catch (e) {
-        console.error('Failed to persist products:', e);
-    }
-}
-
 function initProductDetailsModal() {
 
     // ---- Close / Back helpers ----
@@ -47,7 +31,7 @@ function initProductDetailsModal() {
 
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadArea.style.borderColor = '#8b5cf6';
+            uploadArea.style.borderColor = '#6366f1';
             uploadArea.style.background = '#f0f4f8';
         });
 
@@ -304,7 +288,7 @@ function _pdRenderDetails(p) {
         
         html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 18px;background:linear-gradient(135deg,#f0f4f8 0%,#e0e7ff 100%);border-radius:12px;border:1px solid #bfdbfe;">` +
             `<span style="font-size:0.8rem;font-weight:700;color:#0F172A;text-transform:uppercase;">Final Unit Price</span>` +
-            `<span style="font-size:1.2rem;font-weight:900;color:#8b5cf6;">₦${Math.round(parseFloat(p.price) || 0).toLocaleString()}</span></div>`;
+            `<span style="font-size:1.2rem;font-weight:900;color:#6366f1;">₦${Math.round(parseFloat(p.price) || 0).toLocaleString()}</span></div>`;
         if (payoutEnabled) {
             html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#f0fdf4;border-radius:12px;border:1px solid #bbf7d0;">` +
                 `<span style="font-size:0.8rem;font-weight:700;color:#166534;text-transform:uppercase;">App Payout</span>` +
@@ -549,7 +533,7 @@ function _pdOpenActionPin(actionType) {
         if (svgEdit) svgEdit.style.display = 'block';
         title.textContent = 'Edit Price?';
         desc.textContent = 'Enter your PIN to edit this product\'s retail pricing.';
-        iconWrapper.style.cssText = 'width:64px;height:64px;background:#f0f4f8;color:#8b5cf6;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(0,0,0,0.05);';
+        iconWrapper.style.cssText = 'width:64px;height:64px;background:#f0f4f8;color:#6366f1;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(0,0,0,0.05);';
         btn.textContent = 'Enter Edit Mode';
         btn.className = 'admin-modern-btn';
         btn.style.cssText = 'flex:1;background:#8b5cf6;color:white;border-color:#8b5cf6;';
@@ -557,10 +541,10 @@ function _pdOpenActionPin(actionType) {
         if (svgEdit) svgEdit.style.display = 'block';
         title.textContent = 'Edit Image?';
         desc.textContent = 'Enter your PIN to upload or remove this product\'s image.';
-        iconWrapper.style.cssText = 'width:64px;height:64px;background:#f0f4f8;color:#8b5cf6;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(0,0,0,0.05);';
+        iconWrapper.style.cssText = 'width:64px;height:64px;background:#f0f4f8;color:#6366f1;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(0,0,0,0.05);';
         btn.textContent = 'Enter Edit Mode';
         btn.className = 'admin-modern-btn';
-        btn.style.cssText = 'flex:1;background:#8b5cf6;color:white;border-color:#8b5cf6;';
+        btn.style.cssText = 'flex:1;background:#6366f1;color:white;border-color:#6366f1;';
     } else if (actionType === 'undo_top_up') {
         if (svgClear) svgClear.style.display = 'block';
         title.textContent = 'Undo Last Top Up?';
@@ -618,13 +602,14 @@ function _pdCalculateStock(p) {
         const sold = (sBags * maxCPB) + (sCus * cpc) + sCups;
         const rem = bought - sold;
         const isOut = rem <= 0;
+        const isLow = !isOut && window.checkProductRunningLow && window.checkProductRunningLow(p.name);
         const rB = Math.floor(rem / maxCPB);
         const rC = Math.floor((rem % maxCPB) / cpc);
         const rU = rem % cpc;
 
-        html = `<div style="background:${isOut ? '#fef2f2' : '#f0fdf4'};border:1px solid ${isOut ? '#fecdd3' : '#bbf7d0'};border-radius:12px;padding:16px;text-align:center;margin-bottom:24px;">` +
-            `<h4 style="margin:0 0 8px 0;color:${isOut ? '#e11d48' : '#16a34a'};font-size:1.2rem;font-weight:800;">${isOut ? 'OUT OF STOCK' : 'IN STOCK'}</h4>` +
-            `<p style="margin:0;color:${isOut ? '#be123c' : '#15803d'};font-size:0.9rem;font-weight:700;">Remaining: ` +
+        html = `<div style="background:${isOut ? '#fef2f2' : (isLow ? '#fefce8' : '#f0fdf4')};border:1px solid ${isOut ? '#fecdd3' : (isLow ? '#fde047' : '#bbf7d0')};border-radius:12px;padding:16px;text-align:center;margin-bottom:24px;">` +
+            `<h4 style="margin:0 0 8px 0;color:${isOut ? '#e11d48' : (isLow ? '#a16207' : '#16a34a')};font-size:1.2rem;font-weight:800;">${isOut ? 'OUT OF STOCK' : (isLow ? 'RUNNING LOW' : 'IN STOCK')}</h4>` +
+            `<p style="margin:0;color:${isOut ? '#be123c' : (isLow ? '#854d0e' : '#15803d')};font-size:0.9rem;font-weight:700;">Remaining: ` +
             (rB > 0 ? rB + ' ' + bagT + '(s) ' : '') + (rC > 0 ? rC + ' ' + cusT + '(s) ' : '') + (rU > 0 ? rU + ' ' + cupT + '(s)' : '') +
             (rB <= 0 && rC <= 0 && rU <= 0 ? '0 ' + cupT + '(s)' : '') + '</p>' +
             `<div style="font-size:0.8rem;font-weight:600;color:#64748b;margin-top:6px;">Total Base Units Remaining: ${rem}</div></div>` +
@@ -660,13 +645,14 @@ function _pdCalculateStock(p) {
         const totalSoldPieces = soldRetailPieces + (soldWholesaleBulk * ppb);
         const rem = boughtPieces - totalSoldPieces;
         const isOut = rem <= 0;
+        const isLow = !isOut && window.checkProductRunningLow && window.checkProductRunningLow(p.name);
         
         const rB = Math.floor(rem / ppb);
         const rP = rem % ppb;
 
-        html = `<div style="background:${isOut ? '#fef2f2' : '#f0fdf4'};border:1px solid ${isOut ? '#fecdd3' : '#bbf7d0'};border-radius:12px;padding:16px;text-align:center;margin-bottom:24px;">` +
-            `<h4 style="margin:0 0 8px 0;color:${isOut ? '#e11d48' : '#16a34a'};font-size:1.2rem;font-weight:800;">${isOut ? 'OUT OF STOCK' : 'IN STOCK'}</h4>` +
-            `<p style="margin:0;color:${isOut ? '#be123c' : '#15803d'};font-size:0.9rem;font-weight:700;">Remaining: ` +
+        html = `<div style="background:${isOut ? '#fef2f2' : (isLow ? '#fefce8' : '#f0fdf4')};border:1px solid ${isOut ? '#fecdd3' : (isLow ? '#fde047' : '#bbf7d0')};border-radius:12px;padding:16px;text-align:center;margin-bottom:24px;">` +
+            `<h4 style="margin:0 0 8px 0;color:${isOut ? '#e11d48' : (isLow ? '#a16207' : '#16a34a')};font-size:1.2rem;font-weight:800;">${isOut ? 'OUT OF STOCK' : (isLow ? 'RUNNING LOW' : 'IN STOCK')}</h4>` +
+            `<p style="margin:0;color:${isOut ? '#be123c' : (isLow ? '#854d0e' : '#15803d')};font-size:0.9rem;font-weight:700;">Remaining: ` +
             (rB > 0 ? rB + ' ' + bulk + '(s) ' : '') + (rP > 0 ? rP + ' ' + unit + '(s)' : '') +
             (rB <= 0 && rP <= 0 ? '0 ' + unit + '(s)' : '') + '</p>' +
             `<div style="font-size:0.8rem;font-weight:600;color:#64748b;margin-top:6px;">Total Base Units Remaining: ${Math.round(rem * 10) / 10}</div></div>` +
@@ -725,7 +711,7 @@ function _pdSaveEditImage() {
     });
 
     if (updated) {
-        _saveProductsToCloud(products);
+        localStorage.setItem('nd_products_data', JSON.stringify(products));
         
         // Show success
         _pdShowView('productActionSuccessView');
@@ -831,7 +817,7 @@ function _pdOpenEditPriceForm() {
             // Highlight the correct label
             labels.forEach(l => l.style.borderColor = '#cbd5e1');
             const targetLabel = document.getElementById('lblPdEditT' + targetRadio.value);
-            if (targetLabel) targetLabel.style.borderColor = '#8b5cf6';
+            if (targetLabel) targetLabel.style.borderColor = '#6366f1';
         }
 
         radios.forEach(radio => {
@@ -839,7 +825,7 @@ function _pdOpenEditPriceForm() {
                 const val = e.target.value;
                 window._pdLastSelectedTier = val; // Store selection
                 labels.forEach(l => l.style.borderColor = '#cbd5e1');
-                document.getElementById('lblPdEditT' + val).style.borderColor = '#8b5cf6';
+                document.getElementById('lblPdEditT' + val).style.borderColor = '#6366f1';
                 updateTabVisibility(val);
             });
         });
@@ -1346,7 +1332,7 @@ function _pdSaveEditPrice() {
         if (newName) products[index].name = newName;
     }
 
-    _saveProductsToCloud(products);
+    localStorage.setItem('nd_products_data', JSON.stringify(products));
     if (typeof adminProducts !== 'undefined') {
         try { window.reloadAdminProducts(); } catch (e) { }
     }
@@ -1366,7 +1352,7 @@ function _pdExecuteClear() {
     const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     if (index === -1) return;
     products[index].cleared = true;
-    _saveProductsToCloud(products);
+    localStorage.setItem('nd_products_data', JSON.stringify(products));
     if (typeof window.reloadAdminProducts === 'function') window.reloadAdminProducts();
     if (typeof window.renderProductsGlobal === 'function') window.renderProductsGlobal();
     _pdShowSuccess('Product Hidden', 'Product hidden from view. History is kept intact.');
@@ -1379,7 +1365,7 @@ function _pdExecuteDelete() {
     const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     if (index === -1) return;
     products[index].isDeleted = true;
-    _saveProductsToCloud(products);
+    localStorage.setItem('nd_products_data', JSON.stringify(products));
     if (typeof window.reloadAdminProducts === 'function') window.reloadAdminProducts();
     if (typeof window.renderProductsGlobal === 'function') window.renderProductsGlobal();
     if (typeof window.renderRestockListGlobal === 'function') window.renderRestockListGlobal();
@@ -1432,7 +1418,7 @@ function _pdExecuteUndoTopUp() {
         prod.boughtQuantity = Math.max(0, (parseFloat(prod.boughtQuantity) || 0) - (lastTopUp.qty || 1));
     }
     
-    _saveProductsToCloud(products);
+    localStorage.setItem('nd_products_data', JSON.stringify(products));
     
     setTimeout(() => {
         if (typeof window.reloadAdminProducts === 'function') window.reloadAdminProducts();
@@ -1474,7 +1460,7 @@ window.toggleProductFlexibleState = function(name, dateAdded, isChecked) {
         if (index !== -1) {
             products[index].allowUserFlexiblePricing = false;
             products[index].flexibleVariants = [];
-            _saveProductsToCloud(products);
+            localStorage.setItem('nd_products_data', JSON.stringify(products));
             
             if (window._pdCurrentProduct && window._pdCurrentProduct.name === name && window._pdCurrentProduct.dateAdded === dateAdded) {
                 window._pdCurrentProduct.allowUserFlexiblePricing = false;
@@ -1553,7 +1539,7 @@ window.openFlexibleVariantsModal = function(name, dateAdded, isTogglingOn = fals
                 products[index].flexibleVariants = selectedTitles;
             }
             
-            _saveProductsToCloud(products);
+            localStorage.setItem('nd_products_data', JSON.stringify(products));
             
             if (window._pdCurrentProduct && window._pdCurrentProduct.name === name && window._pdCurrentProduct.dateAdded === dateAdded) {
                 window._pdCurrentProduct.allowUserFlexiblePricing = products[index].allowUserFlexiblePricing;
@@ -1566,7 +1552,6 @@ window.openFlexibleVariantsModal = function(name, dateAdded, isTogglingOn = fals
         document.getElementById('flexVarModalOverlay').remove();
     };
 };
-
 
 
 

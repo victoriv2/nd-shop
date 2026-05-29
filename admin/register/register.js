@@ -117,7 +117,7 @@ window.loadRegister = function () {
                     // Compute totals from data
                     let totalSalesAmt = 0, totalPayoutAmt = 0, totalQty = 0;
                     filteredSales.forEach(r => {
-                        const tot = parseFloat(r.price) || ((parseFloat(r.qty) || 1) * (parseFloat(r.unitPrice) || 0));
+                        const tot = parseFloat(r.price) || (r.isFlexible ? parseFloat(r.unitPrice || 0) : ((parseFloat(r.qty) || 1) * (parseFloat(r.unitPrice) || 0)));
                         totalSalesAmt += tot;
                         totalQty += parseInt(r.qty) || 1;
                         if (r.type === 'Request') totalPayoutAmt += (r.payout || tot * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100));
@@ -128,7 +128,7 @@ window.loadRegister = function () {
                     const rowsHTML = filteredSales.length === 0
                         ? `<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa;">No sales recorded for ${day} ${monthFull} ${year}</td></tr>`
                         : filteredSales.map((r, i) => {
-                            const tot = parseFloat(r.price) || ((parseFloat(r.qty) || 1) * (parseFloat(r.unitPrice) || 0));
+                            const tot = parseFloat(r.price) || (r.isFlexible ? parseFloat(r.unitPrice || 0) : ((parseFloat(r.qty) || 1) * (parseFloat(r.unitPrice) || 0)));
                             const unitPriceVal = r.unitPrice !== undefined ? r.unitPrice : (parseFloat(r.price || 0) / (parseFloat(r.qty) || 1));
                             const unitText = r.unit ? r.unit.replace(/^per\s+/i, '') : '';
                             const qtyStr = r.qty + (unitText ? ' ' + unitText + (r.qty > 1 ? 's' : '') : '');

@@ -212,10 +212,23 @@ function initAiChatLogic() {
     let currentImageBase64 = null;
 
     closeBtn.addEventListener('click', () => {
-        if (inputField) inputField.blur();
-        saveActiveHistory();
-        overlay.classList.remove('show');
-        setTimeout(() => overlay.remove(), 300);
+        try {
+            if (inputField) inputField.blur();
+            saveActiveHistory();
+            overlay.classList.remove('show');
+            if (typeof window.clearAdminModalPersistence === 'function') {
+                window.clearAdminModalPersistence();
+            }
+            setTimeout(() => {
+                try { overlay.remove(); } catch (e) { /* ignore */ }
+            }, 300);
+        } catch (e) {
+            console.error('[AI Chat] close error', e);
+            if (overlay) {
+                try { overlay.classList.remove('show'); } catch (e2) { /* ignore */ }
+                setTimeout(() => { try { overlay.remove(); } catch (e3) { /* ignore */ } }, 300);
+            }
+        }
     });
 
     toggleHistoryBtn.addEventListener('click', () => {
@@ -233,6 +246,26 @@ function initAiChatLogic() {
         createNewThread();
         historyModalOverlay.style.display = 'none';
     });
+
+    // Fallback: delegated click handler in case the button is re-rendered or event lost
+    document.addEventListener('click', (e) => {
+        try {
+            const btn = e.target.closest ? e.target.closest('#aiNewChatSidebarBtn') : null;
+            if (btn) {
+                e.stopPropagation();
+                createNewThread();
+                if (historyModalOverlay) historyModalOverlay.style.display = 'none';
+            }
+        } catch (err) { /* ignore */ }
+    });
+
+    // Expose a global helper to create a new chat programmatically
+    window.createNewAiThread = function () {
+        try {
+            createNewThread();
+            if (historyModalOverlay) historyModalOverlay.style.display = 'none';
+        } catch (e) { console.error('createNewAiThread error', e); }
+    };
 
     let sidebarSearchDebounce = null;
     searchInput.addEventListener('input', (e) => {
@@ -619,7 +652,10 @@ function initAiChatLogic() {
         let activeThread = aiChatThreads.find(t => t.id === currentChatId);
         if (!activeThread) {
             if (aiChatThreads.length === 0) createNewThread();
-            else switchThread(aiChatThreads[0].id);
+            else {
+                const bestId = pickBestThreadId();
+                if (bestId) switchThread(bestId);
+            }
             activeThread = aiChatThreads.find(t => t.id === currentChatId);
         }
         if (!activeThread) return;
@@ -1652,44 +1688,64 @@ PAYOUT PURCHASES:
     }
 
 
+    function pickBestThreadId() {
+        if (!aiChatThreads.length) return null;
+        const sorted = [...aiChatThreads].sort((a, b) => (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0));
+        const withMessages = sorted.find(t => (t.messages || []).length > 0);
+        return (withMessages || sorted[0]).id;
+    }
+
     function loadChatThreads() {
+        aiChatThreads = [];
+
         const saved = localStorage.getItem('nd_ai_chat_threads');
         if (saved) {
             try {
-                aiChatThreads = JSON.parse(saved);
-                if (!Array.isArray(aiChatThreads)) aiChatThreads = [];
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) aiChatThreads = parsed;
             } catch (e) {
-                console.error('[AI Chat] Corrupt thread data, resetting', e);
-                aiChatThreads = [];
+                console.error('[AI Chat] Corrupt thread data', e);
             }
-        } else {
-            // Migrate legacy flat chat history if exists
+        }
+
+        if (!aiChatThreads.length) {
             const legacy = localStorage.getItem('nd_ai_chat_history');
             if (legacy) {
-                const parsed = JSON.parse(legacy);
-                if (parsed.length) {
-                    aiChatThreads.push({
-                        id: 'thread-' + Date.now(),
-                        title: 'Legacy Chat',
-                        isPinned: false,
-                        updatedAt: Date.now(),
-                        messages: parsed
-                    });
-                }
+                try {
+                    const parsed = JSON.parse(legacy);
+                    if (Array.isArray(parsed) && parsed.length) {
+                        aiChatThreads.push({
+                            id: 'thread-' + Date.now(),
+                            title: 'Legacy Chat',
+                            isPinned: false,
+                            updatedAt: Date.now(),
+                            messages: parsed
+                        });
+                    }
+                } catch (e) { /* ignore */ }
             }
         }
 
-        // Clean up empty "New Chat" threads to prevent duplicate spam on refresh
-        aiChatThreads = aiChatThreads.filter(t => !(t.title === 'New Chat' && t.messages.length === 0));
+        aiChatThreads = aiChatThreads.filter(t => !(t.title === 'New Chat' && !(t.messages || []).length));
 
-        if (aiChatThreads.length === 0) {
-            createNewThread();
-        } else if (!currentChatId || !aiChatThreads.find(t => t.id === currentChatId)) {
-            switchThread(aiChatThreads[0].id);
+        const bestId = pickBestThreadId();
+        if (!bestId) {
+            const t = {
+                id: 'thread-' + Date.now(),
+                title: 'New Chat',
+                isPinned: false,
+                updatedAt: Date.now(),
+                messages: []
+            };
+            aiChatThreads = [t];
+            currentChatId = t.id;
+            persistAiThreads(false);
         } else {
-            renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
-            renderActiveThread(true);
+            currentChatId = bestId;
         }
+
+        renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
+        renderActiveThread(false);
     }
 
     function createNewThread() {
@@ -1701,8 +1757,35 @@ PAYOUT PURCHASES:
             messages: []
         };
         aiChatThreads.unshift(t);
-        saveActiveHistory();
+        currentChatId = t.id;
+        persistAiThreads(true);
         switchThread(t.id);
+    }
+
+    function persistAiThreads(pushCloud) {
+        if (!Array.isArray(aiChatThreads)) aiChatThreads = [];
+
+        const payload = JSON.stringify(aiChatThreads);
+        window.__adminAiThreadsSnapshot = payload;
+
+        try {
+            localStorage.setItem('nd_ai_chat_threads', payload);
+            const flatHistory = aiChatThreads.flatMap(t => (t.messages || []));
+            localStorage.setItem('nd_ai_chat_history', JSON.stringify(flatHistory));
+        } catch (e) {
+            console.error('[AI Chat] localStorage save failed', e);
+            if (typeof customAlert === 'function') {
+                customAlert('Could not save chat history. Storage may be full.');
+            }
+            return;
+        }
+
+        const hasContent = aiChatThreads.some(t => (t.messages || []).length > 0);
+        if (pushCloud && hasContent && window.NdCloudSync && typeof window.NdCloudSync.pushKeyToCloud === 'function') {
+            window.NdCloudSync.pushKeyToCloud('nd_ai_chat_threads').catch(err =>
+                console.error('[AI Chat] Cloud push failed', err)
+            );
+        }
     }
 
     function switchThread(id) {
@@ -1731,29 +1814,8 @@ PAYOUT PURCHASES:
     }
 
     function saveActiveHistory() {
-        if (!Array.isArray(aiChatThreads)) aiChatThreads = [];
-
-        window.__adminAiLocalSaveUntil = Date.now() + 3000;
-        const payload = JSON.stringify(aiChatThreads);
-        window.__adminAiThreadsSnapshot = payload;
-
-        try {
-            localStorage.setItem('nd_ai_chat_threads', payload);
-            const flatHistory = aiChatThreads.flatMap(t => (t.messages || []));
-            localStorage.setItem('nd_ai_chat_history', JSON.stringify(flatHistory));
-        } catch (e) {
-            console.error('[AI Chat] localStorage save failed (storage full?)', e);
-            if (typeof customAlert === 'function') {
-                customAlert('Could not save chat history. Storage may be full — try deleting old threads.');
-            }
-            return;
-        }
-
-        if (window.NdCloudSync && typeof window.NdCloudSync.pushKeyToCloud === 'function') {
-            window.NdCloudSync.pushKeyToCloud('nd_ai_chat_threads').catch(err =>
-                console.error('[AI Chat] Cloud push failed', err)
-            );
-        }
+        window.__adminAiLocalSaveUntil = Date.now() + 2500;
+        persistAiThreads(true);
         renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
     }
 
@@ -1769,8 +1831,9 @@ PAYOUT PURCHASES:
         const active = aiChatThreads.find(x => x.id === currentChatId);
         if (!active || active.messages.length === 0) {
             let defaultContent = `
+                <p style="margin: 0 0 12px 0; color: #475569; line-height: 1.5;">Hello! I'm your store assistant. Ask about sales, stock, debtors, requests, or send a photo of a receipt.</p>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">Suggested Questions:</div>
+                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">Suggested questions:</div>
                     <button class="ai-suggested-btn" onclick="window._sendAiSuggested('How many people are owing me?')" style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; text-align: left; cursor: pointer; color: #334155; font-size: 0.9rem; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">1. How many people are owing me?</button>
                     <button class="ai-suggested-btn" onclick="window._sendAiSuggested('Do I have any pending requests?')" style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; text-align: left; cursor: pointer; color: #334155; font-size: 0.9rem; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">2. Do I have any pending requests?</button>
                     <button class="ai-suggested-btn" onclick="window._sendAiSuggested('How many things have I sold today?')" style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; text-align: left; cursor: pointer; color: #334155; font-size: 0.9rem; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">3. How many things have I sold today?</button>
@@ -2204,7 +2267,7 @@ PAYOUT PURCHASES:
         if (threadToDeleteId) {
             aiChatThreads = aiChatThreads.filter(t => t.id !== threadToDeleteId);
             if (currentChatId === threadToDeleteId) {
-                currentChatId = aiChatThreads.length ? aiChatThreads[0].id : null;
+                currentChatId = pickBestThreadId();
                 if (!currentChatId) createNewThread();
                 else switchThread(currentChatId);
             } else {
@@ -2259,41 +2322,20 @@ PAYOUT PURCHASES:
         });
     }
 
-    (async function initAdminAiThreads() {
-        if (window.NdCloudSync && typeof window.NdCloudSync.pullKeyFromCloud === 'function') {
-            await window.NdCloudSync.pullKeyFromCloud('nd_ai_chat_threads');
-        }
-        loadChatThreads();
-    })();
+
+    loadChatThreads();
+    // Always start with a new blank chat when opening AI mode
+    createNewThread();
+    if (window.NdCloudSync && typeof window.NdCloudSync.pullKeyFromCloud === 'function') {
+        window.NdCloudSync.pullKeyFromCloud('nd_ai_chat_threads').then(applied => {
+            if (applied) loadChatThreads();
+        });
+    }
 
     window.refreshAdminAiChatFromCloud = function () {
         if (!document.getElementById('aiChatModalOverlay')) return;
         if (window.__adminAiLocalSaveUntil && Date.now() < window.__adminAiLocalSaveUntil) return;
-
-        const input = document.getElementById('aiChatInput');
-        if (input && document.activeElement === input) return;
-
-        const saved = localStorage.getItem('nd_ai_chat_threads');
-        if (!saved) return;
-        if (window.__adminAiLocalSaveUntil && Date.now() < window.__adminAiLocalSaveUntil && saved === window.__adminAiThreadsSnapshot) return;
-
-        try {
-            const incoming = JSON.parse(saved);
-            if (JSON.stringify(incoming) === JSON.stringify(aiChatThreads)) return;
-
-            aiChatThreads = incoming;
-            aiChatThreads = aiChatThreads.filter(t => !(t.title === 'New Chat' && t.messages.length === 0));
-            window.__adminAiThreadsSnapshot = saved;
-
-            if (!aiChatThreads.find(t => t.id === currentChatId) && aiChatThreads.length) {
-                currentChatId = aiChatThreads[0].id;
-            }
-            const sidebarSearch = document.getElementById('aiSidebarSearch');
-            renderSidebar(sidebarSearch ? sidebarSearch.value : '');
-            renderActiveThread(true);
-        } catch (e) {
-            console.warn('[AI Chat] Cloud refresh failed', e);
-        }
+        loadChatThreads();
     };
 }
 
@@ -2322,6 +2364,23 @@ window._openAiImagePreview = function (src) {
         // Only allow close via button
     });
     document.body.appendChild(preview);
+};
+
+// Safe force-close helper (call from console if modal becomes unresponsive)
+window.forceCloseAiChat = function () {
+    try {
+        const overlay = document.getElementById('aiChatModalOverlay');
+        if (overlay) {
+            try { overlay.classList.remove('show'); } catch (e) {}
+            setTimeout(() => { try { overlay.remove(); } catch (e) {} }, 200);
+        }
+        const rename = document.getElementById('aiRenameModal'); if (rename) try { rename.remove(); } catch (e) {}
+        const del = document.getElementById('aiDeleteModal'); if (del) try { del.remove(); } catch (e) {}
+        const crop = document.getElementById('aiCropperOverlay'); if (crop) try { crop.style.display = 'none'; } catch (e) {}
+        console.info('forceCloseAiChat executed');
+    } catch (e) {
+        console.error('forceCloseAiChat failed', e);
+    }
 };
 
 

@@ -1,45 +1,31 @@
+// Connect the Product list directly to the browser's permanent memory (localStorage).
+// If there is no saved data (first time use), it starts as a completely blank slate [].
 let adminProducts = [];
-
-// Persist admin products to localStorage (triggers cloud sync via app_state bridge)
-async function saveProductsToMemory() {
+const savedProducts = localStorage.getItem('nd_products_data');
+if (savedProducts) {
     try {
-        window.__isSupabaseSyncing = true;
-        localStorage.setItem('nd_products_data', JSON.stringify(adminProducts));
-        window.__isSupabaseSyncing = false;
-        if (window.realtimeSync) {
-            window.realtimeSync.syncNow('nd_products_data');
-        }
+        adminProducts = JSON.parse(savedProducts);
     } catch (e) {
-        console.error('Failed to save products to storage:', e);
+        console.error('Failed to parse saved products', e);
+        adminProducts = [];
     }
 }
 
-// Reload adminProducts from synced localStorage (hydrated from Supabase app_state)
-window.reloadAdminProducts = async function() {
+// Helper function to save current products to localStorage
+function saveProductsToMemory() {
+    localStorage.setItem('nd_products_data', JSON.stringify(adminProducts));
+}
+
+// Reload adminProducts from localStorage (callable from any module)
+window.reloadAdminProducts = function() {
     try {
         const saved = localStorage.getItem('nd_products_data');
-        if (saved) {
-            adminProducts = JSON.parse(saved);
-            if (typeof window.renderProductsGlobal === 'function') {
-                window.renderProductsGlobal();
-            }
-        }
-    } catch (e) {
+        adminProducts = saved ? JSON.parse(saved) : [];
+    } catch(e) {
         console.error('Failed to reload admin products', e);
+        adminProducts = [];
     }
 };
-
-function initAdminProductsFromStorage() {
-    window.reloadAdminProducts();
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(initAdminProductsFromStorage, 800);
-    });
-} else {
-    setTimeout(initAdminProductsFromStorage, 800);
-}
 
 // Current sort and filter state
 let adminProductSortMode = 'newest';
@@ -441,7 +427,7 @@ function initAdminProductLogic() {
         if (filtered.length === 0) {
             productList.innerHTML = `
                 <div class="admin-product-empty" style="text-align: center; padding: 40px 20px; background: #fffcf8; border: 2px dashed #edf1f7; border-radius: 16px; margin-top: 20px;">
-                    <div style="width: 80px; height: 80px; background: #f0f4f8; color: #8b5cf6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; box-shadow: 0 4px 15px rgba(27, 38, 59,0.1);">
+                    <div style="width: 80px; height: 80px; background: #f0f4f8; color: #6366f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; box-shadow: 0 4px 15px rgba(27, 38, 59,0.1);">
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="m7.5 4.27 9 5.15"></path>
                             <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
@@ -495,7 +481,14 @@ function initAdminProductLogic() {
                     </div>`;
                     
             const isOutOfStock = window.checkProductOutOfStock && window.checkProductOutOfStock(p.name);
-            const cardBgStyle = isOutOfStock ? 'background-color: #fef2f2; border: 1px solid #fecaca;' : '';
+            const isRunningLow = !isOutOfStock && window.checkProductRunningLow && window.checkProductRunningLow(p.name);
+            
+            let cardBgStyle = '';
+            if (isOutOfStock) {
+                cardBgStyle = 'background-color: #fef2f2; border: 1px solid #fecaca;';
+            } else if (isRunningLow) {
+                cardBgStyle = 'background-color: #fefce8; border: 1px solid #fef08a;';
+            }
             
             const imageHtml = p.imageData ? `<img src="${p.imageData}" class="admin-product-card-img" alt="Product Image" onclick="event.stopPropagation(); if(typeof window.openImageViewer === 'function') window.openImageViewer('${p.imageData}')" style="cursor:zoom-in;">` : `<div class="admin-product-card-img-placeholder"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`;
             return `
@@ -506,6 +499,7 @@ function initAdminProductLogic() {
                             <div class="admin-product-card-name" style="display:flex; align-items:center; gap:8px;">
                                 ${p.name}
                                 ${isOutOfStock ? '<span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.70rem; font-weight: 800; display: inline-block;">OUT OF STOCK</span>' : ''}
+                                ${isRunningLow ? '<span style="background: #eab308; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.70rem; font-weight: 800; display: inline-block;">RUNNING LOW</span>' : ''}
                                 ${(() => {
                                     const pDate = p.dateAdded ? new Date(p.dateAdded) : null;
                                     const isCurrentMonth = pDate && pDate.getFullYear() === actualYear && pDate.getMonth() === actualMonth;
@@ -1132,41 +1126,43 @@ function initAdminProductLogic() {
             imgInput.click();
         });
 
-        imgInput.addEventListener('change', (e) => {
+        imgInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 400;
-                    const MAX_HEIGHT = 400;
-                    let width = img.width;
-                    let height = img.height;
+            // Show loading state
+            if (imgPlaceholder) {
+                imgPlaceholder.innerHTML = '<div class="spinner" style="width:24px;height:24px;border:3px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;animation:spin 1s linear infinite;"></div><div style="margin-top:10px;color:#64748b;font-size:0.85rem;">Uploading...</div>';
+            }
 
-                    if (width > height) {
-                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                    } else {
-                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                    }
+            const formData = new FormData();
+            formData.append('file', file);
 
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                    
+            try {
+                const response = await fetch(`${window.API_BASE}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const dataUrl = data.url;
                     if (imgPreview) imgPreview.src = dataUrl;
                     if (imgPlaceholder) imgPlaceholder.style.display = 'none';
                     if (imgPreviewCont) imgPreviewCont.style.display = 'block';
                     if (imgDataHidden) imgDataHidden.value = dataUrl;
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
+                } else {
+                    if (typeof customAlert !== 'undefined') customAlert(data.error || 'Upload failed');
+                    else alert('Upload failed');
+                    if (imgPlaceholder) imgPlaceholder.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><div class="admin-image-placeholder-text">Click to upload image</div><div class="admin-image-placeholder-sub">Max file size: 5MB</div>';
+                }
+            } catch (err) {
+                console.error('Upload Error:', err);
+                if (typeof customAlert !== 'undefined') customAlert('Network error during upload');
+                else alert('Network error during upload');
+                if (imgPlaceholder) imgPlaceholder.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><div class="admin-image-placeholder-text">Click to upload image</div><div class="admin-image-placeholder-sub">Max file size: 5MB</div>';
+            }
         });
 
         if (imgReplaceBtn) {
@@ -1341,7 +1337,7 @@ function initAdminProductLogic() {
 
         if (typeDefaultBtn && typeSpecialBtn && typeCustomBtn) {
             typeDefaultBtn.style.background = 'white';
-            typeDefaultBtn.style.color = '#8b5cf6';
+            typeDefaultBtn.style.color = '#6366f1';
             typeDefaultBtn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
             
             typeSpecialBtn.style.background = 'transparent';
@@ -1881,7 +1877,7 @@ function initAdminProductLogic() {
         resetAdminTypeButtons();
         if (btn) {
             btn.style.background = 'white';
-            btn.style.color = '#8b5cf6';
+            btn.style.color = '#6366f1';
             btn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
         }
         const form = document.getElementById(formId);
@@ -2581,15 +2577,15 @@ window.generateProductPDF = function (btn) {
         let priceVal = 0;
         if (p.isSpecial) {
             priceVal = (p.packTypes && p.packTypes.bag && p.packTypes.bag.price) ? parseFloat(p.packTypes.bag.price) : 0;
-            displayPrice = '<span style="font-size: 13px; color: #888; font-weight: 500; margin-right: 4px;">From</span><span style="font-size: 18px; font-weight: 900; color: #8b5cf6;">₦' + Math.round(priceVal).toLocaleString() + '</span> <span style="font-size: 13px; color: #888; font-weight: 500; margin-left: 4px;">' + ((p.packTypes && p.packTypes.bag && p.packTypes.bag.title) ? p.packTypes.bag.title : 'Container 1') + '</span>';
+            displayPrice = '<span style="font-size: 13px; color: #888; font-weight: 500; margin-right: 4px;">From</span><span style="font-size: 18px; font-weight: 900; color: #6366f1;">₦' + Math.round(priceVal).toLocaleString() + '</span> <span style="font-size: 13px; color: #888; font-weight: 500; margin-left: 4px;">' + ((p.packTypes && p.packTypes.bag && p.packTypes.bag.title) ? p.packTypes.bag.title : 'Container 1') + '</span>';
         } else if (p.isCustom) {
             displayPrice = '<span style="font-size: 15px; font-weight: 800; color: #64748b;">Custom Pricing</span>';
         } else {
             priceVal = parseFloat(p.price) || 0;
-            displayPrice = '<span style="font-size: 18px; font-weight: 900; color: #8b5cf6;">₦' + Math.round(priceVal).toLocaleString() + '</span> <span style="font-size: 13px; color: #888; font-weight: 500; margin-left: 4px;">' + (p.unit || '') + '</span>';
+            displayPrice = '<span style="font-size: 18px; font-weight: 900; color: #6366f1;">₦' + Math.round(priceVal).toLocaleString() + '</span> <span style="font-size: 13px; color: #888; font-weight: 500; margin-left: 4px;">' + (p.unit || '') + '</span>';
         }
 
-        const payout = priceVal * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100);
+        const payout = priceVal * 0.02;
         const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
         cardsHtml += `
             <div style="break-inside: avoid; border: 1px solid #edf1f7; border-radius: 12px; padding: 16px; background: #fffcf8; box-shadow: 0 4px 6px rgba(27, 38, 59,0.04); margin-bottom: 20px;">
@@ -2598,7 +2594,7 @@ window.generateProductPDF = function (btn) {
                     <div>
                         ${displayPrice}
                     </div>
-                    <div style="background: #8b5cf6; color: #ffffff; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; box-shadow: 0 2px 4px rgba(27, 38, 59,0.2);">
+                    <div style="background: #6366f1; color: #ffffff; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; box-shadow: 0 2px 4px rgba(27, 38, 59,0.2);">
                         +₦${formattedPayout} Reward
                     </div>
                 </div>
@@ -2610,11 +2606,11 @@ window.generateProductPDF = function (btn) {
     // Using CSS columns for a cool magazine-style layout
     printArea.innerHTML = `
         <div style="padding: 50px; font-family: 'Inter', -apple-system, sans-serif; background: #ffffff;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 3px solid #8b5cf6; padding-bottom: 25px;">
-                <div style="color: #8b5cf6; font-weight: 900; font-size: 34px; letter-spacing: -1.5px; text-transform: uppercase; font-family: 'Outfit', sans-serif;">${shopName}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 3px solid #6366f1; padding-bottom: 25px;">
+                <div style="color: #6366f1; font-weight: 900; font-size: 34px; letter-spacing: -1.5px; text-transform: uppercase; font-family: 'Outfit', sans-serif;">${shopName}</div>
                 <div style="text-align: right;">
                     <h2 style="margin: 0; color: #111; font-size: 28px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Product Catalog</h2>
-                    <p style="margin: 6px 0 0 0; color: #666; font-size: 15px; font-weight: 600;">Active Inventory: <strong style="color:#8b5cf6;">${adminProducts.length} Items</strong></p>
+                    <p style="margin: 6px 0 0 0; color: #666; font-size: 15px; font-weight: 600;">Active Inventory: <strong style="color:#6366f1;">${adminProducts.length} Items</strong></p>
                 </div>
             </div>
             
@@ -2652,8 +2648,6 @@ window.generateProductPDF = function (btn) {
         btn.style.pointerEvents = 'auto';
     });
 }
-
-
 
 
 

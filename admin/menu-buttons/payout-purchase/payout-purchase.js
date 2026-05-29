@@ -46,6 +46,9 @@ function closePayoutPurchaseModal() {
             }
         }, 300);
     }
+    if (typeof window.clearAdminModalPersistence === 'function') {
+        window.clearAdminModalPersistence();
+    }
 }
 
 function _initPayoutPurchaseLogic(modal) {
@@ -504,27 +507,29 @@ function _initPayoutPurchaseLogic(modal) {
                     
                     // Auto-fill price from the product's retail price
                     const unitStr = item.unit ? item.unit : '';
-                    if (ppCustomItemPrice) {
-                        const priceVal = (typeof item.price === 'number') ? item.price : 0;
-                        ppCustomItemPrice.value = '₦' + formatCurrency(Number(priceVal)) + (unitStr ? ' ' + unitStr : '');
-                        ppCustomItemPrice.dataset.price = priceVal;
+                    const priceVal = (typeof item.price === 'number') ? item.price : 0;
+                    
+                    // Always update the hidden field's data-price and the static display
+                    if (ppCustomItemPrice) ppCustomItemPrice.dataset.price = priceVal;
+                    const ppStaticDisplay = modal.querySelector('#ppCustomStaticPriceDisplay');
+                    const ppFlexWrap = modal.querySelector('#ppCustomFlexPriceInputWrapper');
+                    const ppFlexInp = modal.querySelector('#ppCustomFlexPriceInput');
+                    if (ppStaticDisplay) {
+                        ppStaticDisplay.textContent = '₦' + formatCurrency(Number(priceVal)) + (unitStr ? ' ' + unitStr : '');
                     }
-                    const priceLabel = modal.querySelector('#lblPpCustomPrice');
-                    if (priceLabel) {
-                        priceLabel.textContent = 'Unit Price (₦)';
-                    }
-                    const qtyLabel = modal.querySelector('#lblPpCustomQty');
-                    if (qtyLabel) {
-                        qtyLabel.textContent = 'Quantity';
-                    }
-                    const toggleWrapper = modal.querySelector('#ppCustomFlexPriceToggleWrapper');
+                    
+                    const flexContainer = modal.querySelector('#ppCustomFlexibleContainer');
+                    const flexToggle = modal.querySelector('#ppCustomFlexiblePriceToggle');
                     if (item.allowUserFlexiblePricing) {
-                        if (toggleWrapper) toggleWrapper.style.display = 'flex';
+                        // Show toggle, reset it to OFF state
+                        if (flexContainer) flexContainer.style.display = 'block';
+                        if (flexToggle) { flexToggle.checked = false; flexToggle.dispatchEvent(new Event('change')); }
                     } else {
-                        if (toggleWrapper) toggleWrapper.style.display = 'none';
+                        // Hide toggle, always show static price
+                        if (flexContainer) flexContainer.style.display = 'none';
+                        if (ppFlexWrap) ppFlexWrap.style.display = 'none';
+                        if (ppStaticDisplay) ppStaticDisplay.style.display = 'flex';
                     }
-                    const toggleCb = modal.querySelector('#ppCustomFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
     
 
                     ppCustomDropdownWrapper.classList.remove('open');
@@ -843,7 +848,14 @@ function _initPayoutPurchaseLogic(modal) {
     if (ppCustomItemForm) ppCustomItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = ppCustomItemSelect.value;
-        const price = ppCustomItemPrice ? ppCustomItemPrice.dataset.price : '';
+        const ppFlexToggle = modal.querySelector('#ppCustomFlexiblePriceToggle');
+        const ppCustomFlexInput = modal.querySelector('#ppCustomFlexPriceInput');
+        let price;
+        if (ppFlexToggle && ppFlexToggle.checked && ppCustomFlexInput) {
+            price = parseFloat(ppCustomFlexInput.value) || 0;
+        } else {
+            price = Number(ppCustomItemPrice ? ppCustomItemPrice.dataset.price : 0);
+        }
         const qty = modal.querySelector('#ppCustomItemQty').value;
         if (itemName && price && qty) {
             const requiredQty = parseFloat(qty);
@@ -1037,15 +1049,16 @@ function _updatePPBasketUI() {
     let total = 0;
 
     ppBasketItems.forEach((item, index) => {
-        const itemTotal = item.isFlexible ? item.price : item.qty * item.price;
+        const itemTotal = item.qty * item.price;
         total += itemTotal;
 
         const itemDiv = document.createElement('div');
         itemDiv.className = 'basket-item';
+        const flexLabel = item.isFlexible ? ' <span style="color:#c026d3;font-size:0.7rem;">(Flex)</span>' : '';
         itemDiv.innerHTML = `
             <div class="basket-item-info">
                 <span class="basket-item-name">${item.name}</span>
-                <span class="basket-item-meta">${item.isFlexible ? 'Flexible' : item.qty + ' × ₦' + _formatPPCurrency(item.price)}</span>
+                <span class="basket-item-meta">${item.qty} × ₦${_formatPPCurrency(item.price)}${flexLabel}</span>
             </div>
             <span class="basket-item-total">₦${_formatPPCurrency(itemTotal)}</span>
             <button class="remove-basket-item" data-index="${index}">
@@ -1089,7 +1102,7 @@ function _submitPayoutPurchase() {
     // Calculate total
     let total = 0;
     ppBasketItems.forEach(item => {
-        total += item.isFlexible ? item.price : item.qty * item.price;
+        total += item.qty * item.price;
     });
 
     if (total <= 0) {
@@ -1120,7 +1133,7 @@ function _submitPayoutPurchase() {
 
     // Calculate the payout deduction per item, proportionally
     ppBasketItems.forEach(item => {
-        const itemTotal = item.isFlexible ? item.price : item.qty * item.price;
+        const itemTotal = item.qty * item.price;
 
         const newSale = {
             id: `PP-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
@@ -1223,8 +1236,8 @@ function _resetPayoutPurchaseForm(modal) {
     // Reset prices
     const ppExistingPrice = modal.querySelector('#ppExistingItemPrice');
     if (ppExistingPrice) { ppExistingPrice.value = ''; ppExistingPrice.dataset.price = ''; }
-    const ppCustomItemPrice = modal.querySelector('#ppCustomItemPrice');
-    if (ppCustomItemPrice) { ppCustomItemPrice.value = ''; ppCustomItemPrice.dataset.price = ''; }
+    const ppCustomItemPriceReset = modal.querySelector('#ppCustomItemPrice');
+    if (ppCustomItemPriceReset) { ppCustomItemPriceReset.value = ''; ppCustomItemPriceReset.dataset.price = ''; }
     const ppFlexItemPrice = modal.querySelector('#ppFlexItemPrice');
     if (ppFlexItemPrice) ppFlexItemPrice.value = '';
 

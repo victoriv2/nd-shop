@@ -444,7 +444,10 @@ function initCreditAiChatLogic() {
         let activeThread = creditAiChatThreads.find(t => t.id === currentCreditChatId);
         if (!activeThread) {
             if (creditAiChatThreads.length === 0) createNewThread();
-            else switchThread(creditAiChatThreads[0].id);
+            else {
+                const bestId = pickBestCreditThreadId();
+                if (bestId) switchThread(bestId);
+            }
             activeThread = creditAiChatThreads.find(t => t.id === currentCreditChatId);
         }
         if (!activeThread) return;
@@ -1443,43 +1446,51 @@ ${JSON.stringify(userRequests)}
         });
     }
 
+    function pickBestCreditThreadId() {
+        if (!creditAiChatThreads.length) return null;
+        const sorted = [...creditAiChatThreads].sort((a, b) => (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0));
+        const withMessages = sorted.find(t => (t.messages || []).length > 0);
+        return (withMessages || sorted[0]).id;
+    }
+
     function loadChatThreads() {
+        creditAiChatThreads = [];
         const saved = localStorage.getItem('nd_user_ai_chat_threads');
         if (saved) {
             try {
-                creditAiChatThreads = JSON.parse(saved);
-                if (!Array.isArray(creditAiChatThreads)) creditAiChatThreads = [];
-            } catch (e) {
-                console.error('[Credit AI] Corrupt thread data', e);
-                creditAiChatThreads = [];
-            }
-        } else {
-            // Migrate legacy flat chat history if exists
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) creditAiChatThreads = parsed;
+            } catch (e) { /* ignore */ }
+        }
+        if (!creditAiChatThreads.length) {
             const legacy = localStorage.getItem('nd_ai_chat_history');
             if (legacy) {
-                const parsed = JSON.parse(legacy);
-                if (parsed.length) {
-                    creditAiChatThreads.push({
-                        id: 'thread-' + Date.now(),
-                        title: 'Legacy Chat',
-                        isPinned: false,
-                        updatedAt: Date.now(),
-                        messages: parsed
-                    });
-                }
+                try {
+                    const parsed = JSON.parse(legacy);
+                    if (Array.isArray(parsed) && parsed.length) {
+                        creditAiChatThreads.push({
+                            id: 'thread-' + Date.now(),
+                            title: 'Legacy Chat',
+                            isPinned: false,
+                            updatedAt: Date.now(),
+                            messages: parsed
+                        });
+                    }
+                } catch (e) { /* ignore */ }
             }
         }
-
-        creditAiChatThreads = creditAiChatThreads.filter(t => !(t.title === 'New Chat' && t.messages.length === 0));
-
-        if (creditAiChatThreads.length === 0) {
-            createNewThread();
-        } else if (!currentCreditChatId || !creditAiChatThreads.find(t => t.id === currentCreditChatId)) {
-            switchThread(creditAiChatThreads[0].id);
+        creditAiChatThreads = creditAiChatThreads.filter(t => !(t.title === 'New Chat' && !(t.messages || []).length));
+        const bestId = pickBestCreditThreadId();
+        if (!bestId) {
+            const t = { id: 'thread-' + Date.now(), title: 'New Chat', isPinned: false, updatedAt: Date.now(), messages: [] };
+            creditAiChatThreads = [t];
+            currentCreditChatId = t.id;
+            persistCreditAiThreads(false);
         } else {
-            renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
-            renderActiveThread(true);
+            currentCreditChatId = bestId;
         }
+        renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
+        renderActiveThread(false);
     }
 
     function createNewThread() {
@@ -1491,8 +1502,22 @@ ${JSON.stringify(userRequests)}
             messages: []
         };
         creditAiChatThreads.unshift(t);
-        saveActiveHistory();
+        currentCreditChatId = t.id;
+        persistCreditAiThreads(true);
         switchThread(t.id);
+    }
+
+    function persistCreditAiThreads(pushCloud) {
+        const payload = JSON.stringify(creditAiChatThreads);
+        window.__userAiThreadsSnapshot = payload;
+        try {
+            localStorage.setItem('nd_user_ai_chat_threads', payload);
+            localStorage.setItem('nd_ai_chat_history', JSON.stringify(creditAiChatThreads.flatMap(t => (t.messages || []))));
+        } catch (e) { return; }
+        const hasContent = creditAiChatThreads.some(t => (t.messages || []).length > 0);
+        if (pushCloud && hasContent && window.NdCloudSync) {
+            window.NdCloudSync.pushKeyToCloud('nd_user_ai_chat_threads');
+        }
     }
 
     function switchThread(id) {
@@ -1516,24 +1541,8 @@ ${JSON.stringify(userRequests)}
     }
 
     function saveActiveHistory() {
-        if (!Array.isArray(creditAiChatThreads)) creditAiChatThreads = [];
-
-        window.__userAiLocalSaveUntil = Date.now() + 3000;
-        const payload = JSON.stringify(creditAiChatThreads);
-        window.__userAiThreadsSnapshot = payload;
-
-        try {
-            localStorage.setItem('nd_user_ai_chat_threads', payload);
-            const flatHistory = creditAiChatThreads.flatMap(t => (t.messages || []));
-            localStorage.setItem('nd_ai_chat_history', JSON.stringify(flatHistory));
-        } catch (e) {
-            console.error('[Credit AI] localStorage save failed', e);
-            return;
-        }
-
-        if (window.NdCloudSync && typeof window.NdCloudSync.pushKeyToCloud === 'function') {
-            window.NdCloudSync.pushKeyToCloud('nd_user_ai_chat_threads');
-        }
+        window.__userAiLocalSaveUntil = Date.now() + 2500;
+        persistCreditAiThreads(true);
         renderSidebar(document.getElementById('aiSidebarSearch') ? document.getElementById('aiSidebarSearch').value : '');
     }
 
@@ -1986,7 +1995,7 @@ ${JSON.stringify(userRequests)}
         if (threadToDeleteId) {
             creditAiChatThreads = creditAiChatThreads.filter(t => t.id !== threadToDeleteId);
             if (currentCreditChatId === threadToDeleteId) {
-                currentCreditChatId = creditAiChatThreads.length ? creditAiChatThreads[0].id : null;
+                currentCreditChatId = pickBestCreditThreadId();
                 if (!currentCreditChatId) createNewThread();
                 else switchThread(currentCreditChatId);
             } else {
@@ -2041,30 +2050,17 @@ ${JSON.stringify(userRequests)}
         });
     }
 
-    (async function initCreditAiThreads() {
-        if (window.NdCloudSync && typeof window.NdCloudSync.pullKeyFromCloud === 'function') {
-            await window.NdCloudSync.pullKeyFromCloud('nd_user_ai_chat_threads');
-        }
-        loadChatThreads();
-    })();
+    loadChatThreads();
+    if (window.NdCloudSync && typeof window.NdCloudSync.pullKeyFromCloud === 'function') {
+        window.NdCloudSync.pullKeyFromCloud('nd_user_ai_chat_threads').then(applied => {
+            if (applied) loadChatThreads();
+        });
+    }
 
     window.refreshUserAiChatFromCloud = function () {
         if (!document.getElementById('aiChatModalOverlay')) return;
         if (window.__userAiLocalSaveUntil && Date.now() < window.__userAiLocalSaveUntil) return;
-        const saved = localStorage.getItem('nd_user_ai_chat_threads');
-        if (!saved) return;
-        try {
-            const incoming = JSON.parse(saved);
-            if (JSON.stringify(incoming) === JSON.stringify(creditAiChatThreads)) return;
-            creditAiChatThreads = incoming.filter(t => !(t.title === 'New Chat' && t.messages.length === 0));
-            if (!creditAiChatThreads.find(t => t.id === currentCreditChatId) && creditAiChatThreads.length) {
-                currentCreditChatId = creditAiChatThreads[0].id;
-            }
-            renderSidebar(document.getElementById('aiSidebarSearch')?.value || '');
-            renderActiveThread(true);
-        } catch (e) {
-            console.warn('[Credit AI] Cloud refresh failed', e);
-        }
+        loadChatThreads();
     };
 }
 

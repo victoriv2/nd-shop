@@ -150,7 +150,7 @@ function initProgressLogic() {
 
                         if (sMonth === targetShortMonth && sYear === targetYearStr) {
                             const qty = (sale.qty !== undefined && sale.qty !== null && sale.qty !== '') ? Number(sale.qty) : 1;
-                            const price = (sale.price !== undefined && sale.price !== null && sale.price !== '') ? Number(sale.price) : (Number(sale.unitPrice || 0) * Number(sale.qty || 1));
+                            const price = (sale.price !== undefined && sale.price !== null && sale.price !== '') ? Number(sale.price) : (sale.isFlexible ? Number(sale.unitPrice || 0) : (Number(sale.unitPrice || 0) * Number(sale.qty || 1)));
 
                             entriesCount++;
                             totalItems += qty;

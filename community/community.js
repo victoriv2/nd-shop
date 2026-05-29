@@ -346,13 +346,6 @@ function initCommunityLogic() {
             }
         });
     }
-
-    if (window.realtimeSync) {
-        window.realtimeSync.on('nd_comm_messages', () => {
-            const page = document.getElementById('communityPage');
-            if (page && page.classList.contains('show')) renderCommMessages();
-        });
-    }
 }
 
 // --- File Upload (stage in input, don't send immediately) ---
@@ -510,11 +503,7 @@ function _handleCommSend(input) {
     document.getElementById('commMentionsMenu').classList.remove('show');
 }
 
-async function sendCommMessage(content, type, mediaUrl = null, extraData = null) {
-    if (mediaUrl && mediaUrl.startsWith('data:') && window.uploadBase64ToSupabase) {
-        mediaUrl = await window.uploadBase64ToSupabase(mediaUrl, 'community');
-    }
-
+function sendCommMessage(content, type, mediaUrl = null, extraData = null) {
     const messages = JSON.parse(localStorage.getItem('nd_comm_messages') || '[]');
     const myId = _getMyId();
     const myName = _getMyName();
@@ -524,13 +513,13 @@ async function sendCommMessage(content, type, mediaUrl = null, extraData = null)
         senderId: myId,
         senderName: myName,
         content: content,
-        type: type,
+        type: type, // 'text', 'image', 'video', 'audio', 'document', 'poll', 'announcement', 'system'
         mediaUrl: mediaUrl,
-        extraData: extraData,
+        extraData: extraData, // { duration, options, votes, fileType }
         timestamp: new Date().toISOString(),
         isPinned: false,
-        deletedFor: [],
-        replyTo: commReplyingTo
+        deletedFor: [], // e.g. ['userId'] or 'all'
+        replyTo: commReplyingTo // Link to replied message ID
     };
 
     messages.push(newMsg);
@@ -539,22 +528,8 @@ async function sendCommMessage(content, type, mediaUrl = null, extraData = null)
     // Clear reply state
     _cancelCommReply();
     
-    // Immediately render for instant feedback
     renderCommMessages();
     scrollToCommBottom();
-
-    // Push to Supabase backend if available
-    if (window.supabaseClient) {
-        try {
-            await window.supabaseClient.from('community_messages').insert({
-                user_id: myId,
-                message: content || '[Media/System Message]',
-                raw_data: newMsg
-            });
-        } catch(e) {
-            console.error('Supabase message sync failed:', e);
-        }
-    }
 }
 
 // Send a system notification message (non-deletable, centered)
@@ -628,7 +603,7 @@ function _startCommRecording() {
             const pauseBtn = document.getElementById('commRecPause');
             if (pauseBtn) {
                 pauseBtn.textContent = 'Pause';
-                pauseBtn.style.color = '#8b5cf6';
+                pauseBtn.style.color = '#6366f1';
             }
             const indicator = document.getElementById('commRecIndicator');
             if (indicator) {
@@ -670,7 +645,7 @@ function _pauseCommRecording() {
         clearInterval(commRecordingTimer);
         if (pauseBtn) {
             pauseBtn.textContent = 'Resume';
-            pauseBtn.style.color = '#8b5cf6';
+            pauseBtn.style.color = '#6366f1';
         }
         if (indicator) {
             indicator.style.animation = 'none';
@@ -681,7 +656,7 @@ function _pauseCommRecording() {
         commMediaRecorder.resume();
         if (pauseBtn) {
             pauseBtn.textContent = 'Pause';
-            pauseBtn.style.color = '#8b5cf6';
+            pauseBtn.style.color = '#6366f1';
         }
         if (indicator) {
             indicator.style.animation = '';
@@ -822,7 +797,7 @@ function renderCommMessages(searchQuery = '') {
         // --- System notification (centered) ---
         if (msg.type === 'system') {
             const iconType = msg.extraData?.iconType || 'pin';
-            const iconSvg = _svgIcons[iconType] ? _svgIcons[iconType](13, '#8b5cf6') : _svgIcons.pin(13, '#8b5cf6');
+            const iconSvg = _svgIcons[iconType] ? _svgIcons[iconType](13, '#6366f1') : _svgIcons.pin(13, '#6366f1');
             html += `
                 <div class="comm-system-notification" data-id="${msg.id}">
                     <div class="comm-system-bubble">
@@ -895,7 +870,7 @@ function renderCommMessages(searchQuery = '') {
                 return `
                     <div class="comm-poll-opt ${iVoted ? 'voted' : ''}" onclick="event.stopPropagation(); _votePoll('${msg.id}', ${o.index})">
                         <div class="comm-poll-fill" style="width:${pct}%; background:${iVoted ? 'rgba(27,38,59,0.35)' : 'rgba(27,38,59,0.12)'};"></div>
-                        <span class="comm-poll-opt-text">${iVoted ? '<span class="check-icon">' + _svgIcons.check(12,'#8b5cf6') + '</span> ' : ''}${escapeHtml(o.text)}</span>
+                        <span class="comm-poll-opt-text">${iVoted ? '<span class="check-icon">' + _svgIcons.check(12,'#6366f1') + '</span> ' : ''}${escapeHtml(o.text)}</span>
                         <span class="comm-poll-opt-votes">${pct}% (${o.votes})</span>
                     </div>
                 `;
@@ -962,8 +937,8 @@ function renderCommMessages(searchQuery = '') {
                 const replyText = repliedMsg.type === 'text' ? repliedMsg.content : `[${repliedMsg.type}]`;
                 const replySender = repliedMsg.senderId === 'ADMIN' ? 'Admin' : repliedMsg.senderName;
                 replyHtml = `
-                    <div class="comm-reply-preview" onclick="const el = document.querySelector('.comm-row[data-id=\\'${repliedMsg.id}\\']'); if(el) el.scrollIntoView({behavior:'smooth'});" style="background:${isMe ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)'}; border-left:3px solid ${isMe ? 'rgba(255,255,255,0.5)' : '#8b5cf6'}; padding:6px 10px; margin-bottom:6px; border-radius:4px; font-size:0.8rem; cursor:pointer;">
-                        <strong style="color:${isMe ? '#ffffff' : '#8b5cf6'};">${escapeHtml(replySender)}</strong><br>
+                    <div class="comm-reply-preview" onclick="const el = document.querySelector('.comm-row[data-id=\\'${repliedMsg.id}\\']'); if(el) el.scrollIntoView({behavior:'smooth'});" style="background:${isMe ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)'}; border-left:3px solid ${isMe ? 'rgba(255,255,255,0.5)' : '#6366f1'}; padding:6px 10px; margin-bottom:6px; border-radius:4px; font-size:0.8rem; cursor:pointer;">
+                        <strong style="color:${isMe ? '#ffffff' : '#6366f1'};">${escapeHtml(replySender)}</strong><br>
                         <span style="color:${isMe ? 'rgba(255,255,255,0.8)' : '#64748b'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; max-width:100%;">${escapeHtml(replyText)}</span>
                     </div>
                 `;
@@ -983,7 +958,7 @@ function renderCommMessages(searchQuery = '') {
                 <div class="comm-sender-name">${senderName}</div>
                 <div class="comm-bubble-wrapper" style="position:relative; display:flex; align-items:center; gap:4px; flex-direction:${isMe ? 'row-reverse' : 'row'}; cursor:pointer; max-width: 100%; min-width: 0; box-sizing: border-box;" onclick="window._showCommContextMenu(event, this)">
                     <div class="comm-bubble" style="min-width: 0; max-width: ${bubbleMaxWidth}; overflow: hidden; word-wrap: break-word; overflow-wrap: break-word; box-sizing: border-box;">
-                        ${msg.isPinned ? `<div class="comm-pin-badge">${_svgIcons.pin(11,'#8b5cf6')} Pinned</div>` : ''}
+                        ${msg.isPinned ? `<div class="comm-pin-badge">${_svgIcons.pin(11,'#6366f1')} Pinned</div>` : ''}
                         ${replyHtml}
                         ${contentHtml}
                         <div class="comm-meta">${msg.isEdited ? '<span style="font-style:italic; opacity:0.7; margin-right:4px;">edited</span>' : ''}<span>${time}</span></div>
@@ -1012,7 +987,7 @@ function _renderCommPinned(messages) {
         panel.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; width:100%;" onclick="const el = document.querySelector('.comm-row[data-id=\\'${lastPinned.id}\\']'); if(el) el.scrollIntoView({behavior:'smooth'});">
                 <div style="display:flex; flex-direction:column;">
-                    <span class="comm-pinned-label">${_svgIcons.pin(10,'#8b5cf6')} Pinned Message</span>
+                    <span class="comm-pinned-label">${_svgIcons.pin(10,'#6366f1')} Pinned Message</span>
                     <span class="comm-pinned-preview">${escapeHtml(preview)}</span>
                 </div>
             </div>
@@ -1421,7 +1396,7 @@ window.renderCommUserManage = function() {
         return `
             <div class="comm-user-item">
                 <span style="font-weight:600; color:#333;">${escapeHtml(u.name)} <small style="color:#888; font-weight:normal;">(ID: ${u.id})</small></span>
-                <button onclick="window.toggleUserMute('${u.id}')" style="padding:6px 12px; border-radius:8px; border:none; font-weight:700; cursor:pointer; background:${isBanned ? '#edf1f7' : '#fee2e2'}; color:${isBanned ? '#8b5cf6' : '#ef4444'};">
+                <button onclick="window.toggleUserMute('${u.id}')" style="padding:6px 12px; border-radius:8px; border:none; font-weight:700; cursor:pointer; background:${isBanned ? '#edf1f7' : '#fee2e2'}; color:${isBanned ? '#6366f1' : '#ef4444'};">
                     ${isBanned ? 'Unmute' : 'Mute'}
                 </button>
             </div>
@@ -1517,7 +1492,7 @@ window._openCommVideoPlayer = function(src) {
             <div class="cfv-skip-indicator" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:1.2rem; font-weight:700; display:none; pointer-events:none; background:rgba(0,0,0,0.5); padding:8px 18px; border-radius:10px;"></div>
         </div>
         <div class="cfv-controls" style="width:100%; padding:12px 16px; background:rgba(0,0,0,0.7); display:flex; flex-direction:column; gap:8px;">
-            <input type="range" class="cfv-slider" min="0" max="100" value="0" step="0.1" style="width:100%; accent-color:#8b5cf6; height:4px; cursor:pointer;">
+            <input type="range" class="cfv-slider" min="0" max="100" value="0" step="0.1" style="width:100%; accent-color:#6366f1; height:4px; cursor:pointer;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                 <div style="display:flex; align-items:center; gap:12px;">
                     <button class="cfv-play-btn" style="background:none; border:none; color:white; cursor:pointer; display:flex; align-items:center;">
@@ -1617,7 +1592,6 @@ window._openCommVideoPlayer = function(src) {
 
     video.play().then(() => { playBtn.innerHTML = pauseIcon; }).catch(() => {});
 };
-
 
 
 

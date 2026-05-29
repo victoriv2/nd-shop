@@ -35,39 +35,16 @@ window.loadProductTab = function() {
                 const searchWrapper = document.getElementById('searchWrapper');
                 const filterBtn = document.getElementById('filterBtn');
 
-                // Function to get current products — prefer cloud-synced localStorage (full structure)
-                async function getProductsFromMemory() {
+                // Function to get current products from memory (Shared with Admin)
+                function getProductsFromMemory() {
                     const saved = localStorage.getItem('nd_products_data');
                     if (saved) {
                         try {
-                            const products = JSON.parse(saved);
-                            if (Array.isArray(products) && products.length > 0) {
-                                return products;
-                            }
+                            return JSON.parse(saved);
                         } catch (e) {
                             console.error('Failed to parse products', e);
-                        }
-                    }
-
-                    if (window.supabaseClient) {
-                        const { data, error } = await window.supabaseClient.from('products').select('*');
-                        if (error) {
-                            console.error('Error fetching products:', error);
                             return [];
                         }
-                        return data.map(p => ({
-                            ...p,
-                            isCustom: p.is_custom,
-                            isSpecial: p.is_special,
-                            isFlexible: p.is_flexible,
-                            isNewStock: p.is_new_stock,
-                            isOldStock: p.is_old_stock,
-                            isDeleted: p.is_deleted,
-                            isHidden: p.is_hidden,
-                            imageData: p.image_data,
-                            payoutRate: p.payout_rate,
-                            dateAdded: p.created_at
-                        }));
                     }
                     return [];
                 }
@@ -76,10 +53,10 @@ window.loadProductTab = function() {
                 let lastRenderedProductsHtml = '';
 
                 // Creative Rendering Function
-                async function renderDynamicProducts(filterText = '') {
+                function renderDynamicProducts(filterText = '') {
                     if (!dynamicListContainer) return;
 
-                    const products = await getProductsFromMemory();
+                    const products = getProductsFromMemory();
                     let displayList = [];
                     let renderedHTML = '';
 
@@ -152,7 +129,7 @@ window.loadProductTab = function() {
                         renderedHTML = `
                             <div class="empty-product-state" style="padding: 60px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                                 <div class="empty-icon-wrapper" style="width: 100px; height: 100px; background: #f0f4f8; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: 0 10px 25px rgba(27, 38, 59,0.1);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="m7.5 4.27 9 5.15"></path>
                                         <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
                                         <path d="m3.3 7 8.7 5 8.7-5"></path>
@@ -175,7 +152,11 @@ window.loadProductTab = function() {
                             const currentRate = item.payoutRate !== undefined ? parseFloat(item.payoutRate) : globalPayoutRate;
                             let payoutHTML = '';
                             if (item.rawProduct && item.rawProduct.isCustom) {
-                                payoutHTML = '';
+                                payoutHTML = `
+                                        <div class="product-info-right" style="opacity:0.45; padding: 2px;">
+                                            <div class="product-payout-desc" style="color:#94a3b8;background:transparent;">Disabled</div>
+                                        </div>
+                                `;
                             } else if (typeof item.price === 'number') {
                                 const payout = item.price * (currentRate / 100);
                                 const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
@@ -184,11 +165,18 @@ window.loadProductTab = function() {
                                             <div class="product-payout-amount">+\u20a6${formattedPayout}</div>
                                             <div class="product-payout-desc">${currentRate}%</div>
                                         </div>
-                                ` : '';
+                                ` : `
+                                        <div class="product-info-right" style="opacity:0.45; padding: 2px;">
+                                            <div class="product-payout-desc" style="color:#94a3b8;background:transparent;">Disabled</div>
+                                        </div>
+                                `;
                             } else {
-                                payoutHTML = '';
+                                payoutHTML = `
+                                    <div class="product-info-right">
+                                        <div class="product-payout-desc" style="color:#6366f1;background:#e2e8f0;font-weight:700;">Variable</div>
+                                    </div>
+                                `;
                             }
-
 
                             const imageHtml = item.imageData ? 
                                 `<img src="${item.imageData}" alt="${item.name}" onclick="event.stopPropagation(); if(typeof window.openImageViewer === 'function') window.openImageViewer('${item.imageData}')" style="cursor:zoom-in;">` : 
@@ -329,7 +317,6 @@ window.loadProductTab = function() {
 document.addEventListener('DOMContentLoaded', () => {
     window.loadProductTab();
 });
-
 
 
 

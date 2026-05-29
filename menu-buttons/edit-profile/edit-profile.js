@@ -205,46 +205,80 @@ function initEditProfileLogic() {
             // Creative logic
             saveBtn.textContent = 'Saving...';
             saveBtn.style.opacity = '0.7';
-            setTimeout(() => {
+
+            setTimeout(async () => {
                 if (window.loggedInUser) {
-                    window.loggedInUser.firstName = newFirst;
-                    window.loggedInUser.lastName = newLast;
-                    window.loggedInUser.address = newAddress;
-                    window.loggedInUser.state = newState;
-                    window.loggedInUser.lga = newLGA;
-                    window.loggedInUser.name = `${newFirst} ${newLast}`.trim();
+                    try {
+                        const payload = {
+                            id: window.loggedInUser.id,
+                            firstName: newFirst,
+                            lastName: newLast,
+                            address: newAddress,
+                            state: newState,
+                            lga: newLGA,
+                            name: `${newFirst} ${newLast}`.trim()
+                        };
 
-                    // Update localStorage
-                    localStorage.setItem('nd_logged_in_user', JSON.stringify(window.loggedInUser));
+                        const response = await fetch(`${window.API_BASE}/api/update-user`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
 
-                    // Update global users array
-                    const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
-                    const idx = users.findIndex(u => u.id === window.loggedInUser.id);
-                    if (idx !== -1) {
-                        users[idx] = { ...users[idx], ...window.loggedInUser };
-                        localStorage.setItem('nd_users', JSON.stringify(users));
+                        const data = await response.json();
+
+                        if (data.success) {
+                            window.loggedInUser.firstName = newFirst;
+                            window.loggedInUser.lastName = newLast;
+                            window.loggedInUser.address = newAddress;
+                            window.loggedInUser.state = newState;
+                            window.loggedInUser.lga = newLGA;
+                            window.loggedInUser.name = payload.name;
+
+                            // Update localStorage
+                            localStorage.setItem('nd_logged_in_user', JSON.stringify(window.loggedInUser));
+
+                            // Update global users array locally
+                            const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
+                            const idx = users.findIndex(u => u.id === window.loggedInUser.id);
+                            if (idx !== -1) {
+                                users[idx] = { ...users[idx], ...window.loggedInUser };
+                                localStorage.setItem('nd_users', JSON.stringify(users));
+                            }
+
+                            // Dynamically refresh main UI text
+                            const menuName = document.querySelector('.menu-profile-header .profile-name');
+                            const menuAvatar = document.querySelector('.menu-profile-header .profile-avatar');
+                            const payoutGreeting = document.querySelector('.payout-wrapper .payout-text');
+
+                            if (menuName) menuName.textContent = window.loggedInUser.name;
+                            if (menuAvatar) menuAvatar.textContent = newFirst.charAt(0).toUpperCase();
+                            if (payoutGreeting) payoutGreeting.textContent = `Hi, ${newFirst}`;
+
+                            saveBtn.textContent = 'Saved Successfully!';
+                            saveBtn.style.backgroundColor = '#8b5cf6';
+                            saveBtn.style.color = '#fff';
+                            saveBtn.style.opacity = '1';
+                            setTimeout(() => {
+                                saveBtn.textContent = 'Update Information';
+                                saveBtn.style.backgroundColor = '';
+                                saveBtn.style.color = '';
+                                closeModal();
+                            }, 1000);
+                        } else {
+                            throw new Error(data.error || 'Failed to update profile');
+                        }
+                    } catch (err) {
+                        console.error('Profile update error:', err);
+                        saveBtn.textContent = 'Error updating';
+                        saveBtn.style.backgroundColor = '#dc3545';
+                        setTimeout(() => {
+                            saveBtn.textContent = 'Update Information';
+                            saveBtn.style.backgroundColor = '';
+                            saveBtn.style.opacity = '1';
+                        }, 1500);
                     }
-
-                    // Dynamically refresh main UI text
-                    const menuName = document.querySelector('.menu-profile-header .profile-name');
-                    const menuAvatar = document.querySelector('.menu-profile-header .profile-avatar');
-                    const payoutGreeting = document.querySelector('.payout-wrapper .payout-text');
-
-                    if (menuName) menuName.textContent = window.loggedInUser.name;
-                    if (menuAvatar) menuAvatar.textContent = newFirst.charAt(0).toUpperCase();
-                    if (payoutGreeting) payoutGreeting.textContent = `Hi, ${newFirst}`;
                 }
-
-                saveBtn.textContent = 'Saved Successfully!';
-                saveBtn.style.backgroundColor = '#8b5cf6';
-                saveBtn.style.color = '#fff';
-                saveBtn.style.opacity = '1';
-                setTimeout(() => {
-                    saveBtn.textContent = 'Update Information';
-                    saveBtn.style.backgroundColor = '';
-                    saveBtn.style.color = '';
-                    closeModal();
-                }, 1000);
             }, 800);
         });
     }

@@ -45,6 +45,9 @@ function closeAdminSecurity() {
         modal.classList.remove('show');
         setTimeout(() => document.getElementById('modal-container').innerHTML = '', 400);
     }
+    if (typeof window.clearAdminModalPersistence === 'function') {
+        window.clearAdminModalPersistence();
+    }
 }
 
 function switchAsecTab(tabName) {
@@ -203,20 +206,130 @@ function _doSaveLocks() {
 // ========================================
 // Admin Forgot Password Logic
 // ========================================
+
+// State for the reset flow
+window._asecOtpContact = null;
+window._asecOtpMethod = 'email';
+
 function triggerAsecForgotPass(e) {
     if(e) e.preventDefault();
-    const adminId = localStorage.getItem('nd_admin_id') || 'admin@nd.shop';
-    const subtitle = document.getElementById('asecPassVerifySubtitle');
-    if(subtitle) subtitle.textContent = `A 4-digit code has been sent to ${adminId}.`;
-    
-    if (typeof customAlert !== 'undefined') {
-        customAlert(`Verification code sent to ${adminId}`);
-    }
+    const adminId = localStorage.getItem('nd_admin_id') || 'admin@nd-shop.sbs';
 
+    // Show method selection modal first
+    _openAsecMethodModal(adminId);
+}
+
+function _openAsecMethodModal(adminId) {
+    // Build a method selection modal on the fly
+    let overlay = document.getElementById('asecMethodSelectModal');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'asecMethodSelectModal';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200010;display:flex;align-items:center;justify-content:center;';
+        overlay.innerHTML = `
+<style>
+.sec-verify-method-label { font-size: 0.95rem; font-weight: 600; color: #4a5568; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; justify-content: flex-start; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; transition: all 0.2s; background: #fff; }
+.sec-verify-method-label:hover { border-color: #cbd5e0; background: #f8fafc; }
+.sec-verify-method-radio { display: none; }
+.sec-verify-method-square { width: 22px; height: 22px; border: 2px solid #cbd5e0; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; background-color: #fff; flex-shrink: 0; }
+.sec-verify-method-radio:checked + .sec-verify-method-square { background-color: #8b5cf6; border-color: #8b5cf6; }
+.sec-verify-method-square svg { color: #fff; width: 14px; height: 14px; opacity: 0; transform: scale(0.5); transition: all 0.2s; }
+.sec-verify-method-radio:checked + .sec-verify-method-square svg { opacity: 1; transform: scale(1); }
+</style>
+            <div style="background:#fff;border-radius:20px;padding:0;max-width:400px;width:90%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);text-align:center;position:relative;">
+                <div style="padding:24px 24px 0; display:flex; justify-content:center; align-items:center; position:relative;">
+                    <h3 style="margin:0;font-size:1.25rem;color:#1e293b;">Choose OTP Method</h3>
+                    <span onclick="document.getElementById('asecMethodSelectModal').remove()" style="position:absolute;right:24px;top:24px;font-size:1.8rem;color:#a0aec0;cursor:pointer;line-height:1;">&times;</span>
+                </div>
+                <div style="padding:20px 24px 24px;">
+                    <p style="color:#64748b; margin-top:0; margin-bottom:20px; font-size:0.95rem;">Where would you like to receive your 4-digit verification code?</p>
+                    <div style="display:flex; flex-direction:column; gap:15px; text-align:left;">
+                        <label class="sec-verify-method-label">
+                            <input type="radio" name="asecModalVerifyMethod" class="sec-verify-method-radio" value="email" checked>
+                            <div class="sec-verify-method-square">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>
+                            <div>
+                                <strong style="display: block; color: #1e293b;">Email</strong>
+                                <span style="font-size: 0.8rem; color: #64748b; font-weight: normal;">Send to registered email</span>
+                            </div>
+                        </label>
+                        <label class="sec-verify-method-label">
+                            <input type="radio" name="asecModalVerifyMethod" class="sec-verify-method-radio" value="sms">
+                            <div class="sec-verify-method-square">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>
+                            <div>
+                                <strong style="display: block; color: #1e293b;">SMS</strong>
+                                <span style="font-size: 0.8rem; color: #64748b; font-weight: normal;">Send to phone number</span>
+                            </div>
+                        </label>
+                    </div>
+                    <button id="asecMethodSendBtn" style="margin-top:25px;width:100%;padding:14px;border:none;border-radius:14px;font-size:1.05rem;font-weight:700;cursor:pointer;background-color:#8b5cf6;color:white;display:flex;justify-content:center;align-items:center;">Send Code</button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+
+        const btn = document.getElementById('asecMethodSendBtn');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const method = document.querySelector('input[name="asecModalVerifyMethod"]:checked').value;
+                _selectAsecMethod(method);
+            });
+        }
+    }
+    overlay.style.display = 'flex';
+    window._asecRecoveryAdminId = adminId;
+}
+
+async function _selectAsecMethod(method) {
+    window._asecOtpMethod = method;
+    const overlay = document.getElementById('asecMethodSelectModal');
+    if (overlay) overlay.remove();
+
+    const adminId = window._asecRecoveryAdminId || localStorage.getItem('nd_admin_id') || 'admin@nd-shop.sbs';
+    // Determine contact
+    const isPhone = /^\+?\d{7,}$/.test(adminId.replace(/[\s\-\(\)]/g, ''));
+    let contact = adminId;
+    if (method === 'email' && isPhone) contact = localStorage.getItem('nd_admin_email') || 'admin@nd-shop.sbs';
+    if (method === 'sms' && !isPhone) {
+        let ph = localStorage.getItem('nd_admin_phone') || '';
+        if (!ph) { customAlert('No phone number saved for this admin account.'); return; }
+        contact = ph;
+    }
+    if (isPhone && method === 'sms') {
+        let cleaned = adminId.replace(/[\s\-\(\)]/g, '');
+        if (cleaned.length === 11 && cleaned.startsWith('0')) cleaned = '+234' + cleaned.substring(1);
+        contact = cleaned;
+    }
+    window._asecOtpContact = contact;
+
+    const subtitle = document.getElementById('asecPassVerifySubtitle');
+    if(subtitle) subtitle.textContent = `A 4-digit code has been sent to ${contact}.`;
+
+    // Show the OTP verify modal
     const modal = document.getElementById('asecPassVerifyModal');
     if(modal) {
         modal.style.display = 'flex';
         setTimeout(() => modal.classList.add('show'), 10);
+    }
+
+    // Actually send OTP
+    try {
+        const response = await fetch(`${window.API_BASE}/api/send-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ method, contact, name: 'Admin' })
+        });
+        const data = await response.json();
+        if (data.success) {
+            if (typeof customAlert !== 'undefined') customAlert(`Verification code sent to ${contact}`);
+        } else {
+            if (typeof customAlert !== 'undefined') customAlert('Failed to send OTP: ' + (data.error || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error(err);
+        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running on port 5000?');
     }
 }
 
@@ -241,7 +354,7 @@ function moveAsecOtp(input, index) {
     }
 }
 
-function goToAsecStep2() {
+async function goToAsecStep2() {
     const inputs = document.querySelectorAll('.asec-pass-otp');
     const code = Array.from(inputs).map(i => i.value).join('');
     
@@ -252,44 +365,68 @@ function goToAsecStep2() {
     const btn = document.getElementById('btnAsecGoToStep2');
     btn.classList.add('saving');
     btn.textContent = 'Verifying...';
+    btn.disabled = true;
 
-    setTimeout(() => {
+    try {
+        const contact = window._asecOtpContact || localStorage.getItem('nd_admin_id') || 'admin@nd-shop.sbs';
+        const response = await fetch(`${window.API_BASE}/api/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contact, code })
+        });
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById('asecResetStep1').style.display = 'none';
+            document.getElementById('asecResetStep2').style.display = 'block';
+            const firstPassInput = document.getElementById('resetAsecNewPass');
+            if (firstPassInput) firstPassInput.focus();
+        } else {
+            if (typeof customAlert !== 'undefined') customAlert(data.error || 'Invalid OTP. Please try again.');
+            else alert('Invalid OTP.');
+        }
+    } catch (err) {
+        console.error(err);
+        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running on port 5000?');
+    } finally {
         btn.classList.remove('saving');
         btn.textContent = 'Verify Code';
-        
-        document.getElementById('asecResetStep1').style.display = 'none';
-        document.getElementById('asecResetStep2').style.display = 'block';
-        
-        const firstPassInput = document.getElementById('resetAsecNewPass');
-        if (firstPassInput) firstPassInput.focus();
-    }, 800);
+        btn.disabled = false;
+    }
 }
 
 let asecResendCooldown = 0;
-function resendAsecPassCode(e) {
+async function resendAsecPassCode(e) {
     if(e) e.preventDefault();
     if (asecResendCooldown > 0) return;
 
-    const adminId = localStorage.getItem('nd_admin_id') || 'admin@nd.shop';
-    if (typeof customAlert !== 'undefined') {
-        customAlert(`A new code has been sent to ${adminId}.`);
-    }
+    const contact = window._asecOtpContact || localStorage.getItem('nd_admin_id') || 'admin@nd-shop.sbs';
+    const method = window._asecOtpMethod || 'email';
 
     const btn = document.getElementById('asecResendPassCode');
-    asecResendCooldown = 60;
-    btn.style.opacity = '0.5';
-    btn.style.cursor = 'not-allowed';
-    btn.textContent = `Resend Code (60s)`;
+    if (btn) { btn.style.opacity = '0.5'; btn.textContent = 'Sending...'; btn.style.cursor = 'not-allowed'; }
 
+    try {
+        const response = await fetch(`${window.API_BASE}/api/send-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ method, contact, name: 'Admin' })
+        });
+        const data = await response.json();
+        if (typeof customAlert !== 'undefined') {
+            customAlert(data.success ? `A new code has been sent to ${contact}.` : ('Error: ' + (data.error || 'Unknown')));
+        }
+    } catch (err) {
+        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running?');
+    }
+
+    asecResendCooldown = 60;
     const timer = setInterval(() => {
         asecResendCooldown--;
         if (asecResendCooldown <= 0) {
             clearInterval(timer);
-            btn.style.opacity = '1';
-            btn.style.cursor = 'pointer';
-            btn.textContent = 'Resend Code';
+            if (btn) { btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.textContent = 'Resend Code'; }
         } else {
-            btn.textContent = `Resend Code (${asecResendCooldown}s)`;
+            if (btn) btn.textContent = `Resend Code (${asecResendCooldown}s)`;
         }
     }, 1000);
 }

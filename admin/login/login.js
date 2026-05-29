@@ -1,44 +1,7 @@
-async function checkAdminAuth() {
+function checkAdminAuth() {
     const isLoggedIn = sessionStorage.getItem('nd_admin_logged_in');
-    const isBypassLogin = sessionStorage.getItem('nd_admin_bypass') === 'true';
-    
-    // Listen for password recovery events
-    if (window.supabaseClient) {
-        window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'PASSWORD_RECOVERY') {
-                const newPassword = prompt("Welcome back! Please enter your new password:");
-                if (!newPassword || newPassword.trim() === '') {
-                    alert("Password update cancelled. You will need to request another recovery link to change it.");
-                    return;
-                }
-                const { data, error } = await window.supabaseClient.auth.updateUser({ password: newPassword });
-                if (error) {
-                    alert("Error updating password: " + error.message);
-                } else {
-                    alert("Password updated successfully! You can now log in.");
-                    sessionStorage.removeItem('nd_admin_logged_in');
-                    window.location.reload();
-                }
-            }
-        });
-    }
-
     if (!isLoggedIn) {
         showAdminLoginScreen();
-    } else {
-        if (window.supabaseClient) {
-            const { data } = await window.supabaseClient.auth.getSession();
-            if (!data.session && !isBypassLogin) {
-                sessionStorage.removeItem('nd_admin_logged_in');
-                sessionStorage.removeItem('nd_admin_bypass');
-                showAdminLoginScreen();
-            } else if (isBypassLogin && typeof window.establishAdminCloudSession === 'function') {
-                const cloud = await window.establishAdminCloudSession();
-                if (!cloud.ok) {
-                    console.warn('[Admin] Bypass active but cloud sync unavailable:', cloud.reason);
-                }
-            }
-        }
     }
 }
 
@@ -49,317 +12,267 @@ function showAdminLoginScreen() {
             const loginWrapper = document.createElement('div');
             loginWrapper.innerHTML = html;
             document.body.appendChild(loginWrapper);
-            
-            // Apply login CSS if not already there
+
             if (!document.querySelector('link[href="login/login.css"]')) {
                 const link = document.createElement('link');
                 link.rel = 'stylesheet';
                 link.href = 'login/login.css';
                 document.head.appendChild(link);
             }
+
+            // Wire OTP input navigation after HTML is injected
+            setTimeout(() => {
+                document.querySelectorAll('.admin-otp-input').forEach((input, index) => {
+                    const inputs = document.querySelectorAll('.admin-otp-input');
+                    input.addEventListener('input', () => {
+                        if (input.value.length > 1) input.value = input.value.slice(-1);
+                        if (input.value && index < inputs.length - 1) inputs[index + 1].focus();
+                    });
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Backspace' && !input.value && index > 0) inputs[index - 1].focus();
+                    });
+                });
+            }, 300);
         });
 }
 
 function toggleForgotPassword() {
     const formSection = document.getElementById('loginFormSection');
     const pwdSection = document.getElementById('forgotPwdSection');
-    
+    const emailPhase = document.getElementById('recoveryEmailPhase');
+    const otpPhase = document.getElementById('recoveryOtpPhase');
+
     if (formSection.style.display === 'none') {
         formSection.style.display = 'block';
         pwdSection.style.display = 'none';
         document.querySelector('.login-header h2').textContent = 'Admin Portal';
         document.querySelector('.login-header p').textContent = 'Enter your credentials to access the secure area.';
-        
-        // Reset recovery phases
-        const emailPhase = document.getElementById('recoveryEmailPhase');
-        const otpPhase = document.getElementById('recoveryOtpPhase');
-        if (emailPhase) emailPhase.style.display = 'block';
-        if (otpPhase) otpPhase.style.display = 'none';
     } else {
         formSection.style.display = 'none';
         pwdSection.style.display = 'block';
+        if (emailPhase) emailPhase.style.display = 'block';
+        if (otpPhase) otpPhase.style.display = 'none';
         document.querySelector('.login-header h2').textContent = 'Recovery';
         document.querySelector('.login-header p').textContent = 'Reset your access credentials securely.';
     }
 }
 
 function cancelRecoveryOtp() {
-    toggleForgotPassword();
+    const emailPhase = document.getElementById('recoveryEmailPhase');
+    const otpPhase = document.getElementById('recoveryOtpPhase');
+    if (emailPhase) emailPhase.style.display = 'block';
+    if (otpPhase) otpPhase.style.display = 'none';
+    document.querySelectorAll('.admin-otp-input').forEach(i => i.value = '');
 }
 
 async function processAdminLogin() {
     const inputId = document.getElementById('adminLoginId').value.trim();
     const inputPwd = document.getElementById('adminLoginPassword').value;
 
-    const btn = document.querySelector('.admin-login-btn.primary');
-    const oldText = btn.innerHTML;
-    btn.innerHTML = 'Verifying...';
-    btn.disabled = true;
+    const btn = document.querySelector('#loginFormSection .admin-login-btn');
+    const originalText = btn ? btn.textContent : 'Login';
+    if (btn) { btn.textContent = 'Authenticating...'; btn.disabled = true; }
 
     try {
-        const ADMIN_SECRET_PWD = 'admin12345';
+        const response = await fetch(`${window.API_BASE}/api/admin-login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier: inputId, password: inputPwd })
+        });
+        
+        const data = await response.json();
 
-        if (inputPwd === ADMIN_SECRET_PWD) {
+        if (data.success) {
             sessionStorage.setItem('nd_admin_logged_in', 'true');
-            sessionStorage.setItem('nd_admin_bypass', 'true');
-
-            let cloudMsg = '';
-            if (typeof window.establishAdminCloudSession === 'function') {
-                const cloud = await window.establishAdminCloudSession({
-                    loginId: inputId,
-                    password: ADMIN_SECRET_PWD
-                });
-                if (cloud.ok) {
-                    cloudMsg = ' Cloud sync is active.';
-                } else {
-                    cloudMsg = ' Cloud sync off — log in once with your Supabase admin email/phone and the same password as this PIN, or use that email in the Login ID field above.';
-                }
-            }
-
-            document.getElementById('adminLoginScreen')?.remove();
+            // Store basic non-sensitive admin info
+            localStorage.setItem('nd_admin_id', data.admin.id);
+            localStorage.setItem('nd_admin_email', data.admin.email);
+            
+            document.getElementById('adminLoginScreen').remove();
             if (typeof customAlert !== 'undefined') {
-                customAlert('Welcome back, Administrator!' + cloudMsg);
+                customAlert("Welcome back, " + data.admin.name + "!");
             } else {
-                alert('Welcome back!' + cloudMsg);
+                alert("Welcome back!");
             }
-            return;
-        }
-
-        let authParams = { password: inputPwd };
-        if (inputId.includes('@')) {
-            authParams.email = inputId;
         } else {
-            // Assume Nigerian phone number
-            let phone = inputId;
-            if (phone.startsWith('0')) {
-                phone = '+234' + phone.substring(1);
-            } else if (!phone.startsWith('+')) {
-                phone = '+234' + phone;
+            if (typeof customAlert !== 'undefined') {
+                customAlert(data.error || "Invalid credentials.");
+            } else {
+                alert("Invalid credentials.");
             }
-            authParams.phone = phone;
-        }
-
-        const { data, error } = await window.supabaseClient.auth.signInWithPassword(authParams);
-
-        if (error) throw error;
-
-        // Verify Admin status from profiles
-        const { data: profile, error: profileError } = await window.supabaseClient
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', data.user.id)
-            .single();
-
-        if (profileError || !profile || !profile.is_admin) {
-            await window.supabaseClient.auth.signOut();
-            throw new Error('Access denied. Administrator privileges required.');
-        }
-
-        sessionStorage.removeItem('nd_admin_bypass');
-        sessionStorage.setItem('nd_admin_logged_in', 'true');
-
-        if (typeof window.cacheAdminCloudCredentials === 'function') {
-            window.cacheAdminCloudCredentials(inputId, inputPwd, inputId.includes('@') ? 'email' : 'phone');
-        }
-
-        document.getElementById('adminLoginScreen').remove();
-        if (typeof customAlert !== 'undefined') {
-            customAlert("Welcome back, Administrator!");
-        } else {
-            alert("Welcome back!");
         }
     } catch (err) {
-        console.error(err);
+        console.error('Admin Login Error:', err);
         if (typeof customAlert !== 'undefined') {
-            customAlert(err.message || "Invalid credentials.");
+            customAlert("Network error. Please make sure the server is running.");
         } else {
-            alert(err.message || "Invalid credentials.");
+            alert("Network error.");
         }
     } finally {
-        if (btn) {
-            btn.innerHTML = oldText;
-            btn.disabled = false;
-        }
+        if (btn) { btn.textContent = originalText; btn.disabled = false; }
     }
 }
 
-async function sendRecoveryCode() {
+// ===== Admin Recovery: Step 1 — Validate ID, show method modal =====
+function sendRecoveryCode() {
     const inputId = document.getElementById('adminRecoveryId').value.trim();
-    
     if (!inputId) {
-        if (typeof customAlert !== 'undefined') customAlert('Please enter your email or phone number.');
-        else alert('Please enter your email or phone number.');
+        if (typeof customAlert !== 'undefined') customAlert("Please enter your registered email or phone.");
         return;
     }
 
-    // Instead of sending immediately, show the modal
+    const savedId = localStorage.getItem('nd_admin_id');
+    const isIdValid = inputId === savedId || (!savedId && (inputId === 'admin@nd-shop.sbs' || inputId === '08109316532' || inputId === 'mkayud@gmail.com'));
+
+    if (!isIdValid) {
+        if (typeof customAlert !== 'undefined') customAlert("Identifier not recognized in our system.");
+        else alert("Identifier not recognized.");
+        return;
+    }
+
+    window._adminRecoveryId = inputId;
+
+    // Show the method selection modal
     const modal = document.getElementById('adminAuthMethodModal');
-    if (modal) modal.classList.add('active');
+    if (modal) {
+        modal.classList.add('show');
+        // Pre-select email by default
+        selectAdminAuthMethodHighlight('email');
+    }
 }
 
-window.closeAdminAuthMethodModal = function() {
+function closeAdminAuthMethodModal() {
     const modal = document.getElementById('adminAuthMethodModal');
-    if (modal) modal.classList.remove('active');
-};
+    if (modal) modal.classList.remove('show');
+}
 
-window.selectAdminAuthMethod = async function(method) {
-    const inputId = document.getElementById('adminRecoveryId').value.trim();
-
-    // Disable buttons
+// Visual highlight of selected method button
+function selectAdminAuthMethodHighlight(method) {
     const emailBtn = document.getElementById('adminBtnMethodEmail');
     const smsBtn = document.getElementById('adminBtnMethodSms');
-    if (emailBtn) emailBtn.disabled = true;
-    if (smsBtn) smsBtn.disabled = true;
-    
-    const selectedBtn = method === 'email' ? emailBtn : smsBtn;
-    const oldText = selectedBtn ? selectedBtn.innerHTML : '';
-    
-    if (selectedBtn) {
-        selectedBtn.innerHTML = `
-            <div style="display:flex; justify-content:center; align-items:center; width:100%;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-                </svg>
-                <span style="margin-left: 10px; font-weight:bold;">Sending...</span>
-            </div>
-        `;
-    }
+    if (emailBtn) emailBtn.classList.toggle('selected', method === 'email');
+    if (smsBtn) smsBtn.classList.toggle('selected', method === 'sms');
+}
 
-    try {
-        let error;
-        const { data: usersData } = await window.supabaseClient.from('profiles').select('*');
-        const users = usersData || [];
-        let resolvedEmail = inputId.toLowerCase();
-        let resolvedPhone = inputId;
-
-        if (method === 'sms') {
-            if (inputId.includes('@')) {
-                const matchedUser = users.find(u => u.email && u.email.toLowerCase() === inputId.toLowerCase());
-                if (matchedUser && matchedUser.phone) resolvedPhone = matchedUser.phone;
-            }
-            let phone = resolvedPhone;
-            if (phone.startsWith('0')) phone = '+234' + phone.substring(1);
-            else if (!phone.startsWith('+')) phone = '+234' + phone;
-
-            window.adminResolvedPhone = phone; // Save for verification
-            const { error: smsError } = await window.supabaseClient.auth.signInWithOtp({ phone });
-            error = smsError;
-        } else {
-            if (!inputId.includes('@')) {
-                let searchPhone = inputId;
-                if (searchPhone.startsWith('0')) searchPhone = '+234' + searchPhone.substring(1);
-                else if (!searchPhone.startsWith('+')) searchPhone = '+234' + searchPhone;
-                const matchedUser = users.find(u => u.phone === searchPhone);
-                if (matchedUser && matchedUser.email) resolvedEmail = matchedUser.email;
-            }
-
-            window.adminResolvedEmail = resolvedEmail; // Save for verification
-            const { error: emailError } = await window.supabaseClient.auth.resetPasswordForEmail(resolvedEmail);
-            error = emailError;
-        }
-
-        if (error) throw error;
-
-        // Close modal
-        closeAdminAuthMethodModal();
-        
-        // Save method globally for verification phase
-        window.adminRecoveryMethod = method;
-
-        // Transition to OTP phase
-        document.getElementById('recoveryEmailPhase').style.display = 'none';
-        document.getElementById('recoveryOtpPhase').style.display = 'block';
-        
-        // Setup OTP input listeners if not already done
-        const otpInputs = document.querySelectorAll('.admin-otp-input');
-        if (otpInputs.length > 0 && !otpInputs[0].hasAttribute('data-bound')) {
-            otpInputs.forEach((input, index) => {
-                input.setAttribute('data-bound', 'true');
-                input.addEventListener('input', (e) => {
-                    if (e.target.value.length > 1) e.target.value = e.target.value.slice(-1);
-                    if (e.target.value && index < otpInputs.length - 1) otpInputs[index + 1].focus();
-                });
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Backspace' && !e.target.value && index > 0) otpInputs[index - 1].focus();
-                });
-            });
-        }
-        
-    } catch (err) {
-        console.error(err);
-        if (typeof customAlert !== 'undefined') {
-            customAlert(err.message || "Error sending recovery code.", true);
-        } else {
-            alert(err.message || "Error sending recovery.");
-        }
-    } finally {
-        if (selectedBtn) {
-            selectedBtn.innerHTML = oldText;
-        }
-        if (emailBtn) emailBtn.disabled = false;
-        if (smsBtn) smsBtn.disabled = false;
+function sendAdminAuthMethod() {
+    const methodInput = document.querySelector('input[name="adminModalVerifyMethod"]:checked');
+    if (methodInput) {
+        selectAdminAuthMethod(methodInput.value);
     }
 }
 
+// Called when user clicks an option button in the modal
+function selectAdminAuthMethod(method) {
+    selectAdminAuthMethodHighlight(method);
+    window._adminRecoveryMethod = method;
+    closeAdminAuthMethodModal();
+
+    const inputId = window._adminRecoveryId || '';
+    const isPhoneId = /^\+?\d{7,}$/.test(inputId.replace(/[\s\-\(\)]/g, ''));
+
+    let contact = inputId;
+    // Normalize phone
+    if (isPhoneId) {
+        let cleaned = inputId.replace(/[\s\-\(\)]/g, '');
+        if (cleaned.length === 11 && cleaned.startsWith('0')) cleaned = '+234' + cleaned.substring(1);
+        contact = cleaned;
+    }
+    // If email chosen but phone entered, use saved email; if SMS chosen but email entered, use saved phone
+    if (method === 'email' && isPhoneId) {
+        contact = localStorage.getItem('nd_admin_email') || 'admin@nd-shop.sbs';
+    } else if (method === 'sms' && !isPhoneId) {
+        contact = localStorage.getItem('nd_admin_phone') || inputId;
+    }
+
+    window._adminRecoveryContact = contact;
+    _doSendAdminOtp(contact, method);
+}
+
+async function _doSendAdminOtp(contact, method) {
+    const btn = document.querySelector('#recoveryEmailPhase .admin-login-btn.primary');
+    const originalText = btn ? btn.textContent : 'Send Recovery Code';
+    if (btn) { btn.textContent = 'Sending...'; btn.disabled = true; }
+
+    try {
+        const response = await fetch(`${window.API_BASE}/api/send-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ method, contact, name: 'Admin' })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            const emailPhase = document.getElementById('recoveryEmailPhase');
+            const otpPhase = document.getElementById('recoveryOtpPhase');
+            if (emailPhase) emailPhase.style.display = 'none';
+            if (otpPhase) {
+                otpPhase.style.display = 'block';
+                const desc = otpPhase.querySelector('p');
+                if (desc) desc.textContent = `Enter the 4-digit code sent to ${contact}, along with your new password.`;
+            }
+            setTimeout(() => {
+                const first = document.querySelector('.admin-otp-input');
+                if (first) first.focus();
+            }, 200);
+        } else {
+            if (typeof customAlert !== 'undefined') customAlert('Failed to send code: ' + (data.error || 'Unknown error'));
+            else alert('Failed to send code.');
+        }
+    } catch (err) {
+        console.error(err);
+        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running on port 5000?');
+        else alert('Network error.');
+    } finally {
+        if (btn) { btn.textContent = originalText; btn.disabled = false; }
+    }
+}
+
+// ===== Admin Recovery: Step 2 — Verify OTP + Set New Password =====
 async function verifyAdminRecovery() {
-    const inputId = document.getElementById('adminRecoveryId').value.trim();
-    const newPwd = document.getElementById('adminNewPassword').value;
-    
     const otpInputs = document.querySelectorAll('.admin-otp-input');
     const code = Array.from(otpInputs).map(i => i.value).join('');
+    const newPwd = document.getElementById('adminNewPassword').value;
 
-    if (code.length < 6) {
-        if (typeof customAlert !== 'undefined') customAlert('Please enter the 6-digit code.', true);
-        else alert('Please enter the 6-digit code.');
+    if (code.length < 4) {
+        if (typeof customAlert !== 'undefined') customAlert('Please enter the full 4-digit code.');
+        else alert('Please enter the full code.');
         return;
     }
-    
-    if (!newPwd || newPwd.length < 6) {
-        if (typeof customAlert !== 'undefined') customAlert('Please enter a new password (min 6 characters).', true);
-        else alert('Please enter a new password (min 6 characters).');
+    if (!newPwd) {
+        if (typeof customAlert !== 'undefined') customAlert('Please enter a new password.');
+        else alert('Please enter a new password.');
         return;
     }
 
     const btn = document.getElementById('btnVerifyRecovery');
-    const oldText = btn.innerHTML;
-    btn.innerHTML = 'Verifying...';
-    btn.disabled = true;
+    const originalText = btn ? btn.textContent : 'Reset Password';
+    if (btn) { btn.textContent = 'Verifying...'; btn.disabled = true; }
 
     try {
-        const method = window.adminRecoveryMethod || 'email';
-        
-        let verifyPayload = {};
-        if (method === 'sms') {
-            verifyPayload = { phone: window.adminResolvedPhone || inputId, token: code, type: 'sms' };
+        const contact = window._adminRecoveryContact || window._adminRecoveryId || '';
+        const response = await fetch(`${window.API_BASE}/api/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contact, code })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            localStorage.setItem('nd_admin_pwd', newPwd);
+            if (typeof customAlert !== 'undefined') customAlert("Password reset successfully! Please log in with your new password.");
+            else alert("Password reset successfully!");
+            toggleForgotPassword();
+            otpInputs.forEach(i => i.value = '');
+            document.getElementById('adminNewPassword').value = '';
         } else {
-            verifyPayload = { email: window.adminResolvedEmail || inputId, token: code, type: 'recovery' };
+            if (typeof customAlert !== 'undefined') customAlert(data.error || 'Invalid OTP. Please try again.');
+            else alert('Invalid OTP.');
         }
-
-        // 1. Verify the OTP code
-        const { data, error } = await window.supabaseClient.auth.verifyOtp(verifyPayload);
-        
-        if (error) throw error;
-
-        // 2. We now have a session! Update the password securely.
-        const { error: updateError } = await window.supabaseClient.auth.updateUser({ password: newPwd });
-        if (updateError) throw updateError;
-        
-        if (typeof customAlert !== 'undefined') customAlert("Password updated successfully! You can now log in.");
-        else alert("Password updated successfully! You can now log in.");
-        
-        // Log them out so they can log back in with the new credentials
-        await window.supabaseClient.auth.signOut();
-        sessionStorage.removeItem('nd_admin_logged_in');
-        window.location.reload();
-
     } catch (err) {
         console.error(err);
-        if (typeof customAlert !== 'undefined') customAlert(err.message || "Invalid or expired code.", true);
-        else alert(err.message || "Invalid or expired code.");
+        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running on port 5000?');
+        else alert('Network error.');
     } finally {
-        if (btn) {
-            btn.innerHTML = oldText;
-            btn.disabled = false;
-        }
+        if (btn) { btn.textContent = originalText; btn.disabled = false; }
     }
 }

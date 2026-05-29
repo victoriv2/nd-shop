@@ -78,7 +78,7 @@ function initSecurityLogic() {
     // ========================================
     const emailSaveBtn = document.getElementById('secEmailSave');
     if (emailSaveBtn) {
-        emailSaveBtn.addEventListener('click', () => {
+        emailSaveBtn.addEventListener('click', async () => {
             const email = document.getElementById('secNewEmail');
             const pass = document.getElementById('secEmailPass');
 
@@ -94,7 +94,6 @@ function initSecurityLogic() {
                 return;
             }
 
-            // Verify authentication before pretending to send a code
             const user = window.loggedInUser || {};
             if (user.password && user.password !== pass.value) {
                 emailSaveBtn.textContent = 'Incorrect Password';
@@ -110,31 +109,51 @@ function initSecurityLogic() {
 
             emailSaveBtn.classList.add('saving');
             emailSaveBtn.textContent = 'Sending code...';
+            emailSaveBtn.disabled = true;
 
-            setTimeout(() => {
+            try {
+                const response = await fetch(`${window.API_BASE}/api/send-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ method: 'email', contact: email.value.trim(), name: user.firstName || user.name || 'User' })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    window._secEmailOtpContact = email.value.trim();
+                    emailSaveBtn.classList.remove('saving');
+                    emailSaveBtn.classList.add('success');
+                    emailSaveBtn.textContent = 'Code Sent!';
+
+                    setTimeout(() => {
+                        emailSaveBtn.classList.remove('success');
+                        emailSaveBtn.textContent = 'Update Email';
+                        closeModal();
+
+                        const verifyModal = document.getElementById('emailVerifyModal');
+                        if (verifyModal) {
+                            verifyModal.classList.add('show');
+                            document.body.classList.add('modal-open');
+                            setTimeout(() => {
+                                const firstInput = verifyModal.querySelector('.email-otp-input');
+                                if (firstInput) firstInput.focus();
+                            }, 300);
+                        }
+                    }, 1000);
+                } else {
+                    emailSaveBtn.classList.remove('saving');
+                    emailSaveBtn.textContent = 'Failed to send code';
+                    emailSaveBtn.style.backgroundColor = '#dc3545';
+                    setTimeout(() => { emailSaveBtn.textContent = 'Update Email'; emailSaveBtn.style.backgroundColor = ''; }, 2000);
+                }
+            } catch (err) {
                 emailSaveBtn.classList.remove('saving');
-                emailSaveBtn.classList.add('success');
-                emailSaveBtn.textContent = 'Code Sent!';
-
-                setTimeout(() => {
-                    emailSaveBtn.classList.remove('success');
-                    emailSaveBtn.textContent = 'Update Email';
-                    closeModal();
-
-                    // Open Verify Modal
-                    const verifyModal = document.getElementById('emailVerifyModal');
-                    if (verifyModal) {
-                        verifyModal.classList.add('show');
-                        document.body.classList.add('modal-open');
-
-                        // Focus first input
-                        setTimeout(() => {
-                            const firstInput = verifyModal.querySelector('.email-otp-input');
-                            if (firstInput) firstInput.focus();
-                        }, 300);
-                    }
-                }, 1200);
-            }, 1000);
+                emailSaveBtn.textContent = 'Network Error';
+                emailSaveBtn.style.backgroundColor = '#dc3545';
+                setTimeout(() => { emailSaveBtn.textContent = 'Update Email'; emailSaveBtn.style.backgroundColor = ''; }, 2000);
+            } finally {
+                emailSaveBtn.disabled = false;
+            }
         });
     }
 
@@ -143,7 +162,7 @@ function initSecurityLogic() {
     // ========================================
     const phoneSaveBtn = document.getElementById('secPhoneSave');
     if (phoneSaveBtn) {
-        phoneSaveBtn.addEventListener('click', () => {
+        phoneSaveBtn.addEventListener('click', async () => {
             const phone = document.getElementById('secNewPhone');
             const pass = document.getElementById('secPhonePass');
 
@@ -159,7 +178,6 @@ function initSecurityLogic() {
                 return;
             }
 
-            // Verify authentication
             const user = window.loggedInUser || {};
             if (user.password && user.password !== pass.value) {
                 phoneSaveBtn.textContent = 'Incorrect Password';
@@ -173,32 +191,56 @@ function initSecurityLogic() {
                 return;
             }
 
+            let normalizedPhone = phone.value.trim().replace(/[\s\-\(\)]/g, '');
+            if (normalizedPhone.length === 11 && normalizedPhone.startsWith('0')) normalizedPhone = '+234' + normalizedPhone.substring(1);
+
             phoneSaveBtn.classList.add('saving');
             phoneSaveBtn.textContent = 'Sending code...';
+            phoneSaveBtn.disabled = true;
 
-            setTimeout(() => {
+            try {
+                const response = await fetch(`${window.API_BASE}/api/send-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ method: 'sms', contact: normalizedPhone, name: user.firstName || user.name || 'User' })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    window._secPhoneOtpContact = normalizedPhone;
+                    phoneSaveBtn.classList.remove('saving');
+                    phoneSaveBtn.classList.add('success');
+                    phoneSaveBtn.textContent = 'Code Sent!';
+
+                    setTimeout(() => {
+                        phoneSaveBtn.classList.remove('success');
+                        phoneSaveBtn.textContent = 'Update Phone';
+                        closeModal();
+
+                        const verifyModal = document.getElementById('phoneVerifyModal');
+                        if (verifyModal) {
+                            verifyModal.classList.add('show');
+                            document.body.classList.add('modal-open');
+                            setTimeout(() => {
+                                const firstInput = verifyModal.querySelector('.phone-otp-input');
+                                if (firstInput) firstInput.focus();
+                            }, 300);
+                        }
+                    }, 1000);
+                } else {
+                    phoneSaveBtn.classList.remove('saving');
+                    phoneSaveBtn.textContent = 'Failed to send code';
+                    phoneSaveBtn.style.backgroundColor = '#dc3545';
+                    setTimeout(() => { phoneSaveBtn.textContent = 'Update Phone'; phoneSaveBtn.style.backgroundColor = ''; }, 2000);
+                }
+            } catch (err) {
                 phoneSaveBtn.classList.remove('saving');
-                phoneSaveBtn.classList.add('success');
-                phoneSaveBtn.textContent = 'Code Sent!';
-
-                setTimeout(() => {
-                    phoneSaveBtn.classList.remove('success');
-                    phoneSaveBtn.textContent = 'Update Phone';
-                    closeModal();
-
-                    // Open Phone Verify Modal
-                    const verifyModal = document.getElementById('phoneVerifyModal');
-                    if (verifyModal) {
-                        verifyModal.classList.add('show');
-                        document.body.classList.add('modal-open');
-
-                        setTimeout(() => {
-                            const firstInput = verifyModal.querySelector('.phone-otp-input');
-                            if (firstInput) firstInput.focus();
-                        }, 300);
-                    }
-                }, 1200);
-            }, 1000);
+                phoneSaveBtn.textContent = 'Network Error';
+                phoneSaveBtn.style.backgroundColor = '#dc3545';
+                setTimeout(() => { phoneSaveBtn.textContent = 'Update Phone'; phoneSaveBtn.style.backgroundColor = ''; }, 2000);
+            } finally {
+                phoneSaveBtn.disabled = false;
+            }
         });
     }
 
@@ -291,28 +333,138 @@ function initSecurityLogic() {
     const passVerifyCloseBtn = document.getElementById('passVerifyClose');
     const passVerifySubtitle = document.getElementById('passVerifySubtitle');
 
+    // State
+    window._secPassOtpContact = null;
+    window._secPassOtpMethod = 'email';
+
+    function _openPassMethodModal() {
+        const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user') || '{}') || {};
+        const hasEmail = !!user.email;
+        const hasPhone = !!user.phone;
+
+        let overlay = document.getElementById('secPassMethodModal');
+        if (overlay) overlay.remove();
+
+        overlay = document.createElement('div');
+        overlay.id = 'secPassMethodModal';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200010;display:flex;align-items:center;justify-content:center;';
+        let optionsHtml = '';
+        if (hasEmail) {
+            optionsHtml += `
+                <label class="sec-verify-method-label">
+                    <input type="radio" name="secModalVerifyMethod" class="sec-verify-method-radio" value="email" checked>
+                    <div class="sec-verify-method-square">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <div>
+                        <strong style="display: block; color: #1e293b;">Email</strong>
+                        <span style="font-size: 0.8rem; color: #64748b; font-weight: normal;">Send to ${user.email}</span>
+                    </div>
+                </label>`;
+        }
+        if (hasPhone) {
+            optionsHtml += `
+                <label class="sec-verify-method-label">
+                    <input type="radio" name="secModalVerifyMethod" class="sec-verify-method-radio" value="sms" ${!hasEmail ? 'checked' : ''}>
+                    <div class="sec-verify-method-square">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <div>
+                        <strong style="display: block; color: #1e293b;">SMS</strong>
+                        <span style="font-size: 0.8rem; color: #64748b; font-weight: normal;">Send to ${user.phone}</span>
+                    </div>
+                </label>`;
+        }
+        if (!hasEmail && !hasPhone) {
+            optionsHtml += '<p style="color:#dc3545;text-align:center;">No email or phone saved in your account.</p>';
+        }
+
+        let buttonHtml = (hasEmail || hasPhone) ? `<button id="secPassMethodSendBtn" style="margin-top:25px;width:100%;padding:14px;border:none;border-radius:14px;font-size:1.05rem;font-weight:700;cursor:pointer;background-color:#8b5cf6;color:white;display:flex;justify-content:center;align-items:center;">Send Code</button>` : '';
+
+        overlay.innerHTML = `
+<style>
+.sec-verify-method-label { font-size: 0.95rem; font-weight: 600; color: #4a5568; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; justify-content: flex-start; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; transition: all 0.2s; background: #fff; }
+.sec-verify-method-label:hover { border-color: #cbd5e0; background: #f8fafc; }
+.sec-verify-method-radio { display: none; }
+.sec-verify-method-square { width: 22px; height: 22px; border: 2px solid #cbd5e0; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; background-color: #fff; flex-shrink: 0; }
+.sec-verify-method-radio:checked + .sec-verify-method-square { background-color: #8b5cf6; border-color: #8b5cf6; }
+.sec-verify-method-square svg { color: #fff; width: 14px; height: 14px; opacity: 0; transform: scale(0.5); transition: all 0.2s; }
+.sec-verify-method-radio:checked + .sec-verify-method-square svg { opacity: 1; transform: scale(1); }
+</style>
+            <div style="background:#fff;border-radius:20px;padding:0;max-width:400px;width:90%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);text-align:center;position:relative;">
+                <div style="padding:24px 24px 0; display:flex; justify-content:center; align-items:center; position:relative;">
+                    <h3 style="margin:0;font-size:1.25rem;color:#1e293b;">Choose OTP Method</h3>
+                    <span onclick="document.getElementById('secPassMethodModal').remove()" style="position:absolute;right:24px;top:24px;font-size:1.8rem;color:#a0aec0;cursor:pointer;line-height:1;">&times;</span>
+                </div>
+                <div style="padding:20px 24px 24px;">
+                    <p style="color:#64748b; margin-top:0; margin-bottom:20px; font-size:0.95rem;">Where would you like to receive your 4-digit verification code?</p>
+                    <div style="display:flex; flex-direction:column; gap:15px; text-align:left;">
+                        ${optionsHtml}
+                    </div>
+                    ${buttonHtml}
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+
+        // Wire the buttons
+        const btn = document.getElementById('secPassMethodSendBtn');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const method = document.querySelector('input[name="secModalVerifyMethod"]:checked').value;
+                if (method === 'email') _doSendSecPassOtp('email', user.email);
+                else if (method === 'sms') _doSendSecPassOtp('sms', user.phone);
+            });
+        }
+    }
+
+    async function _doSendSecPassOtp(method, contact) {
+        const overlay = document.getElementById('secPassMethodModal');
+        if (overlay) overlay.remove();
+
+        const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user') || '{}') || {};
+        let normalizedContact = contact;
+        if (method === 'sms') {
+            normalizedContact = contact.replace(/[\s\-\(\)]/g, '');
+            if (normalizedContact.length === 11 && normalizedContact.startsWith('0')) normalizedContact = '+234' + normalizedContact.substring(1);
+        }
+
+        window._secPassOtpContact = normalizedContact;
+        window._secPassOtpMethod = method;
+
+        if (passVerifySubtitle) {
+            passVerifySubtitle.textContent = `A 4-digit code has been sent to ${normalizedContact}. Please enter it below.`;
+        }
+
+        closeModal();
+        passVerifyModal.classList.add('show');
+        document.body.classList.add('modal-open');
+
+        setTimeout(() => {
+            const firstInput = passVerifyModal.querySelector('.pass-otp-input');
+            if (firstInput) firstInput.focus();
+        }, 300);
+
+        try {
+            const response = await fetch(`${window.API_BASE}/api/send-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ method, contact: normalizedContact, name: user.firstName || user.name || 'User' })
+            });
+            const data = await response.json();
+            if (data.success) {
+                if (typeof customAlert === 'function') customAlert(`Verification code sent to ${normalizedContact}`);
+            } else {
+                if (typeof customAlert === 'function') customAlert('Failed to send OTP: ' + (data.error || 'Unknown error'));
+            }
+        } catch (err) {
+            if (typeof customAlert === 'function') customAlert('Network error. Is the server running on port 5000?');
+        }
+    }
+
     if (forgotPassBtn && passVerifyModal) {
         forgotPassBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user')) || {};
-            const contact = user.email || user.phone || 'your registered contact';
-            
-            if (passVerifySubtitle) {
-                passVerifySubtitle.textContent = `A 4-digit verification code has been sent to ${contact}. Please enter it below.`;
-            }
-
-            if (typeof customAlert === 'function') {
-                customAlert(`Verification code sent to ${contact}`);
-            }
-
-            closeModal(); // Close main security modal
-            passVerifyModal.classList.add('show');
-            document.body.classList.add('modal-open');
-
-            setTimeout(() => {
-                const firstInput = passVerifyModal.querySelector('.pass-otp-input');
-                if (firstInput) firstInput.focus();
-            }, 300);
+            _openPassMethodModal();
         });
     }
 
@@ -342,23 +494,33 @@ function initSecurityLogic() {
         });
     });
 
-    // Resend logic with cooldown
+    // Resend — calls real Brevo API
     const resendPassBtn = document.getElementById('resendPassCode');
     let passResendCooldown = 0;
     if (resendPassBtn) {
-        resendPassBtn.addEventListener('click', (e) => {
+        resendPassBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             if (passResendCooldown > 0) return;
+            if (!window._secPassOtpContact) return;
 
-            const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user')) || {};
-            const contact = user.email || user.phone || 'your registered contact';
-            
-            if (typeof customAlert === 'function') {
-                customAlert(`A new code has been sent to ${contact}.`);
+            resendPassBtn.textContent = 'Sending...';
+            resendPassBtn.style.opacity = '0.5';
+
+            try {
+                const response = await fetch(`${window.API_BASE}/api/send-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ method: window._secPassOtpMethod, contact: window._secPassOtpContact, name: 'User' })
+                });
+                const data = await response.json();
+                if (typeof customAlert === 'function') {
+                    customAlert(data.success ? `A new code has been sent to ${window._secPassOtpContact}.` : 'Error: ' + (data.error || 'Unknown'));
+                }
+            } catch (err) {
+                if (typeof customAlert === 'function') customAlert('Network error. Is the server running?');
             }
 
             passResendCooldown = 60;
-            resendPassBtn.style.opacity = '0.5';
             resendPassBtn.style.cursor = 'not-allowed';
             resendPassBtn.textContent = `Resend Code (60s)`;
 
@@ -382,7 +544,7 @@ function initSecurityLogic() {
     const step2 = document.getElementById('passResetStep2');
 
     if (btnGoToStep2) {
-        btnGoToStep2.addEventListener('click', () => {
+        btnGoToStep2.addEventListener('click', async () => {
             let code = Array.from(passOtpInputs).map(i => i.value).join('');
             if (code.length < 4) {
                 btnGoToStep2.textContent = 'Enter 4 digits';
@@ -396,17 +558,38 @@ function initSecurityLogic() {
 
             btnGoToStep2.classList.add('saving');
             btnGoToStep2.textContent = 'Verifying...';
+            btnGoToStep2.disabled = true;
 
-            setTimeout(() => {
+            try {
+                const contact = window._secPassOtpContact;
+                if (!contact) throw new Error('No contact stored');
+                const response = await fetch(`${window.API_BASE}/api/verify-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contact, code })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    if (step1) step1.style.display = 'none';
+                    if (step2) step2.style.display = 'block';
+                    const firstPassInput = document.getElementById('resetNewPass');
+                    if (firstPassInput) firstPassInput.focus();
+                } else {
+                    btnGoToStep2.textContent = data.error || 'Invalid OTP';
+                    btnGoToStep2.style.backgroundColor = '#dc3545';
+                    setTimeout(() => {
+                        btnGoToStep2.textContent = 'Verify Code';
+                        btnGoToStep2.style.backgroundColor = '';
+                    }, 2000);
+                }
+            } catch (err) {
+                if (typeof customAlert === 'function') customAlert('Network error. Is the server running on port 5000?');
+            } finally {
                 btnGoToStep2.classList.remove('saving');
-                btnGoToStep2.textContent = 'Verify Code';
-                
-                if (step1) step1.style.display = 'none';
-                if (step2) step2.style.display = 'block';
-                
-                const firstPassInput = document.getElementById('resetNewPass');
-                if (firstPassInput) firstPassInput.focus();
-            }, 800);
+                if (btnGoToStep2.textContent === 'Verifying...') btnGoToStep2.textContent = 'Verify Code';
+                btnGoToStep2.disabled = false;
+            }
         });
     }
 
@@ -486,22 +669,32 @@ function initSecurityLogic() {
         let emailResendCooldown = 0;
 
         if (resendEmailBtn) {
-            resendEmailBtn.addEventListener('click', (e) => {
+            resendEmailBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 if (emailResendCooldown > 0) return;
 
                 const emailInput = document.getElementById('secNewEmail');
-                const email = emailInput ? emailInput.value.trim() : '';
-                const msg = `A new verification code has been sent to your new email (${email}).`;
-                if (typeof customAlert === 'function') {
-                    customAlert(msg);
-                } else {
-                    alert(msg);
+                const email = (window._secEmailOtpContact) || (emailInput ? emailInput.value.trim() : '');
+                const user = window.loggedInUser || {};
+
+                resendEmailBtn.textContent = 'Sending...';
+                resendEmailBtn.style.opacity = '0.5';
+
+                try {
+                    const response = await fetch(`${window.API_BASE}/api/send-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ method: 'email', contact: email, name: user.firstName || user.name || 'User' })
+                    });
+                    const data = await response.json();
+                    if (typeof customAlert === 'function') {
+                        customAlert(data.success ? `A new code has been sent to ${email}.` : 'Error: ' + (data.error || 'Unknown'));
+                    }
+                } catch (err) {
+                    if (typeof customAlert === 'function') customAlert('Network error. Is the server running?');
                 }
 
-                // Start 60s Cooldown
                 emailResendCooldown = 60;
-                resendEmailBtn.style.opacity = '0.5';
                 resendEmailBtn.style.cursor = 'not-allowed';
                 resendEmailBtn.textContent = `Resend Code (60s)`;
 
@@ -541,7 +734,7 @@ function initSecurityLogic() {
 
     const verifyEmailBtn = document.getElementById('verifyEmailBtn');
     if (verifyEmailBtn) {
-        verifyEmailBtn.addEventListener('click', () => {
+        verifyEmailBtn.addEventListener('click', async () => {
             let code = Array.from(emailOtpInputs).map(i => i.value).join('');
             if (code.length < 4) {
                 verifyEmailBtn.textContent = 'Enter 4 digits';
@@ -557,12 +750,34 @@ function initSecurityLogic() {
 
             verifyEmailBtn.classList.add('saving');
             verifyEmailBtn.textContent = 'Verifying...';
+            verifyEmailBtn.disabled = true;
 
-            setTimeout(() => {
+            try {
+                const contact = window._secEmailOtpContact;
+                const response = await fetch(`${window.API_BASE}/api/verify-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contact, code })
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    verifyEmailBtn.classList.remove('saving');
+                    verifyEmailBtn.style.backgroundColor = '#dc3545';
+                    verifyEmailBtn.style.boxShadow = '0 4px 15px rgba(220,38,38,0.3)';
+                    verifyEmailBtn.textContent = data.error || 'Invalid OTP';
+                    setTimeout(() => {
+                        verifyEmailBtn.style.backgroundColor = '';
+                        verifyEmailBtn.style.boxShadow = '';
+                        verifyEmailBtn.textContent = 'Verify & Update';
+                    }, 2500);
+                    verifyEmailBtn.disabled = false;
+                    return;
+                }
+
+                // OTP verified — now update email
                 const emailInput = document.getElementById('secNewEmail');
                 const passInput = document.getElementById('secEmailPass');
-
-                // === Duplicate Email Check ===
                 const allUsers = JSON.parse(localStorage.getItem('nd_users') || '[]');
                 const newEmail = emailInput ? emailInput.value.trim() : '';
                 const emailTaken = allUsers.find(u => u.id !== (window.loggedInUser || {}).id && u.email && u.email.toLowerCase() === newEmail.toLowerCase());
@@ -576,19 +791,15 @@ function initSecurityLogic() {
                         verifyEmailBtn.style.boxShadow = '';
                         verifyEmailBtn.textContent = 'Verify & Update';
                     }, 2500);
+                    verifyEmailBtn.disabled = false;
                     return;
                 }
 
-                // Save New Email to Local Storage
                 if (window.loggedInUser && emailInput && newEmail) {
                     window.loggedInUser.email = newEmail;
                     localStorage.setItem('nd_logged_in_user', JSON.stringify(window.loggedInUser));
-
                     const idx = allUsers.findIndex(u => u.id === window.loggedInUser.id);
-                    if (idx !== -1) {
-                        allUsers[idx].email = newEmail;
-                        localStorage.setItem('nd_users', JSON.stringify(allUsers));
-                    }
+                    if (idx !== -1) { allUsers[idx].email = newEmail; localStorage.setItem('nd_users', JSON.stringify(allUsers)); }
                 }
 
                 verifyEmailBtn.classList.remove('saving');
@@ -598,17 +809,21 @@ function initSecurityLogic() {
                 setTimeout(() => {
                     verifyEmailBtn.classList.remove('success');
                     verifyEmailBtn.textContent = 'Verify & Update';
-
-                    // Reset inputs
                     emailOtpInputs.forEach(i => i.value = '');
                     if (emailInput) emailInput.value = '';
                     if (passInput) passInput.value = '';
-
                     closeEmailVerifyModal();
                 }, 1200);
-            }, 1000);
+            } catch (err) {
+                if (typeof customAlert === 'function') customAlert('Network error. Is the server running?');
+                verifyEmailBtn.classList.remove('saving');
+                verifyEmailBtn.textContent = 'Verify & Update';
+            } finally {
+                verifyEmailBtn.disabled = false;
+            }
         });
     }
+
 
     // ========================================
     // Verify Phone Logic
@@ -630,22 +845,31 @@ function initSecurityLogic() {
         let phoneResendCooldown = 0;
 
         if (resendPhoneBtn) {
-            resendPhoneBtn.addEventListener('click', (e) => {
+            resendPhoneBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 if (phoneResendCooldown > 0) return;
 
-                const phoneInput = document.getElementById('secNewPhone');
-                const phone = phoneInput ? phoneInput.value.trim() : '';
-                const msg = `A new verification code has been sent to your new phone number (${phone}).`;
-                if (typeof customAlert === 'function') {
-                    customAlert(msg);
-                } else {
-                    alert(msg);
+                const contact = window._secPhoneOtpContact;
+                const user = window.loggedInUser || {};
+
+                resendPhoneBtn.textContent = 'Sending...';
+                resendPhoneBtn.style.opacity = '0.5';
+
+                try {
+                    const response = await fetch(`${window.API_BASE}/api/send-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ method: 'sms', contact, name: user.firstName || user.name || 'User' })
+                    });
+                    const data = await response.json();
+                    if (typeof customAlert === 'function') {
+                        customAlert(data.success ? `A new code has been sent to ${contact}.` : 'Error: ' + (data.error || 'Unknown'));
+                    }
+                } catch (err) {
+                    if (typeof customAlert === 'function') customAlert('Network error. Is the server running?');
                 }
 
-                // Start 60s Cooldown
                 phoneResendCooldown = 60;
-                resendPhoneBtn.style.opacity = '0.5';
                 resendPhoneBtn.style.cursor = 'not-allowed';
                 resendPhoneBtn.textContent = `Resend Code (60s)`;
 
@@ -685,7 +909,7 @@ function initSecurityLogic() {
 
     const verifyPhoneBtn = document.getElementById('verifyPhoneBtn');
     if (verifyPhoneBtn) {
-        verifyPhoneBtn.addEventListener('click', () => {
+        verifyPhoneBtn.addEventListener('click', async () => {
             let code = Array.from(phoneOtpInputs).map(i => i.value).join('');
             if (code.length < 4) {
                 verifyPhoneBtn.textContent = 'Enter 4 digits';
@@ -701,12 +925,34 @@ function initSecurityLogic() {
 
             verifyPhoneBtn.classList.add('saving');
             verifyPhoneBtn.textContent = 'Verifying...';
+            verifyPhoneBtn.disabled = true;
 
-            setTimeout(() => {
+            try {
+                const contact = window._secPhoneOtpContact;
+                const response = await fetch(`${window.API_BASE}/api/verify-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contact, code })
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    verifyPhoneBtn.classList.remove('saving');
+                    verifyPhoneBtn.style.backgroundColor = '#dc3545';
+                    verifyPhoneBtn.style.boxShadow = '0 4px 15px rgba(220,38,38,0.3)';
+                    verifyPhoneBtn.textContent = data.error || 'Invalid OTP';
+                    setTimeout(() => {
+                        verifyPhoneBtn.style.backgroundColor = '';
+                        verifyPhoneBtn.style.boxShadow = '';
+                        verifyPhoneBtn.textContent = 'Verify & Update';
+                    }, 2500);
+                    verifyPhoneBtn.disabled = false;
+                    return;
+                }
+
+                // OTP verified — now update phone
                 const phoneInput = document.getElementById('secNewPhone');
                 const passInput = document.getElementById('secPhonePass');
-
-                // === Duplicate Phone Check ===
                 const allUsersPhone = JSON.parse(localStorage.getItem('nd_users') || '[]');
                 const newPhone = phoneInput ? phoneInput.value.trim() : '';
                 const phoneTaken = allUsersPhone.find(u => u.id !== (window.loggedInUser || {}).id && u.phone && u.phone.replace(/[\s\-\(\)]/g, '') === newPhone.replace(/[\s\-\(\)]/g, ''));
@@ -720,19 +966,15 @@ function initSecurityLogic() {
                         verifyPhoneBtn.style.boxShadow = '';
                         verifyPhoneBtn.textContent = 'Verify & Update';
                     }, 2500);
+                    verifyPhoneBtn.disabled = false;
                     return;
                 }
 
-                // Save New Phone to Local Storage
                 if (window.loggedInUser && phoneInput && newPhone) {
                     window.loggedInUser.phone = newPhone;
                     localStorage.setItem('nd_logged_in_user', JSON.stringify(window.loggedInUser));
-
                     const idx = allUsersPhone.findIndex(u => u.id === window.loggedInUser.id);
-                    if (idx !== -1) {
-                        allUsersPhone[idx].phone = newPhone;
-                        localStorage.setItem('nd_users', JSON.stringify(allUsersPhone));
-                    }
+                    if (idx !== -1) { allUsersPhone[idx].phone = newPhone; localStorage.setItem('nd_users', JSON.stringify(allUsersPhone)); }
                 }
 
                 verifyPhoneBtn.classList.remove('saving');
@@ -742,17 +984,22 @@ function initSecurityLogic() {
                 setTimeout(() => {
                     verifyPhoneBtn.classList.remove('success');
                     verifyPhoneBtn.textContent = 'Verify & Update';
-
-                    // Reset inputs
                     phoneOtpInputs.forEach(i => i.value = '');
                     if (phoneInput) phoneInput.value = '';
                     if (passInput) passInput.value = '';
-
                     closePhoneVerifyModal();
                 }, 1200);
-            }, 1000);
+            } catch (err) {
+                if (typeof customAlert === 'function') customAlert('Network error. Is the server running?');
+                verifyPhoneBtn.classList.remove('saving');
+                verifyPhoneBtn.textContent = 'Verify & Update';
+            } finally {
+                verifyPhoneBtn.disabled = false;
+            }
         });
     }
+
+
 
     // ========================================
     // Password Toggle Logic

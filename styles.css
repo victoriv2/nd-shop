@@ -434,3 +434,25 @@ body.modal-open {
 
 
 
+/* Custom Delete Button for Dropdowns */
+.custom-dropdown-option.custom-added-unit {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.remove-unit-btn, .custom-delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: #ef4444;
+    background: #fee2e2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.remove-unit-btn:hover, .custom-delete-btn:hover {
+    background: #f87171;
+    color: white;
+}

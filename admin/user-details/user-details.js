@@ -1,50 +1,19 @@
 // user-details.js
-async function openUserDetailsModal(userId) {
-    let user = null;
-    let userSales = [];
-    let msgs = [];
-    
-    if (window.supabaseClient) {
-        // Fetch User Profile
-        const { data: profile } = await window.supabaseClient.from('profiles').select('*').eq('id', userId).single();
-        if (profile) {
-            user = {
-                id: profile.id,
-                name: (profile.first_name + ' ' + profile.last_name).trim() || profile.email || 'User',
-                email: profile.email,
-                phone: profile.phone,
-                state: profile.state,
-                lga: profile.lga,
-                joinDate: new Date(profile.created_at).toLocaleDateString()
-            };
-        }
+function openUserDetailsModal(userId) {
+    // Attempt to fetch user data
+    const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
+    let user = users.find(u => u.id === userId);
 
-        // Fetch User Sales
-        const { data: salesData } = await window.supabaseClient.from('sales').select('*').eq('user_id', userId);
-        if (salesData) {
-            userSales = salesData;
-        }
-
-        // Fetch Messages
-        const { data: messagesData } = await window.supabaseClient.from('messages').select('*').or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
-        if (messagesData) {
-            msgs = messagesData;
-        }
-    } else {
-        // Fallback if Supabase not ready
-        const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
-        user = users.find(u => u.id === userId);
-        const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
-        userSales = sales.filter(s => s.customerID === userId);
-        msgs = JSON.parse(localStorage.getItem('nd_messages') || '[]');
-    }
+    // Calculate real spending and payout from sales history
+    const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+    const userSales = sales.filter(s => s.customerID === userId);
 
     let calculatedSpending = 0;
     let calculatedPayout = 0;
 
     userSales.forEach(s => {
         calculatedPayout += parseFloat(s.payout) || 0;
-        calculatedSpending += parseFloat(s.price || (s.qty * s.unitPrice) || s.total) || 0;
+        calculatedSpending += parseFloat(s.price || (s.qty * s.unitPrice)) || 0;
     });
 
     // If not found, create dummy creative data specifically for this user
@@ -138,12 +107,13 @@ async function openUserDetailsModal(userId) {
                 ${activityHtml}
 
                 <div style="position:relative; width:100%; margin-bottom:16px;">
-                    <button onclick="event.stopPropagation(); if(typeof openMessagingChat==='function') openMessagingChat('${user.id}', '${(user.name || 'User').replace(/'/g, "\\'")}');" style="width:100%; padding:14px; border:none; border-radius:14px; font-weight:700; font-size:0.9rem; cursor:pointer; background:#e0f2fe; color:#8b5cf6; transition:0.2s; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <button onclick="event.stopPropagation(); if(typeof openMessagingChat==='function') openMessagingChat('${user.id}', '${(user.name || 'User').replace(/'/g, "\\'")}');" style="width:100%; padding:14px; border:none; border-radius:14px; font-weight:700; font-size:0.9rem; cursor:pointer; background:#e0f2fe; color:#6366f1; transition:0.2s; display:flex; align-items:center; justify-content:center; gap:8px;">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
                         Message User
                     </button>
                     ${(() => {
-                        const unread = msgs.filter(m => (m.senderId === user.id || m.sender_id === user.id) && (m.receiverId === 'ADMIN' || m.receiver_id === 'ADMIN') && !(m.readBy || []).includes('ADMIN') && !(m.deletedFor || []).includes('ADMIN')).length;
+                        const msgs = JSON.parse(localStorage.getItem('nd_messages') || '[]');
+                        const unread = msgs.filter(m => m.senderId === user.id && m.receiverId === 'ADMIN' && !(m.readBy || []).includes('ADMIN') && !(m.deletedFor || []).includes('ADMIN')).length;
                         return unread > 0 ? `<span style="position:absolute; top:-6px; right:-6px; background:#ff4d4d; color:white; font-size:9px; font-weight:800; min-width:18px; height:18px; padding:0 4px; border-radius:12px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 0 8px rgba(255,77,77,0.4); z-index:10;">${unread > 9 ? '9+' : unread}</span>` : '';
                     })()}
                 </div>
@@ -225,7 +195,6 @@ function closeUserDetailsModal() {
         }, 300);
     }
 }
-
 
 
 
