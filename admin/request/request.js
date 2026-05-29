@@ -97,6 +97,13 @@ function renderAdminRequests() {
         });
     }
 
+    // Ensure requests are sorted from newest to oldest
+    requests.sort((a, b) => {
+        const timeA = new Date(a.timestamp).getTime();
+        const timeB = new Date(b.timestamp).getTime();
+        return timeB - timeA;
+    });
+
     if (requests.length === 0) {
         listContainer.innerHTML = `
             <div class="empty-requests">
