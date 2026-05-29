@@ -52,8 +52,7 @@ function renderManageUsersList(search = '') {
     const list = document.getElementById('muUserList');
     if (!list) return;
     const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
-    let filtered = [...users];
-
+    let filtered = users.filter(u => !u.is_admin);
     // Get pending requests for badge counting
     const allRequests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
     const userPendingMap = {};
