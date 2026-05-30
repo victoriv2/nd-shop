@@ -16,6 +16,7 @@
         'nd_debtor_notes': 'debtor_notes',
         'nd_debt_requests': 'debt_requests',
         'nd_expenses_notebook': 'expenses_notebook',
+        'nd_user_cart_data': 'user_carts',
         'nd_income_allocations': 'income_allocations',
         'nd_ai_chat_history': 'ai_chat_history',
         'nd_ai_chat_threads': 'ai_chat_threads',
