@@ -384,6 +384,19 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
         res.status(500).json({ success: false, error: 'Internal server error.' });
     }
 });
+app.get('/api/storage-stats', async (req, res) => {
+    try {
+        const { data, error } = await supabase.rpc('get_db_size');
+        if (error) {
+            console.error('[storage-stats] RPC error:', error.message);
+            return res.status(500).json({ success: false, error: error.message });
+        }
+        res.json({ success: true, sizeBytes: data });
+    } catch (err) {
+        console.error('[storage-stats] Fatal error:', err.message);
+        res.status(500).json({ success: false, error: 'Internal server error.' });
+    }
+});
 
 app.get('/api/get-table/:table', optionalToken, async (req, res) => {
     try {

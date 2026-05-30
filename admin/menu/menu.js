@@ -211,23 +211,32 @@ function initAdminMenu() {
     }
 }
 
-function calculateStorageUsage() {
-    let total = 0;
-    for (const key in localStorage) {
-        if (localStorage.hasOwnProperty(key)) {
-            total += (localStorage[key].length + key.length) * 2;
-        }
-    }
-
-    // Calculate percentage based on common 5MB limit
-    const fiveMB = 5 * 1024 * 1024;
-    const percent = Math.min((total / fiveMB) * 100, 100).toFixed(1);
-
+async function calculateStorageUsage() {
     const bar = document.getElementById('storagePercent');
     const label = document.querySelector('.stat-label');
 
-    if (bar) bar.style.width = percent + '%';
-    if (label) label.textContent = `System Storage: ${percent}% Full`;
+    if (label) label.textContent = `SYSTEM STORAGE: CALCULATING...`;
+
+    try {
+        const response = await fetch(`${window.API_BASE || ''}/api/storage-stats`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const resData = await response.json();
+        if (!resData.success) throw new Error(resData.error);
+
+        // Supabase Free Tier gives 500MB
+        const dbSizeBytes = resData.sizeBytes || 0;
+        const limitBytes = 500 * 1024 * 1024;
+        
+        let percent = (dbSizeBytes / limitBytes) * 100;
+        percent = Math.min(percent, 100).toFixed(1);
+
+        if (bar) bar.style.width = percent + '%';
+        if (label) label.textContent = `SYSTEM STORAGE: ${percent}% FULL`;
+    } catch (e) {
+        console.warn('Could not fetch true DB size:', e);
+        if (label) label.textContent = `SYSTEM STORAGE: UNKNOWN`;
+    }
 }
 
 function updateManageUsersBadge() {
