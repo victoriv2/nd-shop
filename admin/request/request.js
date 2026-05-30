@@ -99,8 +99,10 @@ function renderAdminRequests() {
 
     // Ensure requests are sorted from newest to oldest
     requests.sort((a, b) => {
-        const timeA = new Date(a.timestamp).getTime();
-        const timeB = new Date(b.timestamp).getTime();
+        let timeA = new Date(a.timestamp).getTime();
+        let timeB = new Date(b.timestamp).getTime();
+        if (isNaN(timeA)) timeA = 0;
+        if (isNaN(timeB)) timeB = 0;
         return timeB - timeA;
     });
 

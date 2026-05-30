@@ -339,7 +339,7 @@ app.post('/api/upload', optionalToken, async (req, res) => {
 app.post('/api/sync-items', optionalToken, async (req, res) => {
     try {
         const { table, operations } = req.body;
-        const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'ai_chat_history', 'community_messages'];
+        const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'ai_chat_history', 'community_messages', 'user_carts'];
         const settingsTables = ['admin_settings'];
         
         if (![...jsonbTables, ...settingsTables].includes(table)) {
@@ -347,7 +347,7 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
         }
 
         const isAdmin = req.user && req.user.is_admin;
-        const allowedForUser = ['requests', 'messages', 'ai_chat_history', 'community_messages'];
+        const allowedForUser = ['requests', 'messages', 'ai_chat_history', 'community_messages', 'user_carts'];
 
         // If the user doesn't have an admin token, we will TEMPORARILY allow the write 
         // to prevent data loss (since old clients use local authentication).

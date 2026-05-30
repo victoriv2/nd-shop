@@ -64,11 +64,28 @@ function closeCart() {
 }
 
 function getCartData() {
-    return JSON.parse(localStorage.getItem('nd_user_cart_data') || '[]');
+    const allCarts = JSON.parse(localStorage.getItem('nd_user_cart_data') || '[]');
+    const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user')) || { id: '00000ND' };
+    return allCarts.filter(item => item.userId === user.id);
 }
 
 function saveCartData(cart) {
-    localStorage.setItem('nd_user_cart_data', JSON.stringify(cart));
+    const allCarts = JSON.parse(localStorage.getItem('nd_user_cart_data') || '[]');
+    const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user')) || { id: '00000ND' };
+    
+    // Remove all items for this user from the master array
+    const otherUsersCarts = allCarts.filter(item => item.userId !== user.id);
+    
+    // Ensure all new cart items have userId and id
+    cart.forEach(item => {
+        item.userId = user.id;
+        if (!item.id) {
+            item.id = 'cart_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+    });
+
+    const mergedCarts = [...otherUsersCarts, ...cart];
+    localStorage.setItem('nd_user_cart_data', JSON.stringify(mergedCarts));
     updateCartBadge();
     renderCartItems();
 }
@@ -312,8 +329,8 @@ function handleCheckout() {
         btn.style.backgroundColor = '#22c55e'; // Green success
         
         setTimeout(() => {
-            // Clear cart
-            localStorage.setItem('nd_user_cart_data', '[]');
+            // Clear cart safely
+            saveCartData([]);
             updateCartBadge();
             closeCart();
             
