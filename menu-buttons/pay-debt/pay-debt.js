@@ -503,7 +503,7 @@ async function handlePayDebtSubmit() {
 
     try {
         // 1. Call x.ai API to extract amount from receipt
-        const XAI_MODEL = 'grok-2-latest';
+        const XAI_MODEL = 'grok-4.20-0309-reasoning';
         
         const systemPrompt = `You are an AI assistant processing bank transfer receipts for a debt payment system.
 Your job is to extract the exact total amount paid from the provided receipt image.

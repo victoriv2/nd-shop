@@ -1,4 +1,4 @@
-const CAI_MODEL = 'grok-2-latest';
+const CAI_MODEL = 'grok-4.20-0309-reasoning';
 
 const CAI_CAI_SYSTEM_PROMPT = `
 You are a friendly, helpful, and intelligent AI Shopping Assistant for a store named ${localStorage.getItem('nd_shop_name') || 'Nd shop'}.

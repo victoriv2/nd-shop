@@ -435,7 +435,7 @@ async function generateTotalFromAI() {
 
     // Use the existing AI key & model shared across the admin
     const apiKey = (typeof XAI_API_KEY !== 'undefined') ? XAI_API_KEY : localStorage.getItem('nd_xai_api_key');
-    const model  = (typeof XAI_MODEL  !== 'undefined') ? XAI_MODEL  : 'grok-4-1-fast-reasoning';
+    const model  = (typeof XAI_MODEL  !== 'undefined') ? XAI_MODEL  : 'grok-4.20-0309-reasoning';
 
     if (!apiKey) {
         // Fallback or warning if we want to enforce backend auth

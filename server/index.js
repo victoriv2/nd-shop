@@ -439,8 +439,8 @@ app.post('/api/ai-chat', optionalToken, async (req, res) => {
         // Prefer env var, fallback to requested override for backwards compatibility testing
         const XAI_API_KEY = process.env.XAI_API_KEY || apiKeyOverride || 'xai-0Rcj7hvD1iuPzIYQPpi65Iz105iB4357w05JWcEzHXxE6Ff24jp9fobyi0HiOazBXJaUpiBB5hdEhqtI';
 
-        // Force model to a valid one, ignoring frontend legacy strings like 'grok-4-1-fast-reasoning'
-        const finalModel = (model && model.includes('grok-2')) ? model : 'grok-2-latest';
+        // Force model to a valid one
+        const finalModel = 'grok-4.20-0309-reasoning';
 
         const response = await axios.post('https://api.x.ai/v1/chat/completions', {
             model: finalModel,

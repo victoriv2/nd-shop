@@ -1,5 +1,5 @@
 // XAI_API_KEY removed for security. Routed through backend.
-const XAI_MODEL = 'grok-2-latest';
+const XAI_MODEL = 'grok-4.20-0309-reasoning';
 
 const SYSTEM_PROMPT = `
 You are an expert inventory analyst and all-knowing assistant for an admin management system called ${localStorage.getItem('nd_shop_name') || 'Nd shop'}. 

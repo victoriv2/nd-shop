@@ -1,4 +1,4 @@
-const XAI_MODEL = 'grok-2-latest';
+const XAI_MODEL = 'grok-4.20-0309-reasoning';
 
 const SYSTEM_PROMPT = `
 You are a friendly, helpful, and intelligent AI Shopping Assistant for a store named ${localStorage.getItem('nd_shop_name') || 'Nd shop'}.
