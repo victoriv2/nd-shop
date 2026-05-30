@@ -293,7 +293,14 @@ function handleCheckout() {
 
     // Create Grouped Request Payload
     const requestID = 'ORD-' + Date.now().toString().slice(-4) + Math.floor(Math.random() * 90 + 10);
-    const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user')) || { id: '00000ND', firstName: 'Customer', lastName: '' };
+    let user = window.loggedInUser;
+    if (!user) {
+        try {
+            const stored = localStorage.getItem('nd_logged_in_user');
+            if (stored && stored !== 'undefined') user = JSON.parse(stored);
+        } catch(e) {}
+    }
+    user = user || { id: '00000ND', firstName: 'Customer', lastName: '' };
     
     let orderTotal = 0;
     let orderPayout = 0;
@@ -319,7 +326,13 @@ function handleCheckout() {
     };
 
     // Save to Requests DB
-    const existingReqs = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
+    let existingReqs = [];
+    try {
+        const stored = localStorage.getItem('nd_requests_data');
+        if (stored && stored !== 'undefined') existingReqs = JSON.parse(stored);
+    } catch(e) {}
+    if (!Array.isArray(existingReqs)) existingReqs = [];
+    
     existingReqs.unshift(newRequest);
     localStorage.setItem('nd_requests_data', JSON.stringify(existingReqs));
 
