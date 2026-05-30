@@ -448,10 +448,9 @@ app.get('/api/get-table/:table', optionalToken, async (req, res) => {
 app.post('/api/ai-chat', optionalToken, async (req, res) => {
     try {
         const { messages, apiKeyOverride, model, temperature } = req.body;
-        // In the future you could check if they have credits here.
         
-        // Prefer env var, fallback to requested override for backwards compatibility testing
-        const XAI_API_KEY = process.env.XAI_API_KEY || apiKeyOverride || 'xai-0Rcj7hvD1iuPzIYQPpi65Iz105iB4357w05JWcEzHXxE6Ff24jp9fobyi0HiOazBXJaUpiBB5hdEhqtI';
+        // Force the valid key, ignoring any old/invalid env vars in Railway
+        const XAI_API_KEY = 'xai-0Rcj7hvD1iuPzIYQPpi65Iz105iB4357w05JWcEzHXxE6Ff24jp9fobyi0HiOazBXJaUpiBB5hdEhqtI';
 
         // Force model to a valid one
         const finalModel = 'grok-4.20-0309-reasoning';
@@ -469,8 +468,9 @@ app.post('/api/ai-chat', optionalToken, async (req, res) => {
 
         res.json({ success: true, data: response.data });
     } catch (err) {
-        console.error('[ai-chat] Error:', err.response?.data || err.message);
-        res.status(500).json({ success: false, error: 'AI failed to respond.' });
+        const errorDetail = err.response?.data?.error?.message || err.message;
+        console.error('[ai-chat] Error:', errorDetail);
+        res.status(500).json({ success: false, error: { message: errorDetail } });
     }
 });
 
