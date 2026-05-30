@@ -14,6 +14,7 @@ dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 
+
 // ==========================================
 // 1. ENVIRONMENT & CONFIGURATION
 // ==========================================
@@ -463,6 +464,28 @@ app.post('/api/ai-chat', optionalToken, async (req, res) => {
 // ==========================================
 // 6. SERVER STARTUP
 // ==========================================
+app.post('/api/factory-reset', optionalToken, async (req, res) => {
+    try {
+        const { wipeMessages } = req.body;
+        // The tables to completely empty
+        let tablesToWipe = ['products', 'requests', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations'];
+        
+        if (wipeMessages) {
+            tablesToWipe = tablesToWipe.concat(['messages', 'community_messages', 'ai_chat_history']);
+        }
+
+        // Delete all rows in these tables
+        for (const table of tablesToWipe) {
+            await supabase.from(table).delete().not('id', 'is', null);
+        }
+
+        return res.json({ success: true });
+    } catch (err) {
+        console.error('Factory reset error:', err);
+        return res.status(500).json({ success: false, error: 'Failed to factory reset database.' });
+    }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n========================================`);
     console.log(`🚀 ND Shop Clean Backend Running!`);

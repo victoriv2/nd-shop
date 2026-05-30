@@ -93,8 +93,17 @@ function factoryReset() {
                 
                 if (pin === requiredPin) {
                     localStorage.clear();
-                    customAlert('System wiped. Reloading application...').then(() => {
-                        window.location.reload();
+                    fetch(`${window.API_BASE}/api/factory-reset`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ wipeMessages: true })
+                    }).finally(() => {
+                        customAlert('System wiped from cloud and local. Reloading application...').then(() => {
+                            window.location.reload();
+                        });
                     });
                 } else if (pin !== null) {
                     customAlert('Incorrect PIN. Factory reset cancelled.');
@@ -213,17 +222,31 @@ function executeMaintReset() {
         localStorage.removeItem(key);
     });
 
-    closeMaintResetModal();
-    const msg = doWipeMsgs
-        ? 'Reset complete. All data (including messages) wiped. User accounts preserved.'
-        : 'Reset complete. All business data wiped. Messages and user accounts preserved.';
+    // Call the server to wipe Supabase database
+    fetch(`${window.API_BASE}/api/factory-reset`, {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ wipeMessages: doWipeMsgs })
+    }).then(() => {
+        closeMaintResetModal();
+        const msg = doWipeMsgs
+            ? 'Reset complete. All data (including messages) wiped from Cloud and Local. User accounts preserved.'
+            : 'Reset complete. All business data wiped from Cloud and Local. Messages and user accounts preserved.';
 
-    if (typeof customAlert !== 'undefined') {
-        customAlert(msg).then(() => window.location.reload());
-    } else {
-        alert(msg);
+        if (typeof customAlert !== 'undefined') {
+            customAlert(msg).then(() => window.location.reload());
+        } else {
+            alert(msg);
+            window.location.reload();
+        }
+    }).catch(err => {
+        console.error('Failed to wipe cloud data', err);
+        alert('Error communicating with server for factory reset.');
         window.location.reload();
-    }
+    });
 }
 
 
