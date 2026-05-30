@@ -99,7 +99,7 @@ function factoryReset() {
                             'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ wipeMessages: true })
+                        body: JSON.stringify({ wipeMessages: true, wipeUsers: true })
                     }).finally(() => {
                         customAlert('System wiped from cloud and local. Reloading application...').then(() => {
                             window.location.reload();

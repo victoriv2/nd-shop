@@ -466,7 +466,7 @@ app.post('/api/ai-chat', optionalToken, async (req, res) => {
 // ==========================================
 app.post('/api/factory-reset', optionalToken, async (req, res) => {
     try {
-        const { wipeMessages } = req.body;
+        const { wipeMessages, wipeUsers } = req.body;
         // The tables to completely empty
         let tablesToWipe = ['products', 'requests', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations'];
         
@@ -477,6 +477,12 @@ app.post('/api/factory-reset', optionalToken, async (req, res) => {
         // Delete all rows in these tables
         for (const table of tablesToWipe) {
             await supabase.from(table).delete().not('id', 'is', null);
+        }
+
+        // Handle user wiping (Option 4 / Hard Wipe)
+        if (wipeUsers) {
+            // Delete all users except admins
+            await supabase.from('users').delete().eq('is_admin', false);
         }
 
         return res.json({ success: true });
