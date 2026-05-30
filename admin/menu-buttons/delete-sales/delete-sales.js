@@ -377,6 +377,26 @@ function initDeleteSales() {
             salesData = sampleData; // sync if needed
         }
 
+        const saleToDelete = salesData[index];
+        if (saleToDelete && saleToDelete.qty > 0) {
+            // Restore inventory stock
+            let products = [];
+            try {
+                products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+            } catch(e) {}
+            
+            // Match by productId if it exists, otherwise fallback to item name
+            const productIndex = products.findIndex(p => 
+                (saleToDelete.productId && p.id === saleToDelete.productId) || 
+                (p.name === saleToDelete.item)
+            );
+
+            if (productIndex !== -1) {
+                products[productIndex].stock = (parseInt(products[productIndex].stock) || 0) + parseInt(saleToDelete.qty);
+                localStorage.setItem('nd_products_data', JSON.stringify(products));
+            }
+        }
+
         salesData.splice(index, 1);
         
         // Save back
