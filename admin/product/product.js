@@ -447,7 +447,7 @@ function initAdminProductLogic() {
         const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
         const globalPayoutRate = parseFloat(localStorage.getItem('nd_payout_rate') || '2');
         productList.innerHTML = filtered.map(p => {
-            const currentRate = p.payoutRate !== undefined ? parseFloat(p.payoutRate) : globalPayoutRate;
+            const currentRate = globalPayoutRate;
             
             let priceVal = 0;
             let costVal = parseFloat(p.cost) || 0;
@@ -507,7 +507,7 @@ function initAdminProductLogic() {
                                     const showOld = !isOutOfStock && (p.isOldStock || (p.isNewStock && !isCurrentMonth));
                                     
                                     let badges = '';
-                                    if (showNew) badges += '<span style="background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; font-size: 0.70rem; font-weight: 800; border: 1px solid #6ee7b7;">NEW STOCK</span>';
+                                    if (showNew) badges += '<span style="background: #006400; color: #ffffff; padding: 2px 6px; border-radius: 4px; font-size: 0.70rem; font-weight: 800; border: 1px solid #004d00;">NEW STOCK</span>';
                                     if (showOld) badges += '<span style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-size: 0.70rem; font-weight: 800; border: 1px solid #fde68a;">OLD STOCK</span>';
                                     return badges;
                                 })()}

@@ -361,7 +361,7 @@ function renderRestockList(filter = '') {
                                 ${isOutOfStock ? '<span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; border: 1px solid #dc2626; animation: blink 1.5s infinite;">FINISHED</span>' : ''}
                                 ${isRunningLow ? '<span style="background: #eab308; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; border: 1px solid #ca8a04;">RUNNING LOW</span>' : ''}
                                 ${!isOutOfStock && hasOld ? '<span style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; border: 1px solid #fde68a;">OLD STOCK</span>' : ''}
-                                ${!isOutOfStock && hasNew ? '<span style="background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; border: 1px solid #6ee7b7;">NEW STOCK</span>' : ''}
+                                ${!isOutOfStock && hasNew ? '<span style="background: #006400; color: #ffffff; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; border: 1px solid #004d00;">NEW STOCK</span>' : ''}
                             </div>
                             <span class="restock-item-meta">${formattedDate} · ${p.unit || ''}</span>
                             ${isOutOfStock ? '<div style="margin-top: 8px;"><button style="background: #ef4444; color: white; padding: 6px 12px; font-weight: 900; font-size: 0.75rem; border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3); outline: none;">RESTOCK NOW</button></div>' : ''}
