@@ -339,7 +339,7 @@ app.post('/api/upload', optionalToken, async (req, res) => {
 app.post('/api/sync-items', optionalToken, async (req, res) => {
     try {
         const { table, operations } = req.body;
-        const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'admin_settings', 'ai_chat_history', 'user_carts', 'ai_chat_threads', 'user_ai_chat_threads'];
+        const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'admin_settings', 'ai_chat_history', 'ai_chat_threads', 'user_ai_chat_threads'];
         const settingsTables = ['admin_settings'];
         
         if (![...jsonbTables, ...settingsTables].includes(table)) {
@@ -347,7 +347,7 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
         }
 
         const isAdmin = req.user && req.user.is_admin;
-        const allowedForUser = ['requests', 'messages', 'ai_chat_history', 'community_messages', 'user_carts'];
+        const allowedForUser = ['requests', 'messages', 'ai_chat_history', 'community_messages'];
 
         // If the user doesn't have an admin token, we will TEMPORARILY allow the write 
         // to prevent data loss (since old clients use local authentication).
@@ -404,7 +404,7 @@ app.get('/api/get-table/:table', optionalToken, async (req, res) => {
         const userId = req.user ? req.user.id : null;
         const isAdmin = req.user && req.user.is_admin;
         // ALL data tables use JSONB { id, data } pattern including products
-        const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'ai_chat_history', 'community_messages', 'user_carts', 'ai_chat_threads', 'user_ai_chat_threads'];
+        const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'ai_chat_history', 'community_messages', 'ai_chat_threads', 'user_ai_chat_threads'];
         const settingsTables = ['admin_settings'];
 
         if (![...jsonbTables, ...settingsTables].includes(table)) {

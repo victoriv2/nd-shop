@@ -19,8 +19,7 @@
         'nd_income_allocations': 'income_allocations',
         'nd_ai_chat_history': 'ai_chat_history',
         'nd_ai_chat_threads': 'ai_chat_threads',
-        'nd_user_ai_chat_threads': 'user_ai_chat_threads',
-        'nd_user_cart_data': 'user_carts'
+        'nd_user_ai_chat_threads': 'user_ai_chat_threads'
     };
 
     const SETTINGS_KEYS = [
