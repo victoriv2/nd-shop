@@ -401,7 +401,7 @@ app.get('/api/storage-stats', async (req, res) => {
 app.get('/api/get-table/:table', optionalToken, async (req, res) => {
     try {
         const { table } = req.params;
-        const userId = req.user ? req.user.id : null;
+        const userId = req.user ? req.user.id : (req.query.userId || null);
         const isAdmin = req.user && req.user.is_admin;
         // ALL data tables use JSONB { id, data } pattern including products
         const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'ai_chat_history', 'community_messages', 'ai_chat_threads', 'user_ai_chat_threads'];

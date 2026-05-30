@@ -293,7 +293,7 @@ function handleCheckout() {
 
     // Create Grouped Request Payload
     const requestID = 'ORD-' + Date.now().toString().slice(-4) + Math.floor(Math.random() * 90 + 10);
-    const user = window.loggedInUser || { id: '00000ND', firstName: 'Customer', lastName: '' };
+    const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user')) || { id: '00000ND', firstName: 'Customer', lastName: '' };
     
     let orderTotal = 0;
     let orderPayout = 0;
