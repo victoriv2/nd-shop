@@ -404,6 +404,7 @@
                         : container.scrollTop;
                     if (scrollTop === 0 && e.touches.length === 1) {
                         startY = e.touches[0].pageY;
+                        currentY = startY;
                         isPulling = true;
                         
                         container.style.transition = '';
@@ -421,7 +422,7 @@
                         const pullDistance = Math.min(diff * 0.4, 80); // damping & max threshold
                         container.style.transform = `translateY(${pullDistance}px)`;
                     } else {
-                        isPulling = false;
+                        // Do not cancel the pull, just reset visual position so they can pull down again
                         container.style.transform = '';
                     }
                 }, { passive: false });
@@ -434,12 +435,19 @@
                     container.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
                     container.style.transform = '';
                     
-                    if (diff > 100) { // pull down threshold met
+                    if (diff > 60) { // relaxed pull down threshold
                         if (window.showGlobalRefreshLoader) window.showGlobalRefreshLoader();
                         setTimeout(() => {
                             location.reload();
                         }, 100); // small delay to let the UI update
                     }
+                });
+
+                container.addEventListener('touchcancel', () => {
+                    if (!isPulling) return;
+                    isPulling = false;
+                    container.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+                    container.style.transform = '';
                 });
             });
         }
