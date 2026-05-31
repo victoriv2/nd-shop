@@ -143,8 +143,12 @@
         } catch (e) {}
         
         operations.forEach(op => {
-            // Check if this exact operation for this item ID is already in the queue to avoid duplication
-            const isDup = queue.some(q => q.table === table && q.operation.type === op.type && (q.operation.id === op.id || (q.operation.data && q.operation.data.id === op.id)));
+            const isDup = queue.some(q => {
+                if (q.table !== table || q.operation.type !== op.type) return false;
+                if (op.id && q.operation.id === op.id) return true;
+                if (op.data && op.data.id && q.operation.data && q.operation.data.id === op.data.id) return true;
+                return false;
+            });
             if (!isDup) {
                 queue.push({
                     id: 'sync_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
