@@ -453,7 +453,7 @@ app.post('/api/ai-chat', optionalToken, async (req, res) => {
         const XAI_API_KEY = 'xai-0Rcj7hvD1iuPzIYQPpi65Iz105iB4357w05JWcEzHXxE6Ff24jp9fobyi0HiOazBXJaUpiBB5hdEhqtI';
 
         // Force model to a valid one
-        const finalModel = 'grok-beta';
+        const finalModel = 'grok-4.20-0309-reasoning';
 
         const response = await axios.post('https://api.x.ai/v1/chat/completions', {
             model: finalModel,
