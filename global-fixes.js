@@ -382,8 +382,11 @@
 
         // --- Custom Mobile Pull Down To Refresh ---
         if (window.matchMedia('(max-width: 1023px)').matches) {
-            const isAuthPage = document.body.classList.contains('auth-body');
-            const scrollContainers = isAuthPage 
+            const isAuthOrAdmin = document.body.classList.contains('auth-body') || 
+                                  window.location.pathname.includes('/admin') ||
+                                  !!document.getElementById('adminLoginScreen');
+                                  
+            const scrollContainers = isAuthOrAdmin 
                 ? [document.body]
                 : [
                     document.getElementById('payout-container'),
@@ -399,7 +402,7 @@
                 let isPulling = false;
 
                 container.addEventListener('touchstart', (e) => {
-                    const scrollTop = isAuthPage 
+                    const scrollTop = isAuthOrAdmin 
                         ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop)
                         : container.scrollTop;
                     if (scrollTop === 0 && e.touches.length === 1) {
@@ -438,7 +441,15 @@
                     if (diff > 60) { // relaxed pull down threshold
                         if (window.showGlobalRefreshLoader) window.showGlobalRefreshLoader();
                         setTimeout(() => {
-                            location.reload();
+                            try {
+                                if (window.parent && window.parent.location) {
+                                    window.parent.location.reload(true);
+                                } else {
+                                    window.location.reload(true);
+                                }
+                            } catch (e) {
+                                window.location.href = window.location.pathname + window.location.search + window.location.hash;
+                            }
                         }, 100); // small delay to let the UI update
                     }
                 });
