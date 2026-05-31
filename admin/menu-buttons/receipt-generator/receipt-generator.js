@@ -385,51 +385,39 @@ window.printReceiptGen = function() {
         return;
     }
     
-    const printArea = document.getElementById('rgPreviewDoc').innerHTML;
+    const printArea = document.getElementById('rgPreviewDoc');
+    const receiptNum = document.getElementById('rPreviewId').textContent.trim() || 'RCPT';
     
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '1px';
-    iframe.style.height = '1px';
-    iframe.style.opacity = '0.01';
-    iframe.style.border = '0';
-    document.body.appendChild(iframe);
+    const opt = {
+        margin: 10,
+        filename: `Receipt_${receiptNum}.pdf`,
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
 
-    const doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write(`
-        <html>
-            <head>
-                <title>Receipt</title>
-                <style>
-                    body { font-family: 'Courier New', Courier, monospace; color: #000; padding: 20px; -webkit-print-color-adjust: exact; }
-                    table { width: 100%; border-collapse: collapse; }
-                    img { max-height: 70px; object-fit: contain; }
-                </style>
-            </head>
-            <body>
-                ${printArea}
-                <script>
-                    window.onload = function() {
-                        setTimeout(() => {
-                            window.focus();
-                            window.print();
-                        }, 500);
-                    };
-                </script>
-            </body>
-        </html>
-    `);
-    doc.close();
+    const btn = document.querySelector('.use-ai-btn');
+    const originalText = btn ? btn.textContent : 'Print Layout';
+    if (btn) {
+        btn.textContent = 'Downloading...';
+        btn.style.opacity = '0.7';
+        btn.style.pointerEvents = 'none';
+    }
 
-    // Secondary trigger for browsers that might ignore the inline script onload
-    setTimeout(() => {
-        if (iframe && iframe.parentNode) {
-            document.body.removeChild(iframe);
+    html2pdf().set(opt).from(printArea).save().then(() => {
+        if (btn) {
+            btn.textContent = originalText;
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
         }
-    }, 5000); // Increased timeout to ensure print dialog finishes
+    }).catch(err => {
+        console.error("PDF generation failed:", err);
+        if (btn) {
+            btn.textContent = originalText;
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+        }
+    });
 }
 
 // -------------------------------------------------------------------

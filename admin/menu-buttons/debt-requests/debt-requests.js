@@ -334,9 +334,7 @@ window.approveDebtRequest = function(requestId) {
         }
 
         if (isClear) {
-            dbUserNotesIdxs.forEach(idx => {
-                debtorNotes[idx].content = `${req.user ? req.user.firstName : 'User'} (ID: ${req.userId}) Debt Cleared.`;
-            });
+            debtorNotes = debtorNotes.filter((_, idx) => !dbUserNotesIdxs.includes(idx));
             req.status = 'Approved';
             req.aiAction = 'Admin Manually Cleared total debt.';
             localStorage.setItem('nd_debtor_notes', JSON.stringify(debtorNotes));
@@ -344,7 +342,7 @@ window.approveDebtRequest = function(requestId) {
             localStorage.setItem('nd_debt_requests', JSON.stringify(requests));
             if (typeof updateDebtRequestsBadge === 'function') updateDebtRequestsBadge();
             renderDebtRequests();
-            drShowAlert({ title: 'Debt Cleared!', message: `The full debt for ${req.user ? req.user.firstName : 'this user'} has been cleared in the Debtor Book.`, type: 'success' });
+            drShowAlert({ title: 'Debt Cleared!', message: `The full debt for ${req.user ? req.user.firstName : 'this user'} has been deleted from the Debtor Book.`, type: 'success' });
         } else {
             if (dbUserNotesIdxs.length === 0) {
                 drShowAlert({ title: 'Payment Declined', message: 'No matching entry was found in the Debtor Book for this user. The payment has been marked as DECLINED since no deduction could be made.', type: 'warning' });
@@ -364,6 +362,7 @@ window.approveDebtRequest = function(requestId) {
             
             let parsedTotal = 0;
             let remaining = 0;
+            let wasDeleted = false;
             
             if (totalMatch) {
                 const originalTotalText = totalMatch[0]; 
@@ -371,7 +370,8 @@ window.approveDebtRequest = function(requestId) {
                 remaining = parsedTotal - amountNum;
                 
                 if (remaining <= 0) {
-                    debtorNotes[mainNoteIdx].content = nContent.replace(originalTotalText, `total 0 (Paid ₦${amountNum.toLocaleString()} fully cleared from ${parsedTotal.toLocaleString()})`);
+                    debtorNotes.splice(mainNoteIdx, 1);
+                    wasDeleted = true;
                 } else {
                     debtorNotes[mainNoteIdx].content = nContent.replace(originalTotalText, `total ${remaining.toLocaleString()} (Paid ₦${amountNum.toLocaleString()} out of ${parsedTotal.toLocaleString()})`);
                 }
@@ -386,7 +386,11 @@ window.approveDebtRequest = function(requestId) {
             localStorage.setItem('nd_debt_requests', JSON.stringify(requests));
             if (typeof updateDebtRequestsBadge === 'function') updateDebtRequestsBadge();
             renderDebtRequests();
-            drShowAlert({ title: 'Payment Approved', message: `₦${amountNum.toLocaleString()} was successfully recorded and the Debtor Note was updated.`, type: 'success' });
+            if (wasDeleted) {
+                drShowAlert({ title: 'Payment Approved', message: `₦${amountNum.toLocaleString()} was successfully recorded and the Debtor Note was deleted because the debt is fully cleared.`, type: 'success' });
+            } else {
+                drShowAlert({ title: 'Payment Approved', message: `₦${amountNum.toLocaleString()} was successfully recorded and the Debtor Note was updated.`, type: 'success' });
+            }
         }
     });
 };

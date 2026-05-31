@@ -241,13 +241,20 @@ function initDeleteSales() {
         }
 
         // Map sales to index so deletion removes correct global item even after sorting
-        const mappedSales = allSales.map((sale, originalIndex) => ({
-            ...sale,
-            originalIndex,
-            parsedDateObj: parseSaleDate(sale.date), // for day comparison
-            realDateObj: new Date(sale.date.replace('·', '').trim() || new Date()), // for sorting newest/oldest
-            totalCalc: sale.isFlexible ? (parseFloat(sale.unitPrice) || 0) : (parseFloat(sale.qty) || 1) * (parseFloat(sale.unitPrice) || 0)
-        }));
+        const mappedSales = allSales.map((sale, originalIndex) => {
+            const isRequest = sale.type === 'Request';
+            const baseTotal = sale.isFlexible ? (parseFloat(sale.unitPrice) || 0) : (parseFloat(sale.qty) || 1) * (parseFloat(sale.unitPrice) || 0);
+            const payout = isRequest ? (sale.payout != null ? sale.payout : (baseTotal * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100))) : 0;
+            const total = (sale.price !== undefined && sale.price !== null && sale.price !== '') ? Number(sale.price) : (baseTotal - payout);
+            return {
+                ...sale,
+                originalIndex,
+                parsedDateObj: parseSaleDate(sale.date), // for day comparison
+                realDateObj: new Date(sale.date.replace('·', '').trim() || new Date()), // for sorting newest/oldest
+                totalCalc: total,
+                payout: payout
+            };
+        });
 
         // Determine current month bounds
         const now = new Date();
@@ -340,11 +347,11 @@ function initDeleteSales() {
                 deleteTargetIndex = parseInt(e.currentTarget.getAttribute('data-index'));
                 
                 // Set modal text
-                const saleData = allSales[deleteTargetIndex];
+                const saleData = mappedSales.find(s => s.originalIndex === deleteTargetIndex);
                 document.getElementById('dsConfirmMsgText').innerHTML = `
                     Are you sure you want to delete this sale?<br><br>
                     <strong>Item:</strong> ${saleData.item}<br>
-                    <strong>Price:</strong> ₦${formatCurrency(saleData.isFlexible ? (parseFloat(saleData.unitPrice) || 0) : (parseFloat(saleData.qty) || 1) * (parseFloat(saleData.unitPrice) || 0))}
+                    <strong>Price:</strong> ₦${formatCurrency(saleData.totalCalc)}
                 `;
                 
                 // Show modal
