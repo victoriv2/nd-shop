@@ -268,6 +268,125 @@ app.post('/api/verify-otp', otpLimiter, (req, res) => {
     }
 });
 
+app.post('/api/reset-admin-credentials', async (req, res) => {
+    try {
+        const { contact, code, type, newValue } = req.body;
+        if (!contact || !code || !type || !newValue) {
+            return res.status(400).json({ success: false, error: 'Missing parameters.' });
+        }
+
+        // Verify OTP code
+        const record = otpStore[contact];
+        if (!record) return res.status(400).json({ success: false, error: 'No OTP found. Please request a new one.' });
+        if (Date.now() > record.expiresAt) {
+            delete otpStore[contact];
+            return res.status(400).json({ success: false, error: 'OTP expired.' });
+        }
+        if (record.code !== code) {
+            return res.status(400).json({ success: false, error: 'Invalid OTP.' });
+        }
+
+        // Clean up OTP
+        delete otpStore[contact];
+
+        if (type === 'password') {
+            // Hash new password
+            const hashedPassword = await bcrypt.hash(newValue, 10);
+
+            // Find the admin user with matching email or phone
+            const { data: users, error: findError } = await supabase
+                .from('users')
+                .select('id')
+                .or(`email.eq."${contact}",phone.eq."${contact}"`)
+                .eq('is_admin', true)
+                .limit(1);
+
+            if (findError || !users || users.length === 0) {
+                return res.status(404).json({ success: false, error: 'Admin account not found for this contact.' });
+            }
+
+            const adminId = users[0].id;
+
+            // Update the password in the database
+            const { error: updateError } = await supabase
+                .from('users')
+                .update({ password: hashedPassword })
+                .eq('id', adminId);
+
+            if (updateError) {
+                console.error('Failed to reset admin password in DB:', updateError.message);
+                return res.status(500).json({ success: false, error: 'Failed to reset password.' });
+            }
+        } else if (type === 'pin') {
+            // Update the PIN in admin_settings table in Supabase
+            const { error: updateError } = await supabase
+                .from('admin_settings')
+                .upsert({ id: 'nd_delete_pin', value: newValue, updated_at: new Date().toISOString() });
+
+            if (updateError) {
+                console.error('Failed to reset admin PIN in DB:', updateError.message);
+                return res.status(500).json({ success: false, error: 'Failed to reset PIN.' });
+            }
+        } else {
+            return res.status(400).json({ success: false, error: 'Invalid reset type.' });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('reset-admin-credentials error:', err);
+        res.status(500).json({ success: false, error: 'Internal server error.' });
+    }
+});
+
+app.post('/api/admin/update-credentials', authenticateToken, async (req, res) => {
+    try {
+        if (!req.user || !req.user.is_admin) {
+            return res.status(403).json({ success: false, error: 'Access Denied: Admin only.' });
+        }
+
+        const { name, email, phone, password, pin } = req.body;
+        
+        // 1. Update users table for name, email, phone, password
+        const userUpdates = {};
+        if (name !== undefined) userUpdates.name = name;
+        if (email !== undefined) userUpdates.email = email;
+        if (phone !== undefined) userUpdates.phone = phone;
+        if (password !== undefined) {
+            userUpdates.password = await bcrypt.hash(password, 10);
+        }
+
+        if (Object.keys(userUpdates).length > 0) {
+            const { error: userError } = await supabase
+                .from('users')
+                .update(userUpdates)
+                .eq('id', req.user.id);
+
+            if (userError) {
+                console.error('Failed to update admin user in DB:', userError.message);
+                return res.status(500).json({ success: false, error: 'Failed to update admin profile details.' });
+            }
+        }
+
+        // 2. Update admin_settings table for PIN
+        if (pin !== undefined) {
+            const { error: pinError } = await supabase
+                .from('admin_settings')
+                .upsert({ id: 'nd_delete_pin', value: pin, updated_at: new Date().toISOString() });
+
+            if (pinError) {
+                console.error('Failed to update PIN in DB:', pinError.message);
+                return res.status(500).json({ success: false, error: 'Failed to update Master PIN.' });
+            }
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('update-credentials fatal error:', err);
+        res.status(500).json({ success: false, error: 'Internal server error.' });
+    }
+});
+
+
 // ==========================================
 // 5. SYNC & DATA ROUTES
 // ==========================================

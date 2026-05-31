@@ -117,16 +117,60 @@ async function processAdminLogin() {
     }
 }
 
+async function getAdminUser() {
+    let users = [];
+    try {
+        const cached = localStorage.getItem('nd_users');
+        if (cached) {
+            users = JSON.parse(cached);
+        }
+    } catch (e) {}
+
+    if (!users || users.length === 0) {
+        try {
+            const res = await fetch(`${window.API_BASE}/api/users`);
+            const data = await res.json();
+            if (data.success && data.users) {
+                users = data.users;
+                localStorage.setItem('nd_users', JSON.stringify(users));
+            }
+        } catch (e) {
+            console.error('Failed to fetch users dynamically:', e);
+        }
+    }
+
+    let admin = users.find(u => u.is_admin === true);
+    if (!admin) {
+        admin = users.find(u => u.id && u.id.startsWith('nd_admin_'));
+    }
+    return admin;
+}
+
 // ===== Admin Recovery: Step 1 — Validate ID, show method modal =====
-function sendRecoveryCode() {
+async function sendRecoveryCode() {
     const inputId = document.getElementById('adminRecoveryId').value.trim();
     if (!inputId) {
         if (typeof customAlert !== 'undefined') customAlert("Please enter your registered email or phone.");
         return;
     }
 
-    const savedId = localStorage.getItem('nd_admin_id');
-    const isIdValid = inputId === savedId || (!savedId && (inputId === 'admin@nd-shop.sbs' || inputId === '08109316532' || inputId === 'mkayud@gmail.com'));
+    const admin = await getAdminUser();
+    let isIdValid = false;
+    
+    if (admin) {
+        const inputClean = inputId.replace(/[\s\-\(\)]/g, '').toLowerCase();
+        const adminEmail = (admin.email || '').toLowerCase();
+        const adminPhone = (admin.phone || '').replace(/[\s\-\(\)]/g, '');
+        const adminIdVal = (admin.id || '').toLowerCase();
+        
+        isIdValid = (inputClean === adminEmail) || 
+                    (inputClean === adminPhone) || 
+                    (inputClean === adminIdVal) ||
+                    (inputClean.startsWith('0') && adminPhone.endsWith(inputClean.substring(1))) ||
+                    (adminPhone.startsWith('0') && inputClean.endsWith(adminPhone.substring(1)));
+    } else {
+        isIdValid = (inputId === 'admin@nd-shop.sbs' || inputId === '08109316532' || inputId === 'mkayud@gmail.com' || inputId === 'nd_admin_001');
+    }
 
     if (!isIdValid) {
         if (typeof customAlert !== 'undefined') customAlert("Identifier not recognized in our system.");
@@ -135,11 +179,12 @@ function sendRecoveryCode() {
     }
 
     window._adminRecoveryId = inputId;
+    window._adminUserObj = admin;
 
     // Show the method selection modal
     const modal = document.getElementById('adminAuthMethodModal');
     if (modal) {
-        modal.classList.add('show');
+        modal.classList.add('active');
         // Pre-select email by default
         selectAdminAuthMethodHighlight('email');
     }
@@ -147,7 +192,7 @@ function sendRecoveryCode() {
 
 function closeAdminAuthMethodModal() {
     const modal = document.getElementById('adminAuthMethodModal');
-    if (modal) modal.classList.remove('show');
+    if (modal) modal.classList.remove('active');
 }
 
 // Visual highlight of selected method button
@@ -171,21 +216,30 @@ function selectAdminAuthMethod(method) {
     window._adminRecoveryMethod = method;
     closeAdminAuthMethodModal();
 
-    const inputId = window._adminRecoveryId || '';
-    const isPhoneId = /^\+?\d{7,}$/.test(inputId.replace(/[\s\-\(\)]/g, ''));
+    const admin = window._adminUserObj;
+    let contact = '';
+    
+    if (method === 'email') {
+        contact = admin ? admin.email : 'admin@nd-shop.sbs';
+    } else if (method === 'sms') {
+        contact = admin ? admin.phone : '08109316532';
+    }
 
-    let contact = inputId;
-    // Normalize phone
-    if (isPhoneId) {
-        let cleaned = inputId.replace(/[\s\-\(\)]/g, '');
-        if (cleaned.length === 11 && cleaned.startsWith('0')) cleaned = '+234' + cleaned.substring(1);
+    if (method === 'sms' && contact) {
+        let cleaned = contact.replace(/[\s\-\(\)]/g, '');
+        if (cleaned.length === 11 && cleaned.startsWith('0')) {
+            cleaned = '+234' + cleaned.substring(1);
+        }
         contact = cleaned;
     }
-    // If email chosen but phone entered, use saved email; if SMS chosen but email entered, use saved phone
-    if (method === 'email' && isPhoneId) {
-        contact = localStorage.getItem('nd_admin_email') || 'admin@nd-shop.sbs';
-    } else if (method === 'sms' && !isPhoneId) {
-        contact = localStorage.getItem('nd_admin_phone') || inputId;
+
+    if (!contact) {
+        if (typeof customAlert !== 'undefined') {
+            customAlert(`No registered ${method} found for this admin account.`);
+        } else {
+            alert(`No registered ${method} found.`);
+        }
+        return;
     }
 
     window._adminRecoveryContact = contact;
@@ -225,7 +279,7 @@ async function _doSendAdminOtp(contact, method) {
         }
     } catch (err) {
         console.error(err);
-        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running on port 5000?');
+        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running?');
         else alert('Network error.');
     } finally {
         if (btn) { btn.textContent = originalText; btn.disabled = false; }
@@ -255,11 +309,11 @@ async function verifyAdminRecovery() {
 
     try {
         const contact = window._adminRecoveryContact || window._adminRecoveryId || '';
-        const response = await fetch(`${window.API_BASE}/api/verify-otp`, {
+        const response = await fetch(`${window.API_BASE}/api/reset-admin-credentials`, {
             method: 'POST',
             headers: {
                     'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contact, code })
+            body: JSON.stringify({ contact, code, type: 'password', newValue: newPwd })
         });
         const data = await response.json();
 
@@ -276,9 +330,10 @@ async function verifyAdminRecovery() {
         }
     } catch (err) {
         console.error(err);
-        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running on port 5000?');
+        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running?');
         else alert('Network error.');
     } finally {
         if (btn) { btn.textContent = originalText; btn.disabled = false; }
     }
 }
+

@@ -1,3 +1,32 @@
+async function getAdminUser() {
+    let users = [];
+    try {
+        const cached = localStorage.getItem('nd_users');
+        if (cached) {
+            users = JSON.parse(cached);
+        }
+    } catch (e) {}
+
+    if (!users || users.length === 0) {
+        try {
+            const res = await fetch(`${window.API_BASE}/api/users`);
+            const data = await res.json();
+            if (data.success && data.users) {
+                users = data.users;
+                localStorage.setItem('nd_users', JSON.stringify(users));
+            }
+        } catch (e) {
+            console.error('Failed to fetch users dynamically:', e);
+        }
+    }
+
+    let admin = users.find(u => u.is_admin === true);
+    if (!admin) {
+        admin = users.find(u => u.id && u.id.startsWith('nd_admin_'));
+    }
+    return admin;
+}
+
 function openAdminSecurity() {
     fetch('menu-buttons/admin-security/admin-security.html')
         .then(res => res.text())
@@ -15,8 +44,8 @@ function openAdminSecurity() {
             const adminName = localStorage.getItem('nd_admin_name') || 'Shop Administrator';
             document.getElementById('asecName').value = adminName;
 
-            const adminId = localStorage.getItem('nd_admin_id') || '08109316532';
-            document.getElementById('asecLoginId').value = adminId;
+            const adminEmail = localStorage.getItem('nd_admin_email') || 'admin@nd-shop.sbs';
+            document.getElementById('asecLoginId').value = adminEmail;
             
             // Populate locks
             const locks = JSON.parse(localStorage.getItem('nd_admin_locks') || '{}');
@@ -82,25 +111,56 @@ function switchAsecTab(tabName) {
     }
 }
 
-function saveAdminName() {
+async function saveAdminName() {
     const name = document.getElementById('asecName').value.trim() || 'Shop Administrator';
-    localStorage.setItem('nd_admin_name', name);
     
-    const menuName = document.querySelector('.admin-name');
-    if (menuName) menuName.textContent = name;
-    
-    if (typeof customAlert !== 'undefined') {
-        customAlert("Profile name updated successfully!");
-    } else {
-        alert("Profile name updated successfully!");
+    const btn = document.querySelector('#asecPanelProfile .asec-save-btn');
+    const originalText = btn ? btn.textContent : 'Update Profile';
+    if (btn) { btn.textContent = 'Updating...'; btn.disabled = true; }
+
+    try {
+        const response = await fetch(`${window.API_BASE}/api/admin/update-credentials`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name })
+        });
+        const data = await response.json();
+        if (data.success) {
+            localStorage.setItem('nd_admin_name', name);
+            const menuName = document.querySelector('.admin-name');
+            if (menuName) menuName.textContent = name;
+            
+            if (typeof customAlert !== 'undefined') {
+                customAlert("Profile name updated successfully!");
+            } else {
+                alert("Profile name updated successfully!");
+            }
+        } else {
+            if (typeof customAlert !== 'undefined') {
+                customAlert("Failed to update display name: " + (data.error || 'Unknown error'));
+            } else {
+                alert("Failed to update name.");
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        if (typeof customAlert !== 'undefined') customAlert("Network error updating profile.");
+    } finally {
+        if (btn) { btn.textContent = originalText; btn.disabled = false; }
     }
 }
 
-function saveAdminId() {
-    const loginId = document.getElementById('asecLoginId').value.trim() || '08109316532';
+async function saveAdminId() {
+    const loginId = document.getElementById('asecLoginId').value.trim();
     const confirmPass = document.getElementById('asecIdPass').value;
     const currentPass = localStorage.getItem('nd_admin_pwd') || 'admin123';
     
+    if (!loginId) {
+        return typeof customAlert !== 'undefined' ? customAlert('Please enter your new Login ID.') : alert('Required Login ID');
+    }
     if (!confirmPass) {
         return typeof customAlert !== 'undefined' ? customAlert('Please enter your password to confirm.') : alert('Required password');
     }
@@ -108,18 +168,59 @@ function saveAdminId() {
     if (confirmPass !== currentPass) {
         return typeof customAlert !== 'undefined' ? customAlert('Incorrect password.') : alert('Incorrect password.');
     }
+
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginId);
+    const isPhone = /^\+?\d{7,}$/.test(loginId.replace(/[\s\-\(\)]/g, ''));
     
-    localStorage.setItem('nd_admin_id', loginId);
-    document.getElementById('asecIdPass').value = '';
-    
-    if (typeof customAlert !== 'undefined') {
-        customAlert("Login ID updated successfully!");
-    } else {
-        alert("Login ID updated successfully!");
+    if (!isEmail && !isPhone) {
+        return typeof customAlert !== 'undefined' ? customAlert('Please enter a valid email or phone number.') : alert('Invalid Login ID format');
+    }
+
+    const updatePayload = {};
+    if (isEmail) updatePayload.email = loginId;
+    if (isPhone) updatePayload.phone = loginId;
+
+    const btn = document.querySelector('#asecPanelLogin .asec-save-btn');
+    const originalText = btn ? btn.textContent : 'Update Login ID';
+    if (btn) { btn.textContent = 'Updating...'; btn.disabled = true; }
+
+    try {
+        const response = await fetch(`${window.API_BASE}/api/admin/update-credentials`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatePayload)
+        });
+        const data = await response.json();
+        if (data.success) {
+            if (isEmail) localStorage.setItem('nd_admin_email', loginId);
+            if (isPhone) localStorage.setItem('nd_admin_phone', loginId);
+            localStorage.setItem('nd_admin_id', loginId);
+            document.getElementById('asecIdPass').value = '';
+            
+            if (typeof customAlert !== 'undefined') {
+                customAlert("Login ID updated successfully!");
+            } else {
+                alert("Login ID updated successfully!");
+            }
+        } else {
+            if (typeof customAlert !== 'undefined') {
+                customAlert("Failed to update Login ID: " + (data.error || 'Unknown error'));
+            } else {
+                alert("Failed to update Login ID.");
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        if (typeof customAlert !== 'undefined') customAlert("Network error updating Login ID.");
+    } finally {
+        if (btn) { btn.textContent = originalText; btn.disabled = false; }
     }
 }
 
-function saveAdminPassword() {
+async function saveAdminPassword() {
     const oldPass = document.getElementById('asecOldPass').value;
     const newPass = document.getElementById('asecNewPass').value;
     const currentPass = localStorage.getItem('nd_admin_pwd') || 'admin123';
@@ -136,18 +237,46 @@ function saveAdminPassword() {
         return typeof customAlert !== 'undefined' ? customAlert('New password must be different.') : alert('New password must differ.');
     }
     
-    localStorage.setItem('nd_admin_pwd', newPass);
-    document.getElementById('asecOldPass').value = '';
-    document.getElementById('asecNewPass').value = '';
-    
-    if (typeof customAlert !== 'undefined') {
-        customAlert("Password updated successfully!");
-    } else {
-        alert("Password updated!");
+    const btn = document.querySelector('#asecPanelPassword .asec-save-btn');
+    const originalText = btn ? btn.textContent : 'Update Password';
+    if (btn) { btn.textContent = 'Updating...'; btn.disabled = true; }
+
+    try {
+        const response = await fetch(`${window.API_BASE}/api/admin/update-credentials`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: newPass })
+        });
+        const data = await response.json();
+        if (data.success) {
+            localStorage.setItem('nd_admin_pwd', newPass);
+            document.getElementById('asecOldPass').value = '';
+            document.getElementById('asecNewPass').value = '';
+            
+            if (typeof customAlert !== 'undefined') {
+                customAlert("Password updated successfully!");
+            } else {
+                alert("Password updated!");
+            }
+        } else {
+            if (typeof customAlert !== 'undefined') {
+                customAlert("Failed to update password: " + (data.error || 'Unknown error'));
+            } else {
+                alert("Failed to update password.");
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        if (typeof customAlert !== 'undefined') customAlert("Network error updating password.");
+    } finally {
+        if (btn) { btn.textContent = originalText; btn.disabled = false; }
     }
 }
 
-function saveAdminDeletePin() {
+async function saveAdminDeletePin() {
     const oldPinEl = document.getElementById('asecOldPin');
     const newPinEl = document.getElementById('asecNewPin');
     const currentPin = localStorage.getItem('nd_delete_pin') || '1234';
@@ -164,14 +293,43 @@ function saveAdminDeletePin() {
         return typeof customAlert !== 'undefined' ? customAlert('Current PIN is incorrect.') : alert('Current PIN is incorrect.');
     }
 
-    localStorage.setItem('nd_delete_pin', newPinEl.value);
-    oldPinEl.value = '';
-    newPinEl.value = '';
-    
-    if (typeof customAlert !== 'undefined') {
-        customAlert("PIN successfully updated!");
-    } else {
-        alert("PIN successfully updated!");
+    const newPin = newPinEl.value;
+    const btn = document.querySelector('#asecPanelPin .asec-save-btn');
+    const originalText = btn ? btn.textContent : 'Update PIN';
+    if (btn) { btn.textContent = 'Updating...'; btn.disabled = true; }
+
+    try {
+        const response = await fetch(`${window.API_BASE}/api/admin/update-credentials`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ pin: newPin })
+        });
+        const data = await response.json();
+        if (data.success) {
+            localStorage.setItem('nd_delete_pin', newPin);
+            oldPinEl.value = '';
+            newPinEl.value = '';
+            
+            if (typeof customAlert !== 'undefined') {
+                customAlert("PIN successfully updated!");
+            } else {
+                alert("PIN successfully updated!");
+            }
+        } else {
+            if (typeof customAlert !== 'undefined') {
+                customAlert("Failed to update PIN: " + (data.error || 'Unknown error'));
+            } else {
+                alert("Failed to update PIN.");
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        if (typeof customAlert !== 'undefined') customAlert("Network error updating PIN.");
+    } finally {
+        if (btn) { btn.textContent = originalText; btn.disabled = false; }
     }
 }
 
@@ -219,7 +377,10 @@ window._asecOtpMethod = 'email';
 window._asecRecoveryType = 'password'; // 'password' or 'pin'
 
 function triggerAsecForgotPass(e) {
-    if(e) e.preventDefault();
+    if(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
     const adminId = localStorage.getItem('nd_admin_id') || 'admin@nd-shop.sbs';
     window._asecRecoveryType = 'password';
 
@@ -228,7 +389,10 @@ function triggerAsecForgotPass(e) {
 }
 
 function triggerAsecForgotPin(e) {
-    if(e) e.preventDefault();
+    if(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
     const adminId = localStorage.getItem('nd_admin_id') || 'admin@nd-shop.sbs';
     window._asecRecoveryType = 'pin';
 
@@ -304,21 +468,32 @@ async function _selectAsecMethod(method) {
     const overlay = document.getElementById('asecMethodSelectModal');
     if (overlay) overlay.remove();
 
-    const adminId = window._asecRecoveryAdminId || localStorage.getItem('nd_admin_id') || 'admin@nd-shop.sbs';
-    // Determine contact
-    const isPhone = /^\+?\d{7,}$/.test(adminId.replace(/[\s\-\(\)]/g, ''));
-    let contact = adminId;
-    if (method === 'email' && isPhone) contact = localStorage.getItem('nd_admin_email') || 'admin@nd-shop.sbs';
-    if (method === 'sms' && !isPhone) {
-        let ph = localStorage.getItem('nd_admin_phone') || '';
-        if (!ph) { customAlert('No phone number saved for this admin account.'); return; }
-        contact = ph;
+    const admin = await getAdminUser();
+    let contact = '';
+    
+    if (method === 'email') {
+        contact = admin ? admin.email : (localStorage.getItem('nd_admin_email') || 'admin@nd-shop.sbs');
+    } else if (method === 'sms') {
+        contact = admin ? admin.phone : (localStorage.getItem('nd_admin_phone') || '08109316532');
     }
-    if (isPhone && method === 'sms') {
-        let cleaned = adminId.replace(/[\s\-\(\)]/g, '');
-        if (cleaned.length === 11 && cleaned.startsWith('0')) cleaned = '+234' + cleaned.substring(1);
+
+    if (method === 'sms' && contact) {
+        let cleaned = contact.replace(/[\s\-\(\)]/g, '');
+        if (cleaned.length === 11 && cleaned.startsWith('0')) {
+            cleaned = '+234' + cleaned.substring(1);
+        }
         contact = cleaned;
     }
+
+    if (!contact) {
+        if (typeof customAlert !== 'undefined') {
+            customAlert(`No registered ${method} found for this admin account.`);
+        } else {
+            alert(`No registered ${method} found.`);
+        }
+        return;
+    }
+
     window._asecOtpContact = contact;
 
     const subtitle = document.getElementById('asecPassVerifySubtitle');
@@ -346,7 +521,7 @@ async function _selectAsecMethod(method) {
         }
     } catch (err) {
         console.error(err);
-        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running on port 5000?');
+        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running?');
     }
 }
 
@@ -394,6 +569,8 @@ async function goToAsecStep2() {
         });
         const data = await response.json();
         if (data.success) {
+            window._asecOtpCode = code; // Cache verified code
+            
             document.getElementById('asecResetStep1').style.display = 'none';
             if (window._asecRecoveryType === 'pin') {
                 document.getElementById('asecResetStep2Pin').style.display = 'block';
@@ -410,7 +587,7 @@ async function goToAsecStep2() {
         }
     } catch (err) {
         console.error(err);
-        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running on port 5000?');
+        if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running?');
     } finally {
         btn.classList.remove('saving');
         btn.textContent = 'Verify Code';
@@ -455,7 +632,7 @@ async function resendAsecPassCode(e) {
     }, 1000);
 }
 
-function verifyAsecPasswordReset() {
+async function verifyAsecPasswordReset() {
     const newPassInput = document.getElementById('resetAsecNewPass');
     const confirmPassInput = document.getElementById('resetAsecConfirmPass');
     const newPass = newPassInput ? newPassInput.value : '';
@@ -469,32 +646,51 @@ function verifyAsecPasswordReset() {
     btn.classList.add('saving');
     btn.textContent = 'Updating...';
 
-    setTimeout(() => {
-        // Update Admin Password
-        localStorage.setItem('nd_admin_pwd', newPass);
+    try {
+        const contact = window._asecOtpContact || localStorage.getItem('nd_admin_id') || 'admin@nd-shop.sbs';
+        const code = window._asecOtpCode;
         
-        btn.classList.remove('saving');
-        btn.classList.add('success');
-        btn.textContent = 'Password Updated Successfully!';
+        const response = await fetch(`${window.API_BASE}/api/reset-admin-credentials`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contact, code, type: 'password', newValue: newPass })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            localStorage.setItem('nd_admin_pwd', newPass);
+            btn.classList.remove('saving');
+            btn.classList.add('success');
+            btn.textContent = 'Password Updated Successfully!';
 
-        setTimeout(() => {
-            btn.classList.remove('success');
+            setTimeout(() => {
+                btn.classList.remove('success');
+                btn.textContent = 'Update Password';
+                
+                // Reset fields and close
+                document.querySelectorAll('.asec-pass-otp').forEach(i => i.value = '');
+                document.getElementById('asecOldPass').value = '';
+                document.getElementById('asecNewPass').value = '';
+                if (newPassInput) newPassInput.value = '';
+                if (confirmPassInput) confirmPassInput.value = '';
+                
+                closeAsecPassVerify();
+                closeAdminSecurity();
+            }, 1500);
+        } else {
+            btn.classList.remove('saving');
             btn.textContent = 'Update Password';
-            
-            // Reset fields and close
-            document.querySelectorAll('.asec-pass-otp').forEach(i => i.value = '');
-            document.getElementById('asecOldPass').value = '';
-            document.getElementById('asecNewPass').value = '';
-            if (newPassInput) newPassInput.value = '';
-            if (confirmPassInput) confirmPassInput.value = '';
-            
-            closeAsecPassVerify();
-            closeAdminSecurity();
-        }, 1500);
-    }, 1000);
+            if (typeof customAlert !== 'undefined') customAlert("Reset failed: " + (data.error || 'Invalid session.'));
+        }
+    } catch (err) {
+        console.error(err);
+        btn.classList.remove('saving');
+        btn.textContent = 'Update Password';
+        if (typeof customAlert !== 'undefined') customAlert("Network error resetting password.");
+    }
 }
 
-function verifyAsecPinReset() {
+async function verifyAsecPinReset() {
     const newPinInput = document.getElementById('resetAsecNewPin');
     const confirmPinInput = document.getElementById('resetAsecConfirmPin');
     const newPin = newPinInput ? newPinInput.value : '';
@@ -512,29 +708,46 @@ function verifyAsecPinReset() {
     btn.classList.add('saving');
     btn.textContent = 'Updating...';
 
-    setTimeout(() => {
-        // Update Admin PIN
-        localStorage.setItem('nd_delete_pin', newPin);
+    try {
+        const contact = window._asecOtpContact || localStorage.getItem('nd_admin_id') || 'admin@nd-shop.sbs';
+        const code = window._asecOtpCode;
         
-        btn.classList.remove('saving');
-        btn.classList.add('success');
-        btn.textContent = 'PIN Updated Successfully!';
+        const response = await fetch(`${window.API_BASE}/api/reset-admin-credentials`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contact, code, type: 'pin', newValue: newPin })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            localStorage.setItem('nd_delete_pin', newPin);
+            btn.classList.remove('saving');
+            btn.classList.add('success');
+            btn.textContent = 'PIN Updated Successfully!';
 
-        setTimeout(() => {
-            btn.classList.remove('success');
+            setTimeout(() => {
+                btn.classList.remove('success');
+                btn.textContent = 'Update PIN';
+                
+                // Reset fields and close
+                document.querySelectorAll('.asec-pass-otp').forEach(i => i.value = '');
+                document.getElementById('asecOldPin').value = '';
+                document.getElementById('asecNewPin').value = '';
+                if (newPinInput) newPinInput.value = '';
+                if (confirmPinInput) confirmPinInput.value = '';
+                
+                closeAsecPassVerify();
+                closeAdminSecurity();
+            }, 1500);
+        } else {
+            btn.classList.remove('saving');
             btn.textContent = 'Update PIN';
-            
-            // Reset fields and close
-            document.querySelectorAll('.asec-pass-otp').forEach(i => i.value = '');
-            document.getElementById('asecOldPin').value = '';
-            document.getElementById('asecNewPin').value = '';
-            if (newPinInput) newPinInput.value = '';
-            if (confirmPinInput) confirmPinInput.value = '';
-            
-            closeAsecPassVerify();
-            closeAdminSecurity();
-        }, 1500);
-    }, 1000);
+            if (typeof customAlert !== 'undefined') customAlert("Reset failed: " + (data.error || 'Invalid session.'));
+        }
+    } catch (err) {
+        console.error(err);
+        btn.classList.remove('saving');
+        btn.textContent = 'Update PIN';
+        if (typeof customAlert !== 'undefined') customAlert("Network error resetting PIN.");
+    }
 }
-
-

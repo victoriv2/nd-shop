@@ -402,36 +402,27 @@ window.printReceiptGen = function() {
     }
     
     const previewDoc = document.getElementById('rgPreviewDoc');
+    if (!previewDoc) return;
     const receiptNum = document.getElementById('rPreviewId').textContent.trim() || 'RCPT';
 
     // Build temporary print container styled as A4 (794px)
-    const tempPrintArea = document.createElement('div');
-    tempPrintArea.style.position = 'absolute';
-    tempPrintArea.style.left = '-9999px';
-    tempPrintArea.style.top = '-9999px';
-    tempPrintArea.style.width = '794px';
-    tempPrintArea.style.padding = '60px 80px'; // Generous, centered padding for A4 margins
-    tempPrintArea.style.background = '#ffffff';
-    tempPrintArea.style.color = '#000';
-    tempPrintArea.style.fontFamily = "'Courier New', Courier, monospace";
-    tempPrintArea.style.boxSizing = 'border-box';
-    
-    // Copy content
-    tempPrintArea.innerHTML = previewDoc.innerHTML;
+    const printArea = document.createElement('div');
+    printArea.innerHTML = `
+        <div style="width: 794px; padding: 60px 80px; background: #ffffff; color: #000; font-family: 'Courier New', Courier, monospace; box-sizing: border-box;">
+            ${previewDoc.innerHTML}
+        </div>
+    `;
     
     // Adjust layout sizes in temp print to look premium on A4
-    const headerTitle = tempPrintArea.querySelector('#rgPreviewShopName');
+    const headerTitle = printArea.querySelector('#rgPreviewShopName');
     if (headerTitle) {
         headerTitle.style.fontSize = '2.2rem';
         headerTitle.style.marginBottom = '8px';
     }
-    const phoneLabel = tempPrintArea.querySelector('#rgPreviewStorePhone');
+    const phoneLabel = printArea.querySelector('#rgPreviewStorePhone');
     if (phoneLabel) {
         phoneLabel.style.fontSize = '1.05rem';
     }
-    
-    // Add to DOM temporarily
-    document.body.appendChild(tempPrintArea);
     
     const opt = {
         margin: 0,
@@ -449,13 +440,12 @@ window.printReceiptGen = function() {
         btn.style.pointerEvents = 'none';
     }
 
-    html2pdf().set(opt).from(tempPrintArea).save().then(() => {
+    html2pdf().set(opt).from(printArea.innerHTML).save().then(() => {
         if (btn) {
             btn.textContent = originalText;
             btn.style.opacity = '1';
             btn.style.pointerEvents = 'auto';
         }
-        tempPrintArea.remove(); // Cleanup
     }).catch(err => {
         console.error("PDF generation failed:", err);
         if (btn) {
@@ -463,7 +453,6 @@ window.printReceiptGen = function() {
             btn.style.opacity = '1';
             btn.style.pointerEvents = 'auto';
         }
-        tempPrintArea.remove(); // Cleanup
     });
 }
 
@@ -518,10 +507,15 @@ window.searchRgUsers = function() {
 
     const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
     const matches = users.filter(u =>
-        (u.id && u.id.toLowerCase().includes(query)) ||
-        (u.name && u.name.toLowerCase().includes(query)) ||
-        (u.email && u.email.toLowerCase().includes(query)) ||
-        (u.phone && u.phone.includes(query))
+        !u.is_admin &&
+        u.id !== 'nd_admin_001' &&
+        !(u.id && u.id.toLowerCase().startsWith('nd_admin_')) &&
+        (
+            (u.id && u.id.toLowerCase().includes(query)) ||
+            (u.name && u.name.toLowerCase().includes(query)) ||
+            (u.email && u.email.toLowerCase().includes(query)) ||
+            (u.phone && u.phone.includes(query))
+        )
     ).slice(0, 8); // Max 8 results
 
     if (matches.length === 0) {
