@@ -34,6 +34,12 @@ function openAdminSecurity() {
                 if(cb) cb.checked = !!locks[k];
             });
 
+            // Bind forgot buttons immediately (avoiding race conditions)
+            const btnPass = document.getElementById('asecForgotPassBtn');
+            if (btnPass) btnPass.onclick = triggerAsecForgotPass;
+            const btnPin = document.getElementById('asecForgotPinBtn');
+            if (btnPin) btnPin.onclick = triggerAsecForgotPin;
+
             // Default to profile tab
             switchAsecTab('profile');
         });
@@ -531,16 +537,4 @@ function verifyAsecPinReset() {
     }, 1000);
 }
 
-// Add event listener for the forgot password/PIN link when modal opens
-(function() {
-    const originalOpen = openAdminSecurity;
-    window.openAdminSecurity = function() {
-        originalOpen();
-        setTimeout(() => {
-            const btnPass = document.getElementById('asecForgotPassBtn');
-            if(btnPass) btnPass.onclick = triggerAsecForgotPass;
-            const btnPin = document.getElementById('asecForgotPinBtn');
-            if(btnPin) btnPin.onclick = triggerAsecForgotPin;
-        }, 500);
-    };
-})();
+

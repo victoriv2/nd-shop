@@ -103,15 +103,22 @@ window.updateRgPreview = function() {
     let grandTotal = 0;
 
     rgSelectedItems.forEach((item, index) => {
-        // Handle varying localStorage schemas (price vs unitPrice)
-        const rawPrice = item.price !== undefined ? item.price : (item.unitPrice !== undefined ? item.unitPrice : 0);
-        // Strip everything except numbers and decimals
-        const cleanPrice = String(rawPrice).replace(/[^\d.-]/g, '');
-        
-        const unitPriceNum = parseFloat(cleanPrice) || 0;
         const itemQty = parseFloat(item.qty) || 1;
-        const itemTotal = unitPriceNum * itemQty;
+        const priceVal = item.price !== undefined ? parseFloat(String(item.price).replace(/[^\d.-]/g, '')) || 0 : 0;
+        const payoutVal = item.payout !== undefined ? parseFloat(String(item.payout).replace(/[^\d.-]/g, '')) || 0 : 0;
+        const unitPriceVal = item.unitPrice !== undefined ? parseFloat(String(item.unitPrice).replace(/[^\d.-]/g, '')) || 0 : 0;
         
+        let grossTotal = 0;
+        if (payoutVal > 0) {
+            // For sales with payout (e.g. request sales), price is stored as (total - payout).
+            // Adding payout back restores the full gross total amount.
+            grossTotal = priceVal + payoutVal;
+        } else {
+            // For regular sales, price is already the gross total. Fall back to unitPrice * qty if price is missing.
+            grossTotal = item.price !== undefined ? priceVal : (unitPriceVal * itemQty);
+        }
+        
+        const itemTotal = grossTotal;
         grandTotal += itemTotal;
 
         // Config Table Row
@@ -335,13 +342,22 @@ function renderRgSaleList() {
         const itemEl = document.createElement('label');
         itemEl.className = 'rg-sale-item';
         
-        // Strictly extract from either price or unitPrice
-        const rawPrice = sale.price !== undefined ? sale.price : (sale.unitPrice !== undefined ? sale.unitPrice : 0);
-        const cleanPrice = String(rawPrice).replace(/[^\d.-]/g, '');
-        const unitPriceNum = parseFloat(cleanPrice) || 0;
         const itemQty = parseFloat(sale.qty) || 1;
-        const itemTotal = unitPriceNum * itemQty;
+        const priceVal = sale.price !== undefined ? parseFloat(String(sale.price).replace(/[^\d.-]/g, '')) || 0 : 0;
+        const payoutVal = sale.payout !== undefined ? parseFloat(String(sale.payout).replace(/[^\d.-]/g, '')) || 0 : 0;
+        const unitPriceVal = sale.unitPrice !== undefined ? parseFloat(String(sale.unitPrice).replace(/[^\d.-]/g, '')) || 0 : 0;
         
+        let grossTotal = 0;
+        if (payoutVal > 0) {
+            // For sales with payout (e.g. request sales), price is stored as (total - payout).
+            // Adding payout back restores the full gross total amount.
+            grossTotal = priceVal + payoutVal;
+        } else {
+            // For regular sales, price is already the gross total. Fall back to unitPrice * qty if price is missing.
+            grossTotal = sale.price !== undefined ? priceVal : (unitPriceVal * itemQty);
+        }
+        
+        const itemTotal = grossTotal;
         const amtStr = itemTotal.toLocaleString();
         
         itemEl.innerHTML = `
