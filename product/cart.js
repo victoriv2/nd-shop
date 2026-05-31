@@ -371,3 +371,11 @@ function handleCheckout() {
         }
     }
 }
+
+// Auto-update cart badge and UI when sync engine loads from Supabase
+window.addEventListener('nd_sync_complete', () => {
+    updateCartBadge();
+    if (document.getElementById('cartModalContainer') && document.getElementById('cartModalContainer').classList.contains('show')) {
+        renderCartItems();
+    }
+});

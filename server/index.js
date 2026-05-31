@@ -339,7 +339,7 @@ app.post('/api/upload', optionalToken, async (req, res) => {
 app.post('/api/sync-items', optionalToken, async (req, res) => {
     try {
         const { table, operations } = req.body;
-        const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'admin_settings', 'ai_chat_history', 'ai_chat_threads', 'user_ai_chat_threads'];
+        const jsonbTables = ['products', 'requests', 'messages', 'sales_history', 'debtor_notes', 'debt_requests', 'expenses_notebook', 'income_allocations', 'admin_settings', 'ai_chat_history', 'community_messages', 'ai_chat_threads', 'user_ai_chat_threads', 'user_carts'];
         const settingsTables = ['admin_settings'];
         
         if (![...jsonbTables, ...settingsTables].includes(table)) {
@@ -347,7 +347,7 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
         }
 
         const isAdmin = req.user && req.user.is_admin;
-        const allowedForUser = ['requests', 'messages', 'ai_chat_history', 'community_messages'];
+        const allowedForUser = ['requests', 'messages', 'ai_chat_history', 'community_messages', 'user_carts'];
 
         // If the user doesn't have an admin token, we will TEMPORARILY allow the write 
         // to prevent data loss (since old clients use local authentication).
@@ -358,9 +358,14 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
         for (const op of operations) {
             if (op.type === 'INSERT' || op.type === 'UPDATE') {
                 let upsertPayload;
+                let upsertOptions = {};
                 if (settingsTables.includes(table)) {
                     // admin_settings uses { id, value } columns
                     upsertPayload = { id: op.data.id, value: op.data.value, updated_at: new Date().toISOString() };
+                } else if (table === 'user_carts') {
+                    // user_carts table uses local_id as the unique string ID, and id as UUID
+                    upsertPayload = { local_id: op.data.id, data: op.data };
+                    upsertOptions = { onConflict: 'local_id' };
                 } else {
                     // All data tables use { id, data } JSONB pattern
                     upsertPayload = { id: op.data.id, data: op.data };
@@ -371,10 +376,16 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
                         upsertPayload.receiver_id = op.data.receiverId || '';
                     }
                 }
-                const { error: upsertError } = await supabase.from(table).upsert(upsertPayload);
+                const { error: upsertError } = await supabase.from(table).upsert(upsertPayload, upsertOptions);
                 if (upsertError) console.error(`[sync-items] upsert error on ${table}:`, upsertError.message);
             } else if (op.type === 'DELETE') {
-                const { error: deleteError } = await supabase.from(table).delete().eq('id', op.id);
+                let deleteQuery = supabase.from(table).delete();
+                if (table === 'user_carts') {
+                    deleteQuery = deleteQuery.eq('local_id', op.id);
+                } else {
+                    deleteQuery = deleteQuery.eq('id', op.id);
+                }
+                const { error: deleteError } = await deleteQuery;
                 if (deleteError) console.error(`[sync-items] delete error on ${table}:`, deleteError.message);
             }
         }
@@ -436,6 +447,9 @@ app.get('/api/get-table/:table', optionalToken, async (req, res) => {
         } else {
             // All data tables: unwrap the JSONB data column
             mappedData = data.map(row => row.data).filter(Boolean);
+            if (table === 'user_carts' && userId && !isAdmin) {
+                mappedData = mappedData.filter(item => item && item.userId === userId);
+            }
         }
 
         res.json({ success: true, data: mappedData });

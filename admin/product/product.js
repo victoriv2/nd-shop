@@ -522,9 +522,17 @@ function initAdminProductLogic() {
     }
 
     // Expose render function for the delete modal logic
-    window.renderProductsGlobal = () => renderProducts(searchInput ? searchInput.value.trim() : '');
+    window.renderProductsGlobal = () => {
+        if (typeof window.reloadAdminProducts === 'function') {
+            window.reloadAdminProducts();
+        }
+        renderProducts(searchInput ? searchInput.value.trim() : '');
+    };
 
     // Initial render
+    if (typeof window.reloadAdminProducts === 'function') {
+        window.reloadAdminProducts();
+    }
     renderProducts();
 
     // ========================================

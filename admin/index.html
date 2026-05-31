@@ -504,6 +504,21 @@
             }
         }, { passive: true });
 
+        // Listen for Supabase sync completion to auto-refresh current active tab's UI
+        window.addEventListener('nd_sync_complete', () => {
+            const tabId = window.adminExpectedTabId;
+            if (tabId === 'tab-product') {
+                if (typeof window.reloadAdminProducts === 'function') window.reloadAdminProducts();
+                if (typeof window.renderProductsGlobal === 'function') window.renderProductsGlobal();
+            } else if (tabId === 'tab-request') {
+                if (typeof renderAdminRequests === 'function') renderAdminRequests();
+            } else if (tabId === 'tab-register') {
+                if (typeof renderSalesTable === 'function') renderSalesTable();
+                if (typeof updateStatsSummary === 'function') updateStatsSummary();
+            } else if (tabId === 'tab-progress') {
+                if (typeof renderAdminProgress === 'function') renderAdminProgress();
+            }
+        });
 
     </script>
 

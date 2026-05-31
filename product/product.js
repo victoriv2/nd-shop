@@ -318,6 +318,16 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadProductTab();
 });
 
+// Auto-refresh product list on user side when database sync completes
+window.addEventListener('nd_sync_complete', () => {
+    if (typeof window.refreshProducts === 'function') {
+        const container = document.getElementById('product-container');
+        if (container && container.style.display !== 'none') {
+            window.refreshProducts();
+        }
+    }
+});
+
 
 
 
