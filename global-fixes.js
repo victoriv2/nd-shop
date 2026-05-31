@@ -693,19 +693,21 @@ window.checkProductRunningLow = function(productName) {
 };
 
 window.getRemainingProductStock = function(productName, variantType = null) {
-    const products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+    const allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+    // Filter out deleted and cleared products so we only look at active inventory
+    const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared);
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     
-    let baseName = productName;
+    let baseName = productName.trim();
     let extractedVariantTitle = null;
-    let p = products.find(item => item.name === productName);
+    let p = products.find(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
     
     if (!p) {
         const match = productName.match(/^(.*?)\s+\((.*?)\)$/);
         if (match) {
-            baseName = match[1];
-            extractedVariantTitle = match[2];
-            p = products.find(item => item.name === baseName);
+            baseName = match[1].trim();
+            extractedVariantTitle = match[2].trim();
+            p = products.find(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
         }
     }
     
@@ -719,7 +721,7 @@ window.getRemainingProductStock = function(productName, variantType = null) {
         
         let totalBoughtCups = 0;
         products.forEach(item => {
-            if (item.name === baseName && item.packTypes) {
+            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.packTypes) {
                 totalBoughtCups += (parseFloat(item.boughtQuantity) || 0) * maxCupsPerBag;
             }
         });
@@ -730,11 +732,21 @@ window.getRemainingProductStock = function(productName, variantType = null) {
 
         let soldCups = 0, soldCustards = 0, soldBags = 0;
         sales.forEach(sale => {
-            if (sale.item && sale.item.includes(baseName)) {
-                const q = parseFloat(sale.qty) || 0;
-                if (sale.item.includes(`(${cpTitle})`)) soldCups += q;
-                else if (sale.item.includes(`(${cTitle})`)) soldCustards += q;
-                else if (sale.item.includes(`(${bTitle})`)) soldBags += q;
+            if (sale.item) {
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\((.*?)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
+
+                if (saleBaseName.toLowerCase() === baseName.toLowerCase()) {
+                    const q = parseFloat(sale.qty) || 0;
+                    if (saleVariant === cpTitle || saleVariant === 'Container 3') soldCups += q;
+                    else if (saleVariant === cTitle || saleVariant === 'Container 2') soldCustards += q;
+                    else if (saleVariant === bTitle || saleVariant === 'Container 1') soldBags += q;
+                }
             }
         });
 
@@ -743,12 +755,9 @@ window.getRemainingProductStock = function(productName, variantType = null) {
 
         let targetVariantType = variantType;
         if (!targetVariantType && extractedVariantTitle) {
-            if (extractedVariantTitle === bTitle) targetVariantType = 'bag';
-            else if (extractedVariantTitle === cTitle) targetVariantType = 'custard';
-            else if (extractedVariantTitle === cpTitle) targetVariantType = 'cup';
-            else if (extractedVariantTitle === 'Container 1') targetVariantType = 'bag';
-            else if (extractedVariantTitle === 'Container 2') targetVariantType = 'custard';
-            else if (extractedVariantTitle === 'Container 3') targetVariantType = 'cup';
+            if (extractedVariantTitle === bTitle || extractedVariantTitle === 'Container 1') targetVariantType = 'bag';
+            else if (extractedVariantTitle === cTitle || extractedVariantTitle === 'Container 2') targetVariantType = 'custard';
+            else if (extractedVariantTitle === cpTitle || extractedVariantTitle === 'Container 3') targetVariantType = 'cup';
         }
 
         if (targetVariantType === 'bag' || targetVariantType === 'c1') {
@@ -766,7 +775,7 @@ window.getRemainingProductStock = function(productName, variantType = null) {
 
         let totalC1Bought = 0;
         products.forEach(item => {
-            if (item.name === baseName && item.isFlexible) {
+            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isFlexible) {
                 totalC1Bought += parseFloat(item.boughtQuantity) || 0;
             }
         });
@@ -780,11 +789,21 @@ window.getRemainingProductStock = function(productName, variantType = null) {
 
         let soldC1 = 0, soldC2 = 0, soldC3 = 0;
         sales.forEach(sale => {
-            if (sale.item && sale.item.includes(baseName)) {
-                const q = parseFloat(sale.qty) || 0;
-                if (sale.item.includes(`(${c3Title})`)) soldC3 += q;
-                else if (sale.item.includes(`(${c2Title})`)) soldC2 += q;
-                else if (sale.item.includes(`(${c1Title})`)) soldC1 += q;
+            if (sale.item) {
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\((.*?)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
+
+                if (saleBaseName.toLowerCase() === baseName.toLowerCase()) {
+                    const q = parseFloat(sale.qty) || 0;
+                    if (saleVariant === c3Title || saleVariant === 'Container 3') soldC3 += q;
+                    else if (saleVariant === c2Title || saleVariant === 'Container 2') soldC2 += q;
+                    else if (saleVariant === c1Title || saleVariant === 'Container 1') soldC1 += q;
+                }
             }
         });
 
@@ -793,12 +812,9 @@ window.getRemainingProductStock = function(productName, variantType = null) {
 
         let targetVariantType = variantType;
         if (!targetVariantType && extractedVariantTitle) {
-            if (extractedVariantTitle === c1Title) targetVariantType = 'c1';
-            else if (extractedVariantTitle === c2Title) targetVariantType = 'c2';
-            else if (extractedVariantTitle === c3Title) targetVariantType = 'c3';
-            else if (extractedVariantTitle === 'Container 1') targetVariantType = 'c1';
-            else if (extractedVariantTitle === 'Container 2') targetVariantType = 'c2';
-            else if (extractedVariantTitle === 'Container 3') targetVariantType = 'c3';
+            if (extractedVariantTitle === c1Title || extractedVariantTitle === 'Container 1') targetVariantType = 'c1';
+            else if (extractedVariantTitle === c2Title || extractedVariantTitle === 'Container 2') targetVariantType = 'c2';
+            else if (extractedVariantTitle === c3Title || extractedVariantTitle === 'Container 3') targetVariantType = 'c3';
         }
 
         if (targetVariantType === 'c1') return Math.floor(remainingC3 / (c2sPerC1 * c3sPerC2));
@@ -809,15 +825,22 @@ window.getRemainingProductStock = function(productName, variantType = null) {
         // Custom: boughtQuantity × pieces = total units
         let totalBought = 0;
         products.forEach(item => {
-            if (item.name === baseName && item.isCustom) {
+            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isCustom) {
                 totalBought += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
             }
         });
 
         let totalSold = 0;
         sales.forEach(sale => {
-            if (sale.item === baseName) {
-                totalSold += parseFloat(sale.qty) || 0;
+            if (sale.item) {
+                let saleBaseName = sale.item.trim();
+                const match = sale.item.match(/^(.*?)\s+\((.*?)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                }
+                if (saleBaseName.toLowerCase() === baseName.toLowerCase()) {
+                    totalSold += parseFloat(sale.qty) || 0;
+                }
             }
         });
 
@@ -827,23 +850,36 @@ window.getRemainingProductStock = function(productName, variantType = null) {
         // Default
         let totalBoughtPieces = 0;
         products.forEach(item => {
-            if (item.name === baseName && !item.isSpecial && !item.isFlexible && !item.isCustom) {
+            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && !item.isSpecial && !item.isFlexible && !item.isCustom) {
                 totalBoughtPieces += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
             }
         });
         
         let totalSoldPieces = 0;
         sales.forEach(sale => {
-            if (sale.item === baseName) {
-                totalSoldPieces += parseFloat(sale.qty) || 0;
-            } else if (sale.item === `${baseName} (${p.bulkUnit || 'Carton'})`) {
-                totalSoldPieces += (parseFloat(sale.qty) || 0) * (parseInt(p.pieces) || 1);
+            if (sale.item) {
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\((.*?)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
+
+                if (saleBaseName.toLowerCase() === baseName.toLowerCase()) {
+                    const q = parseFloat(sale.qty) || 0;
+                    if (saleVariant === (p.bulkUnit || 'Carton') || saleVariant === 'Carton') {
+                        totalSoldPieces += q * (parseInt(p.pieces) || 1);
+                    } else {
+                        totalSoldPieces += q;
+                    }
+                }
             }
         });
         
         let rem = totalBoughtPieces - totalSoldPieces;
         let targetVariantType = variantType;
-        if (!targetVariantType && extractedVariantTitle && extractedVariantTitle === (p.bulkUnit || 'Carton')) {
+        if (!targetVariantType && extractedVariantTitle && (extractedVariantTitle === (p.bulkUnit || 'Carton') || extractedVariantTitle === 'Carton')) {
             targetVariantType = 'wholesale';
         }
         
