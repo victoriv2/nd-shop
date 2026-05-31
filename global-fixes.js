@@ -713,7 +713,7 @@ window.getRemainingProductStock = function(productName, variantType = null) {
     let p = products.find(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
     
     if (!p) {
-        const match = productName.match(/^(.*?)\s+\((.*?)\)$/);
+        const match = productName.match(/^(.*?)\s+\(([^)]+)\)$/);
         if (match) {
             baseName = match[1].trim();
             extractedVariantTitle = match[2].trim();
@@ -736,16 +736,16 @@ window.getRemainingProductStock = function(productName, variantType = null) {
             }
         });
 
-        const bTitle = p.packTypes.bag?.title || p.packTypes.c1?.title || 'Container 1';
-        const cTitle = p.packTypes.custard?.title || p.packTypes.c2?.title || 'Container 2';
-        const cpTitle = p.packTypes.cup?.title || p.packTypes.c3?.title || 'Container 3';
+        const bTitle = p.packTypes?.bag?.title || p.packTypes?.c1?.title || 'Container 1';
+        const cTitle = p.packTypes?.custard?.title || p.packTypes?.c2?.title || 'Container 2';
+        const cpTitle = p.packTypes?.cup?.title || p.packTypes?.c3?.title || 'Container 3';
 
         let soldCups = 0, soldCustards = 0, soldBags = 0;
         sales.forEach(sale => {
             if (sale.item) {
                 let saleBaseName = sale.item.trim();
                 let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\((.*?)\)$/);
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
                 if (match) {
                     saleBaseName = match[1].trim();
                     saleVariant = match[2].trim();
@@ -802,7 +802,7 @@ window.getRemainingProductStock = function(productName, variantType = null) {
             if (sale.item) {
                 let saleBaseName = sale.item.trim();
                 let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\((.*?)\)$/);
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
                 if (match) {
                     saleBaseName = match[1].trim();
                     saleVariant = match[2].trim();
@@ -844,7 +844,7 @@ window.getRemainingProductStock = function(productName, variantType = null) {
         sales.forEach(sale => {
             if (sale.item) {
                 let saleBaseName = sale.item.trim();
-                const match = sale.item.match(/^(.*?)\s+\((.*?)\)$/);
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
                 if (match) {
                     saleBaseName = match[1].trim();
                 }
@@ -870,7 +870,7 @@ window.getRemainingProductStock = function(productName, variantType = null) {
             if (sale.item) {
                 let saleBaseName = sale.item.trim();
                 let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\((.*?)\)$/);
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
                 if (match) {
                     saleBaseName = match[1].trim();
                     saleVariant = match[2].trim();

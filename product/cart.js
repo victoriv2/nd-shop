@@ -145,7 +145,7 @@ function renderCartItems() {
         if (!itemImgSrc) {
             try {
                 const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-                const matched = dbProducts.find(p => p.name === item.name || p.name === item.name.split(' (')[0]);
+                const matched = dbProducts.find(p => p.name === item.name || p.name === item.name.replace(/\s+\([^)]+\)$/, ''));
                 if (matched && matched.imageData) itemImgSrc = matched.imageData;
             } catch(e) {}
         }

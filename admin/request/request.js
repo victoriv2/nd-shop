@@ -213,7 +213,7 @@ function openOrderDetails(id) {
             if (!imgSrc) {
                 try {
                     const dbProducts = typeof adminProducts !== 'undefined' ? adminProducts : JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-                    const matched = dbProducts.find(p => p.name === item.name || p.name === item.name.split(' (')[0]);
+                    const matched = dbProducts.find(p => p.name === item.name || p.name === item.name.replace(/\s+\([^)]+\)$/, ''));
                     if (matched && matched.imageData) imgSrc = matched.imageData;
                 } catch(e) {}
             }
@@ -237,7 +237,7 @@ function openOrderDetails(id) {
         if (!pImgSrc) {
             try {
                 const dbProducts = typeof adminProducts !== 'undefined' ? adminProducts : JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-                const matched = dbProducts.find(p => p.name === req.product.name || p.name === req.product.name.split(' (')[0]);
+                const matched = dbProducts.find(p => p.name === req.product.name || p.name === req.product.name.replace(/\s+\([^)]+\)$/, ''));
                 if (matched && matched.imageData) pImgSrc = matched.imageData;
             } catch(e) {}
         }
@@ -359,7 +359,7 @@ function _buildEditableOrderTable(req, id) {
             if (!imgSrc) {
                 try {
                     const dbProducts = typeof adminProducts !== 'undefined' ? adminProducts : JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-                    const matched = dbProducts.find(p => p.name === item.name || p.name === item.name.split(' (')[0]);
+                    const matched = dbProducts.find(p => p.name === item.name || p.name === item.name.replace(/\s+\([^)]+\)$/, ''));
                     if (matched && matched.imageData) imgSrc = matched.imageData;
                 } catch(e) {}
             }
