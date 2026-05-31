@@ -385,14 +385,43 @@ window.printReceiptGen = function() {
         return;
     }
     
-    const printArea = document.getElementById('rgPreviewDoc');
+    const previewDoc = document.getElementById('rgPreviewDoc');
     const receiptNum = document.getElementById('rPreviewId').textContent.trim() || 'RCPT';
+
+    // Build temporary print container styled as A4 (794px)
+    const tempPrintArea = document.createElement('div');
+    tempPrintArea.style.position = 'absolute';
+    tempPrintArea.style.left = '-9999px';
+    tempPrintArea.style.top = '-9999px';
+    tempPrintArea.style.width = '794px';
+    tempPrintArea.style.padding = '60px 80px'; // Generous, centered padding for A4 margins
+    tempPrintArea.style.background = '#ffffff';
+    tempPrintArea.style.color = '#000';
+    tempPrintArea.style.fontFamily = "'Courier New', Courier, monospace";
+    tempPrintArea.style.boxSizing = 'border-box';
+    
+    // Copy content
+    tempPrintArea.innerHTML = previewDoc.innerHTML;
+    
+    // Adjust layout sizes in temp print to look premium on A4
+    const headerTitle = tempPrintArea.querySelector('#rgPreviewShopName');
+    if (headerTitle) {
+        headerTitle.style.fontSize = '2.2rem';
+        headerTitle.style.marginBottom = '8px';
+    }
+    const phoneLabel = tempPrintArea.querySelector('#rgPreviewStorePhone');
+    if (phoneLabel) {
+        phoneLabel.style.fontSize = '1.05rem';
+    }
+    
+    // Add to DOM temporarily
+    document.body.appendChild(tempPrintArea);
     
     const opt = {
-        margin: 10,
+        margin: 0,
         filename: `Receipt_${receiptNum}.pdf`,
         image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false, windowWidth: 794 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
@@ -404,12 +433,13 @@ window.printReceiptGen = function() {
         btn.style.pointerEvents = 'none';
     }
 
-    html2pdf().set(opt).from(printArea).save().then(() => {
+    html2pdf().set(opt).from(tempPrintArea).save().then(() => {
         if (btn) {
             btn.textContent = originalText;
             btn.style.opacity = '1';
             btn.style.pointerEvents = 'auto';
         }
+        tempPrintArea.remove(); // Cleanup
     }).catch(err => {
         console.error("PDF generation failed:", err);
         if (btn) {
@@ -417,6 +447,7 @@ window.printReceiptGen = function() {
             btn.style.opacity = '1';
             btn.style.pointerEvents = 'auto';
         }
+        tempPrintArea.remove(); // Cleanup
     });
 }
 

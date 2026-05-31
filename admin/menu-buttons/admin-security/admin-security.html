@@ -117,6 +117,9 @@
                         <div class="password-input-wrapper">
                             <input type="tel" class="m-input" id="asecOldPin" placeholder="Enter current PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-form-type="other" style="-webkit-text-security:disc;">
                         </div>
+                        <div style="text-align: right; margin-top: 5px;">
+                            <a href="#" style="font-size: 0.8rem; color: #d97706; text-decoration: none; font-weight: 600;" id="asecForgotPinBtn">Forgot PIN?</a>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>New 4-Digit PIN <span class="req">*</span></label>
@@ -326,6 +329,31 @@
                 </div>
 
                 <button class="asec-save-btn" id="btnAsecFinal" onclick="verifyAsecPasswordReset()" style="margin: 0; width: 100%;">Update Password</button>
+            </div>
+
+            <!-- Step 2: New PIN -->
+            <div id="asecResetStep2Pin" style="display: none;">
+                <div style="font-size: 2.5rem; color: #d97706; margin-bottom: 10px;">
+                    <svg viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <h4 style="margin-bottom: 10px; color: #1e293b;">Set New Master PIN</h4>
+                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 20px;">Choose a secure new 4-digit PIN for your admin account.</p>
+
+                <div class="security-form-area" style="text-align: left; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">New 4-Digit PIN</label>
+                        <input type="tel" class="m-input" id="resetAsecNewPin" placeholder="Enter new 4-digit PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" style="width: 100%; box-sizing: border-box; -webkit-text-security:disc;">
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Confirm New PIN</label>
+                        <input type="tel" class="m-input" id="resetAsecConfirmPin" placeholder="Re-type new 4-digit PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" style="width: 100%; box-sizing: border-box; -webkit-text-security:disc;">
+                    </div>
+                </div>
+
+                <button class="asec-save-btn" id="btnAsecPinFinal" onclick="verifyAsecPinReset()" style="margin: 0; width: 100%; background:#d97706; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.4);">Update PIN</button>
             </div>
         </div>
     </div>

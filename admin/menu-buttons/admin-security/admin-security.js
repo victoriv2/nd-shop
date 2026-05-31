@@ -210,10 +210,21 @@ function _doSaveLocks() {
 // State for the reset flow
 window._asecOtpContact = null;
 window._asecOtpMethod = 'email';
+window._asecRecoveryType = 'password'; // 'password' or 'pin'
 
 function triggerAsecForgotPass(e) {
     if(e) e.preventDefault();
     const adminId = localStorage.getItem('nd_admin_id') || 'admin@nd-shop.sbs';
+    window._asecRecoveryType = 'password';
+
+    // Show method selection modal first
+    _openAsecMethodModal(adminId);
+}
+
+function triggerAsecForgotPin(e) {
+    if(e) e.preventDefault();
+    const adminId = localStorage.getItem('nd_admin_id') || 'admin@nd-shop.sbs';
+    window._asecRecoveryType = 'pin';
 
     // Show method selection modal first
     _openAsecMethodModal(adminId);
@@ -342,6 +353,7 @@ function closeAsecPassVerify() {
             // Reset to step 1 for next time
             document.getElementById('asecResetStep1').style.display = 'block';
             document.getElementById('asecResetStep2').style.display = 'none';
+            document.getElementById('asecResetStep2Pin').style.display = 'none';
         }, 300);
     }
 }
@@ -377,9 +389,15 @@ async function goToAsecStep2() {
         const data = await response.json();
         if (data.success) {
             document.getElementById('asecResetStep1').style.display = 'none';
-            document.getElementById('asecResetStep2').style.display = 'block';
-            const firstPassInput = document.getElementById('resetAsecNewPass');
-            if (firstPassInput) firstPassInput.focus();
+            if (window._asecRecoveryType === 'pin') {
+                document.getElementById('asecResetStep2Pin').style.display = 'block';
+                const firstPinInput = document.getElementById('resetAsecNewPin');
+                if (firstPinInput) firstPinInput.focus();
+            } else {
+                document.getElementById('asecResetStep2').style.display = 'block';
+                const firstPassInput = document.getElementById('resetAsecNewPass');
+                if (firstPassInput) firstPassInput.focus();
+            }
         } else {
             if (typeof customAlert !== 'undefined') customAlert(data.error || 'Invalid OTP. Please try again.');
             else alert('Invalid OTP.');
@@ -470,14 +488,59 @@ function verifyAsecPasswordReset() {
     }, 1000);
 }
 
-// Add event listener for the forgot password link when modal opens
+function verifyAsecPinReset() {
+    const newPinInput = document.getElementById('resetAsecNewPin');
+    const confirmPinInput = document.getElementById('resetAsecConfirmPin');
+    const newPin = newPinInput ? newPinInput.value : '';
+    const confirmPin = confirmPinInput ? confirmPinInput.value : '';
+
+    if (!newPin || !/^\d{4}$/.test(newPin)) {
+        return typeof customAlert !== 'undefined' ? customAlert('PIN must be exactly 4 digits.') : alert('PIN must be exactly 4 digits.');
+    }
+
+    if (newPin !== confirmPin) {
+        return typeof customAlert !== 'undefined' ? customAlert('PINs do not match.') : alert('PINs do not match.');
+    }
+
+    const btn = document.getElementById('btnAsecPinFinal');
+    btn.classList.add('saving');
+    btn.textContent = 'Updating...';
+
+    setTimeout(() => {
+        // Update Admin PIN
+        localStorage.setItem('nd_delete_pin', newPin);
+        
+        btn.classList.remove('saving');
+        btn.classList.add('success');
+        btn.textContent = 'PIN Updated Successfully!';
+
+        setTimeout(() => {
+            btn.classList.remove('success');
+            btn.textContent = 'Update PIN';
+            
+            // Reset fields and close
+            document.querySelectorAll('.asec-pass-otp').forEach(i => i.value = '');
+            document.getElementById('asecOldPin').value = '';
+            document.getElementById('asecNewPin').value = '';
+            if (newPinInput) newPinInput.value = '';
+            if (confirmPinInput) confirmPinInput.value = '';
+            
+            closeAsecPassVerify();
+            closeAdminSecurity();
+        }, 1500);
+    }, 1000);
+}
+
+// Add event listener for the forgot password/PIN link when modal opens
 (function() {
     const originalOpen = openAdminSecurity;
     window.openAdminSecurity = function() {
         originalOpen();
         setTimeout(() => {
-            const btn = document.getElementById('asecForgotPassBtn');
-            if(btn) btn.onclick = triggerAsecForgotPass;
+            const btnPass = document.getElementById('asecForgotPassBtn');
+            if(btnPass) btnPass.onclick = triggerAsecForgotPass;
+            const btnPin = document.getElementById('asecForgotPinBtn');
+            if(btnPin) btnPin.onclick = triggerAsecForgotPin;
         }, 500);
     };
 })();
