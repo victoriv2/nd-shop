@@ -382,9 +382,9 @@
 
         // --- Custom Mobile Pull Down To Refresh ---
         if (window.matchMedia('(max-width: 1023px)').matches) {
-            const isAuthOrAdmin = document.body.classList.contains('auth-body') || 
-                                  window.location.pathname.includes('/admin') ||
-                                  !!document.getElementById('adminLoginScreen');
+            const isAdminLoggedOut = window.location.pathname.includes('/admin') && 
+                                     sessionStorage.getItem('nd_admin_logged_in') !== 'true';
+            const isAuthOrAdmin = document.body.classList.contains('auth-body') || isAdminLoggedOut;
                                   
             const scrollContainers = isAuthOrAdmin 
                 ? [document.body]
@@ -398,6 +398,7 @@
                 if (!container) return;
 
                 let startY = 0;
+                let startX = 0;
                 let currentY = 0;
                 let isPulling = false;
 
@@ -407,6 +408,7 @@
                         : container.scrollTop;
                     if (scrollTop === 0 && e.touches.length === 1) {
                         startY = e.touches[0].pageY;
+                        startX = e.touches[0].pageX;
                         currentY = startY;
                         isPulling = true;
                         
@@ -418,6 +420,14 @@
                     if (!isPulling) return;
                     currentY = e.touches[0].pageY;
                     const diff = currentY - startY;
+                    const diffX = Math.abs(e.touches[0].pageX - startX);
+
+                    // Cancel pull-to-refresh if they are swiping horizontally (changing tabs or sliding tables)
+                    if (diffX > Math.abs(diff) && diffX > 10) {
+                        isPulling = false;
+                        container.style.transform = '';
+                        return;
+                    }
 
                     if (diff > 0) {
                         if (e.cancelable) e.preventDefault();
