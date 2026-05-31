@@ -382,11 +382,14 @@
 
         // --- Custom Mobile Pull Down To Refresh ---
         if (window.matchMedia('(max-width: 1023px)').matches) {
-            const scrollContainers = [
-                document.getElementById('payout-container'),
-                document.getElementById('product-container'),
-                document.getElementById('menu-container')
-            ];
+            const isAuthPage = document.body.classList.contains('auth-body');
+            const scrollContainers = isAuthPage 
+                ? [document.body]
+                : [
+                    document.getElementById('payout-container'),
+                    document.getElementById('product-container'),
+                    document.getElementById('menu-container')
+                ];
 
             scrollContainers.forEach(container => {
                 if (!container) return;
@@ -398,7 +401,8 @@
                 // Create pull indicator element
                 const ptrIndicator = document.createElement('div');
                 ptrIndicator.className = 'custom-ptr-indicator';
-                ptrIndicator.style.cssText = 'position:absolute;top:10px;left:50%;transform:translate(-50%, -100px);z-index:999999;pointer-events:none;display:flex;align-items:center;justify-content:center;height:40px;width:40px;background:white;border-radius:50%;box-shadow:0 3px 10px rgba(0,0,0,0.15);transition:transform 0.1s ease, opacity 0.1s ease;opacity:0;';
+                const positionType = isAuthPage ? 'fixed' : 'absolute';
+                ptrIndicator.style.cssText = `position:${positionType};top:10px;left:50%;transform:translate(-50%, -100px);z-index:999999;pointer-events:none;display:flex;align-items:center;justify-content:center;height:40px;width:40px;background:white;border-radius:50%;box-shadow:0 3px 10px rgba(0,0,0,0.15);transition:transform 0.1s ease, opacity 0.1s ease;opacity:0;`;
                 ptrIndicator.innerHTML = `<svg style="width:20px;height:20px;color:#8b5cf6;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4.79M9 9h5v5" /></svg>`;
                 
                 // Add keyframes styles dynamically
@@ -409,10 +413,17 @@
                     document.head.appendChild(style);
                 }
                 
-                container.parentNode.insertBefore(ptrIndicator, container);
+                if (isAuthPage) {
+                    document.body.appendChild(ptrIndicator);
+                } else {
+                    container.parentNode.insertBefore(ptrIndicator, container);
+                }
 
                 container.addEventListener('touchstart', (e) => {
-                    if (container.scrollTop === 0 && e.touches.length === 1) {
+                    const scrollTop = isAuthPage 
+                        ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop)
+                        : container.scrollTop;
+                    if (scrollTop === 0 && e.touches.length === 1) {
                         startY = e.touches[0].pageY;
                         isPulling = true;
                         
