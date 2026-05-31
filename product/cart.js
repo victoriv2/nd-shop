@@ -283,74 +283,91 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
 };
 
 function handleCheckout() {
-    const cart = getCartData();
-    if (cart.length === 0) return;
-
-    const btn = document.getElementById('checkoutBtn');
-    const originalText = btn.textContent;
-    btn.textContent = 'Processing...';
-    btn.disabled = true;
-
-    // Create Grouped Request Payload
-    const requestID = 'ORD-' + Date.now().toString().slice(-4) + Math.floor(Math.random() * 90 + 10);
-    let user = window.loggedInUser;
-    if (!user) {
-        try {
-            const stored = localStorage.getItem('nd_logged_in_user');
-            if (stored && stored !== 'undefined') user = JSON.parse(stored);
-        } catch(e) {}
-    }
-    user = user || { id: '00000ND', firstName: 'Customer', lastName: '' };
-    
-    let orderTotal = 0;
-    let orderPayout = 0;
-    
-    cart.forEach(item => {
-        orderTotal += item.total;
-        orderPayout += item.payout;
-    });
-
-    const newRequest = {
-        id: requestID,
-        timestamp: new Date().toISOString(),
-        status: 'Pending',
-        isGroupedOrder: true,
-        user: {
-            id: user.id,
-            name: (user.firstName + ' ' + (user.lastName || '')).trim(),
-            avatar: user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U'
-        },
-        orderTotal: orderTotal,
-        orderPayout: orderPayout,
-        items: cart // Array of all items
-    };
-
-    // Save to Requests DB
-    let existingReqs = [];
     try {
-        const stored = localStorage.getItem('nd_requests_data');
-        if (stored && stored !== 'undefined') existingReqs = JSON.parse(stored);
-    } catch(e) {}
-    if (!Array.isArray(existingReqs)) existingReqs = [];
-    
-    existingReqs.unshift(newRequest);
-    localStorage.setItem('nd_requests_data', JSON.stringify(existingReqs));
+        const cart = getCartData();
+        if (!cart || cart.length === 0) return;
 
-    // Simulated delay for premium feel
-    setTimeout(() => {
-        btn.textContent = 'Order Placed!';
-        btn.style.backgroundColor = '#22c55e'; // Green success
+        const btn = document.getElementById('checkoutBtn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Processing...';
+        btn.disabled = true;
+
+        // Safely determine user
+        let user = window.loggedInUser;
+        if (!user) {
+            try {
+                const stored = localStorage.getItem('nd_logged_in_user');
+                if (stored && stored !== 'undefined') user = JSON.parse(stored);
+            } catch(e) {}
+        }
+        user = user || { id: '00000ND', name: 'Customer' };
+
+        const userName = user.name || ((user.firstName || '') + ' ' + (user.lastName || '')).trim() || 'Customer';
+        const userAvatar = userName.charAt(0).toUpperCase();
+
+        const requestID = 'ORD-' + Date.now().toString().slice(-4) + Math.floor(Math.random() * 90 + 10);
+        let orderTotal = 0;
+        let orderPayout = 0;
         
+        cart.forEach(item => {
+            orderTotal += (parseFloat(item.total) || 0);
+            orderPayout += (parseFloat(item.payout) || 0);
+        });
+
+        const newRequest = {
+            id: requestID,
+            timestamp: new Date().toISOString(),
+            status: 'Pending',
+            isGroupedOrder: true,
+            user: {
+                id: user.id || '00000ND',
+                name: userName,
+                avatar: userAvatar
+            },
+            orderTotal: orderTotal,
+            orderPayout: orderPayout,
+            items: cart
+        };
+
+        let existingReqs = [];
+        try {
+            const stored = localStorage.getItem('nd_requests_data');
+            if (stored && stored !== 'undefined') {
+                existingReqs = JSON.parse(stored);
+            }
+        } catch(e) {}
+        if (!Array.isArray(existingReqs)) existingReqs = [];
+        
+        existingReqs.unshift(newRequest);
+        localStorage.setItem('nd_requests_data', JSON.stringify(existingReqs));
+
+        // Ensure sync happens if possible
+        if (typeof handleMutation === 'function') {
+            handleMutation('nd_requests_data', JSON.stringify(existingReqs));
+        }
+
         setTimeout(() => {
-            // Clear cart safely
-            saveCartData([]);
-            updateCartBadge();
-            closeCart();
+            btn.textContent = 'Order Placed!';
+            btn.style.backgroundColor = '#22c55e';
             
-            // Reset button
-            btn.textContent = originalText;
-            btn.style.backgroundColor = '';
+            setTimeout(() => {
+                saveCartData([]);
+                updateCartBadge();
+                closeCart();
+                
+                btn.textContent = originalText;
+                btn.style.backgroundColor = '';
+                btn.disabled = false;
+            }, 1500);
+        }, 800);
+    } catch (error) {
+        console.error("Checkout failed:", error);
+        alert("Failed to process checkout. Please try again.");
+        const btn = document.getElementById('checkoutBtn');
+        if (btn) {
+            btn.textContent = 'Checkout';
             btn.disabled = false;
-        }, 1500);
-    }, 800);
+            btn.style.backgroundColor = '';
+        }
+    }
 }
