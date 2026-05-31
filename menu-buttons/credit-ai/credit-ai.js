@@ -518,6 +518,13 @@ function initCreditAiChatLogic() {
                 totalPayout += parseFloat(s.payout) || 0;
             });
 
+            // Clean requests data (strip heavy base64 imageData or receipt strings)
+            const cleanUserRequests = userRequests.map(r => ({
+                name: r.productName || r.name,
+                qty: r.qty,
+                status: r.status
+            }));
+
             const injectedPrompt = (localStorage.getItem('nd_shop_name') || 'Nd shop') + ' ' + (CAI_CAI_SYSTEM_PROMPT || '') + `\n\n--- INJECTED STORE CONTEXT ---\n
 USER PROFILE:
 - Name: ${userName}
@@ -538,7 +545,7 @@ ${JSON.stringify(dbProducts.map(p => ({ name: p.name, price: p.price, unit: p.un
 
 YOUR REQUESTS DATA:
 (Format: 'name' = requested item, 'qty' = quantity requested, 'status' = flow state [Pending/Approved/Declined])
-${JSON.stringify(userRequests)}
+${JSON.stringify(cleanUserRequests)}
 
 -----------------------------\n`;
 

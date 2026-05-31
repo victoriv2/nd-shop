@@ -888,6 +888,72 @@ function initAiChatLogic() {
                 ? `\nCURRENT PAGE CONTEXT: ${_pageCtx}\nThe admin opened AI from the ${_contextLabel} page. Route all save actions to that book only.\n`
                 : `\nCURRENT PAGE CONTEXT: general\nDefault mode — only extract to Register or Debtor Book.\n`;
 
+            // Clean/strip heavy base64 data to avoid payload/token limit failures (400 Bad Request)
+            const cleanEnrichedUsers = enrichedUsers.map(u => ({
+                id: u.id,
+                firstName: u.firstName,
+                lastName: u.lastName,
+                phone: u.phone,
+                email: u.email,
+                state: u.state,
+                localGovernment: u.localGovernment || u.lga,
+                isActive: u.isActive,
+                lastSeen: u.lastSeen,
+                activityPercent: u.activityPercent,
+                payoutBalance: u.payoutBalance
+            }));
+
+            const cleanSales = dbSales.map(s => ({
+                item: s.item,
+                qty: s.qty,
+                price: s.price,
+                unitPrice: s.unitPrice,
+                date: s.date,
+                customerID: s.customerID,
+                customerName: s.customerName
+            }));
+
+            const cleanProducts = dbProducts.map(p => ({
+                name: p.name,
+                price: p.price,
+                cost: p.cost,
+                profit: p.profit,
+                unit: p.unit,
+                category: p.category
+            }));
+
+            const cleanProgress = dbProgress.map(p => {
+                const { receipt, image, imageData, imageBase64, ...rest } = p;
+                return rest;
+            });
+
+            const cleanRestock = dbRestockHistory.map(r => ({
+                id: r.id,
+                item: r.item,
+                qty: r.qty,
+                cost: r.cost,
+                date: r.date
+            }));
+
+            const cleanRequests = dbRequests.map(r => ({
+                id: r.id,
+                status: r.status,
+                productName: r.productName,
+                qty: r.qty,
+                unitPrice: r.unitPrice,
+                total: r.total,
+                userName: r.user ? r.user.name : (r.customerName || '')
+            }));
+
+            const cleanMessages = dbMessages.map(m => ({
+                id: m.id,
+                sender: m.sender,
+                recipient: m.recipient,
+                text: m.text,
+                timestamp: m.timestamp,
+                read: m.read
+            }));
+
             const injectedPrompt = SYSTEM_PROMPT + _contextDirective + `\n\n--- INJECTED STORE CONTEXT ---\n
 FINANCIAL SUMMARY:
 - Total Revenue (All Time): ₦${totalRevenue.toLocaleString()}
@@ -924,18 +990,18 @@ TODAY'S SUMMARY (${todayDay} ${todayMonth}, ${todayYear}):
 
 USERS (Full Profiles + Computed Data):
 (Format: id, firstName, lastName, phone, email, state, localGovernment, isActive, lastSeen, activityPercent, payoutBalance. Represents registered customers.)
-${JSON.stringify(enrichedUsers)}
+${JSON.stringify(cleanEnrichedUsers)}
 
 SALES HISTORY (Last 100):
 (Format: item = product sold, qty = quantity, price = total price for this qty, unitPrice = price per item, date, customerID = who bought it.)
-${JSON.stringify(dbSales)}
+${JSON.stringify(cleanSales)}
 
 PRODUCTS/REGISTER:
 (Format: name = exact product name, price = selling price per unit, cost = wholesale cost per unit, profit = gross profit per unit, unit = measurement scale, category = product group)
-${JSON.stringify(dbProducts)}
+${JSON.stringify(cleanProducts)}
 
 PROGRESS DATA:
-${JSON.stringify(dbProgress)}
+${JSON.stringify(cleanProgress)}
 
 DEBTOR BOOK NOTES:
 (Format: id, title = debtor name/identifier, content = details of the debt, isPinned)
@@ -943,17 +1009,17 @@ ${JSON.stringify(dbDebtorNotes)}
 
 RESTOCK HISTORY (Last 100):
 (Format: id, item = product restocked, qty = quantity added, cost = total cost paid for this restock, date)
-${JSON.stringify(dbRestockHistory)}
+${JSON.stringify(cleanRestock)}
 
 FINANCIAL SETTINGS:
 - Payout Rate: ${dbPayoutRate}%
 
 REQUESTS (Last 100):
 (Format: id, status, productName, qty, unitPrice, total, user.name = requester)
-${JSON.stringify(dbRequests)}
+${JSON.stringify(cleanRequests)}
 
 MESSAGES (Last 50):
-${JSON.stringify(dbMessages)}
+${JSON.stringify(cleanMessages)}
 
 EXPENSES NOTEBOOK (All Expenses):
 ${JSON.stringify(dbExpensesNotebook)}

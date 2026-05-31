@@ -669,6 +669,21 @@ function initAiChatLogic() {
                 totalPayout += parseFloat(s.payout) || 0;
             });
 
+            // Clean requests data (strip heavy base64 imageData)
+            const cleanUserRequests = userRequests.map(r => ({
+                id: r.id,
+                timestamp: r.timestamp,
+                status: r.status,
+                orderTotal: r.orderTotal,
+                items: r.items ? r.items.map(item => ({
+                    name: item.name,
+                    qty: item.qty,
+                    unitPrice: item.unitPrice,
+                    unit: item.unit,
+                    total: item.total
+                })) : []
+            }));
+
             const injectedPrompt = SYSTEM_PROMPT + `\n\n--- INJECTED STORE CONTEXT ---\n
 USER PROFILE:
 - Name: ${userName}
@@ -692,8 +707,8 @@ AVAILABLE PRODUCTS IN STORE:
 ${JSON.stringify(dbProducts.map(p => ({ name: p.name, price: p.price, unit: p.unit, category: p.category })))}
 
 YOUR REQUESTS DATA:
-(Format: 'name' = requested item, 'qty' = quantity requested, 'status' = flow state [Pending/Approved/Declined])
-${JSON.stringify(userRequests)}
+(Format: 'id' = request ID, 'timestamp' = time, 'status' = status, 'orderTotal' = total value, 'items' = list of items)
+${JSON.stringify(cleanUserRequests)}
 
 -----------------------------\n`;
 
