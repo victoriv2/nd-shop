@@ -398,27 +398,6 @@
                 let currentY = 0;
                 let isPulling = false;
 
-                // Create pull indicator element
-                const ptrIndicator = document.createElement('div');
-                ptrIndicator.className = 'custom-ptr-indicator';
-                const positionType = isAuthPage ? 'fixed' : 'absolute';
-                ptrIndicator.style.cssText = `position:${positionType};top:10px;left:50%;transform:translate(-50%, -100px);z-index:999999;pointer-events:none;display:flex;align-items:center;justify-content:center;height:40px;width:40px;background:white;border-radius:50%;box-shadow:0 3px 10px rgba(0,0,0,0.15);transition:transform 0.1s ease, opacity 0.1s ease;opacity:0;`;
-                ptrIndicator.innerHTML = `<svg style="width:20px;height:20px;color:#8b5cf6;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4.79M9 9h5v5" /></svg>`;
-                
-                // Add keyframes styles dynamically
-                if (!document.getElementById('ptr-spin-style')) {
-                    const style = document.createElement('style');
-                    style.id = 'ptr-spin-style';
-                    style.textContent = `@keyframes ptr-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
-                    document.head.appendChild(style);
-                }
-                
-                if (isAuthPage) {
-                    document.body.appendChild(ptrIndicator);
-                } else {
-                    container.parentNode.insertBefore(ptrIndicator, container);
-                }
-
                 container.addEventListener('touchstart', (e) => {
                     const scrollTop = isAuthPage 
                         ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop)
@@ -428,7 +407,6 @@
                         isPulling = true;
                         
                         container.style.transition = '';
-                        ptrIndicator.style.transition = '';
                     }
                 }, { passive: true });
 
@@ -440,15 +418,11 @@
                     if (diff > 0) {
                         if (e.cancelable) e.preventDefault();
                         // Dragging down at scrollTop = 0
-                        const pullDistance = Math.min(diff * 0.4, 60); // damping & max threshold
+                        const pullDistance = Math.min(diff * 0.4, 80); // damping & max threshold
                         container.style.transform = `translateY(${pullDistance}px)`;
-                        ptrIndicator.style.opacity = '1';
-                        ptrIndicator.style.transform = `translate(-50%, ${pullDistance}px) rotate(${diff * 2}deg)`;
                     } else {
                         isPulling = false;
                         container.style.transform = '';
-                        ptrIndicator.style.transform = 'translate(-50%, -100px)';
-                        ptrIndicator.style.opacity = '0';
                     }
                 }, { passive: false });
 
@@ -460,19 +434,11 @@
                     container.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
                     container.style.transform = '';
                     
-                    ptrIndicator.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease';
-                    
-                    if (diff > 120) { // pull down threshold met
-                        ptrIndicator.style.transform = 'translate(-50%, 30px)';
-                        ptrIndicator.querySelector('svg').style.animation = 'ptr-spin 0.8s linear infinite';
-                        
+                    if (diff > 100) { // pull down threshold met
+                        if (window.showGlobalRefreshLoader) window.showGlobalRefreshLoader();
                         setTimeout(() => {
-                            if (window.showGlobalRefreshLoader) window.showGlobalRefreshLoader();
                             location.reload();
-                        }, 500);
-                    } else {
-                        ptrIndicator.style.opacity = '0';
-                        ptrIndicator.style.transform = 'translate(-50%, -100px)';
+                        }, 100); // small delay to let the UI update
                     }
                 });
             });
