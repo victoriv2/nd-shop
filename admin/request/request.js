@@ -208,22 +208,46 @@ function openOrderDetails(id) {
 
     if (req.isGroupedOrder && req.items) {
         totalCost = req.orderTotal || 0;
-        itemsHtml = req.items.map(item => `
-            <tr>
-                <td style="display:flex;align-items:center;gap:8px;">
-                    ${item.imageData ? `<img src="${item.imageData}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;cursor:zoom-in;" onclick="event.stopPropagation();if(typeof window.openImageViewer==='function')window.openImageViewer('${item.imageData}')">` : `<div style="width:32px;height:32px;background:#f1f5f9;border-radius:4px;flex-shrink:0;"></div>`}
-                    <span>${item.name}</span>
-                </td>
-                <td style="text-align:center;">${item.qty} ${item.unit}</td>
-                <td style="text-align:right;">₦${item.total.toLocaleString()}</td>
-            </tr>
-        `).join('');
+        itemsHtml = req.items.map(item => {
+            let imgSrc = item.imageData;
+            if (!imgSrc) {
+                try {
+                    const dbProducts = typeof adminProducts !== 'undefined' ? adminProducts : JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+                    const matched = dbProducts.find(p => p.name === item.name || p.name === item.name.split(' (')[0]);
+                    if (matched && matched.imageData) imgSrc = matched.imageData;
+                } catch(e) {}
+            }
+            const imgTag = imgSrc 
+                ? `<img src="${imgSrc}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;cursor:zoom-in;" onclick="event.stopPropagation();if(typeof window.openImageViewer==='function')window.openImageViewer('${imgSrc}')">`
+                : `<div style="width:32px;height:32px;background:#f1f5f9;border-radius:4px;flex-shrink:0;"></div>`;
+            return `
+                <tr>
+                    <td style="display:flex;align-items:center;gap:8px;">
+                        ${imgTag}
+                        <span>${item.name}</span>
+                    </td>
+                    <td style="text-align:center;">${item.qty} ${item.unit}</td>
+                    <td style="text-align:right;">₦${item.total.toLocaleString()}</td>
+                </tr>
+            `;
+        }).join('');
     } else if (req.product) {
         totalCost = req.product.total || 0;
+        let pImgSrc = req.product.imageData;
+        if (!pImgSrc) {
+            try {
+                const dbProducts = typeof adminProducts !== 'undefined' ? adminProducts : JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+                const matched = dbProducts.find(p => p.name === req.product.name || p.name === req.product.name.split(' (')[0]);
+                if (matched && matched.imageData) pImgSrc = matched.imageData;
+            } catch(e) {}
+        }
+        const pImgTag = pImgSrc 
+            ? `<img src="${pImgSrc}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;cursor:zoom-in;" onclick="event.stopPropagation();if(typeof window.openImageViewer==='function')window.openImageViewer('${pImgSrc}')">`
+            : `<div style="width:32px;height:32px;background:#f1f5f9;border-radius:4px;flex-shrink:0;"></div>`;
         itemsHtml = `
             <tr>
                 <td style="display:flex;align-items:center;gap:8px;">
-                    ${req.product.imageData ? `<img src="${req.product.imageData}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;cursor:zoom-in;" onclick="event.stopPropagation();if(typeof window.openImageViewer==='function')window.openImageViewer('${req.product.imageData}')">` : `<div style="width:32px;height:32px;background:#f1f5f9;border-radius:4px;flex-shrink:0;"></div>`}
+                    ${pImgTag}
                     <span>${req.product.name}</span>
                 </td>
                 <td style="text-align:center;">${req.product.qty} ${req.product.unit}</td>
@@ -331,8 +355,16 @@ function _buildEditableOrderTable(req, id) {
             const tr = document.createElement('tr');
             tr.style.transition = 'background 0.2s';
 
-            const imgHtml = item.imageData
-                ? `<img src="${item.imageData}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;cursor:zoom-in;" onclick="event.stopPropagation();if(typeof window.openImageViewer==='function')window.openImageViewer('${item.imageData}')">`
+            let imgSrc = item.imageData;
+            if (!imgSrc) {
+                try {
+                    const dbProducts = typeof adminProducts !== 'undefined' ? adminProducts : JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+                    const matched = dbProducts.find(p => p.name === item.name || p.name === item.name.split(' (')[0]);
+                    if (matched && matched.imageData) imgSrc = matched.imageData;
+                } catch(e) {}
+            }
+            const imgHtml = imgSrc
+                ? `<img src="${imgSrc}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;cursor:zoom-in;" onclick="event.stopPropagation();if(typeof window.openImageViewer==='function')window.openImageViewer('${imgSrc}')">`
                 : `<div style="width:32px;height:32px;background:#f1f5f9;border-radius:4px;flex-shrink:0;"></div>`;
             tr.innerHTML = `
                 <td style="display:flex;align-items:center;gap:8px;">

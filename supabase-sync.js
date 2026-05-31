@@ -36,6 +36,11 @@
     
     // Initialize cache and pull fresh data from Supabase
     async function initSync() {
+        if (!navigator.onLine) {
+            console.log("[sync] Browser is offline, skipping pull.");
+            return;
+        }
+
         // Determine the current user context
         let userId = '';
         const token = localStorage.getItem('nd_token') || '';
@@ -61,10 +66,15 @@
                 const currentLocal = JSON.parse(localStorage.getItem(localKey) || '[]');
                 stateCache[localKey] = currentLocal;
 
-                // Pull absolute truth from server with auth token
+                // Pull absolute truth from server with auth token and timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout
+
                 const res = await fetch(`${window.API_BASE}/api/get-table/${tableName}?userId=${userId}`, {
-                    headers: authHeaders
+                    headers: authHeaders,
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 const data = await res.json();
                 
                 if (data.success && data.data) {
@@ -78,9 +88,14 @@
         }
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout
+
             const res = await fetch(`${window.API_BASE}/api/get-table/admin_settings`, {
-                headers: authHeaders
+                headers: authHeaders,
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
             const data = await res.json();
             if (data.success && data.data) {
                 for (const setting of data.data) {
@@ -98,6 +113,7 @@
         
         // Let the app know data is fresh
         window.dispatchEvent(new Event('nd_sync_complete'));
+        processSyncQueue();
     }
 
     // Intercept localStorage writes
@@ -115,17 +131,96 @@
         try {
             if (stateCache[key] === value) return;
             stateCache[key] = value;
-            fetch(`${window.API_BASE}/api/sync-items`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    table: 'admin_settings',
-                    operations: [{ type: 'UPDATE', data: { id: key, value: value } }]
-                })
-            }).catch(err => console.error('Settings sync error:', err));
+            queueOperations('admin_settings', [{ type: 'UPDATE', data: { id: key, value: value } }]);
+            processSyncQueue();
         } catch (e) {}
     }
+
+    function queueOperations(table, operations) {
+        let queue = [];
+        try {
+            queue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
+        } catch (e) {}
+        
+        operations.forEach(op => {
+            // Check if this exact operation for this item ID is already in the queue to avoid duplication
+            const isDup = queue.some(q => q.table === table && q.operation.type === op.type && (q.operation.id === op.id || (q.operation.data && q.operation.data.id === op.id)));
+            if (!isDup) {
+                queue.push({
+                    id: 'sync_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                    table,
+                    operation: op,
+                    timestamp: Date.now()
+                });
+            }
+        });
+        
+        try {
+            localStorage.setItem('nd_sync_retry_queue', JSON.stringify(queue));
+        } catch(e) {}
+    }
+
+    let isSyncingQueue = false;
+    async function processSyncQueue() {
+        if (isSyncingQueue) return;
+        isSyncingQueue = true;
+        
+        let queue = [];
+        try {
+            queue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
+        } catch (e) {}
+        
+        if (queue.length === 0) {
+            isSyncingQueue = false;
+            return;
+        }
+        
+        const groups = {};
+        queue.forEach(item => {
+            if (!groups[item.table]) groups[item.table] = [];
+            groups[item.table].push(item);
+        });
+        
+        const token = localStorage.getItem('nd_token') || '';
+        const headers = {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        };
+        
+        for (const [table, items] of Object.entries(groups)) {
+            const operations = items.map(item => item.operation);
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout
+
+                const res = await fetch(`${window.API_BASE}/api/sync-items`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ table, operations }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                const data = await res.json();
+                if (data.success) {
+                    const itemIds = items.map(item => item.id);
+                    let currentQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
+                    currentQueue = currentQueue.filter(item => !itemIds.includes(item.id));
+                    localStorage.setItem('nd_sync_retry_queue', JSON.stringify(currentQueue));
+                    console.log(`[sync-queue] Successfully synced ${operations.length} pending ops for ${table}`);
+                } else {
+                    console.warn(`[sync-queue] Sync failed for ${table}:`, data.error);
+                }
+            } catch (err) {
+                console.error(`[sync-queue] Network error syncing ${table} (offline/poor network):`, err);
+                break; 
+            }
+        }
+        
+        isSyncingQueue = false;
+    }
+
+    // Attempt to process queue when user comes online
+    window.addEventListener('online', processSyncQueue);
 
     function handleMutation(key, newValueString) {
         try {
@@ -133,10 +228,9 @@
             let newList = JSON.parse(newValueString || '[]');
             
             // AUTO-ID: assign stable IDs to items that don't have one
-            // (products are created without id - generate and persist)
             let needsWriteback = false;
             newList = newList.map(item => {
-                if (!item.id) {
+                if (item && !item.id) {
                     item.id = key + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                     needsWriteback = true;
                 }
@@ -173,18 +267,8 @@
             }
 
             if (operations.length > 0) {
-                // Push to server immediately
-                fetch(`${window.API_BASE}/api/sync-items`, {
-                    method: 'POST',
-                    headers: {
-                    'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ table: tableName, operations })
-                }).then(res => res.json()).then(data => {
-                    if (!data.success) console.error('Sync failed', data.error);
-                    else console.log(`[sync] Synced ${operations.length} ops to ${tableName}`);
-                }).catch(err => {
-                    console.error('Network error during sync:', err);
-                });
+                queueOperations(tableName, operations);
+                processSyncQueue();
             }
             
             // Update cache to reflect new state

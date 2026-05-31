@@ -141,8 +141,17 @@ function renderCartItems() {
         totalItems += item.qty;
         orderTotal += item.total;
 
-        const imgHtml = item.imageData 
-            ? `<img src="${item.imageData}" alt="${item.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; cursor: zoom-in; flex-shrink: 0;" onclick="event.stopPropagation(); if(typeof window.openImageViewer === 'function') window.openImageViewer('${item.imageData}')">`
+        let itemImgSrc = item.imageData;
+        if (!itemImgSrc) {
+            try {
+                const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+                const matched = dbProducts.find(p => p.name === item.name || p.name === item.name.split(' (')[0]);
+                if (matched && matched.imageData) itemImgSrc = matched.imageData;
+            } catch(e) {}
+        }
+
+        const imgHtml = itemImgSrc 
+            ? `<img src="${itemImgSrc}" alt="${item.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; cursor: zoom-in; flex-shrink: 0;" onclick="event.stopPropagation(); if(typeof window.openImageViewer === 'function') window.openImageViewer('${itemImgSrc}')">`
             : `<div style="width: 44px; height: 44px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #cbd5e1; flex-shrink: 0;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`;
 
         html += `
@@ -274,7 +283,7 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             isFlexible: isFlexible || false,
             customPayoutRate: specificPayoutRate,
             customPayoutType: specificPayoutType,
-            imageData: imageData,
+            imageData: undefined,
             unitCost: unitCost || 0
         });
     }
@@ -326,7 +335,10 @@ function handleCheckout() {
             },
             orderTotal: orderTotal,
             orderPayout: orderPayout,
-            items: cart
+            items: cart.map(item => {
+                const { imageData, ...cleanItem } = item;
+                return cleanItem;
+            })
         };
 
         let existingReqs = [];
@@ -338,6 +350,21 @@ function handleCheckout() {
         } catch(e) {}
         if (!Array.isArray(existingReqs)) existingReqs = [];
         
+        // Clean past requests to strip out any remaining base64 images
+        existingReqs = existingReqs.map(req => {
+            if (req.items) {
+                req.items = req.items.map(item => {
+                    const { imageData, ...cleanItem } = item;
+                    return cleanItem;
+                });
+            }
+            if (req.product) {
+                const { imageData, ...cleanProduct } = req.product;
+                req.product = cleanProduct;
+            }
+            return req;
+        });
+
         existingReqs.unshift(newRequest);
         localStorage.setItem('nd_requests_data', JSON.stringify(existingReqs));
 
@@ -379,3 +406,64 @@ window.addEventListener('nd_sync_complete', () => {
         renderCartItems();
     }
 });
+
+// Clean up bloated base64 imageData from localStorage to prevent QuotaExceededError
+(function() {
+    try {
+        const cartKey = 'nd_user_cart_data';
+        const cartStored = localStorage.getItem(cartKey);
+        if (cartStored) {
+            const cartList = JSON.parse(cartStored);
+            if (Array.isArray(cartList)) {
+                let cleaned = false;
+                const cleanCart = cartList.map(item => {
+                    if (item.imageData) {
+                        cleaned = true;
+                        const { imageData, ...rest } = item;
+                        return rest;
+                    }
+                    return item;
+                });
+                if (cleaned) {
+                    localStorage.setItem(cartKey, JSON.stringify(cleanCart));
+                    console.log("[cleanup] Cleaned base64 imageData from nd_user_cart_data");
+                }
+            }
+        }
+
+        const requestsKey = 'nd_requests_data';
+        const reqStored = localStorage.getItem(requestsKey);
+        if (reqStored) {
+            const reqList = JSON.parse(reqStored);
+            if (Array.isArray(reqList)) {
+                let cleaned = false;
+                const cleanReqs = reqList.map(req => {
+                    let reqCleaned = false;
+                    if (req.items) {
+                        req.items = req.items.map(item => {
+                            if (item.imageData) {
+                                reqCleaned = true;
+                                const { imageData, ...rest } = item;
+                                return rest;
+                            }
+                            return item;
+                        });
+                    }
+                    if (req.product && req.product.imageData) {
+                        reqCleaned = true;
+                        const { imageData, ...rest } = req.product;
+                        req.product = rest;
+                    }
+                    if (reqCleaned) cleaned = true;
+                    return req;
+                });
+                if (cleaned) {
+                    localStorage.setItem(requestsKey, JSON.stringify(cleanReqs));
+                    console.log("[cleanup] Cleaned base64 imageData from nd_requests_data");
+                }
+            }
+        }
+    } catch (e) {
+        console.warn("[cleanup] LocalStorage image cleanup failed:", e);
+    }
+})();
