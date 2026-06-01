@@ -406,17 +406,12 @@
                                   
             const scrollContainers = isPageAdmin
                 ? [document.body]
-                : (isAuthOrAdmin 
-                    ? [document.body]
-                    : [
-                        document.getElementById('payout-container'),
-                        document.getElementById('product-container'),
-                        document.getElementById('menu-container')
-                    ]
-                  );
+                : [];
 
             function getAnimTarget(c) {
                 if (c === document.body) {
+                    const regContainer = document.getElementById('register-container');
+                    if (regContainer) return regContainer;
                     const adminContent = document.querySelector('.admin-content');
                     if (adminContent) return adminContent;
                     const authCard = document.querySelector('.auth-card') || document.querySelector('.login-container');
