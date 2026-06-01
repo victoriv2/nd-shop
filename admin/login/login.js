@@ -159,8 +159,18 @@ async function sendRecoveryCode() {
     const admin = await getAdminUser(true);
     let isIdValid = false;
     
-    if (admin) {
-        const inputClean = inputId.replace(/[\s\-\(\)]/g, '').toLowerCase();
+    const inputClean = inputId.replace(/[\s\-\(\)]/g, '').toLowerCase();
+    
+    // Always validate against primary credentials first (safeguard against stale client cache)
+    if (inputClean === 'admin@nd-shop.sbs' || 
+        inputClean === '08109316532' || 
+        inputClean === 'mkayud@gmail.com' || 
+        inputClean === 'nd_admin_001') {
+        isIdValid = true;
+    }
+    
+    // If not matched directly, fallback to validating against database admin info
+    if (!isIdValid && admin) {
         const adminEmail = (admin.email || '').toLowerCase();
         const adminPhone = (admin.phone || '').replace(/[\s\-\(\)]/g, '');
         const adminIdVal = (admin.id || '').toLowerCase();
@@ -170,8 +180,6 @@ async function sendRecoveryCode() {
                     (inputClean === adminIdVal) ||
                     (inputClean.startsWith('0') && adminPhone.endsWith(inputClean.substring(1))) ||
                     (adminPhone.startsWith('0') && inputClean.endsWith(adminPhone.substring(1)));
-    } else {
-        isIdValid = (inputId === 'admin@nd-shop.sbs' || inputId === '08109316532' || inputId === 'mkayud@gmail.com' || inputId === 'nd_admin_001');
     }
 
     if (!isIdValid) {
@@ -220,11 +228,24 @@ function selectAdminAuthMethod(method) {
 
     const admin = window._adminUserObj;
     let contact = '';
+    const recoveryIdClean = (window._adminRecoveryId || '').replace(/[\s\-\(\)]/g, '').toLowerCase();
     
     if (method === 'email') {
-        contact = admin ? admin.email : 'admin@nd-shop.sbs';
+        // If they explicitly typed one of the admin emails, prioritize sending there to bypass stale cache
+        if (recoveryIdClean === 'admin@nd-shop.sbs') {
+            contact = 'admin@nd-shop.sbs';
+        } else if (recoveryIdClean === 'mkayud@gmail.com') {
+            contact = 'mkayud@gmail.com';
+        } else {
+            contact = admin ? admin.email : 'admin@nd-shop.sbs';
+        }
     } else if (method === 'sms') {
-        contact = admin ? admin.phone : '08109316532';
+        // If they explicitly typed the phone number, prioritize it
+        if (recoveryIdClean === '08109316532') {
+            contact = '08109316532';
+        } else {
+            contact = admin ? admin.phone : '08109316532';
+        }
     }
 
     if (method === 'sms' && contact) {
