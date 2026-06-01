@@ -286,7 +286,7 @@ app.post('/api/send-admin-recovery-otp', otpLimiter, async (req, res) => {
 
         if (findError || !users || users.length === 0) {
             // Fallback for default hardcoded admin values (safeguard)
-            const isDefaultAdmin = (contact === 'admin@nd-shop.sbs' || contact === '08109316532' || contact === '+2348109316532' || contact === 'mkayud@gmail.com');
+            const isDefaultAdmin = (contact === 'admin@nd-shop.sbs' || contact === '08109316532' || contact === '+2348109316532');
             if (!isDefaultAdmin) {
                 return res.status(404).json({ success: false, error: 'Admin account not found for this contact.' });
             }
