@@ -420,6 +420,39 @@
                 return c;
             }
 
+            function isModalActive() {
+                if (document.body.classList.contains('modal-open')) return true;
+                
+                // Scan all elements containing "modal-overlay" class
+                const overlays = document.querySelectorAll('.modal-overlay, .admin-modal-overlay, [class*="modal-overlay"]');
+                for (let i = 0; i < overlays.length; i++) {
+                    const style = window.getComputedStyle(overlays[i]);
+                    if (style.display !== 'none' && style.visibility !== 'hidden') {
+                        return true;
+                    }
+                }
+                
+                // Scan modal contents that might be active
+                const modalContents = document.querySelectorAll('.modal-content, [class*="modal-content"], .admin-modal-content');
+                for (let i = 0; i < modalContents.length; i++) {
+                    const style = window.getComputedStyle(modalContents[i]);
+                    if (style.display !== 'none' && style.visibility !== 'hidden') {
+                        const parent = modalContents[i].parentElement;
+                        if (parent) {
+                            const parentStyle = window.getComputedStyle(parent);
+                            if (parentStyle.display !== 'none' && parentStyle.visibility !== 'hidden') {
+                                return true;
+                            }
+                        }
+                    }
+                }
+
+                // If overlays exist in the back button navigation stack
+                if (window.overlayStack && window.overlayStack.length > 0) return true;
+
+                return false;
+            }
+
             scrollContainers.forEach(container => {
                 if (!container) return;
 
@@ -429,6 +462,8 @@
                 let isPulling = false;
 
                 container.addEventListener('touchstart', (e) => {
+                    if (isModalActive()) return;
+
                     const scrollTop = (container === document.body)
                         ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop)
                         : container.scrollTop;

@@ -102,21 +102,19 @@ function updateRecoveryWizard() {
 async function fetchAdminDetails() {
     let users = [];
     try {
-        const cached = localStorage.getItem('nd_users');
-        if (cached) users = JSON.parse(cached);
-    } catch (e) {}
-
-    if (!users || users.length === 0) {
-        try {
-            const res = await fetch(`${window.API_BASE}/api/users`);
-            const data = await res.json();
-            if (data.success && data.users) {
-                users = data.users;
-                localStorage.setItem('nd_users', JSON.stringify(users));
-            }
-        } catch (e) {
-            console.error('Failed to fetch users:', e);
+        // ALWAYS fetch fresh from server to ensure we have the latest email/phone
+        const res = await fetch(`${window.API_BASE}/api/users?_t=${Date.now()}`);
+        const data = await res.json();
+        if (data.success && data.users) {
+            users = data.users;
+            localStorage.setItem('nd_users', JSON.stringify(users)); // update cache
         }
+    } catch (e) {
+        console.error('Failed to fetch fresh users, falling back to cache:', e);
+        try {
+            const cached = localStorage.getItem('nd_users');
+            if (cached) users = JSON.parse(cached);
+        } catch (err) {}
     }
 
     // Prioritize the default system admin
