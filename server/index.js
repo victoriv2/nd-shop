@@ -251,14 +251,14 @@ app.post('/api/send-otp', otpLimiter, async (req, res) => {
 
 app.post('/api/send-admin-recovery-otp', otpLimiter, async (req, res) => {
     try {
-        const { identifier } = req.body;
+        const { identifier, method: reqMethod } = req.body;
         if (!identifier) return res.status(400).json({ success: false, error: 'Identifier is required.' });
 
         const inputClean = identifier.replace(/[\s\-\(\)]/g, '').toLowerCase();
 
         // Check if input is email or phone
         const isEmail = inputClean.includes('@');
-        const method = isEmail ? 'email' : 'sms';
+        const method = reqMethod || (isEmail ? 'email' : 'sms');
 
         let contact = inputClean;
         if (method === 'sms') {

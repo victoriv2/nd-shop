@@ -343,6 +343,13 @@
     box-shadow: 0 4px 12px rgba(139, 92, 246, 0.12);
 }
 
+.auth-method-btn.selected {
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.08);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.18);
+    transform: translateY(-1px);
+}
+
 .method-icon {
     width: 44px;
     height: 44px;
