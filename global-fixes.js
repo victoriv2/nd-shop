@@ -453,6 +453,26 @@
                 return false;
             }
 
+            function getScrollTop(containerEl, targetEl) {
+                if (containerEl !== document.body) {
+                    return containerEl.scrollTop;
+                }
+
+                // Traverse up from the touch target to find any active scrollable container
+                let current = targetEl;
+                while (current && current !== document.body && current !== document.documentElement) {
+                    const style = window.getComputedStyle(current);
+                    const isScrollable = (style.overflowY === 'auto' || style.overflowY === 'scroll');
+                    
+                    if (isScrollable && current.scrollHeight > current.clientHeight) {
+                        return current.scrollTop;
+                    }
+                    current = current.parentElement;
+                }
+
+                return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+            }
+
             scrollContainers.forEach(container => {
                 if (!container) return;
 
@@ -464,9 +484,7 @@
                 container.addEventListener('touchstart', (e) => {
                     if (isModalActive()) return;
 
-                    const scrollTop = (container === document.body)
-                        ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop)
-                        : container.scrollTop;
+                    const scrollTop = getScrollTop(container, e.target);
 
                     if (scrollTop === 0 && e.touches.length === 1 && !ptrIndicator.classList.contains('loading')) {
                         startY = e.touches[0].pageY;
