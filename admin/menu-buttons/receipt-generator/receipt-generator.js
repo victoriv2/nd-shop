@@ -33,7 +33,7 @@ window.openReceiptGeneratorAdmin = function() {
             if (phoneLabel) phoneLabel.textContent = 'Tel: ' + storedPhone;
 
             // Shop Name
-            const shopName = localStorage.getItem('nd_shop_name') || 'Nd shop';
+            const shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
             const rgPreviewShopName = document.getElementById('rgPreviewShopName');
             if (rgPreviewShopName) rgPreviewShopName.textContent = shopName.toUpperCase() + ' STORE';
 

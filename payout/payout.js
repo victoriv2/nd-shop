@@ -27,7 +27,7 @@ window.loadPayoutTab = function() {
                 if (msgBtn) {
                     msgBtn.addEventListener('click', () => {
                         if (typeof openMessagingChat === 'function') {
-                            const shopName = localStorage.getItem('nd_shop_name') || 'Nd shop';
+                            const shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
                             openMessagingChat('ADMIN', shopName + ' Support');
                         }
                     });

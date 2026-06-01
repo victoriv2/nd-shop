@@ -42,7 +42,7 @@ function openAdminSecurity() {
             }, 10);
 
             // Populate current values
-            const adminName = localStorage.getItem('nd_admin_name') || 'Shop Administrator';
+            const adminName = localStorage.getItem('nd_admin_name') || 'Fundsafe Technologies Lmt';
             document.getElementById('asecName').value = adminName;
 
             const adminEmail = localStorage.getItem('nd_admin_email') || 'admin@nd-shop.sbs';
@@ -113,7 +113,7 @@ function switchAsecTab(tabName) {
 }
 
 async function saveAdminName() {
-    const name = document.getElementById('asecName').value.trim() || 'Shop Administrator';
+    const name = document.getElementById('asecName').value.trim() || 'Fundsafe Technologies Lmt';
     
     const btn = document.querySelector('#asecPanelProfile .asec-save-btn');
     const originalText = btn ? btn.textContent : 'Update Profile';

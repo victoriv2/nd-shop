@@ -17,6 +17,17 @@
     <script src="../custom-alert.js"></script>
     <script src="../api-config.js"></script>
     <script src="../global-fixes.js"></script>
+    <style>
+        .shop-logo-text {
+            color: #8b5cf6;
+            text-transform: lowercase;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+        }
+        [data-theme="dark"] .shop-logo-text {
+            color: #E0E1DD;
+        }
+    </style>
 </head>
 
 <body class="auth-body">
@@ -26,7 +37,7 @@
 
     <div class="auth-container signup-container">
         <div class="auth-header">
-            <h1 class="auth-title">Join <span id="shopLogoText">Nd shop</span></h1>
+            <h1 class="auth-title">Join <span id="shopLogoText" class="shop-logo-text">nd shop</span></h1>
             <p class="auth-subtitle">Create your account in just a few quick steps.</p>
         </div>
 

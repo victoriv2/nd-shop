@@ -155,7 +155,7 @@ function initCardModalLogic() {
                 const txnId = document.getElementById('tmTransactionId') ? document.getElementById('tmTransactionId').textContent : '';
                 const refId = document.getElementById('tmReference') ? document.getElementById('tmReference').textContent : '';
                 const titleVal = document.querySelector('.tm-status') ? document.querySelector('.tm-status').textContent : 'Reward Paid';
-                const shopName = localStorage.getItem('nd_shop_name') || 'Nd shop';
+                const shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
 
                 const printArea = document.createElement('div');
                 printArea.innerHTML = `

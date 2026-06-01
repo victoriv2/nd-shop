@@ -761,7 +761,7 @@ function initProgressLogic() {
         const itemsSold = document.getElementById('kpiItemsSold').textContent;
         const totalSales = document.getElementById('kpiTotalSales').textContent;
         const totalPayout = document.getElementById('kpiTotalPayout').textContent;
-        const shopName = localStorage.getItem('nd_shop_name') || 'Nd shop';
+        const shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
 
         const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
 

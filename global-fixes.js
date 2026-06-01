@@ -468,7 +468,7 @@
             }
 
             function getScrollTop(containerEl, targetEl) {
-                if (containerEl !== document.body) {
+                if (containerEl !== window && containerEl !== document.body) {
                     return containerEl.scrollTop;
                 }
 
@@ -484,6 +484,9 @@
                     current = current.parentElement;
                 }
 
+                if (isPageAdmin) {
+                    return 0;
+                }
                 return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
             }
 
@@ -495,12 +498,15 @@
                 let currentY = 0;
                 let isPulling = false;
 
-                container.addEventListener('touchstart', (e) => {
+                const targetBinding = (container === document.body) ? window : container;
+                const useCaptureOption = (container === document.body);
+
+                targetBinding.addEventListener('touchstart', (e) => {
                     if (isModalActive()) return;
 
-                    const scrollTop = getScrollTop(container, e.target);
+                    const scrollTop = getScrollTop(targetBinding, e.target);
 
-                    if (scrollTop === 0 && e.touches.length === 1 && !ptrIndicator.classList.contains('loading')) {
+                    if (scrollTop <= 1 && e.touches.length === 1 && !ptrIndicator.classList.contains('loading')) {
                         startY = e.touches[0].pageY;
                         startX = e.touches[0].pageX;
                         currentY = startY;
@@ -510,9 +516,9 @@
                         if (animTarget) animTarget.style.transition = '';
                         ptrIndicator.style.transition = '';
                     }
-                }, { passive: true });
+                }, { passive: true, capture: useCaptureOption });
 
-                container.addEventListener('touchmove', (e) => {
+                targetBinding.addEventListener('touchmove', (e) => {
                     if (!isPulling) return;
                     currentY = e.touches[0].pageY;
                     const diff = currentY - startY;
@@ -561,9 +567,9 @@
                         ptrIndicator.style.transform = 'translate(-50%, -50px) scale(0)';
                         ptrIndicator.style.opacity = '0';
                     }
-                }, { passive: false });
+                }, { passive: false, capture: useCaptureOption });
 
-                container.addEventListener('touchend', () => {
+                targetBinding.addEventListener('touchend', () => {
                     if (!isPulling) return;
                     isPulling = false;
                     const diff = currentY - startY;
@@ -612,7 +618,7 @@
                     }
                 });
 
-                container.addEventListener('touchcancel', () => {
+                targetBinding.addEventListener('touchcancel', () => {
                     if (!isPulling) return;
                     isPulling = false;
                     const animTarget = getAnimTarget(container);
@@ -1095,7 +1101,14 @@ window.openImageViewer = function(src) {
  * Shop Branding Management
  */
 window.updateShopBranding = function() {
-    const shopName = localStorage.getItem('nd_shop_name') || 'Nd shop';
+    const isPageAdmin = window.location.pathname.includes('/admin');
+    const defaultName = isPageAdmin ? 'F T L' : 'nd shop';
+    let shopName = localStorage.getItem('nd_shop_name') || defaultName;
+    
+    if (!isPageAdmin) {
+        // Enforce strictly lowercase on the user side
+        shopName = shopName.toLowerCase();
+    }
     
     // Update logo text
     const logoTexts = document.querySelectorAll('#shopLogoText, .shop-logo-text, .dynamic-shop-name');
@@ -1107,9 +1120,11 @@ window.updateShopBranding = function() {
     if (document.title.toLowerCase().includes('nd shop')) {
         document.title = document.title.replace(/nd shop/gi, shopName);
     }
+    if (document.title.toLowerCase().includes('nd-shop')) {
+        document.title = document.title.replace(/nd-shop/gi, shopName);
+    }
 
-    // Replace "Nd shop" in specific common UI areas if found in text nodes
-    // This is a safety measure for static HTML that was loaded dynamically
+    // Replace "Nd shop" / "nd shop" / "nd-shop" in specific common UI areas if found in text nodes
     const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
     let node;
     while(node = walk.nextNode()) {
@@ -1119,6 +1134,12 @@ window.updateShopBranding = function() {
             }
             if (node.nodeValue.includes('nd shop')) {
                 node.nodeValue = node.nodeValue.replace(/nd shop/g, shopName);
+            }
+            if (node.nodeValue.includes('nd-shop')) {
+                node.nodeValue = node.nodeValue.replace(/nd-shop/g, shopName);
+            }
+            if (node.nodeValue.includes('Nd-shop')) {
+                node.nodeValue = node.nodeValue.replace(/Nd-shop/g, shopName);
             }
         }
     }
