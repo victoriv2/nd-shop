@@ -402,7 +402,6 @@
                 ptrIndicator = document.createElement('div');
                 ptrIndicator.id = 'ptr-global-indicator';
                 ptrIndicator.className = 'ptr-indicator';
-                ptrIndicator.style.zIndex = '99999999';
                 ptrIndicator.innerHTML = `
                     <svg class="ptr-spinner-svg" viewBox="0 0 24 24">
                         <circle class="ptr-circle-bg" cx="12" cy="12" r="9" fill="none" stroke-width="3"></circle>
@@ -410,8 +409,6 @@
                     </svg>
                 `;
                 document.body.appendChild(ptrIndicator);
-            } else {
-                ptrIndicator.style.zIndex = '99999999';
             }
             const ptrCirclePath = ptrIndicator.querySelector('.ptr-circle-path');
             const ptrSpinnerSvg = ptrIndicator.querySelector('.ptr-spinner-svg');
@@ -425,64 +422,44 @@
 
             function getAnimTarget(c) {
                 if (c === document.body) {
-                    const payoutModal = document.getElementById('payoutPurchaseModal');
-                    if (payoutModal && payoutModal.classList.contains('show')) {
-                        const modalContent = payoutModal.querySelector('.admin-modal-content');
-                        if (modalContent) return modalContent;
-                        return payoutModal;
-                    }
-
                     const regContainer = document.getElementById('register-container');
                     if (regContainer) return regContainer;
-                    
-                    const sliderTrack = document.getElementById('sliderTrack');
-                    if (sliderTrack) return sliderTrack;
-
                     const adminContent = document.querySelector('.admin-content');
                     if (adminContent) return adminContent;
-                    
-                    const authCard = document.querySelector('.auth-card') || 
-                                     document.querySelector('.login-container') || 
-                                     document.querySelector('.auth-container');
+                    const authCard = document.querySelector('.auth-card') || document.querySelector('.login-container');
                     if (authCard) return authCard;
                 }
                 return c;
             }
 
             function isModalActive() {
-                const payoutModal = document.getElementById('payoutPurchaseModal');
-                if (payoutModal && payoutModal.classList.contains('show')) {
-                    return false;
-                }
-
                 if (document.body.classList.contains('modal-open')) return true;
                 
-                const overlayCandidates = document.querySelectorAll(
-                    '[class*="modal"], [class*="overlay"], [id*="modal"], [id*="Modal"], [id*="Overlay"]'
-                );
-                for (let i = 0; i < overlayCandidates.length; i++) {
-                    const el = overlayCandidates[i];
-                    if (el.id === 'modal-container' || el.id === 'persistent-modal-container' || el.id === 'ptr-global-indicator') {
-                        continue;
+                // Scan all elements containing "modal-overlay" class
+                const overlays = document.querySelectorAll('.modal-overlay, .admin-modal-overlay, [class*="modal-overlay"]');
+                for (let i = 0; i < overlays.length; i++) {
+                    const style = window.getComputedStyle(overlays[i]);
+                    if (style.display !== 'none' && style.visibility !== 'hidden') {
+                        return true;
                     }
-                    const style = window.getComputedStyle(el);
-                    if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
-                        const isOverlay = el.classList.contains('modal-overlay') || 
-                                          el.classList.contains('admin-modal-overlay') || 
-                                          el.classList.contains('menu-modal-overlay') ||
-                                          el.className.includes('overlay') ||
-                                          el.className.includes('modal-content') ||
-                                          style.position === 'fixed' || 
-                                          style.position === 'absolute';
-                        
-                        if (isOverlay) {
-                            if (el.offsetWidth > 50 && el.offsetHeight > 50) {
+                }
+                
+                // Scan modal contents that might be active
+                const modalContents = document.querySelectorAll('.modal-content, [class*="modal-content"], .admin-modal-content');
+                for (let i = 0; i < modalContents.length; i++) {
+                    const style = window.getComputedStyle(modalContents[i]);
+                    if (style.display !== 'none' && style.visibility !== 'hidden') {
+                        const parent = modalContents[i].parentElement;
+                        if (parent) {
+                            const parentStyle = window.getComputedStyle(parent);
+                            if (parentStyle.display !== 'none' && parentStyle.visibility !== 'hidden') {
                                 return true;
                             }
                         }
                     }
                 }
-                
+
+                // If overlays exist in the back button navigation stack
                 if (window.overlayStack && window.overlayStack.length > 0) return true;
 
                 return false;
@@ -493,28 +470,19 @@
                     return containerEl.scrollTop;
                 }
 
+                // Traverse up from the touch target to find any active scrollable container
                 let current = targetEl;
                 while (current && current !== document.body && current !== document.documentElement) {
                     const style = window.getComputedStyle(current);
                     const isScrollable = (style.overflowY === 'auto' || style.overflowY === 'scroll');
                     
-                    if (current.scrollTop > 0) {
-                        return current.scrollTop;
-                    }
                     if (isScrollable && current.scrollHeight > current.clientHeight) {
                         return current.scrollTop;
                     }
                     current = current.parentElement;
                 }
 
-                const isAuthPage = document.body.classList.contains('auth-body');
-                if (isAuthPage) {
-                    return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
-                }
-                if (isPageAdmin) {
-                    return 0;
-                }
-                return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+                return 0;
             }
 
             scrollContainers.forEach(container => {
@@ -533,7 +501,7 @@
 
                     const scrollTop = getScrollTop(targetBinding, e.target);
 
-                    if (scrollTop <= 1 && e.touches.length === 1 && !ptrIndicator.classList.contains('loading')) {
+                    if (scrollTop <= 5 && e.touches.length === 1 && !ptrIndicator.classList.contains('loading')) {
                         startY = e.touches[0].pageY;
                         startX = e.touches[0].pageX;
                         currentY = startY;
