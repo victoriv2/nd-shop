@@ -435,16 +435,27 @@
             function isModalActive() {
                 if (document.body.classList.contains('modal-open')) return true;
                 
+                // Helper to check if element is visually hidden (opacity, pointer-events, or off-screen)
+                function isElementHidden(el, style) {
+                    const opacityVal = parseFloat(style.opacity);
+                    if (style.opacity === '0' || opacityVal === 0 || style.pointerEvents === 'none') return true;
+                    
+                    // Check if it's pushed off-screen via transform (e.g. translateY(100%))
+                    const rect = el.getBoundingClientRect();
+                    // If it's completely below the viewport or has no size
+                    if (rect.top >= window.innerHeight || rect.bottom <= 0 || (rect.width === 0 && rect.height === 0)) {
+                        return true;
+                    }
+                    return false;
+                }
+                
                 // Scan all elements containing "modal-overlay" class or specific overlay containers
                 const overlays = document.querySelectorAll('.modal-overlay, .admin-modal-overlay, .menu-modal-overlay, [class*="modal-overlay"], #cartOverlay, #cartModalContainer');
                 for (let i = 0; i < overlays.length; i++) {
                     const el = overlays[i];
                     const style = window.getComputedStyle(el);
                     if (style.display !== 'none' && style.visibility !== 'hidden') {
-                        // Check if it is visually hidden via opacity or pointer-events
-                        const opacityVal = parseFloat(style.opacity);
-                        const isHidden = (style.opacity === '0' || opacityVal === 0 || style.pointerEvents === 'none');
-                        if (!isHidden) {
+                        if (!isElementHidden(el, style)) {
                             return true;
                         }
                     }
@@ -456,19 +467,17 @@
                     const el = modalContents[i];
                     const style = window.getComputedStyle(el);
                     if (style.display !== 'none' && style.visibility !== 'hidden') {
-                        const opacityVal = parseFloat(style.opacity);
-                        const isHidden = (style.opacity === '0' || opacityVal === 0 || style.pointerEvents === 'none');
-                        if (!isHidden) {
+                        if (!isElementHidden(el, style)) {
                             const parent = el.parentElement;
                             if (parent) {
                                 const parentStyle = window.getComputedStyle(parent);
                                 if (parentStyle.display !== 'none' && parentStyle.visibility !== 'hidden') {
-                                    const parentOpacityVal = parseFloat(parentStyle.opacity);
-                                    const parentIsHidden = (parentStyle.opacity === '0' || parentOpacityVal === 0 || parentStyle.pointerEvents === 'none');
-                                    if (!parentIsHidden) {
+                                    if (!isElementHidden(parent, parentStyle)) {
                                         return true;
                                     }
                                 }
+                            } else {
+                                return true;
                             }
                         }
                     }
