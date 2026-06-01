@@ -431,7 +431,30 @@
     pointer-events: auto;
 }
 
+/* OTP Input Styles */
+.admin-otp-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 10px 0;
+}
 
+.admin-otp-input {
+    width: 50px;
+    height: 55px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+    outline: none;
+}
 
-
-
+.admin-otp-input:focus {
+    border-color: #8b5cf6;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
