@@ -301,7 +301,7 @@
     // Start initialization
     initSync();
     
-    // Poll for updates every 15 seconds to simulate real-time
-    setInterval(initSync, 15000);
+    // Poll for updates every 3 seconds to simulate real-time
+    setInterval(initSync, 3000);
 
 })();
