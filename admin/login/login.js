@@ -22,14 +22,24 @@ function showAdminLoginScreen() {
 
             // Wire OTP input navigation after HTML is injected
             setTimeout(() => {
-                document.querySelectorAll('.admin-otp-input').forEach((input, index) => {
-                    const inputs = document.querySelectorAll('.admin-otp-input');
+                const inputs = document.querySelectorAll('.admin-otp-input');
+                inputs.forEach((input, index) => {
                     input.addEventListener('input', () => {
                         if (input.value.length > 1) input.value = input.value.slice(-1);
                         if (input.value && index < inputs.length - 1) inputs[index + 1].focus();
                     });
                     input.addEventListener('keydown', (e) => {
                         if (e.key === 'Backspace' && !input.value && index > 0) inputs[index - 1].focus();
+                    });
+                    input.addEventListener('paste', (e) => {
+                        e.preventDefault();
+                        const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
+                        if (/^\d{4}$/.test(pasteData)) {
+                            inputs.forEach((inp, idx) => {
+                                inp.value = pasteData[idx];
+                            });
+                            inputs[3].focus();
+                        }
                     });
                 });
             }, 300);
@@ -39,9 +49,6 @@ function showAdminLoginScreen() {
 function toggleForgotPassword() {
     const formSection = document.getElementById('loginFormSection');
     const pwdSection = document.getElementById('forgotPwdSection');
-    const emailPhase = document.getElementById('recoveryEmailPhase');
-    const otpPhase = document.getElementById('recoveryOtpPhase');
-    const passPhase = document.getElementById('recoveryNewPasswordPhase');
 
     // Reset recovery input values
     const idInput = document.getElementById('adminRecoveryId');
@@ -58,11 +65,36 @@ function toggleForgotPassword() {
     } else {
         formSection.style.display = 'none';
         pwdSection.style.display = 'block';
-        if (emailPhase) emailPhase.style.display = 'block';
-        if (otpPhase) otpPhase.style.display = 'none';
-        if (passPhase) passPhase.style.display = 'none';
-        document.querySelector('.login-header h2').textContent = 'Recovery';
-        document.querySelector('.login-header p').textContent = 'Reset your access credentials securely.';
+        window._adminRecoveryStep = 0;
+        updateRecoveryWizard();
+    }
+}
+
+function updateRecoveryWizard() {
+    const currentStep = window._adminRecoveryStep || 0;
+    const track = document.getElementById('recoveryTrack');
+    if (track) {
+        track.style.setProperty('--current-recovery-step', currentStep);
+    }
+
+    const steps = document.querySelectorAll('.recovery-step');
+    steps.forEach((step, idx) => {
+        step.classList.toggle('active-step', idx === currentStep);
+    });
+
+    const headerTitle = document.querySelector('.login-header h2');
+    const headerSub = document.querySelector('.login-header p');
+
+    if (currentStep === 0) {
+        if (headerTitle) headerTitle.textContent = 'Password Recovery';
+        if (headerSub) headerSub.textContent = 'Enter your registered admin email or phone number.';
+    } else if (currentStep === 1) {
+        const contact = window._adminRecoveryContact || 'your contact';
+        if (headerTitle) headerTitle.textContent = 'Verify OTP Code';
+        if (headerSub) headerSub.textContent = `Enter the 4-digit code sent to ${contact}.`;
+    } else if (currentStep === 2) {
+        if (headerTitle) headerTitle.textContent = 'Set New Password';
+        if (headerSub) headerSub.textContent = 'Choose a secure new password for your admin account.';
     }
 }
 
@@ -241,18 +273,13 @@ async function _doSendAdminOtp(contact, method) {
         const data = await response.json();
 
         if (data.success) {
-            const emailPhase = document.getElementById('recoveryEmailPhase');
-            const otpPhase = document.getElementById('recoveryOtpPhase');
-            const otpDesc = document.getElementById('recoveryOtpDescription');
-            
-            if (emailPhase) emailPhase.style.display = 'none';
-            if (otpPhase) otpPhase.style.display = 'block';
-            if (otpDesc) otpDesc.textContent = `Enter the 4-digit verification code sent to ${contact}.`;
+            window._adminRecoveryStep = 1;
+            updateRecoveryWizard();
             
             setTimeout(() => {
                 const first = document.querySelector('.admin-otp-input');
                 if (first) first.focus();
-            }, 200);
+            }, 300);
         } else {
             if (typeof customAlert !== 'undefined') customAlert('Failed to send code: ' + (data.error || 'Unknown error'));
             else alert('Failed to send code.');
@@ -339,15 +366,13 @@ async function verifyRecoveryOtp() {
 
         if (data.success) {
             window._adminRecoveryCode = code; // Save code for reset step
-            const otpPhase = document.getElementById('recoveryOtpPhase');
-            const newPasswordPhase = document.getElementById('recoveryNewPasswordPhase');
+            window._adminRecoveryStep = 2;
+            updateRecoveryWizard();
             
-            if (otpPhase) otpPhase.style.display = 'none';
-            if (newPasswordPhase) {
-                newPasswordPhase.style.display = 'block';
+            setTimeout(() => {
                 const pwdInput = document.getElementById('adminNewPassword');
                 if (pwdInput) pwdInput.focus();
-            }
+            }, 300);
         } else {
             if (typeof customAlert !== 'undefined') customAlert(data.error || 'Invalid OTP. Please try again.');
             else alert('Invalid OTP.');

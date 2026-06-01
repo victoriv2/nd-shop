@@ -30,52 +30,45 @@
 
         <!-- Forgotten Password Section -->
         <div class="forgot-pwd-section" id="forgotPwdSection" style="display: none;">
-            <!-- Step 1: Input Email/Phone -->
-            <div id="recoveryEmailPhase">
-                <h3>Password Recovery</h3>
-                <p>Enter your registered admin email or phone to receive a 4-digit recovery code.</p>
+            <div class="recovery-track" id="recoveryTrack">
+                <!-- Step 1: Input Email/Phone -->
+                <div class="recovery-step active-step" id="recoveryEmailPhase">
+                    <div class="login-input-group" style="margin-top: 10px;">
+                        <label>Registered Email or Phone</label>
+                        <input type="text" id="adminRecoveryId" placeholder="admin@nd-shop.sbs or 08109316532" autocomplete="username">
+                    </div>
 
-                <div class="login-input-group" style="margin-top: 20px;">
-                    <label>Registered Email or Phone</label>
-                    <input type="text" id="adminRecoveryId" placeholder="admin@nd-shop.sbs or 08109316532" autocomplete="username">
+                    <button class="admin-login-btn primary" style="margin-top:20px;" onclick="sendRecoveryCode()">Send Recovery Code</button>
+                    <button class="admin-login-btn secondary" style="margin-top:10px;" onclick="toggleForgotPassword()">Cancel</button>
                 </div>
 
-                <button class="admin-login-btn primary" style="margin-top:20px;" onclick="sendRecoveryCode()">Send Recovery Code</button>
-                <button class="admin-login-btn secondary" style="margin-top:10px;" onclick="toggleForgotPassword()">Cancel</button>
-            </div>
+                <!-- Step 2: Input OTP & Resend -->
+                <div class="recovery-step" id="recoveryOtpPhase">
+                    <div class="auth-otp-container admin-otp-container" style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
+                        <input type="text" class="auth-otp-input admin-otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                        <input type="text" class="auth-otp-input admin-otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                        <input type="text" class="auth-otp-input admin-otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                        <input type="text" class="auth-otp-input admin-otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                    </div>
 
-            <!-- Step 2: Input OTP & Resend -->
-            <div id="recoveryOtpPhase" style="display: none;">
-                <h3>Verify OTP Code</h3>
-                <p id="recoveryOtpDescription">Enter the 4-digit verification code sent to your contact.</p>
+                    <div style="text-align: center; margin-top: 15px; margin-bottom: 5px;">
+                        <a href="javascript:void(0)" style="font-size: 0.9rem; font-weight: 600; color: #8b5cf6; text-decoration: none;" id="adminResendOtpBtn" onclick="resendAdminRecoveryOtp()">Resend Code</a>
+                    </div>
 
-                <div class="auth-otp-container admin-otp-container" style="display: flex; gap: 8px; justify-content: center; margin-top: 20px;">
-                    <input type="text" class="auth-otp-input admin-otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
-                    <input type="text" class="auth-otp-input admin-otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
-                    <input type="text" class="auth-otp-input admin-otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
-                    <input type="text" class="auth-otp-input admin-otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                    <button class="admin-login-btn primary" style="margin-top:20px;" onclick="verifyRecoveryOtp()">Verify Code</button>
+                    <button class="admin-login-btn secondary" style="margin-top:10px;" onclick="toggleForgotPassword()">Cancel</button>
                 </div>
 
-                <div style="text-align: center; margin-top: 15px; margin-bottom: 5px;">
-                    <a href="javascript:void(0)" style="font-size: 0.9rem; font-weight: 600; color: #8b5cf6; text-decoration: none;" id="adminResendOtpBtn" onclick="resendAdminRecoveryOtp()">Resend Code</a>
+                <!-- Step 3: Input New Password -->
+                <div class="recovery-step" id="recoveryNewPasswordPhase">
+                    <div class="login-input-group" style="margin-top: 10px;">
+                        <label>New Password</label>
+                        <input type="password" id="adminNewPassword" placeholder="••••••••">
+                    </div>
+
+                    <button class="admin-login-btn primary" id="btnVerifyRecovery" style="margin-top:20px;" onclick="resetAdminPassword()">Reset Password</button>
+                    <button class="admin-login-btn secondary" style="margin-top:10px;" onclick="toggleForgotPassword()">Cancel</button>
                 </div>
-
-                <button class="admin-login-btn primary" style="margin-top:20px;" onclick="verifyRecoveryOtp()">Verify Code</button>
-                <button class="admin-login-btn secondary" style="margin-top:10px;" onclick="toggleForgotPassword()">Cancel</button>
-            </div>
-
-            <!-- Step 3: Input New Password -->
-            <div id="recoveryNewPasswordPhase" style="display: none;">
-                <h3>Set New Password</h3>
-                <p>Choose a secure new password for your admin account.</p>
-
-                <div class="login-input-group" style="margin-top: 20px;">
-                    <label>New Password</label>
-                    <input type="password" id="adminNewPassword" placeholder="••••••••">
-                </div>
-
-                <button class="admin-login-btn primary" id="btnVerifyRecovery" style="margin-top:20px;" onclick="resetAdminPassword()">Reset Password</button>
-                <button class="admin-login-btn secondary" style="margin-top:10px;" onclick="toggleForgotPassword()">Cancel</button>
             </div>
         </div>
     </div>

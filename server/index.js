@@ -261,7 +261,6 @@ app.post('/api/verify-otp', otpLimiter, (req, res) => {
     }
 
     if (record.code === code) {
-        delete otpStore[contact];
         return res.json({ success: true, message: 'OTP verified successfully.' });
     } else {
         return res.status(400).json({ success: false, error: 'Invalid OTP.' });
