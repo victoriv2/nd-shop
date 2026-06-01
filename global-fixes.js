@@ -435,25 +435,40 @@
             function isModalActive() {
                 if (document.body.classList.contains('modal-open')) return true;
                 
-                // Scan all elements containing "modal-overlay" class
-                const overlays = document.querySelectorAll('.modal-overlay, .admin-modal-overlay, [class*="modal-overlay"]');
+                // Scan all elements containing "modal-overlay" class or specific overlay containers
+                const overlays = document.querySelectorAll('.modal-overlay, .admin-modal-overlay, .menu-modal-overlay, [class*="modal-overlay"], #cartOverlay, #cartModalContainer');
                 for (let i = 0; i < overlays.length; i++) {
-                    const style = window.getComputedStyle(overlays[i]);
+                    const el = overlays[i];
+                    const style = window.getComputedStyle(el);
                     if (style.display !== 'none' && style.visibility !== 'hidden') {
-                        return true;
+                        // Check if it is visually hidden via opacity or pointer-events
+                        const opacityVal = parseFloat(style.opacity);
+                        const isHidden = (style.opacity === '0' || opacityVal === 0 || style.pointerEvents === 'none');
+                        if (!isHidden) {
+                            return true;
+                        }
                     }
                 }
                 
                 // Scan modal contents that might be active
                 const modalContents = document.querySelectorAll('.modal-content, [class*="modal-content"], .admin-modal-content');
                 for (let i = 0; i < modalContents.length; i++) {
-                    const style = window.getComputedStyle(modalContents[i]);
+                    const el = modalContents[i];
+                    const style = window.getComputedStyle(el);
                     if (style.display !== 'none' && style.visibility !== 'hidden') {
-                        const parent = modalContents[i].parentElement;
-                        if (parent) {
-                            const parentStyle = window.getComputedStyle(parent);
-                            if (parentStyle.display !== 'none' && parentStyle.visibility !== 'hidden') {
-                                return true;
+                        const opacityVal = parseFloat(style.opacity);
+                        const isHidden = (style.opacity === '0' || opacityVal === 0 || style.pointerEvents === 'none');
+                        if (!isHidden) {
+                            const parent = el.parentElement;
+                            if (parent) {
+                                const parentStyle = window.getComputedStyle(parent);
+                                if (parentStyle.display !== 'none' && parentStyle.visibility !== 'hidden') {
+                                    const parentOpacityVal = parseFloat(parentStyle.opacity);
+                                    const parentIsHidden = (parentStyle.opacity === '0' || parentOpacityVal === 0 || parentStyle.pointerEvents === 'none');
+                                    if (!parentIsHidden) {
+                                        return true;
+                                    }
+                                }
                             }
                         }
                     }
