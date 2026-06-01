@@ -137,9 +137,23 @@
             });
             const data = await response.json();
             if (data.success && data.users) {
-                // Keep nd_users locally updated so that admin tools and security modules keep working
-                localStorage.setItem('nd_users', JSON.stringify(data.users));
+                // Merge users to prevent wiping out local test users that aren't in the DB yet
+                let localUsers = [];
+                try {
+                    localUsers = JSON.parse(localStorage.getItem('nd_users') || '[]');
+                } catch(e) {}
                 
+                data.users.forEach(dbU => {
+                    let idx = localUsers.findIndex(lu => lu.id === dbU.id);
+                    if (idx >= 0) {
+                        localUsers[idx] = dbU;
+                    } else {
+                        localUsers.push(dbU);
+                    }
+                });
+                
+                // Keep nd_users locally updated so that admin tools and security modules keep working
+                localStorage.setItem('nd_users', JSON.stringify(localUsers));
                 // If a user is logged in, update their local data silently
                 const loggedInRaw = localStorage.getItem('nd_logged_in_user');
                 if (loggedInRaw) {

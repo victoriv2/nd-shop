@@ -4,7 +4,14 @@ async function getAdminUser() {
         const res = await fetch(`${window.API_BASE}/api/users?_t=${Date.now()}`);
         const data = await res.json();
         if (data.success && data.users) {
-            users = data.users;
+            let localUsers = [];
+            try { localUsers = JSON.parse(localStorage.getItem('nd_users') || '[]'); } catch(e) {}
+            data.users.forEach(dbU => {
+                let idx = localUsers.findIndex(lu => lu.id === dbU.id);
+                if (idx >= 0) localUsers[idx] = dbU;
+                else localUsers.push(dbU);
+            });
+            users = localUsers;
             localStorage.setItem('nd_users', JSON.stringify(users));
         }
     } catch (e) {
