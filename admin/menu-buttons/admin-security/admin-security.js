@@ -1,29 +1,23 @@
 async function getAdminUser() {
     let users = [];
     try {
-        const cached = localStorage.getItem('nd_users');
-        if (cached) {
-            users = JSON.parse(cached);
+        const res = await fetch(`${window.API_BASE}/api/users?_t=${Date.now()}`);
+        const data = await res.json();
+        if (data.success && data.users) {
+            users = data.users;
+            localStorage.setItem('nd_users', JSON.stringify(users));
         }
-    } catch (e) {}
-
-    if (!users || users.length === 0) {
+    } catch (e) {
+        console.error('Failed to fetch fresh users, falling back to cache:', e);
         try {
-            const res = await fetch(`${window.API_BASE}/api/users`);
-            const data = await res.json();
-            if (data.success && data.users) {
-                users = data.users;
-                localStorage.setItem('nd_users', JSON.stringify(users));
-            }
-        } catch (e) {
-            console.error('Failed to fetch users dynamically:', e);
-        }
+            const cached = localStorage.getItem('nd_users');
+            if (cached) users = JSON.parse(cached);
+        } catch (err) {}
     }
 
-    let admin = users.find(u => u.is_admin === true);
-    if (!admin) {
-        admin = users.find(u => u.id && u.id.startsWith('nd_admin_'));
-    }
+    let admin = users.find(u => u.id && u.id.startsWith('nd_admin_'));
+    if (!admin) admin = users.find(u => u.email === 'admin@nd-shop.sbs');
+    if (!admin) admin = users.find(u => u.is_admin === true);
     return admin;
 }
 
