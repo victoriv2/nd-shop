@@ -293,11 +293,22 @@ app.post('/api/reset-admin-credentials', async (req, res) => {
             // Hash new password
             const hashedPassword = await bcrypt.hash(newValue, 10);
 
+            // Normalize contact to check both international and local formatting for phone number
+            let queryFilter = `email.eq."${contact}",phone.eq."${contact}"`;
+            let cleanedPhone = contact.replace(/[\s\-\(\)]/g, '');
+            if (cleanedPhone.startsWith('+234')) {
+                const localFormat = '0' + cleanedPhone.substring(4);
+                queryFilter += `,phone.eq."${localFormat}"`;
+            } else if (cleanedPhone.startsWith('0') && cleanedPhone.length === 11) {
+                const intlFormat = '+234' + cleanedPhone.substring(1);
+                queryFilter += `,phone.eq."${intlFormat}"`;
+            }
+
             // Find the admin user with matching email or phone
             const { data: users, error: findError } = await supabase
                 .from('users')
                 .select('id')
-                .or(`email.eq."${contact}",phone.eq."${contact}"`)
+                .or(queryFilter)
                 .eq('is_admin', true)
                 .limit(1);
 
@@ -334,6 +345,72 @@ app.post('/api/reset-admin-credentials', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         console.error('reset-admin-credentials error:', err);
+        res.status(500).json({ success: false, error: 'Internal server error.' });
+    }
+});
+
+app.post('/api/reset-user-credentials', async (req, res) => {
+    try {
+        const { contact, code, newValue } = req.body;
+        if (!contact || !code || !newValue) {
+            return res.status(400).json({ success: false, error: 'Missing parameters.' });
+        }
+
+        // Verify OTP code
+        const record = otpStore[contact];
+        if (!record) return res.status(400).json({ success: false, error: 'No OTP found. Please request a new one.' });
+        if (Date.now() > record.expiresAt) {
+            delete otpStore[contact];
+            return res.status(400).json({ success: false, error: 'OTP expired.' });
+        }
+        if (record.code !== code) {
+            return res.status(400).json({ success: false, error: 'Invalid OTP.' });
+        }
+
+        // Clean up OTP
+        delete otpStore[contact];
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newValue, 10);
+
+        // Normalize contact to check both international and local formatting for phone number
+        let queryFilter = `email.eq."${contact}",phone.eq."${contact}"`;
+        let cleanedPhone = contact.replace(/[\s\-\(\)]/g, '');
+        if (cleanedPhone.startsWith('+234')) {
+            const localFormat = '0' + cleanedPhone.substring(4);
+            queryFilter += `,phone.eq."${localFormat}"`;
+        } else if (cleanedPhone.startsWith('0') && cleanedPhone.length === 11) {
+            const intlFormat = '+234' + cleanedPhone.substring(1);
+            queryFilter += `,phone.eq."${intlFormat}"`;
+        }
+
+        // Find the user with matching email or phone
+        const { data: users, error: findError } = await supabase
+            .from('users')
+            .select('id')
+            .or(queryFilter)
+            .limit(1);
+
+        if (findError || !users || users.length === 0) {
+            return res.status(404).json({ success: false, error: 'Account not found for this contact.' });
+        }
+
+        const userId = users[0].id;
+
+        // Update the password in the database
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ password: hashedPassword })
+            .eq('id', userId);
+
+        if (updateError) {
+            console.error('Failed to reset user password in DB:', updateError.message);
+            return res.status(500).json({ success: false, error: 'Failed to reset password.' });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('reset-user-credentials error:', err);
         res.status(500).json({ success: false, error: 'Internal server error.' });
     }
 });
