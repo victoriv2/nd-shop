@@ -158,7 +158,8 @@ app.post('/api/register', async (req, res) => {
         const newUser = {
             id: newId, name, first_name: firstName, middle_name: middleName, last_name: lastName,
             email: email || null, phone: phone || null, password: hashedPassword,
-            address, state, lga, join_date: new Date().toISOString()
+            address, state, lga, join_date: new Date().toISOString(),
+            is_admin: false
         };
 
         const { error } = await supabase.from('users').insert([newUser]);
