@@ -304,26 +304,13 @@ function initDynamicPayoutLogic() {
             totalSpending += (s.price || (s.qty * s.unitPrice)) || 0;
         });
 
-        // Calculate pending reward requests deductions
-        const requests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
-        const pendingRewardReqs = requests.filter(r => r.user && r.user.id === user.id && r.status === 'Pending' && r.isRewardPurchase === true);
-        let pendingDeductions = 0;
-        pendingRewardReqs.forEach(r => {
-            pendingDeductions += r.orderTotal || 0;
-        });
-
         // Update Dashboard with glow effect
         if (totalPayoutDisplay) {
-            const payoutChanged = totalPayout !== lastTotalPayout || pendingDeductions !== lastPendingDeductions;
+            const payoutChanged = totalPayout !== lastTotalPayout;
             if (payoutChanged) {
-                if (pendingDeductions > 0) {
-                    totalPayoutDisplay.innerHTML = `Total reward: ₦${Math.round(totalPayout).toLocaleString()} <span style="font-size:0.75rem; color:#f87171; display:block; font-weight:600; margin-top:2px;">(Spendable: ₦${Math.round(totalPayout - pendingDeductions).toLocaleString()})</span>`;
-                } else {
-                    totalPayoutDisplay.textContent = `Total reward: ₦${Math.round(totalPayout).toLocaleString()}`;
-                }
+                totalPayoutDisplay.textContent = `Total reward: ₦${Math.round(totalPayout).toLocaleString()}`;
                 animateValuePulse(totalPayoutDisplay);
                 lastTotalPayout = totalPayout;
-                lastPendingDeductions = pendingDeductions;
             }
         }
         if (totalSpendingDisplay) {
@@ -590,13 +577,7 @@ function openUserRewardPurchaseModal() {
         totalPayout += s.payout || 0;
     });
 
-    const requests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
-    const pendingRewardReqs = requests.filter(r => r.user && r.user.id === user.id && r.status === 'Pending' && r.isRewardPurchase === true);
-    let pendingDeductions = 0;
-    pendingRewardReqs.forEach(r => {
-        pendingDeductions += r.orderTotal || 0;
-    });
-    let spendableRewardBalance = totalPayout - pendingDeductions;
+    let spendableRewardBalance = totalPayout;
     
     modal.innerHTML = `
         <div class="admin-modal-content" style="max-height: 90vh;">
@@ -609,18 +590,8 @@ function openUserRewardPurchaseModal() {
                 <!-- Account Info -->
                 <div style="padding: 14px 18px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #6366f1; margin-bottom: 16px;">
                     <div style="font-weight: 700; color: #1e293b; font-size: 1rem; margin-bottom: 6px;">${user.firstName} ${user.lastName || ''}</div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px;">
-                        <span style="color: #64748b;">Reward Balance:</span>
-                        <strong style="color: #6366f1;">₦${Math.round(totalPayout).toLocaleString()}</strong>
-                    </div>
-                    ${pendingDeductions > 0 ? `
-                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px; color: #ef4444;">
-                        <span>Pending Requests:</span>
-                        <strong>-₦${Math.round(pendingDeductions).toLocaleString()}</strong>
-                    </div>
-                    ` : ''}
-                    <div style="display: flex; justify-content: space-between; font-size: 0.95rem; border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: 4px;">
-                        <span style="color: #64748b; font-weight: 600;">Spendable Reward:</span>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
+                        <span style="color: #64748b; font-weight: 600;">Available Reward Balance:</span>
                         <strong style="color: #16a34a; font-size: 1rem;">₦${Math.round(spendableRewardBalance).toLocaleString()}</strong>
                     </div>
                 </div>
