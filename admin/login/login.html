@@ -29,8 +29,8 @@
         </div>
 
         <!-- Forgotten Password Section -->
-        <!-- Forgotten Password Section -->
         <div class="forgot-pwd-section" id="forgotPwdSection" style="display: none;">
+            <!-- Step 1: Input Email/Phone -->
             <div id="recoveryEmailPhase">
                 <h3>Password Recovery</h3>
                 <p>Enter your registered admin email or phone to receive a 4-digit recovery code.</p>
@@ -44,9 +44,10 @@
                 <button class="admin-login-btn secondary" style="margin-top:10px;" onclick="toggleForgotPassword()">Cancel</button>
             </div>
 
+            <!-- Step 2: Input OTP & Resend -->
             <div id="recoveryOtpPhase" style="display: none;">
-                <h3>Verify Recovery</h3>
-                <p>Enter the 4-digit code sent to your contact, along with your new password.</p>
+                <h3>Verify OTP Code</h3>
+                <p id="recoveryOtpDescription">Enter the 4-digit verification code sent to your contact.</p>
 
                 <div class="auth-otp-container admin-otp-container" style="display: flex; gap: 8px; justify-content: center; margin-top: 20px;">
                     <input type="text" class="auth-otp-input admin-otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
@@ -55,55 +56,27 @@
                     <input type="text" class="auth-otp-input admin-otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
                 </div>
 
+                <div style="text-align: center; margin-top: 15px; margin-bottom: 5px;">
+                    <a href="javascript:void(0)" style="font-size: 0.9rem; font-weight: 600; color: #8b5cf6; text-decoration: none;" id="adminResendOtpBtn" onclick="resendAdminRecoveryOtp()">Resend Code</a>
+                </div>
+
+                <button class="admin-login-btn primary" style="margin-top:20px;" onclick="verifyRecoveryOtp()">Verify Code</button>
+                <button class="admin-login-btn secondary" style="margin-top:10px;" onclick="toggleForgotPassword()">Cancel</button>
+            </div>
+
+            <!-- Step 3: Input New Password -->
+            <div id="recoveryNewPasswordPhase" style="display: none;">
+                <h3>Set New Password</h3>
+                <p>Choose a secure new password for your admin account.</p>
+
                 <div class="login-input-group" style="margin-top: 20px;">
                     <label>New Password</label>
                     <input type="password" id="adminNewPassword" placeholder="••••••••">
                 </div>
 
-                <button class="admin-login-btn primary" id="btnVerifyRecovery" style="margin-top:20px;" onclick="verifyAdminRecovery()">Reset Password</button>
-                <button class="admin-login-btn secondary" style="margin-top:10px;" onclick="cancelRecoveryOtp()">Cancel</button>
+                <button class="admin-login-btn primary" id="btnVerifyRecovery" style="margin-top:20px;" onclick="resetAdminPassword()">Reset Password</button>
+                <button class="admin-login-btn secondary" style="margin-top:10px;" onclick="toggleForgotPassword()">Cancel</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Admin Auth Method Modal -->
-    <div class="auth-method-modal-overlay" id="adminAuthMethodModal">
-        <div class="auth-method-modal">
-            <div class="auth-method-header">
-                <div class="auth-method-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </div>
-                <h3>Secure Recovery</h3>
-                <p>How would you like to receive your 4-digit code?</p>
-            </div>
-            
-            <div class="auth-method-options" style="display:flex; flex-direction:column; gap:15px; text-align:left; padding: 0 10px;">
-                <label class="verify-method-label" style="justify-content: flex-start; padding: 15px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px;">
-                    <input type="radio" name="adminModalVerifyMethod" class="verify-method-radio" value="email" checked>
-                    <div class="verify-method-square">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </div>
-                    <div style="text-align: left;">
-                        <strong style="display: block; font-weight:700;">Email</strong>
-                        <span style="font-size: 0.8rem; color: #64748b; font-weight: normal;">Send to registered email</span>
-                    </div>
-                </label>
-                <label class="verify-method-label" style="justify-content: flex-start; padding: 15px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px;">
-                    <input type="radio" name="adminModalVerifyMethod" class="verify-method-radio" value="sms">
-                    <div class="verify-method-square">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </div>
-                    <div style="text-align: left;">
-                        <strong style="display: block; font-weight:700;">SMS</strong>
-                        <span style="font-size: 0.8rem; color: #64748b; font-weight: normal;">Send to phone number</span>
-                    </div>
-                </label>
-                <button type="button" class="admin-login-btn primary" onclick="sendAdminAuthMethod()" style="margin-top: 15px; width: 100%; border-radius: 12px; padding: 14px; background-color: #8b5cf6; border: none; color: white; font-weight: 700; font-size: 1.05rem; cursor: pointer;">
-                    Send Code
-                </button>
-            </div>
-            
-            <button type="button" class="auth-method-cancel" onclick="closeAdminAuthMethodModal()">Cancel</button>
         </div>
     </div>
 </div>
