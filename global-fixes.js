@@ -1134,10 +1134,12 @@ window.openImageViewer = function(src) {
  */
 window.updateShopBranding = function() {
     const isPageAdmin = window.location.pathname.includes('/admin');
-    const defaultName = isPageAdmin ? 'F T L' : 'nd shop';
-    let shopName = localStorage.getItem('nd_shop_name') || defaultName;
+    let shopName;
     
-    if (!isPageAdmin) {
+    if (isPageAdmin) {
+        shopName = 'F T L';
+    } else {
+        shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
         // Enforce strictly lowercase on the user side
         shopName = shopName.toLowerCase();
     }
