@@ -380,19 +380,50 @@
             });
         });
 
-        // --- Custom Mobile Pull Down To Refresh ---
+        // --- Custom Mobile Safari-Style Pull Down To Refresh ---
         if (window.matchMedia('(max-width: 1023px)').matches) {
+            // Inject Global Visual Indicator
+            let ptrIndicator = document.getElementById('ptr-global-indicator');
+            if (!ptrIndicator) {
+                ptrIndicator = document.createElement('div');
+                ptrIndicator.id = 'ptr-global-indicator';
+                ptrIndicator.className = 'ptr-indicator';
+                ptrIndicator.innerHTML = `
+                    <svg class="ptr-spinner-svg" viewBox="0 0 24 24">
+                        <circle class="ptr-circle-bg" cx="12" cy="12" r="9" fill="none" stroke-width="3"></circle>
+                        <circle class="ptr-circle-path" cx="12" cy="12" r="9" fill="none" stroke-width="3" stroke-dasharray="56.5" stroke-dashoffset="56.5" stroke-linecap="round"></circle>
+                    </svg>
+                `;
+                document.body.appendChild(ptrIndicator);
+            }
+            const ptrCirclePath = ptrIndicator.querySelector('.ptr-circle-path');
+            const ptrSpinnerSvg = ptrIndicator.querySelector('.ptr-spinner-svg');
+
             const isAdminLoggedOut = window.location.pathname.includes('/admin') && 
                                      sessionStorage.getItem('nd_admin_logged_in') !== 'true';
             const isAuthOrAdmin = document.body.classList.contains('auth-body') || isAdminLoggedOut;
+            const isPageAdmin = window.location.pathname.includes('/admin');
                                   
-            const scrollContainers = isAuthOrAdmin 
+            const scrollContainers = isPageAdmin
                 ? [document.body]
-                : [
-                    document.getElementById('payout-container'),
-                    document.getElementById('product-container'),
-                    document.getElementById('menu-container')
-                ];
+                : (isAuthOrAdmin 
+                    ? [document.body]
+                    : [
+                        document.getElementById('payout-container'),
+                        document.getElementById('product-container'),
+                        document.getElementById('menu-container')
+                    ]
+                  );
+
+            function getAnimTarget(c) {
+                if (c === document.body) {
+                    const adminContent = document.querySelector('.admin-content');
+                    if (adminContent) return adminContent;
+                    const authCard = document.querySelector('.auth-card') || document.querySelector('.login-container');
+                    if (authCard) return authCard;
+                }
+                return c;
+            }
 
             scrollContainers.forEach(container => {
                 if (!container) return;
@@ -403,16 +434,19 @@
                 let isPulling = false;
 
                 container.addEventListener('touchstart', (e) => {
-                    const scrollTop = isAuthOrAdmin 
+                    const scrollTop = (container === document.body)
                         ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop)
                         : container.scrollTop;
-                    if (scrollTop === 0 && e.touches.length === 1) {
+
+                    if (scrollTop === 0 && e.touches.length === 1 && !ptrIndicator.classList.contains('loading')) {
                         startY = e.touches[0].pageY;
                         startX = e.touches[0].pageX;
                         currentY = startY;
                         isPulling = true;
                         
-                        container.style.transition = '';
+                        const animTarget = getAnimTarget(container);
+                        if (animTarget) animTarget.style.transition = '';
+                        ptrIndicator.style.transition = '';
                     }
                 }, { passive: true });
 
@@ -425,18 +459,45 @@
                     // Cancel pull-to-refresh if they are swiping horizontally (changing tabs or sliding tables)
                     if (diffX > Math.abs(diff) && diffX > 10) {
                         isPulling = false;
-                        container.style.transform = '';
+                        const animTarget = getAnimTarget(container);
+                        if (animTarget) {
+                            animTarget.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+                            animTarget.style.transform = '';
+                        }
+                        ptrIndicator.style.transform = 'translate(-50%, -50px) scale(0)';
+                        ptrIndicator.style.opacity = '0';
                         return;
                     }
 
                     if (diff > 0) {
                         if (e.cancelable) e.preventDefault();
-                        // Dragging down at scrollTop = 0
-                        const pullDistance = Math.min(diff * 0.4, 80); // damping & max threshold
-                        container.style.transform = `translateY(${pullDistance}px)`;
+                        
+                        const pullDistance = Math.min(diff * 0.4, 100); // Physics damping
+                        const animTarget = getAnimTarget(container);
+                        if (animTarget) {
+                            animTarget.style.transform = `translateY(${pullDistance}px)`;
+                        }
+
+                        // Animate global indicator
+                        ptrIndicator.style.opacity = Math.min(1, pullDistance / 40);
+                        const indicatorY = Math.min(pullDistance * 0.8, 60);
+                        ptrIndicator.style.transform = `translate(-50%, ${indicatorY}px) scale(${Math.min(1, pullDistance / 60)})`;
+                        
+                        const progress = Math.min(1, pullDistance / 70);
+                        ptrCirclePath.style.strokeDashoffset = 56.5 * (1 - progress);
+                        ptrSpinnerSvg.style.transform = `rotate(${progress * 360 - 90}deg)`;
+
+                        if (pullDistance >= 70) {
+                            ptrIndicator.classList.add('ready');
+                        } else {
+                            ptrIndicator.classList.remove('ready');
+                        }
                     } else {
-                        // Do not cancel the pull, just reset visual position so they can pull down again
-                        container.style.transform = '';
+                        // Reset visual position if drag goes backwards
+                        const animTarget = getAnimTarget(container);
+                        if (animTarget) animTarget.style.transform = '';
+                        ptrIndicator.style.transform = 'translate(-50%, -50px) scale(0)';
+                        ptrIndicator.style.opacity = '0';
                     }
                 }, { passive: false });
 
@@ -444,12 +505,21 @@
                     if (!isPulling) return;
                     isPulling = false;
                     const diff = currentY - startY;
+                    const pullDistance = Math.min(diff * 0.4, 100);
+                    const animTarget = getAnimTarget(container);
 
-                    container.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-                    container.style.transform = '';
-                    
-                    if (diff > 60) { // relaxed pull down threshold
-                        if (window.showGlobalRefreshLoader) window.showGlobalRefreshLoader();
+                    if (pullDistance >= 70) {
+                        ptrIndicator.classList.add('loading');
+                        ptrCirclePath.style.strokeDashoffset = '15'; // Loader dash gap
+                        
+                        if (animTarget) {
+                            animTarget.style.transition = 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.15)';
+                            animTarget.style.transform = 'translateY(55px)';
+                        }
+                        ptrIndicator.style.transition = 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.15), opacity 0.25s';
+                        ptrIndicator.style.transform = 'translate(-50%, 55px) scale(1)';
+                        ptrIndicator.style.opacity = '1';
+                        
                         setTimeout(() => {
                             try {
                                 if (window.parent && window.parent.location) {
@@ -460,15 +530,37 @@
                             } catch (e) {
                                 window.location.href = window.location.pathname + window.location.search + window.location.hash;
                             }
-                        }, 100); // small delay to let the UI update
+                        }, 300); // Slight snap pause to wow the user
+                    } else {
+                        // Bounce back to default
+                        if (animTarget) {
+                            animTarget.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1)';
+                            animTarget.style.transform = '';
+                        }
+                        ptrIndicator.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1), opacity 0.3s ease';
+                        ptrIndicator.style.transform = 'translate(-50%, -50px) scale(0)';
+                        ptrIndicator.style.opacity = '0';
+                        
+                        setTimeout(() => {
+                            if (!ptrIndicator.classList.contains('loading')) {
+                                ptrCirclePath.style.strokeDashoffset = '56.5';
+                                ptrIndicator.classList.remove('ready');
+                            }
+                        }, 400);
                     }
                 });
 
                 container.addEventListener('touchcancel', () => {
                     if (!isPulling) return;
                     isPulling = false;
-                    container.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-                    container.style.transform = '';
+                    const animTarget = getAnimTarget(container);
+                    if (animTarget) {
+                        animTarget.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+                        animTarget.style.transform = '';
+                    }
+                    ptrIndicator.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                    ptrIndicator.style.transform = 'translate(-50%, -50px) scale(0)';
+                    ptrIndicator.style.opacity = '0';
                 });
             });
         }
