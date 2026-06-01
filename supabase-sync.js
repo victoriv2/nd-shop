@@ -60,6 +60,11 @@
             ? { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
             : { 'Content-Type': 'application/json' };
 
+        let syncQueue = [];
+        try {
+            syncQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
+        } catch (e) {}
+
         for (const [localKey, tableName] of Object.entries(TABLES_TO_SYNC)) {
             try {
                 // Read what's currently in localStorage
@@ -78,9 +83,13 @@
                 const data = await res.json();
                 
                 if (data.success && data.data) {
-                    // Update localStorage with truth
-                    nativeSetItem.call(localStorage, localKey, JSON.stringify(data.data));
-                    stateCache[localKey] = data.data; // Update cache
+                    // Prevent overwriting local data if there are pending optimistic updates
+                    const hasPendingOps = syncQueue.some(q => q.table === tableName);
+                    if (!hasPendingOps) {
+                        // Update localStorage with truth
+                        nativeSetItem.call(localStorage, localKey, JSON.stringify(data.data));
+                        stateCache[localKey] = data.data; // Update cache
+                    }
                 }
             } catch (err) {
                 console.error(`Failed to pull ${tableName} from server:`, err);
@@ -98,13 +107,17 @@
             clearTimeout(timeoutId);
             const data = await res.json();
             if (data.success && data.data) {
-                for (const setting of data.data) {
-                    // admin_settings rows have { id, value } columns
-                    const val = typeof setting.value === 'object' && setting.value !== null
-                        ? JSON.stringify(setting.value)
-                        : String(setting.value ?? '');
-                    nativeSetItem.call(localStorage, setting.id, val);
-                    stateCache[setting.id] = val;
+                // Prevent overwriting local settings if there are pending optimistic updates
+                const hasPendingSettings = syncQueue.some(q => q.table === 'admin_settings');
+                if (!hasPendingSettings) {
+                    for (const setting of data.data) {
+                        // admin_settings rows have { id, value } columns
+                        const val = typeof setting.value === 'object' && setting.value !== null
+                            ? JSON.stringify(setting.value)
+                            : String(setting.value ?? '');
+                        nativeSetItem.call(localStorage, setting.id, val);
+                        stateCache[setting.id] = val;
+                    }
                 }
             }
         } catch (err) {
