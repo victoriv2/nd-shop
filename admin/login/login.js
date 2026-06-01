@@ -150,129 +150,34 @@ async function processAdminLogin() {
     }
 }
 
-async function getAdminUser(bypassCache = false) {
-    let users = [];
-    if (!bypassCache) {
-        try {
-            const cached = localStorage.getItem('nd_users');
-            if (cached) {
-                users = JSON.parse(cached);
-            }
-        } catch (e) {}
-    }
-
-    if (bypassCache || !users || users.length === 0) {
-        try {
-            const res = await fetch(`${window.API_BASE}/api/users`);
-            const data = await res.json();
-            if (data.success && data.users) {
-                users = data.users;
-                localStorage.setItem('nd_users', JSON.stringify(users));
-            }
-        } catch (e) {
-            console.error('Failed to fetch users dynamically:', e);
-        }
-    }
-
-    let admin = users.find(u => u.is_admin === true);
-    if (!admin) {
-        admin = users.find(u => u.id && u.id.startsWith('nd_admin_'));
-    }
-    return admin;
-}
-
 // ===== Admin Recovery: Step 1 — Auto-detect contact & Send OTP directly =====
 async function sendRecoveryCode() {
     const inputId = document.getElementById('adminRecoveryId').value.trim();
     if (!inputId) {
         if (typeof customAlert !== 'undefined') customAlert("Please enter your registered email or phone.");
+        else alert("Please enter your registered email or phone.");
         return;
     }
 
-    const admin = await getAdminUser(true);
-    let isIdValid = false;
-    const inputClean = inputId.replace(/[\s\-\(\)]/g, '').toLowerCase();
-    
-    // Always validate against primary credentials first (safeguard against stale client cache)
-    if (inputClean === 'admin@nd-shop.sbs' || 
-        inputClean === '08109316532' || 
-        inputClean === 'mkayud@gmail.com' || 
-        inputClean === 'nd_admin_001') {
-        isIdValid = true;
-    }
-    
-    // If not matched directly, fallback to validating against database admin info
-    if (!isIdValid && admin) {
-        const adminEmail = (admin.email || '').toLowerCase();
-        const adminPhone = (admin.phone || '').replace(/[\s\-\(\)]/g, '');
-        const adminIdVal = (admin.id || '').toLowerCase();
-        
-        isIdValid = (inputClean === adminEmail) || 
-                    (inputClean === adminPhone) || 
-                    (inputClean === adminIdVal) ||
-                    (inputClean.startsWith('0') && adminPhone.endsWith(inputClean.substring(1))) ||
-                    (adminPhone.startsWith('0') && inputClean.endsWith(adminPhone.substring(1)));
-    }
-
-    if (!isIdValid) {
-        if (typeof customAlert !== 'undefined') customAlert("Identifier not recognized in our system.");
-        else alert("Identifier not recognized.");
-        return;
-    }
-
-    // Auto-detect method (Email if input contains @ or matches default admin email, otherwise SMS)
-    const isEmail = inputClean.includes('@') || inputClean === 'admin@nd-shop.sbs' || inputClean === 'mkayud@gmail.com';
-    const method = isEmail ? 'email' : 'sms';
-    
-    let contact = '';
-    if (method === 'email') {
-        if (inputClean === 'admin@nd-shop.sbs') {
-            contact = 'admin@nd-shop.sbs';
-        } else if (inputClean === 'mkayud@gmail.com') {
-            contact = 'mkayud@gmail.com';
-        } else {
-            contact = admin ? admin.email : 'admin@nd-shop.sbs';
-        }
-    } else {
-        if (inputClean === '08109316532') {
-            contact = '08109316532';
-        } else {
-            contact = admin ? admin.phone : '08109316532';
-        }
-    }
-
-    if (method === 'sms' && contact) {
-        let cleaned = contact.replace(/[\s\-\(\)]/g, '');
-        if (cleaned.length === 11 && cleaned.startsWith('0')) {
-            cleaned = '+234' + cleaned.substring(1);
-        }
-        contact = cleaned;
-    }
-
-    window._adminRecoveryId = inputId;
-    window._adminRecoveryContact = contact;
-    window._adminRecoveryMethod = method;
-
-    await _doSendAdminOtp(contact, method);
-}
-
-async function _doSendAdminOtp(contact, method) {
     const btn = document.querySelector('#recoveryEmailPhase .admin-login-btn.primary');
     const originalText = btn ? btn.textContent : 'Send Recovery Code';
     if (btn) { btn.textContent = 'Sending...'; btn.disabled = true; }
 
     try {
-        const response = await fetch(`${window.API_BASE}/api/send-otp`, {
+        const response = await fetch(`${window.API_BASE}/api/send-admin-recovery-otp`, {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''),
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ method, contact, name: 'Admin' })
+            body: JSON.stringify({ identifier: inputId })
         });
         const data = await response.json();
 
         if (data.success) {
+            window._adminRecoveryId = inputId;
+            window._adminRecoveryContact = data.contact;
+            window._adminRecoveryMethod = data.method;
+
             window._adminRecoveryStep = 1;
             updateRecoveryWizard();
             
@@ -281,8 +186,8 @@ async function _doSendAdminOtp(contact, method) {
                 if (first) first.focus();
             }, 300);
         } else {
-            if (typeof customAlert !== 'undefined') customAlert('Failed to send code: ' + (data.error || 'Unknown error'));
-            else alert('Failed to send code.');
+            if (typeof customAlert !== 'undefined') customAlert(data.error || 'Failed to send recovery code.');
+            else alert(data.error || 'Failed to send recovery code.');
         }
     } catch (err) {
         console.error(err);

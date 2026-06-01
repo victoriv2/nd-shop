@@ -249,6 +249,149 @@ app.post('/api/send-otp', otpLimiter, async (req, res) => {
     }
 });
 
+app.post('/api/send-admin-recovery-otp', otpLimiter, async (req, res) => {
+    try {
+        const { identifier } = req.body;
+        if (!identifier) return res.status(400).json({ success: false, error: 'Identifier is required.' });
+
+        const inputClean = identifier.replace(/[\s\-\(\)]/g, '').toLowerCase();
+
+        // Check if input is email or phone
+        const isEmail = inputClean.includes('@');
+        const method = isEmail ? 'email' : 'sms';
+
+        let contact = inputClean;
+        if (method === 'sms') {
+            if (contact.length === 11 && contact.startsWith('0')) {
+                contact = '+234' + contact.substring(1);
+            }
+        }
+
+        // Check database for admin user with this contact
+        let queryFilter = `email.eq."${contact}",phone.eq."${contact}"`;
+        if (contact.startsWith('+234')) {
+            const localFormat = '0' + contact.substring(4);
+            queryFilter += `,phone.eq."${localFormat}"`;
+        } else if (contact.startsWith('0') && contact.length === 11) {
+            const intlFormat = '+234' + contact.substring(1);
+            queryFilter += `,phone.eq."${intlFormat}"`;
+        }
+
+        const { data: users, error: findError } = await supabase
+            .from('users')
+            .select('id, name, email, phone')
+            .or(queryFilter)
+            .eq('is_admin', true)
+            .limit(1);
+
+        if (findError || !users || users.length === 0) {
+            // Fallback for default hardcoded admin values (safeguard)
+            const isDefaultAdmin = (contact === 'admin@nd-shop.sbs' || contact === '08109316532' || contact === '+2348109316532' || contact === 'mkayud@gmail.com');
+            if (!isDefaultAdmin) {
+                return res.status(404).json({ success: false, error: 'Admin account not found for this contact.' });
+            }
+        }
+
+        const name = (users && users.length > 0) ? users[0].name : 'Admin';
+        const finalContact = contact;
+
+        // Generate OTP
+        const code = Math.floor(1000 + Math.random() * 9000).toString();
+        otpStore[finalContact] = { code, expiresAt: Date.now() + 5 * 60 * 1000 };
+
+        const headers = { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' };
+        if (method === 'email') {
+            await axios.post('https://api.brevo.com/v3/smtp/email', {
+                sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
+                to: [{ email: finalContact, name: name }],
+                subject: "Your ND Shop Admin Verification Code",
+                htmlContent: `<html><body><p>Hello,</p><p>Your 4-digit admin verification code is: <strong style="font-size: 24px;">${code}</strong></p><p>This code will expire in 5 minutes.</p></body></html>`
+            }, { headers });
+        } else {
+            await axios.post('https://api.brevo.com/v3/transactionalSMS/sms', {
+                type: "transactional", unicodeEnabled: false,
+                sender: BREVO_SENDER_NAME.substring(0, 11),
+                recipient: finalContact,
+                content: `Your ND Shop admin verification code is: ${code}. It expires in 5 mins.`
+            }, { headers });
+        }
+
+        res.json({ success: true, method, contact: finalContact, name });
+    } catch (err) {
+        console.error('send-admin-recovery-otp error:', err);
+        res.status(500).json({ success: false, error: 'Failed to send recovery code.' });
+    }
+});
+
+app.post('/api/send-user-recovery-otp', otpLimiter, async (req, res) => {
+    try {
+        const { identifier } = req.body;
+        if (!identifier) return res.status(400).json({ success: false, error: 'Identifier is required.' });
+
+        const inputClean = identifier.replace(/[\s\-\(\)]/g, '').toLowerCase();
+
+        // Check if input is email or phone
+        const isEmail = inputClean.includes('@');
+        const method = isEmail ? 'email' : 'sms';
+
+        let contact = inputClean;
+        if (method === 'sms') {
+            if (contact.length === 11 && contact.startsWith('0')) {
+                contact = '+234' + contact.substring(1);
+            }
+        }
+
+        // Check database for user with this contact
+        let queryFilter = `email.eq."${contact}",phone.eq."${contact}"`;
+        if (contact.startsWith('+234')) {
+            const localFormat = '0' + contact.substring(4);
+            queryFilter += `,phone.eq."${localFormat}"`;
+        } else if (contact.startsWith('0') && contact.length === 11) {
+            const intlFormat = '+234' + contact.substring(1);
+            queryFilter += `,phone.eq."${intlFormat}"`;
+        }
+
+        const { data: users, error: findError } = await supabase
+            .from('users')
+            .select('id, name, email, phone')
+            .or(queryFilter)
+            .limit(1);
+
+        if (findError || !users || users.length === 0) {
+            return res.status(404).json({ success: false, error: 'Account not found for this contact.' });
+        }
+
+        const name = users[0].name || 'User';
+        const finalContact = contact;
+
+        // Generate OTP
+        const code = Math.floor(1000 + Math.random() * 9000).toString();
+        otpStore[finalContact] = { code, expiresAt: Date.now() + 5 * 60 * 1000 };
+
+        const headers = { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' };
+        if (method === 'email') {
+            await axios.post('https://api.brevo.com/v3/smtp/email', {
+                sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
+                to: [{ email: finalContact, name: name }],
+                subject: "Your ND Shop Verification Code",
+                htmlContent: `<html><body><p>Hello,</p><p>Your 4-digit verification code is: <strong style="font-size: 24px;">${code}</strong></p><p>This code will expire in 5 minutes.</p></body></html>`
+            }, { headers });
+        } else {
+            await axios.post('https://api.brevo.com/v3/transactionalSMS/sms', {
+                type: "transactional", unicodeEnabled: false,
+                sender: BREVO_SENDER_NAME.substring(0, 11),
+                recipient: finalContact,
+                content: `Your ND Shop verification code is: ${code}. It expires in 5 mins.`
+            }, { headers });
+        }
+
+        res.json({ success: true, method, contact: finalContact, name });
+    } catch (err) {
+        console.error('send-user-recovery-otp error:', err);
+        res.status(500).json({ success: false, error: 'Failed to send recovery code.' });
+    }
+});
+
 app.post('/api/verify-otp', otpLimiter, (req, res) => {
     const { contact, code } = req.body;
     if (!contact || !code) return res.status(400).json({ success: false, error: 'Contact and code required.' });
