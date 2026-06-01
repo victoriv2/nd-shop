@@ -422,6 +422,8 @@
 
             function getAnimTarget(c) {
                 if (c === document.body) {
+                    const sliderViewport = document.querySelector('.slider-viewport');
+                    if (sliderViewport) return sliderViewport;
                     const regContainer = document.getElementById('register-container');
                     if (regContainer) return regContainer;
                     const adminContent = document.querySelector('.admin-content');
@@ -617,6 +619,17 @@
                             } catch (e) {
                                 window.location.href = window.location.pathname + window.location.search + window.location.hash;
                             }
+                            
+                            // Failsafe: if the page doesn't unload/reload within 3 seconds, reset the spinner
+                            setTimeout(() => {
+                                ptrIndicator.classList.remove('loading');
+                                ptrIndicator.style.transform = 'translate(-50%, -50px) scale(0)';
+                                ptrIndicator.style.opacity = '0';
+                                if (animTarget) {
+                                    animTarget.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1)';
+                                    animTarget.style.transform = '';
+                                }
+                            }, 3000);
                         }, 300); // Slight snap pause to wow the user
                     } else {
                         // Bounce back to default
