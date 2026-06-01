@@ -117,16 +117,18 @@ async function processAdminLogin() {
     }
 }
 
-async function getAdminUser() {
+async function getAdminUser(bypassCache = false) {
     let users = [];
-    try {
-        const cached = localStorage.getItem('nd_users');
-        if (cached) {
-            users = JSON.parse(cached);
-        }
-    } catch (e) {}
+    if (!bypassCache) {
+        try {
+            const cached = localStorage.getItem('nd_users');
+            if (cached) {
+                users = JSON.parse(cached);
+            }
+        } catch (e) {}
+    }
 
-    if (!users || users.length === 0) {
+    if (bypassCache || !users || users.length === 0) {
         try {
             const res = await fetch(`${window.API_BASE}/api/users`);
             const data = await res.json();
@@ -154,7 +156,7 @@ async function sendRecoveryCode() {
         return;
     }
 
-    const admin = await getAdminUser();
+    const admin = await getAdminUser(true);
     let isIdValid = false;
     
     if (admin) {
