@@ -66,50 +66,8 @@ function toggleForgotPassword() {
         formSection.style.display = 'none';
         pwdSection.style.display = 'block';
         window._adminRecoveryStep = 0;
-        
-        // Reset recovery method selection UI
         window._selectedRecoveryMethod = null;
-        const emailBtn = document.getElementById('methodEmailBtn');
-        const smsBtn = document.getElementById('methodSmsBtn');
-        if (emailBtn) emailBtn.classList.remove('selected');
-        if (smsBtn) smsBtn.classList.remove('selected');
-        const inputContainer = document.getElementById('recoveryInputContainer');
-        if (inputContainer) inputContainer.style.display = 'none';
-
         updateRecoveryWizard();
-    }
-}
-
-function selectAdminRecoveryMethod(method) {
-    window._selectedRecoveryMethod = method;
-    const emailBtn = document.getElementById('methodEmailBtn');
-    const smsBtn = document.getElementById('methodSmsBtn');
-    const label = document.getElementById('recoveryInputLabel');
-    const input = document.getElementById('adminRecoveryId');
-    const inputContainer = document.getElementById('recoveryInputContainer');
-
-    if (method === 'email') {
-        if (emailBtn) emailBtn.classList.add('selected');
-        if (smsBtn) smsBtn.classList.remove('selected');
-        if (label) label.textContent = 'Registered Admin Email';
-        if (input) {
-            input.type = 'email';
-            input.placeholder = 'admin@nd-shop.sbs';
-            input.value = '';
-        }
-    } else if (method === 'sms') {
-        if (smsBtn) smsBtn.classList.add('selected');
-        if (emailBtn) emailBtn.classList.remove('selected');
-        if (label) label.textContent = 'Registered Admin Phone';
-        if (input) {
-            input.type = 'tel';
-            input.placeholder = '08109316532';
-            input.value = '';
-        }
-    }
-
-    if (inputContainer) {
-        inputContainer.style.display = 'block';
     }
 }
 
@@ -130,7 +88,7 @@ function updateRecoveryWizard() {
 
     if (currentStep === 0) {
         if (headerTitle) headerTitle.textContent = 'Password Recovery';
-        if (headerSub) headerSub.textContent = 'Choose your recovery method and enter your registered admin contact.';
+        if (headerSub) headerSub.textContent = 'Choose your recovery method to receive a verification code.';
     } else if (currentStep === 1) {
         const contact = window._adminRecoveryContact || 'your contact';
         if (headerTitle) headerTitle.textContent = 'Verify OTP Code';
@@ -139,6 +97,33 @@ function updateRecoveryWizard() {
         if (headerTitle) headerTitle.textContent = 'Set New Password';
         if (headerSub) headerSub.textContent = 'Choose a secure new password for your admin account.';
     }
+}
+
+async function fetchAdminDetails() {
+    let users = [];
+    try {
+        const cached = localStorage.getItem('nd_users');
+        if (cached) users = JSON.parse(cached);
+    } catch (e) {}
+
+    if (!users || users.length === 0) {
+        try {
+            const res = await fetch(`${window.API_BASE}/api/users`);
+            const data = await res.json();
+            if (data.success && data.users) {
+                users = data.users;
+                localStorage.setItem('nd_users', JSON.stringify(users));
+            }
+        } catch (e) {
+            console.error('Failed to fetch users:', e);
+        }
+    }
+
+    // Prioritize the default system admin
+    let admin = users.find(u => u.id && u.id.startsWith('nd_admin_'));
+    if (!admin) admin = users.find(u => u.email === 'admin@nd-shop.sbs');
+    if (!admin) admin = users.find(u => u.is_admin === true);
+    return admin;
 }
 
 async function processAdminLogin() {
@@ -164,6 +149,7 @@ async function processAdminLogin() {
             // Store basic non-sensitive admin info
             localStorage.setItem('nd_admin_id', data.admin.id);
             localStorage.setItem('nd_admin_email', data.admin.email);
+            if (data.admin.phone) localStorage.setItem('nd_admin_phone', data.admin.phone);
             if (data.token) {
                 localStorage.setItem('nd_token', data.token);
             }
@@ -193,57 +179,58 @@ async function processAdminLogin() {
     }
 }
 
-// ===== Admin Recovery: Step 1 — Choose Method, Enter contact & Send OTP =====
-async function sendRecoveryCode() {
-    const method = window._selectedRecoveryMethod;
-    if (!method) {
-        if (typeof customAlert !== 'undefined') customAlert("Please choose email or sms first.");
-        else alert("Please choose email or sms first.");
-        return;
+// ===== Admin Recovery: Step 1 — Choose Method & Send OTP =====
+async function sendRecoveryCode(method) {
+    if (!method) return;
+    
+    // UI Feedback on button
+    const btnId = method === 'email' ? 'methodEmailBtn' : 'methodSmsBtn';
+    const btn = document.getElementById(btnId);
+    let originalHtml = '';
+    if (btn) {
+        originalHtml = btn.innerHTML;
+        btn.innerHTML = `<div class="method-text" style="text-align:center; width:100%;"><span class="method-title">Sending...</span></div>`;
+        btn.disabled = true;
     }
-
-    const inputId = document.getElementById('adminRecoveryId').value.trim();
-    if (!inputId) {
-        const name = method === 'email' ? 'email' : 'phone number';
-        if (typeof customAlert !== 'undefined') customAlert(`Please enter your registered admin ${name}.`);
-        else alert(`Please enter your registered admin ${name}.`);
-        return;
-    }
-
-    // Client-side validation to verify the input corresponds to the chosen method
-    if (method === 'email') {
-        if (!inputId.includes('@')) {
-            if (typeof customAlert !== 'undefined') customAlert("Please enter a valid email address.");
-            else alert("Please enter a valid email address.");
-            return;
-        }
-    } else {
-        const cleaned = inputId.replace(/[\s\-\(\)]/g, '');
-        if (!/^\+?\d{10,14}$/.test(cleaned)) {
-            if (typeof customAlert !== 'undefined') customAlert("Please enter a valid phone number.");
-            else alert("Please enter a valid phone number.");
-            return;
-        }
-    }
-
-    const btn = document.querySelector('#recoveryEmailPhase .admin-login-btn.primary');
-    const originalText = btn ? btn.textContent : 'Send Recovery Code';
-    if (btn) { btn.textContent = 'Sending...'; btn.disabled = true; }
 
     try {
-        const response = await fetch(`${window.API_BASE}/api/send-admin-recovery-otp`, {
+        const admin = await fetchAdminDetails();
+        let contact = '';
+        
+        if (method === 'email') {
+            contact = admin ? admin.email : (localStorage.getItem('nd_admin_email') || 'admin@nd-shop.sbs');
+        } else if (method === 'sms') {
+            contact = admin ? admin.phone : (localStorage.getItem('nd_admin_phone') || '08109316532');
+        }
+
+        if (method === 'sms' && contact) {
+            let cleaned = contact.replace(/[\s\-\(\)]/g, '');
+            if (cleaned.length === 11 && cleaned.startsWith('0')) {
+                cleaned = '+234' + cleaned.substring(1);
+            }
+            contact = cleaned;
+        }
+
+        if (!contact) {
+            if (typeof customAlert !== 'undefined') customAlert(`No registered ${method} found for admin.`);
+            else alert(`No registered ${method} found.`);
+            return;
+        }
+
+        // Call the regular send-otp endpoint (same as admin-security)
+        const response = await fetch(`${window.API_BASE}/api/send-otp`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ identifier: inputId, method })
+            body: JSON.stringify({ method, contact, name: 'Admin' })
         });
         const data = await response.json();
 
         if (data.success) {
-            window._adminRecoveryId = inputId;
-            window._adminRecoveryContact = data.contact;
-            window._adminRecoveryMethod = data.method || method;
+            window._adminRecoveryContact = contact;
+            window._adminRecoveryMethod = method;
+            window._selectedRecoveryMethod = method; // For resend logic
 
             window._adminRecoveryStep = 1;
             updateRecoveryWizard();
@@ -261,7 +248,10 @@ async function sendRecoveryCode() {
         if (typeof customAlert !== 'undefined') customAlert('Network error. Is the server running?');
         else alert('Network error.');
     } finally {
-        if (btn) { btn.textContent = originalText; btn.disabled = false; }
+        if (btn) { 
+            btn.innerHTML = originalHtml; 
+            btn.disabled = false; 
+        }
     }
 }
 
