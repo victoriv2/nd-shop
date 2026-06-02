@@ -699,8 +699,9 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
                 let upsertPayload;
                 let upsertOptions = {};
                 if (settingsTables.includes(table)) {
-                    // admin_settings uses { id, value } columns
-                    upsertPayload = { id: op.data.id, value: op.data.value, updated_at: new Date().toISOString() };
+                    // admin_settings uses { key, value } columns
+                    upsertPayload = { key: op.data.id, value: op.data.value, updated_at: new Date().toISOString() };
+                    upsertOptions = { onConflict: 'key' };
                 } else if (table === 'user_carts') {
                     // user_carts table uses local_id as the unique string ID, and id as UUID
                     upsertPayload = { local_id: op.data.id, data: op.data };
