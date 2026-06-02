@@ -1134,12 +1134,10 @@ window.openImageViewer = function(src) {
  */
 window.updateShopBranding = function() {
     const isPageAdmin = window.location.pathname.includes('/admin');
-    let shopName;
+    let shopName = localStorage.getItem('nd_shop_name');
     
-    if (isPageAdmin) {
-        shopName = 'F T L';
-    } else {
-        shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
+    if (!shopName) {
+        shopName = isPageAdmin ? 'F T L' : 'nd shop';
     }
     
     // Update logo text
@@ -1154,6 +1152,9 @@ window.updateShopBranding = function() {
     }
     if (document.title.toLowerCase().includes('nd-shop')) {
         document.title = document.title.replace(/nd-shop/gi, shopName);
+    }
+    if (document.title.includes('F T L')) {
+        document.title = document.title.replace(/F T L/g, shopName);
     }
 
     // Replace "Nd shop" / "nd shop" / "nd-shop" in specific common UI areas if found in text nodes
