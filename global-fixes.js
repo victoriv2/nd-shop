@@ -1134,10 +1134,12 @@ window.openImageViewer = function(src) {
  */
 window.updateShopBranding = function() {
     const isPageAdmin = window.location.pathname.includes('/admin');
-    let shopName = localStorage.getItem('nd_shop_name');
+    let shopName;
     
-    if (!shopName) {
-        shopName = isPageAdmin ? 'F T L' : 'nd shop';
+    if (isPageAdmin) {
+        shopName = 'F T L';
+    } else {
+        shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
     }
     
     // Update logo text
