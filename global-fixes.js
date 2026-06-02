@@ -1137,7 +1137,7 @@ window.updateShopBranding = function() {
     let shopName;
     
     if (isPageAdmin) {
-        shopName = localStorage.getItem('nd_admin_shop_name') || 'F T L';
+        shopName = 'F T L';
     } else {
         shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
     }
@@ -1185,7 +1185,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for real-time changes
     if (window.realtimeSync) {
         window.realtimeSync.on('nd_shop_name', () => window.updateShopBranding());
-        window.realtimeSync.on('nd_admin_shop_name', () => window.updateShopBranding());
         window.realtimeSync.on('nd_shop_owner_phone', () => window.updateShopContactPhone?.());
     }
 
