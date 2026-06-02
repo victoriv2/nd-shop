@@ -1181,6 +1181,13 @@ window.updateShopBranding = function() {
 document.addEventListener('DOMContentLoaded', () => {
     window.updateShopBranding();
     window.updateShopContactPhone?.();
+    
+    // Listen for real-time changes
+    if (window.realtimeSync) {
+        window.realtimeSync.on('nd_shop_name', () => window.updateShopBranding());
+        window.realtimeSync.on('nd_admin_shop_name', () => window.updateShopBranding());
+        window.realtimeSync.on('nd_shop_owner_phone', () => window.updateShopContactPhone?.());
+    }
 
     // Observe modal container for any dynamic content loads
     const modalObserver = new MutationObserver(() => {
