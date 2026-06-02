@@ -1137,11 +1137,9 @@ window.updateShopBranding = function() {
     let shopName;
     
     if (isPageAdmin) {
-        shopName = 'F T L';
+        shopName = localStorage.getItem('nd_admin_shop_name') || 'F T L';
     } else {
         shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
-        // Enforce strictly lowercase on the user side
-        shopName = shopName.toLowerCase();
     }
     
     // Update logo text

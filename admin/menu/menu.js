@@ -321,6 +321,7 @@ window.openAppContactSettings = function() {
     const modal = document.getElementById('appContactSettingsModal');
     if (modal) {
         document.getElementById('appShopNameInput').value = localStorage.getItem('nd_shop_name') || 'nd shop';
+        document.getElementById('appAdminShopNameInput').value = localStorage.getItem('nd_admin_shop_name') || 'F T L';
         document.getElementById('appContactPhoneInput').value = localStorage.getItem('nd_shop_owner_phone') || '08109316532';
         modal.style.display = 'flex';
         setTimeout(() => modal.classList.add('show'), 10);
@@ -337,10 +338,11 @@ window.closeAppContactSettings = function() {
 
 window.saveAppContactSettings = function() {
     const shopName = document.getElementById('appShopNameInput').value.trim();
+    const adminShopName = document.getElementById('appAdminShopNameInput').value.trim();
     const phone = document.getElementById('appContactPhoneInput').value.trim();
     
-    if (!shopName || !phone) {
-        const msg = !shopName ? "Please enter a shop name." : "Please enter a valid phone number.";
+    if (!shopName || !phone || !adminShopName) {
+        const msg = !shopName ? "Please enter a shop name." : (!adminShopName ? "Please enter an Admin App name." : "Please enter a valid phone number.");
         if(typeof customAlert === 'function') customAlert(msg);
         else alert(msg);
         return;
@@ -355,7 +357,7 @@ window.saveAppContactSettings = function() {
                 customAlert("Incorrect PIN. Changes not saved.");
                 return;
             }
-            _finishSavingAppContact(shopName, phone);
+            _finishSavingAppContact(shopName, adminShopName, phone);
         });
     } else {
         const pin = prompt("Please enter the Admin Authorization PIN to save these changes:");
@@ -365,18 +367,20 @@ window.saveAppContactSettings = function() {
             alert("Incorrect PIN. Changes not saved.");
             return;
         }
-        _finishSavingAppContact(shopName, phone);
+        _finishSavingAppContact(shopName, adminShopName, phone);
     }
 }
 
-window._finishSavingAppContact = function(shopName, phone) {
+window._finishSavingAppContact = function(shopName, adminShopName, phone) {
     localStorage.setItem('nd_shop_name', shopName);
+    localStorage.setItem('nd_admin_shop_name', adminShopName);
     localStorage.setItem('nd_shop_owner_phone', phone);
 
     if (typeof window.updateShopBranding === 'function') window.updateShopBranding();
     if (typeof window.updateShopContactPhone === 'function') window.updateShopContactPhone();
     if (window.realtimeSync) {
         window.realtimeSync.syncNow('nd_shop_name');
+        window.realtimeSync.syncNow('nd_admin_shop_name');
         window.realtimeSync.syncNow('nd_shop_owner_phone');
     }
     
