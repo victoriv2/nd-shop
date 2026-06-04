@@ -153,33 +153,33 @@ function initProductModalLogic() {
                     const cpc = s.cupsPerCustard !== undefined ? Number(s.cupsPerCustard) : (s.c3sPerC2 || 1);
                     const c3Cost = (cpc > 0 && cpb > 0) ? c2Cost / cpc : 0;
 
-                    if (pts.bag && Number(pts.bag.price) > 0) variants.push({ title: pts.bag.title || 'Container 1', price: Number(pts.bag.price), flex: false, cost: perUnitCost });
-                    if (pts.custard && Number(pts.custard.price) > 0) variants.push({ title: pts.custard.title || 'Container 2', price: Number(pts.custard.price), flex: false, cost: c2Cost });
+                    if (pts.bag && Number(pts.bag.price) > 0) variants.push({ title: pts.bag.title || 'Container 1', price: Number(pts.bag.price), flex: false, cost: perUnitCost, variantType: 'c1' });
+                    if (pts.custard && Number(pts.custard.price) > 0) variants.push({ title: pts.custard.title || 'Container 2', price: Number(pts.custard.price), flex: false, cost: c2Cost, variantType: 'c2' });
                     if (pts.cup) {
                         let cupPrice = Number(pts.cup.price) || 0;
                         if (cupPrice <= 0) {
                             const cupProfit = s.cupProfit !== undefined ? s.cupProfit : (s.c3Profit !== undefined ? s.c3Profit : 0);
                             cupPrice = Math.round(c3Cost + cupProfit) || 0;
                         }
-                        variants.push({ title: pts.cup.title || 'Container 3', price: cupPrice, flex: false, cost: c3Cost });
+                        variants.push({ title: pts.cup.title || 'Container 3', price: cupPrice, flex: false, cost: c3Cost, variantType: 'c3' });
                     }
                 } else if (product.isFlexible) {
                     const pts = product.packTypes || {};
                     const baseCost = parseFloat(product.cost) || 0;
-                    if (pts.c1 && Number(pts.c1.price) > 0) variants.push({ title: pts.c1.title || 'Container 1', price: Number(pts.c1.price), flex: false, cost: baseCost });
-                    if (pts.c2 && Number(pts.c2.price) > 0) variants.push({ title: pts.c2.title || 'Container 2', price: Number(pts.c2.price), flex: false, cost: baseCost });
-                    if (pts.c3) variants.push({ title: pts.c3.title || 'Container 3', price: Number(pts.c3.price) || 0, flex: true, cost: baseCost });
+                    if (pts.c1 && Number(pts.c1.price) > 0) variants.push({ title: pts.c1.title || 'Container 1', price: Number(pts.c1.price), flex: false, cost: baseCost, variantType: 'c1' });
+                    if (pts.c2 && Number(pts.c2.price) > 0) variants.push({ title: pts.c2.title || 'Container 2', price: Number(pts.c2.price), flex: false, cost: baseCost, variantType: 'c2' });
+                    if (pts.c3) variants.push({ title: pts.c3.title || 'Container 3', price: Number(pts.c3.price) || 0, flex: true, cost: baseCost, variantType: 'c3' });
                 } else if (product.isCustom) {
                     isCustomMode = true;
-                    variants.push({ title: 'Default', price: Number(product.price) || 0, flex: false, unit: product.unit || 'per unit', cost: parseFloat(product.cost) || 0 });
+                    variants.push({ title: 'Default', price: Number(product.price) || 0, flex: false, unit: product.unit || 'per unit', cost: parseFloat(product.cost) || 0, variantType: null });
                 } else {
                     const baseCost = parseFloat(product.cost) || 0;
-                    variants.push({ title: 'Default', price: Number(product.price) || 0, flex: false, unit: product.unit || 'per unit', cost: baseCost });
+                    variants.push({ title: 'Default', price: Number(product.price) || 0, flex: false, unit: product.unit || 'per unit', cost: baseCost, variantType: null });
                     if (product.wholesalePrice && Number(product.wholesalePrice) > 0) {
                         const bulkUnitStr = product.bulkUnit || 'Carton';
                         const wholesaleRemaining = window.getRemainingProductStock ? window.getRemainingProductStock(product.name, 'wholesale') : Infinity;
                         if (wholesaleRemaining > 0) {
-                            variants.push({ title: bulkUnitStr, price: Number(product.wholesalePrice), flex: false, unit: 'per ' + bulkUnitStr.toLowerCase(), cost: baseCost * (product.pieces || 1) });
+                            variants.push({ title: bulkUnitStr, price: Number(product.wholesalePrice), flex: false, unit: 'per ' + bulkUnitStr.toLowerCase(), cost: baseCost * (product.pieces || 1), variantType: 'wholesale' });
                         }
                     }
                 }
@@ -280,48 +280,32 @@ function initProductModalLogic() {
                 // Update Availability
                 const availabilityElem = document.querySelector('.pm-available-text');
                 if (availabilityElem && currentProduct && typeof window.getRemainingProductStock === 'function') {
-                    let variantType = null;
-                    if (v.title === 'Carton' || v.title === currentProduct.bulkUnit) {
-                        variantType = 'wholesale';
-                    } else if (v.title === 'Container 1') {
-                        variantType = 'c1';
-                    } else if (v.title === 'Container 2') {
-                        variantType = 'c2';
-                    } else if (v.title === 'Container 3') {
-                        variantType = 'c3';
+                    let parts = [];
+                    let hasInfinity = false;
+                    let allZero = true;
+
+                    for (const altV of currentVariants) {
+                        const maxStock = window.getRemainingProductStock(currentProduct.name, altV.variantType);
+                        
+                        if (maxStock === Infinity) {
+                            hasInfinity = true;
+                            parts.push(`<span style="white-space:nowrap;">${altV.title}: <strong>In Stock</strong></span>`);
+                            allZero = false;
+                        } else {
+                            parts.push(`<span style="white-space:nowrap; color:${maxStock > 0 ? '#16a34a' : '#ef4444'}">${altV.title}: <strong>${maxStock}</strong></span>`);
+                            if (maxStock > 0) allZero = false;
+                        }
                     }
                     
-                    const maxStock = window.getRemainingProductStock(currentProduct.name, variantType);
-                    
-                    if (maxStock === Infinity) {
+                    if (hasInfinity && parts.length === 1) {
                         availabilityElem.textContent = 'In Stock';
-                        availabilityElem.style.color = '#16a34a'; // green
-                    } else if (maxStock > 0) {
-                        availabilityElem.textContent = `${maxStock} in stock`;
-                        availabilityElem.style.color = '#16a34a'; // green
+                        availabilityElem.style.color = '#16a34a';
                     } else {
-                        let alternative = null;
-                        for (const altV of currentVariants) {
-                            if (altV === v) continue;
-                            let altType = null;
-                            if (altV.title === 'Carton' || altV.title === currentProduct.bulkUnit) altType = 'wholesale';
-                            else if (altV.title === 'Container 1') altType = 'c1';
-                            else if (altV.title === 'Container 2') altType = 'c2';
-                            else if (altV.title === 'Container 3') altType = 'c3';
-                            
-                            if (window.getRemainingProductStock(currentProduct.name, altType) > 0) {
-                                alternative = altV.title;
-                                break;
-                            }
-                        }
-                        
-                        if (alternative) {
-                            availabilityElem.textContent = `Out of stock (try ${alternative})`;
-                            availabilityElem.style.color = '#ef4444'; // red
-                        } else {
-                            availabilityElem.textContent = 'Out of stock';
-                            availabilityElem.style.color = '#ef4444'; // red
-                        }
+                        availabilityElem.innerHTML = parts.join('<br>');
+                        availabilityElem.style.color = allZero ? '#ef4444' : '#16a34a'; 
+                        availabilityElem.style.textAlign = 'right';
+                        availabilityElem.style.fontSize = parts.length > 1 ? '0.8rem' : '0.9rem';
+                        availabilityElem.style.lineHeight = '1.4';
                     }
                 }
 
