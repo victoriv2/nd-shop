@@ -900,6 +900,20 @@ window.getRemainingProductStock = function(productName, variantType = null) {
     const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared);
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     
+    // Also deduct stock from pending requests to prevent overselling
+    const requests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
+    requests.forEach(req => {
+        if (req.status === 'Pending') {
+            if (req.isGroupedOrder && req.items) {
+                req.items.forEach(item => {
+                    sales.push({ item: item.name, qty: item.qty });
+                });
+            } else if (req.product) {
+                sales.push({ item: req.product.name, qty: req.product.qty });
+            }
+        }
+    });
+    
     let baseName = productName.trim();
     let extractedVariantTitle = null;
     let p = products.find(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
