@@ -446,11 +446,14 @@ function initProductModalLogic() {
     function handleBuyNowRequest(btn) {
         const selectedRadio = document.querySelector('input[name="pmVariant"]:checked');
         let isFlex = false;
+        let activeVariant = null;
         if (selectedRadio) {
             const idx = parseInt(selectedRadio.value);
-            isFlex = currentVariants[idx] ? currentVariants[idx].flex : false;
+            activeVariant = currentVariants[idx];
+            isFlex = activeVariant ? activeVariant.flex : false;
         } else if (currentVariants.length === 1) {
-            isFlex = currentVariants[0].flex;
+            activeVariant = currentVariants[0];
+            isFlex = activeVariant.flex;
         }
 
         if (isFlex && basePriceValue <= 0) {
@@ -460,6 +463,82 @@ function initProductModalLogic() {
 
         const name = document.getElementById('pmProductNameValue').textContent;
         const unit = document.getElementById('pmProductUnitValue').textContent;
+
+        // --- NEW PRE-CHECK LOGIC ---
+        if (typeof window.getRemainingProductStock === 'function' && !isCustomMode && !isFlex && currentProduct && activeVariant) {
+            const maxStock = window.getRemainingProductStock(currentProduct.name, activeVariant.variantType);
+            
+            const cart = JSON.parse(localStorage.getItem('nd_cart') || '[]');
+            const existingItem = cart.find(item => item.name === currentProduct.name && !item.isCustom && !item.isFlexible);
+            const currentQtyInCart = existingItem ? parseFloat(existingItem.qty) : 0;
+            
+            if (currentQtyInCart + currentQuantity > maxStock) {
+                // Determine alternatives
+                let alternatives = [];
+                currentVariants.forEach(v => {
+                    if (v !== activeVariant) {
+                        const s = window.getRemainingProductStock(currentProduct.name, v.variantType);
+                        if (s > 0 && s !== Infinity) {
+                            alternatives.push(`• <strong>${v.title}</strong> (${s} available)`);
+                        } else if (s === Infinity) {
+                            alternatives.push(`• <strong>${v.title}</strong> (In Stock)`);
+                        }
+                    }
+                });
+                
+                // Show custom modal overlay
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+                    z-index: 999999; display: flex; align-items: center; justify-content: center;
+                    opacity: 0; transition: opacity 0.25s;
+                `;
+                
+                let altHtml = '';
+                if (alternatives.length > 0) {
+                    altHtml = `
+                        <div style="background: #f8fafc; border-radius: 10px; padding: 14px; text-align: left; margin-top: 15px;">
+                            <p style="margin: 0 0 8px 0; color: #475569; font-size: 0.9rem; font-weight: 600;">But the following are available:</p>
+                            <div style="color: #16a34a; font-size: 0.95rem; line-height: 1.5;">
+                                ${alternatives.join('<br>')}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    altHtml = `
+                        <div style="background: #fef2f2; border-radius: 10px; padding: 14px; margin-top: 15px;">
+                            <p style="margin: 0; color: #ef4444; font-size: 0.9rem; font-weight: 600;">All options for this product are currently out of stock.</p>
+                        </div>
+                    `;
+                }
+                
+                overlay.innerHTML = `
+                    <div style="background: white; border-radius: 20px; padding: 24px; max-width: 360px; width: 90%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: scale(0.95); transition: transform 0.25s;" id="pmStockWarningBox">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: #fef2f2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 16px;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        </div>
+                        <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 1.25rem;">Not Enough Stock</h3>
+                        <p style="margin: 0; color: #64748b; font-size: 0.95rem; line-height: 1.5;">
+                            Sorry, <strong>${activeVariant.title}</strong> is not available for the requested quantity.
+                        </p>
+                        ${altHtml}
+                        <button onclick="this.closest('div').parentElement.remove()" style="margin-top: 20px; width: 100%; padding: 12px; background: #8b5cf6; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">
+                            Got It
+                        </button>
+                    </div>
+                `;
+                
+                document.body.appendChild(overlay);
+                requestAnimationFrame(() => {
+                    overlay.style.opacity = '1';
+                    document.getElementById('pmStockWarningBox').style.transform = 'scale(1)';
+                });
+                
+                return;
+            }
+        }
+        // --- END PRE-CHECK LOGIC ---
 
         const effectiveUnitPrice = basePriceValue;
         const totalCost = basePriceValue * currentQuantity;
