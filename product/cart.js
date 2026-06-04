@@ -273,7 +273,7 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
         } else {
             alert(`Only ${maxStock} remaining in stock!`);
         }
-        return;
+        return false;
     }
 
     
@@ -332,6 +332,7 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
     }
     
     saveCartData(cart);
+    return true;
 };
 
 function handleCheckout() {

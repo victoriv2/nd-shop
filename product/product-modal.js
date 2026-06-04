@@ -494,7 +494,12 @@ function initProductModalLogic() {
 
         // Add to Cart instead of direct Request
         if (typeof window.addToCart === 'function') {
-            window.addToCart(name, currentQuantity, unit, effectiveUnitPrice, isCustomMode, undefined, undefined, currentImageData, isFlex, baseCostValue);
+            const success = window.addToCart(name, currentQuantity, unit, effectiveUnitPrice, isCustomMode, undefined, undefined, currentImageData, isFlex, baseCostValue);
+            if (success === false) {
+                btn.textContent = originalText;
+                btn.classList.remove('pending');
+                return;
+            }
         }
 
         // Simulated delay for premium feel
