@@ -62,6 +62,32 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     });
                 }
+
+                // Update Total Spending on the greeting dashboard
+                const updateGreetingSpending = () => {
+                    const spendingItems = container.querySelectorAll('.spending-item');
+                    if (spendingItems.length > 0) {
+                        const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user')) || { id: '00000ND' };
+                        const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+                        const allUserSales = sales.filter(s => s.customerID === user.id);
+                        let totalSpending = 0;
+                        allUserSales.forEach(s => {
+                            totalSpending += (s.price || (s.qty * s.unitPrice)) || 0;
+                        });
+                        spendingItems.forEach(el => {
+                            el.textContent = `Total spending: ₦${Math.round(totalSpending).toLocaleString()}`;
+                        });
+                    }
+                };
+                
+                updateGreetingSpending();
+
+                if (window.realtimeSync) {
+                    window.realtimeSync.on('nd_sales_history', () => {
+                        updateGreetingSpending();
+                    });
+                }
+
             })
             .catch(error => {
                 // If fetch fails (like when opening directly via file:// in some browsers), 

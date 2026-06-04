@@ -1879,5 +1879,10 @@ function _submitURPRequest(spendableRewardBalance, user) {
     }
 }
 
-
-
+if (window.realtimeSync) {
+    window.realtimeSync.on('nd_sales_history', () => {
+        if (typeof window.refreshPayouts === 'function') {
+            window.refreshPayouts();
+        }
+    });
+}
