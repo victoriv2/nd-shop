@@ -184,6 +184,26 @@ function renderCartItems() {
 function updateCartItemQty(index, delta) {
     const cart = getCartData();
     if (cart[index]) {
+        if (delta > 0) {
+            let maxStock = Infinity;
+            if (typeof window.getRemainingProductStock === 'function') {
+                let variantType = null;
+                const unitStr = cart[index].unit || '';
+                if (unitStr.toLowerCase().includes('carton') || unitStr.toLowerCase().includes('bag')) variantType = 'wholesale';
+                else if (unitStr.toLowerCase().includes('container 1')) variantType = 'c1';
+                else if (unitStr.toLowerCase().includes('container 2')) variantType = 'c2';
+                else if (unitStr.toLowerCase().includes('container 3')) variantType = 'c3';
+                maxStock = window.getRemainingProductStock(cart[index].name, variantType);
+            }
+            if (cart[index].qty + delta > maxStock) {
+                if (typeof window.showCustomAlert === 'function') {
+                    window.showCustomAlert(`Only ${maxStock} remaining in stock!`, 'warning');
+                } else {
+                    alert(`Only ${maxStock} remaining in stock!`);
+                }
+                return;
+            }
+        }
         cart[index].qty += delta;
         if (cart[index].qty <= 0) {
             cart.splice(index, 1);
@@ -233,6 +253,29 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
     
     // Check if item exists (if not custom/flexible, we can just bump qty)
     const existingIndex = cart.findIndex(item => item.name === productName && !isCustom && !isFlexible);
+
+    let maxStock = Infinity;
+    if (typeof window.getRemainingProductStock === 'function') {
+        let variantType = null;
+        if (unit) {
+            if (unit.toLowerCase().includes('carton') || unit.toLowerCase().includes('bag')) variantType = 'wholesale';
+            else if (unit.toLowerCase().includes('container 1')) variantType = 'c1';
+            else if (unit.toLowerCase().includes('container 2')) variantType = 'c2';
+            else if (unit.toLowerCase().includes('container 3')) variantType = 'c3';
+        }
+        maxStock = window.getRemainingProductStock(productName, variantType);
+    }
+
+    const currentQtyInCart = existingIndex > -1 ? cart[existingIndex].qty : 0;
+    if (currentQtyInCart + qty > maxStock) {
+        if (typeof window.showCustomAlert === 'function') {
+            window.showCustomAlert(`Only ${maxStock} remaining in stock!`, 'warning');
+        } else {
+            alert(`Only ${maxStock} remaining in stock!`);
+        }
+        return;
+    }
+
     
     if (existingIndex > -1) {
         cart[existingIndex].qty += qty;

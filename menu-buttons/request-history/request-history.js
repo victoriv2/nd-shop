@@ -174,5 +174,11 @@ window.renderRequestHistory = function() {
     }).join('');
 };
 
-
-
+if (window.realtimeSync) {
+    window.realtimeSync.on('nd_requests_data', () => {
+        const modal = document.getElementById('requestHistoryModal');
+        if (modal && modal.classList.contains('show') && typeof window.renderRequestHistory === 'function') {
+            window.renderRequestHistory();
+        }
+    });
+}

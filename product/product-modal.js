@@ -46,8 +46,43 @@ function initProductModalLogic() {
 
         // Handle Quantity Buttons
         if (qtyPlus) {
-            currentQuantity++;
-            updateModalEstimates();
+            let maxStock = Infinity;
+            if (currentProduct && typeof window.getRemainingProductStock === 'function') {
+                const selectedRadio = document.querySelector('input[name="pmVariant"]:checked');
+                let variantType = null;
+                if (selectedRadio) {
+                    const idx = parseInt(selectedRadio.value);
+                    const v = currentVariants[idx];
+                    if (v) {
+                        if (v.title === 'Carton' || v.title === currentProduct.bulkUnit) {
+                            variantType = 'wholesale';
+                        } else if (v.title === 'Container 1') {
+                            variantType = 'c1';
+                        } else if (v.title === 'Container 2') {
+                            variantType = 'c2';
+                        } else if (v.title === 'Container 3') {
+                            variantType = 'c3';
+                        }
+                    }
+                } else if (currentVariants.length === 1) {
+                    const v = currentVariants[0];
+                    if (v.title === 'Carton' || v.title === currentProduct.bulkUnit) {
+                        variantType = 'wholesale';
+                    }
+                }
+                maxStock = window.getRemainingProductStock(currentProduct.name, variantType);
+            }
+            
+            if (currentQuantity < maxStock) {
+                currentQuantity++;
+                updateModalEstimates();
+            } else {
+                if (typeof window.showCustomAlert === 'function') {
+                    window.showCustomAlert(`Only ${maxStock} remaining in stock!`, 'warning');
+                } else {
+                    alert(`Only ${maxStock} remaining in stock!`);
+                }
+            }
             return;
         }
         if (qtyMinus) {
