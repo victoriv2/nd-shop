@@ -277,6 +277,54 @@ function initProductModalLogic() {
                     if (flexWrapper) flexWrapper.style.display = 'none';
                 }
 
+                // Update Availability
+                const availabilityElem = document.querySelector('.pm-available-text');
+                if (availabilityElem && currentProduct && typeof window.getRemainingProductStock === 'function') {
+                    let variantType = null;
+                    if (v.title === 'Carton' || v.title === currentProduct.bulkUnit) {
+                        variantType = 'wholesale';
+                    } else if (v.title === 'Container 1') {
+                        variantType = 'c1';
+                    } else if (v.title === 'Container 2') {
+                        variantType = 'c2';
+                    } else if (v.title === 'Container 3') {
+                        variantType = 'c3';
+                    }
+                    
+                    const maxStock = window.getRemainingProductStock(currentProduct.name, variantType);
+                    
+                    if (maxStock === Infinity) {
+                        availabilityElem.textContent = 'In Stock';
+                        availabilityElem.style.color = '#16a34a'; // green
+                    } else if (maxStock > 0) {
+                        availabilityElem.textContent = `${maxStock} in stock`;
+                        availabilityElem.style.color = '#16a34a'; // green
+                    } else {
+                        let alternative = null;
+                        for (const altV of currentVariants) {
+                            if (altV === v) continue;
+                            let altType = null;
+                            if (altV.title === 'Carton' || altV.title === currentProduct.bulkUnit) altType = 'wholesale';
+                            else if (altV.title === 'Container 1') altType = 'c1';
+                            else if (altV.title === 'Container 2') altType = 'c2';
+                            else if (altV.title === 'Container 3') altType = 'c3';
+                            
+                            if (window.getRemainingProductStock(currentProduct.name, altType) > 0) {
+                                alternative = altV.title;
+                                break;
+                            }
+                        }
+                        
+                        if (alternative) {
+                            availabilityElem.textContent = `Out of stock (try ${alternative})`;
+                            availabilityElem.style.color = '#ef4444'; // red
+                        } else {
+                            availabilityElem.textContent = 'Out of stock';
+                            availabilityElem.style.color = '#ef4444'; // red
+                        }
+                    }
+                }
+
                 updateModalEstimates();
             }
 
