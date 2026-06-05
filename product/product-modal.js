@@ -580,6 +580,36 @@ function initProductModalLogic() {
             }, 1500);
         }, 800);
     }
+
+    // Real-time synchronization check: if admin updates product mid-interaction
+    window.addEventListener('nd_sync_complete', () => {
+        const productModal = document.getElementById('productModal');
+        if (productModal && productModal.classList.contains('show') && currentProduct) {
+            try {
+                const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+                const latest = dbProducts.find(p => p.name === currentProduct.name);
+                if (latest) {
+                    const wasFlexibleAllowed = currentProduct.isFlexible || currentProduct.allowUserFlexiblePricing;
+                    const isFlexibleAllowed = latest.isFlexible || latest.allowUserFlexiblePricing;
+                    
+                    if (wasFlexibleAllowed && !isFlexibleAllowed) {
+                        productModal.classList.remove('show');
+                        document.body.classList.remove('modal-open');
+                        if (typeof window.showCustomAlert === 'function') {
+                            window.showCustomAlert(`Product pricing has been updated by admin. Please select the product again.`, 'warning');
+                        } else {
+                            alert(`Product pricing has been updated by admin. Please select the product again.`);
+                        }
+                    } else {
+                        // Update current product reference to keep it fresh
+                        currentProduct = latest;
+                    }
+                }
+            } catch (e) {
+                console.error("Error checking real-time sync for product modal", e);
+            }
+        }
+    });
 }
 
 

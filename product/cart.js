@@ -249,6 +249,27 @@ function removeCartItem(index) {
 
 // Global hook for product-modal to call when adding to cart
 window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specificPayoutRate, specificPayoutType, imageData, isFlexible, unitCost) {
+    // --- NEW STRICT SECURITY VALIDATION FOR FLEXIBLE PRICING ---
+    if (isFlexible) {
+        try {
+            const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+            const latestProduct = dbProducts.find(p => p.name === productName || p.name === productName.replace(/\s+\([^)]+\)$/, ''));
+            if (latestProduct) {
+                if (!latestProduct.isFlexible && !latestProduct.allowUserFlexiblePricing) {
+                    if (typeof window.showCustomAlert === 'function') {
+                        window.showCustomAlert(`Flexible pricing is no longer available for this item.`, 'error');
+                    } else {
+                        alert(`Flexible pricing is no longer available for this item.`);
+                    }
+                    return false;
+                }
+            }
+        } catch(e) {
+            console.error('Validation error', e);
+        }
+    }
+    // --- END SECURITY VALIDATION ---
+
     const cart = getCartData();
     
     // Check if item exists (if not custom/flexible, we can just bump qty)
