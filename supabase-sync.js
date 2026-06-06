@@ -33,6 +33,9 @@
     // We keep an in-memory cache of the "last known good state" to compute diffs against
     let stateCache = {};
 
+    // Track timestamps of last local writes to prevent in-flight fetches from overwriting newer local state
+    const lastLocalWrite = {};
+
     const nativeSetItem = Storage.prototype.setItem;
     
     // Initialize cache and pull fresh data from Supabase
@@ -61,16 +64,13 @@
             ? { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
             : { 'Content-Type': 'application/json' };
 
-        let syncQueue = [];
-        try {
-            syncQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
-        } catch (e) {}
-
         for (const [localKey, tableName] of Object.entries(TABLES_TO_SYNC)) {
             try {
                 // Read what's currently in localStorage
                 const currentLocal = JSON.parse(localStorage.getItem(localKey) || '[]');
                 stateCache[localKey] = currentLocal;
+
+                const fetchStartTime = Date.now();
 
                 // Pull absolute truth from server with auth token and timeout
                 const controller = new AbortController();
@@ -84,8 +84,15 @@
                 const data = await res.json();
                 
                 if (data.success && data.data) {
+                    // Check if a local write occurred while the fetch was in progress
+                    if (lastLocalWrite[localKey] && lastLocalWrite[localKey] >= fetchStartTime) {
+                        console.log(`[sync] Skipping pull update for ${localKey} because a newer local change occurred.`);
+                        continue;
+                    }
+
                     // Prevent overwriting local data if there are pending optimistic updates
-                    const hasPendingOps = syncQueue.some(q => q.table === tableName);
+                    const freshQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
+                    const hasPendingOps = freshQueue.some(q => q.table === tableName);
                     if (!hasPendingOps) {
                         // Update localStorage with truth
                         nativeSetItem.call(localStorage, localKey, JSON.stringify(data.data));
@@ -98,6 +105,7 @@
         }
 
         try {
+            const fetchStartTime = Date.now();
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout
 
@@ -109,9 +117,14 @@
             const data = await res.json();
             if (data.success && data.data) {
                 // Prevent overwriting local settings if there are pending optimistic updates
-                const hasPendingSettings = syncQueue.some(q => q.table === 'admin_settings');
+                const freshQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
+                const hasPendingSettings = freshQueue.some(q => q.table === 'admin_settings');
                 if (!hasPendingSettings) {
                     for (const setting of data.data) {
+                        // Check if a local write occurred while the fetch was in progress
+                        if (lastLocalWrite[setting.key] && lastLocalWrite[setting.key] >= fetchStartTime) {
+                            continue;
+                        }
                         // admin_settings rows have { key, value } columns
                         const val = typeof setting.value === 'object' && setting.value !== null
                             ? JSON.stringify(setting.value)
@@ -135,8 +148,10 @@
         nativeSetItem.apply(this, arguments);
         
         if (TABLES_TO_SYNC[key]) {
+            lastLocalWrite[key] = Date.now();
             handleMutation(key, value);
         } else if (SETTINGS_KEYS.includes(key)) {
+            lastLocalWrite[key] = Date.now();
             handleSettingsMutation(key, value);
         }
     };
@@ -335,10 +350,12 @@
     // Listen for storage changes from other tabs to keep stateCache in sync
     window.addEventListener('storage', (e) => {
         if (e.key && TABLES_TO_SYNC[e.key]) {
+            lastLocalWrite[e.key] = Date.now();
             try {
                 stateCache[e.key] = JSON.parse(e.newValue || '[]');
             } catch (err) {}
         } else if (e.key && SETTINGS_KEYS.includes(e.key)) {
+            lastLocalWrite[e.key] = Date.now();
             stateCache[e.key] = e.newValue;
         }
     });
