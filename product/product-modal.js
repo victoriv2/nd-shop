@@ -55,20 +55,12 @@ function initProductModalLogic() {
                     const idx = parseInt(selectedRadio.value);
                     const v = currentVariants[idx];
                     if (v) {
-                        if (v.title === 'Carton' || v.title === currentProduct.bulkUnit) {
-                            variantType = 'wholesale';
-                        } else if (v.title === 'Container 1') {
-                            variantType = 'c1';
-                        } else if (v.title === 'Container 2') {
-                            variantType = 'c2';
-                        } else if (v.title === 'Container 3') {
-                            variantType = 'c3';
-                        }
+                        variantType = v.variantType;
                     }
                 } else if (currentVariants.length === 1) {
                     const v = currentVariants[0];
-                    if (v.title === 'Carton' || v.title === currentProduct.bulkUnit) {
-                        variantType = 'wholesale';
+                    if (v) {
+                        variantType = v.variantType;
                     }
                 }
                 maxStock = window.getRemainingProductStock(currentProduct.name, variantType);
@@ -220,6 +212,12 @@ function initProductModalLogic() {
                     if (slider) slider.style.backgroundColor = isChecked ? '#c026d3' : '#cbd5e1';
                     if (knob) knob.style.left = isChecked ? '24px' : '4px';
                     
+                    let selectedIdx = 0;
+                    if (currentVariants.length > 1) {
+                        const checkedRadio = document.querySelector('input[name="pmVariant"]:checked');
+                        if (checkedRadio) selectedIdx = parseInt(checkedRadio.value);
+                    }
+                    
                     const flexVars = currentProduct.flexibleVariants || [];
                     currentVariants.forEach((v, i) => {
                         let isAllowed = false;
@@ -231,14 +229,9 @@ function initProductModalLogic() {
                     });
                     
                     if (currentVariants.length > 1) {
-                        renderVariantsList();
+                        renderVariantsList(selectedIdx);
                     }
                     
-                    let selectedIdx = 0;
-                    if (currentVariants.length > 1) {
-                        const checkedRadio = document.querySelector('input[name="pmVariant"]:checked');
-                        if (checkedRadio) selectedIdx = parseInt(checkedRadio.value);
-                    }
                     updateModalForVariant(currentVariants[selectedIdx]);
                 };
             }
@@ -323,12 +316,12 @@ function initProductModalLogic() {
                 updateModalEstimates();
             }
 
-            function renderVariantsList() {
+            function renderVariantsList(selectedIdx = 0) {
                 if (pmVariantsContainer) {
                     pmVariantsContainer.innerHTML = currentVariants.map((v, i) => `
                         <label class="pm-variant-label" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid #bfdbfe; border-radius:8px; cursor:pointer; background:white; transition:all 0.2s;">
                             <div style="display:flex; align-items:center; gap:8px;">
-                                <input type="radio" name="pmVariant" value="${i}" ${i===0?'checked':''} style="accent-color:#8b5cf6; width:18px; height:18px; cursor:pointer;">
+                                <input type="radio" name="pmVariant" value="${i}" ${i===selectedIdx?'checked':''} style="accent-color:#8b5cf6; width:18px; height:18px; cursor:pointer;">
                                 <span style="font-weight:600; color:#8b5cf6; font-size:0.95rem;">${v.title}</span>
                             </div>
                             <span style="font-weight:700; color:#334155;">${v.flex ? 'Flexible' : '₦' + Math.round(v.price).toLocaleString()}</span>
@@ -356,16 +349,24 @@ function initProductModalLogic() {
                     });
                     
                     if (labels.length > 0) {
-                        labels[0].style.borderColor = '#8b5cf6';
-                        labels[0].style.borderWidth = '2px';
-                        labels[0].style.background = '#f0f4f8';
+                        labels.forEach((l, idx) => {
+                            if (idx === selectedIdx) {
+                                l.style.borderColor = '#8b5cf6';
+                                l.style.borderWidth = '2px';
+                                l.style.background = '#f0f4f8';
+                            } else {
+                                l.style.borderColor = '#bfdbfe';
+                                l.style.borderWidth = '1px';
+                                l.style.background = 'white';
+                            }
+                        });
                     }
                 }
             }
 
             if (variants.length > 1) {
                 if (pmVariantsSection) pmVariantsSection.style.display = 'block';
-                renderVariantsList();
+                renderVariantsList(0);
                 updateModalForVariant(variants[0]);
             } else {
                 if (pmVariantsSection) pmVariantsSection.style.display = 'none';
@@ -693,25 +694,7 @@ function initProductModalLogic() {
                     if (newVariants.length > 1) {
                         const pmVariantsSection = document.getElementById('pmVariantsSection');
                         if (pmVariantsSection) pmVariantsSection.style.display = 'block';
-                        renderVariantsList();
-                        
-                        // Restore checked state for the selected option
-                        const radios = document.querySelectorAll('input[name="pmVariant"]');
-                        if (radios[selectedIdx]) {
-                            radios[selectedIdx].checked = true;
-                            // Reset border visual highlights
-                            const labels = document.querySelectorAll('#pmVariantsContainer label');
-                            labels.forEach(l => {
-                                l.style.borderColor = '#cbd5e1';
-                                l.style.borderWidth = '1px';
-                                l.style.background = 'transparent';
-                            });
-                            if (labels[selectedIdx]) {
-                                labels[selectedIdx].style.borderColor = '#8b5cf6';
-                                labels[selectedIdx].style.borderWidth = '2px';
-                                labels[selectedIdx].style.background = '#f0f4f8';
-                            }
-                        }
+                        renderVariantsList(selectedIdx);
                     } else {
                         const pmVariantsSection = document.getElementById('pmVariantsSection');
                         if (pmVariantsSection) pmVariantsSection.style.display = 'none';
