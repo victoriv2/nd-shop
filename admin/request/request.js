@@ -473,22 +473,22 @@ function _buildEditableOrderTable(req, id) {
                     const cpc = s.cupsPerCustard !== undefined ? Number(s.cupsPerCustard) : (s.c3sPerC2 || 1);
                     const c3Cost = (cpc > 0 && cpb > 0) ? c2Cost / cpc : 0;
 
-                    if (pts.bag && Number(pts.bag.price) > 0) variants.push({ title: pts.bag.title || 'Container 1', price: Number(pts.bag.price), flex: false, cost: perUnitCost });
-                    if (pts.custard && Number(pts.custard.price) > 0) variants.push({ title: pts.custard.title || 'Container 2', price: Number(pts.custard.price), flex: false, cost: c2Cost });
+                    if (pts.bag && Number(pts.bag.price) > 0) variants.push({ title: (pts.bag || {}).title || (pts.c1 || {}).title || 'Container 1', price: Number(pts.bag.price), flex: false, cost: perUnitCost });
+                    if (pts.custard && Number(pts.custard.price) > 0) variants.push({ title: (pts.custard || {}).title || (pts.c2 || {}).title || 'Container 2', price: Number(pts.custard.price), flex: false, cost: c2Cost });
                     if (pts.cup) {
                         let cupPrice = Number(pts.cup.price) || 0;
                         if (cupPrice <= 0) {
                             const cupProfit = s.cupProfit !== undefined ? s.cupProfit : (s.c3Profit !== undefined ? s.c3Profit : 0);
                             cupPrice = Math.round(c3Cost + cupProfit) || 0;
                         }
-                        variants.push({ title: pts.cup.title || 'Container 3', price: cupPrice, flex: false, cost: c3Cost });
+                        variants.push({ title: (pts.cup || {}).title || (pts.c3 || {}).title || 'Container 3', price: cupPrice, flex: false, cost: c3Cost });
                     }
                 } else if (prod.isFlexible) {
                     const pts = prod.packTypes || {};
                     const baseCost = parseFloat(prod.cost) || 0;
-                    if (pts.c1 && Number(pts.c1.price) > 0) variants.push({ title: pts.c1.title || 'Container 1', price: Number(pts.c1.price), flex: false, cost: baseCost });
-                    if (pts.c2 && Number(pts.c2.price) > 0) variants.push({ title: pts.c2.title || 'Container 2', price: Number(pts.c2.price), flex: false, cost: baseCost });
-                    if (pts.c3) variants.push({ title: pts.c3.title || 'Container 3', price: Number(pts.c3.price) || 0, flex: true, cost: baseCost });
+                    if (pts.c1 && Number(pts.c1.price) > 0) variants.push({ title: (pts.c1 || {}).title || (pts.bag || {}).title || 'Container 1', price: Number(pts.c1.price), flex: false, cost: baseCost });
+                    if (pts.c2 && Number(pts.c2.price) > 0) variants.push({ title: (pts.c2 || {}).title || (pts.custard || {}).title || 'Container 2', price: Number(pts.c2.price), flex: false, cost: baseCost });
+                    if (pts.c3) variants.push({ title: (pts.c3 || {}).title || (pts.cup || {}).title || 'Container 3', price: Number(pts.c3.price) || 0, flex: true, cost: baseCost });
                 } else if (prod.isCustom) {
                     variants.push({ title: 'Default', price: Number(prod.price) || 0, flex: false, unit: prod.unit || 'per unit', cost: parseFloat(prod.cost) || 0 });
                 } else {

@@ -2585,9 +2585,11 @@ window.generateProductPDF = function (btn) {
         let priceVal = 0;
         if (p.isSpecial) {
             priceVal = (p.packTypes && p.packTypes.bag && p.packTypes.bag.price) ? parseFloat(p.packTypes.bag.price) : 0;
-            displayPrice = '<span style="font-size: 13px; color: #888; font-weight: 500; margin-right: 4px;">From</span><span style="font-size: 18px; font-weight: 900; color: #6366f1;">₦' + Math.round(priceVal).toLocaleString() + '</span> <span style="font-size: 13px; color: #888; font-weight: 500; margin-left: 4px;">' + ((p.packTypes && p.packTypes.bag && p.packTypes.bag.title) ? p.packTypes.bag.title : 'Container 1') + '</span>';
+            displayPrice = '<span style="font-size: 13px; color: #888; font-weight: 500; margin-right: 4px;">From</span><span style="font-size: 18px; font-weight: 900; color: #6366f1;">₦' + Math.round(priceVal).toLocaleString() + '</span> <span style="font-size: 13px; color: #888; font-weight: 500; margin-left: 4px;">' + ((p.packTypes && p.packTypes.bag && p.packTypes.bag.title) ? p.packTypes.bag.title : ((p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) ? p.packTypes.c1.title : 'Container 1')) + '</span>';
         } else if (p.isCustom) {
             displayPrice = '<span style="font-size: 15px; font-weight: 800; color: #64748b;">Custom Pricing</span>';
+        } else if (p.isFlexible) {
+            displayPrice = '<span style="font-size: 15px; font-weight: 800; color: #64748b;">Flexible Pricing</span>';
         } else {
             priceVal = parseFloat(p.price) || 0;
             displayPrice = '<span style="font-size: 18px; font-weight: 900; color: #6366f1;">₦' + Math.round(priceVal).toLocaleString() + '</span> <span style="font-size: 13px; color: #888; font-weight: 500; margin-left: 4px;">' + (p.unit || '') + '</span>';

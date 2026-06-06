@@ -1526,4 +1526,38 @@ window.openCameraCapture = function(onCapture) {
             });
         }, 10);
     });
+
+    // Global password toggle handler
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.password-toggle');
+        if (!btn) return;
+        
+        const targetId = btn.getAttribute('data-target');
+        const passwordInput = document.getElementById(targetId);
+        if (!passwordInput) return;
+        
+        const eyeOpen = btn.querySelector('.eye-open');
+        const eyeClosed = btn.querySelector('.eye-closed');
+        
+        const isPin = passwordInput.getAttribute('inputmode') === 'numeric';
+        
+        if (passwordInput.type === 'password' || passwordInput.style.webkitTextSecurity === 'disc') {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+            } else {
+                passwordInput.style.webkitTextSecurity = 'none';
+            }
+            if (eyeOpen) eyeOpen.style.display = 'none';
+            if (eyeClosed) eyeClosed.style.display = 'block';
+        } else {
+            if (!isPin) {
+                passwordInput.type = 'password';
+            } else {
+                passwordInput.style.webkitTextSecurity = 'disc';
+            }
+            if (eyeClosed) eyeClosed.style.display = 'none';
+            if (eyeOpen) eyeOpen.style.display = 'block';
+        }
+    });
+
 })();

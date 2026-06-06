@@ -570,13 +570,13 @@ function initSalesTable() {
                     if (specVariantCupPrice) { specVariantCupPrice.textContent = '₦' + formatCurrency(Number((pt.cup || {}).price || 0)); specVariantCupPrice.dataset.price = (pt.cup || {}).price || 0; }
                     
                     const bagTxt = document.getElementById('specVariantBagLabelTxt');
-                    if (bagTxt) bagTxt.textContent = (pt.bag || {}).title || 'Container 1';
+                    if (bagTxt) bagTxt.textContent = (pt.bag || {}).title || (pt.c1 || {}).title || 'Container 1';
                     
                     const custardTxt = document.getElementById('specVariantCustardLabelTxt');
-                    if (custardTxt) custardTxt.textContent = (pt.custard || {}).title || 'Container 2';
+                    if (custardTxt) custardTxt.textContent = (pt.custard || {}).title || (pt.c2 || {}).title || 'Container 2';
                     
                     const cupTxt = document.getElementById('specVariantCupLabelTxt');
-                    if (cupTxt) cupTxt.textContent = (pt.cup || {}).title || 'Container 3';
+                    if (cupTxt) cupTxt.textContent = (pt.cup || {}).title || (pt.c3 || {}).title || 'Container 3';
 
                     specDropdownWrapper.classList.remove('open');
                 });
@@ -735,13 +735,13 @@ function initSalesTable() {
                     if (flexVariantC2Price) { flexVariantC2Price.textContent = '₦' + formatCurrency(Number((pt.c2 || {}).price || 0)); flexVariantC2Price.dataset.price = (pt.c2 || {}).price || 0; }
                     
                     const c1Txt = document.getElementById('flexVariantC1LabelTxt');
-                    if (c1Txt) c1Txt.textContent = (pt.c1 || {}).title || 'Container 1';
+                    if (c1Txt) c1Txt.textContent = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
                     
                     const c2Txt = document.getElementById('flexVariantC2LabelTxt');
-                    if (c2Txt) c2Txt.textContent = (pt.c2 || {}).title || 'Container 2';
+                    if (c2Txt) c2Txt.textContent = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
                     
                     const c3Txt = document.getElementById('flexVariantC3LabelTxt');
-                    if (c3Txt) c3Txt.textContent = (pt.c3 || {}).title || 'Container 3';
+                    if (c3Txt) c3Txt.textContent = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
 
                     const checkedRad = document.querySelector('input[name="flexVariant"]:checked');
                     if (checkedRad) checkedRad.checked = false;

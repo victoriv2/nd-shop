@@ -584,9 +584,9 @@ function _pdCalculateStock(p) {
         const cpb = parseInt(s.custardsPerBag) || 1;
         const cpc = parseInt(s.cupsPerCustard) || 1;
         const maxCPB = cpb * cpc;
-        const bagT = (p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || p.bulkUnit || 'Container 1';
-        const cusT = (p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || 'Container 2';
-        const cupT = (p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || 'Container 3';
+        const bagT = (p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || (p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) || p.bulkUnit || 'Container 1';
+        const cusT = (p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || (p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) || 'Container 2';
+        const cupT = (p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || (p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) || 'Container 3';
 
         let totalBags = 0;
         allProducts.forEach(item => { if (!item.isDeleted && item.name === p.name && (item.isSpecial || item.packTypes)) totalBags += (parseFloat(item.boughtQuantity) || 1); });

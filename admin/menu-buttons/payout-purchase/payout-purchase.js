@@ -429,13 +429,13 @@ function _initPayoutPurchaseLogic(modal) {
                     if (ppSpecVariantCupPrice) { ppSpecVariantCupPrice.textContent = '₦' + formatCurrency(Number((pt.cup || {}).price || 0)); ppSpecVariantCupPrice.dataset.price = (pt.cup || {}).price || 0; }
                     
                     const bagTxt = modal.querySelector('#ppSpecVariantBagLabelTxt');
-                    if (bagTxt) bagTxt.textContent = (pt.bag || {}).title || 'Container 1';
+                    if (bagTxt) bagTxt.textContent = (pt.bag || {}).title || (pt.c1 || {}).title || 'Container 1';
                     
                     const custardTxt = modal.querySelector('#ppSpecVariantCustardLabelTxt');
-                    if (custardTxt) custardTxt.textContent = (pt.custard || {}).title || 'Container 2';
+                    if (custardTxt) custardTxt.textContent = (pt.custard || {}).title || (pt.c2 || {}).title || 'Container 2';
                     
                     const cupTxt = modal.querySelector('#ppSpecVariantCupLabelTxt');
-                    if (cupTxt) cupTxt.textContent = (pt.cup || {}).title || 'Container 3';
+                    if (cupTxt) cupTxt.textContent = (pt.cup || {}).title || (pt.c3 || {}).title || 'Container 3';
 
                     const toggleWrapper = modal.querySelector('#ppSpecFlexPriceToggleWrapper');
                     if (item.allowUserFlexiblePricing) {
@@ -597,13 +597,13 @@ function _initPayoutPurchaseLogic(modal) {
                     if (ppFlexVariantC2Price) { ppFlexVariantC2Price.textContent = '₦' + formatCurrency(Number((pt.c2 || {}).price || 0)); ppFlexVariantC2Price.dataset.price = (pt.c2 || {}).price || 0; }
                     
                     const c1Txt = modal.querySelector('#ppFlexVariantC1LabelTxt');
-                    if (c1Txt) c1Txt.textContent = (pt.c1 || {}).title || 'Container 1';
+                    if (c1Txt) c1Txt.textContent = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
                     
                     const c2Txt = modal.querySelector('#ppFlexVariantC2LabelTxt');
-                    if (c2Txt) c2Txt.textContent = (pt.c2 || {}).title || 'Container 2';
+                    if (c2Txt) c2Txt.textContent = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
                     
                     const c3Txt = modal.querySelector('#ppFlexVariantC3LabelTxt');
-                    if (c3Txt) c3Txt.textContent = (pt.c3 || {}).title || 'Container 3';
+                    if (c3Txt) c3Txt.textContent = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
 
                     const checkedRad = modal.querySelector('input[name="ppFlexVariant"]:checked');
                     if (checkedRad) checkedRad.checked = false;

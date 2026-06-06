@@ -2891,9 +2891,9 @@ function _rsOpenEditPriceForm() {
         if(defContainer) defContainer.style.display = 'none';
         if(anaContainer) anaContainer.style.display = 'flex';
         
-        const bagTitle = (p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || p.bulkUnit || 'Container 1';
-        const custardTitle = (p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || 'Container 2';
-        const cupTitle = (p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || 'Container 3';
+        const bagTitle = (p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || (p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) || p.bulkUnit || 'Container 1';
+        const custardTitle = (p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || (p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) || 'Container 2';
+        const cupTitle = (p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || (p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) || 'Container 3';
         const s = p.structure || {};
         
         document.getElementById('rsEditPriceAnaBagTitleText').value = bagTitle;
@@ -3165,9 +3165,9 @@ function _rsCalculateRestockStock(p) {
         const cpb = parseInt(s.custardsPerBag) || 1;
         const cpc = parseInt(s.cupsPerCustard) || 1;
         const maxCPB = cpb * cpc;
-        const bagT  = (p.packTypes && p.packTypes.bag     && p.packTypes.bag.title)     || p.bulkUnit || 'Container 1';
-        const cusT  = (p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || 'Container 2';
-        const cupT  = (p.packTypes && p.packTypes.cup     && p.packTypes.cup.title)     || 'Container 3';
+        const bagT  = (p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || (p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) || p.bulkUnit || 'Container 1';
+        const cusT  = (p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || (p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) || 'Container 2';
+        const cupT  = (p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || (p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) || 'Container 3';
 
         let totalBags = 0;
         allProducts.forEach(item => { if (!item.isDeleted && item.name === p.name && (item.isSpecial || item.packTypes)) totalBags += (parseFloat(item.boughtQuantity) || 1); });
@@ -4110,9 +4110,9 @@ function _rsOpenTopUpForm(p) {
         const struct = p.structure || {};
         const costConfig = p.packTypes || {};
         
-        const bagTitle = (costConfig.bag && costConfig.bag.title) || p.bulkUnit || 'Container 1';
-        const custardTitle = (costConfig.custard && costConfig.custard.title) || 'Container 2';
-        const cupTitle = (costConfig.cup && costConfig.cup.title) || 'Container 3';
+        const bagTitle = (costConfig.bag && costConfig.bag.title) || (costConfig.c1 && costConfig.c1.title) || p.bulkUnit || 'Container 1';
+        const custardTitle = (costConfig.custard && costConfig.custard.title) || (costConfig.c2 && costConfig.c2.title) || 'Container 2';
+        const cupTitle = (costConfig.cup && costConfig.cup.title) || (costConfig.c3 && costConfig.c3.title) || 'Container 3';
 
         document.querySelectorAll('.rsTopUpAnaBagLbl').forEach(el => el.textContent = bagTitle);
         document.querySelectorAll('.rsTopUpAnaCustardLbl').forEach(el => el.textContent = custardTitle);
