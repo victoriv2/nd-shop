@@ -145,7 +145,7 @@ function renderCartItems() {
         if (!itemImgSrc) {
             try {
                 const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-                const matched = dbProducts.find(p => p.name === item.name || p.name === item.name.replace(/\s+\([^)]+\)$/, ''));
+                const matched = dbProducts.find(p => (p.name === item.name || p.name === item.name.replace(/\s+\([^)]+\)$/, '')) && !p.isDeleted);
                 if (matched && matched.imageData) itemImgSrc = matched.imageData;
             } catch(e) {}
         }
@@ -253,7 +253,7 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
     if (isFlexible) {
         try {
             const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-            const latestProduct = dbProducts.find(p => p.name === productName || p.name === productName.replace(/\s+\([^)]+\)$/, ''));
+            const latestProduct = dbProducts.find(p => (p.name === productName || p.name === productName.replace(/\s+\([^)]+\)$/, '')) && !p.isDeleted);
             if (latestProduct) {
                 if (!latestProduct.isFlexible && !latestProduct.allowUserFlexiblePricing) {
                     if (typeof window.showCustomAlert === 'function') {
