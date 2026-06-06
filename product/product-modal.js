@@ -219,10 +219,10 @@ function initProductModalLogic() {
                     if (slider) slider.style.backgroundColor = isChecked ? '#c026d3' : '#cbd5e1';
                     if (knob) knob.style.left = isChecked ? '24px' : '4px';
                     
-                    const flexVars = product.flexibleVariants || [];
+                    const flexVars = currentProduct.flexibleVariants || [];
                     currentVariants.forEach((v, i) => {
                         let isAllowed = false;
-                        if (product.allowUserFlexiblePricing) {
+                        if (currentProduct.allowUserFlexiblePricing) {
                             if (flexVars.length === 0) isAllowed = true;
                             else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
                         }
@@ -249,13 +249,13 @@ function initProductModalLogic() {
                 const unitStr = v.unit || `per ${v.title.toLowerCase()}`;
                 
                 const flexToggleWrapper = document.getElementById('pmFlexPriceToggleWrapper');
-                if (flexToggleWrapper && product.allowUserFlexiblePricing) {
+                if (flexToggleWrapper && currentProduct.allowUserFlexiblePricing) {
                     flexToggleWrapper.style.display = 'flex';
                 } else if (flexToggleWrapper) {
                     flexToggleWrapper.style.display = 'none';
                 }
                 
-                let displayName = product.name || (productCard.querySelector('.product-name') ? productCard.querySelector('.product-name').textContent : '');
+                let displayName = currentProduct.name || (productCard.querySelector('.product-name') ? productCard.querySelector('.product-name').textContent : '');
                 if (v.title !== 'Default') {
                     displayName += ` (${v.title})`;
                 }
@@ -609,6 +609,12 @@ function initProductModalLogic() {
                             window.showCustomAlert(`Product pricing has been updated by admin. Please select the product again.`, 'warning');
                         } else {
                             alert(`Product pricing has been updated by admin. Please select the product again.`);
+                        }
+                    } else if (!wasFlexibleAllowed && isFlexibleAllowed) {
+                        currentProduct = latest;
+                        const flexToggleWrapper = document.getElementById('pmFlexPriceToggleWrapper');
+                        if (flexToggleWrapper) {
+                            flexToggleWrapper.style.display = 'flex';
                         }
                     } else {
                         // Update current product reference to keep it fresh
