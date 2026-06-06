@@ -331,5 +331,18 @@
     
     // Keep a slower background poll as a safety net (10 seconds instead of 3)
     setInterval(initSync, 10000);
+    
+    // Listen for storage changes from other tabs to keep stateCache in sync
+    window.addEventListener('storage', (e) => {
+        if (e.key && TABLES_TO_SYNC[e.key]) {
+            try {
+                stateCache[e.key] = JSON.parse(e.newValue || '[]');
+            } catch (err) {}
+        } else if (e.key && SETTINGS_KEYS.includes(e.key)) {
+            stateCache[e.key] = e.newValue;
+        }
+    });
 
 })();
+
+

@@ -593,7 +593,7 @@ function initProductModalLogic() {
     }
 
     // Real-time synchronization check: if admin updates product mid-interaction
-    window.addEventListener('nd_sync_complete', () => {
+    const handleRealtimeSyncUpdate = () => {
         const productModal = document.getElementById('productModal');
         if (productModal && productModal.classList.contains('show') && currentProduct) {
             try {
@@ -724,7 +724,12 @@ function initProductModalLogic() {
                 console.error("Error checking real-time sync for product modal", e);
             }
         }
-    });
+    };
+
+    window.addEventListener('nd_sync_complete', handleRealtimeSyncUpdate);
+    if (window.realtimeSync) {
+        window.realtimeSync.on('nd_products_data', handleRealtimeSyncUpdate);
+    }
 }
 
 
