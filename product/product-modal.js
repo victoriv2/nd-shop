@@ -31,6 +31,7 @@ function initProductModalLogic() {
     let isCustomMode = false;
     let currentImageData = '';
     let currentVariants = [];
+    let originalVariants = [];
     let currentProduct = null;
 
     const pmStandardHero = document.getElementById('pmStandardHero');
@@ -196,7 +197,7 @@ function initProductModalLogic() {
             }
 
             currentVariants = variants;
-            const originalVariants = JSON.parse(JSON.stringify(variants));
+            originalVariants = JSON.parse(JSON.stringify(variants));
             
             const flexToggleWrapper = document.getElementById('pmFlexPriceToggleWrapper');
             const flexToggleInput = document.getElementById('pmFlexPriceToggle');
@@ -610,16 +611,114 @@ function initProductModalLogic() {
                         } else {
                             alert(`Product pricing has been updated by admin. Please select the product again.`);
                         }
-                    } else if (!wasFlexibleAllowed && isFlexibleAllowed) {
-                        currentProduct = latest;
-                        const flexToggleWrapper = document.getElementById('pmFlexPriceToggleWrapper');
-                        if (flexToggleWrapper) {
-                            flexToggleWrapper.style.display = 'flex';
+                        return;
+                    }
+
+                    // Rebuild variants array using latest product data
+                    let newVariants = [];
+                    if (latest.name) {
+                        if (latest.isSpecial) {
+                            const pts = latest.packTypes || {};
+                            const s = latest.structure || {};
+                            const perUnitCost = parseFloat(latest.cost) || 0;
+                            const cpb = s.custardsPerBag !== undefined ? Number(s.custardsPerBag) : (s.c2sPerC1 || 1);
+                            const c2Cost = cpb > 0 ? perUnitCost / cpb : 0;
+                            const cpc = s.cupsPerCustard !== undefined ? Number(s.cupsPerCustard) : (s.c3sPerC2 || 1);
+                            const c3Cost = (cpc > 0 && cpb > 0) ? c2Cost / cpc : 0;
+
+                            if (pts.bag && Number(pts.bag.price) > 0) newVariants.push({ title: pts.bag.title || 'Container 1', price: Number(pts.bag.price), flex: false, cost: perUnitCost, variantType: 'c1' });
+                            if (pts.custard && Number(pts.custard.price) > 0) newVariants.push({ title: pts.custard.title || 'Container 2', price: Number(pts.custard.price), flex: false, cost: c2Cost, variantType: 'c2' });
+                            if (pts.cup) {
+                                let cupPrice = Number(pts.cup.price) || 0;
+                                if (cupPrice <= 0) {
+                                    const cupProfit = s.cupProfit !== undefined ? s.cupProfit : (s.c3Profit !== undefined ? s.c3Profit : 0);
+                                    cupPrice = Math.round(c3Cost + cupProfit) || 0;
+                                }
+                                newVariants.push({ title: pts.cup.title || 'Container 3', price: cupPrice, flex: false, cost: c3Cost, variantType: 'c3' });
+                            }
+                        } else if (latest.isFlexible) {
+                            const pts = latest.packTypes || {};
+                            const baseCost = parseFloat(latest.cost) || 0;
+                            if (pts.c1 && Number(pts.c1.price) > 0) newVariants.push({ title: pts.c1.title || 'Container 1', price: Number(pts.c1.price), flex: false, cost: baseCost, variantType: 'c1' });
+                            if (pts.c2 && Number(pts.c2.price) > 0) newVariants.push({ title: pts.c2.title || 'Container 2', price: Number(pts.c2.price), flex: false, cost: baseCost, variantType: 'c2' });
+                            if (pts.c3) newVariants.push({ title: pts.c3.title || 'Container 3', price: Number(pts.c3.price) || 0, flex: true, cost: baseCost, variantType: 'c3' });
+                        } else if (latest.isCustom) {
+                            newVariants.push({ title: 'Default', price: Number(latest.price) || 0, flex: false, unit: latest.unit || 'per unit', cost: parseFloat(latest.cost) || 0, variantType: null });
+                        } else {
+                            const baseCost = parseFloat(latest.cost) || 0;
+                            newVariants.push({ title: 'Default', price: Number(latest.price) || 0, flex: false, unit: latest.unit || 'per unit', cost: baseCost, variantType: null });
+                            if (latest.wholesalePrice && Number(latest.wholesalePrice) > 0) {
+                                const bulkUnitStr = latest.bulkUnit || 'Carton';
+                                const wholesaleRemaining = window.getRemainingProductStock ? window.getRemainingProductStock(latest.name, 'wholesale') : Infinity;
+                                if (wholesaleRemaining > 0) {
+                                    newVariants.push({ title: bulkUnitStr, price: Number(latest.wholesalePrice), flex: false, unit: 'per ' + bulkUnitStr.toLowerCase(), cost: baseCost * (latest.pieces || 1), variantType: 'wholesale' });
+                                }
+                            }
+                        }
+                    }
+
+                    // Keep selected index or default to 0 if out of range
+                    const checkedRadio = document.querySelector('input[name="pmVariant"]:checked');
+                    let selectedIdx = 0;
+                    if (checkedRadio) {
+                        const oldIdx = parseInt(checkedRadio.value);
+                        if (oldIdx >= 0 && oldIdx < newVariants.length) {
+                            selectedIdx = oldIdx;
+                        }
+                    }
+
+                    currentProduct = latest;
+                    currentVariants = newVariants;
+                    originalVariants = JSON.parse(JSON.stringify(newVariants));
+
+                    // Re-render the flex pricing toggle and list of variants
+                    const flexToggleWrapper = document.getElementById('pmFlexPriceToggleWrapper');
+                    if (flexToggleWrapper) {
+                        flexToggleWrapper.style.display = latest.allowUserFlexiblePricing ? 'flex' : 'none';
+                    }
+
+                    const flexToggleInput = document.getElementById('pmFlexPriceToggle');
+                    const isChecked = flexToggleInput ? flexToggleInput.checked : false;
+
+                    const flexVars = latest.flexibleVariants || [];
+                    currentVariants.forEach((v, i) => {
+                        let isAllowed = false;
+                        if (latest.allowUserFlexiblePricing) {
+                            if (flexVars.length === 0) isAllowed = true;
+                            else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
+                        }
+                        v.flex = (isChecked && isAllowed) ? true : originalVariants[i].flex;
+                    });
+
+                    if (newVariants.length > 1) {
+                        const pmVariantsSection = document.getElementById('pmVariantsSection');
+                        if (pmVariantsSection) pmVariantsSection.style.display = 'block';
+                        renderVariantsList();
+                        
+                        // Restore checked state for the selected option
+                        const radios = document.querySelectorAll('input[name="pmVariant"]');
+                        if (radios[selectedIdx]) {
+                            radios[selectedIdx].checked = true;
+                            // Reset border visual highlights
+                            const labels = document.querySelectorAll('#pmVariantsContainer label');
+                            labels.forEach(l => {
+                                l.style.borderColor = '#cbd5e1';
+                                l.style.borderWidth = '1px';
+                                l.style.background = 'transparent';
+                            });
+                            if (labels[selectedIdx]) {
+                                labels[selectedIdx].style.borderColor = '#8b5cf6';
+                                labels[selectedIdx].style.borderWidth = '2px';
+                                labels[selectedIdx].style.background = '#f0f4f8';
+                            }
                         }
                     } else {
-                        // Update current product reference to keep it fresh
-                        currentProduct = latest;
+                        const pmVariantsSection = document.getElementById('pmVariantsSection');
+                        if (pmVariantsSection) pmVariantsSection.style.display = 'none';
                     }
+
+                    updateModalForVariant(currentVariants[selectedIdx]);
+                    updateModalEstimates();
                 }
             } catch (e) {
                 console.error("Error checking real-time sync for product modal", e);
