@@ -301,7 +301,35 @@
     // Start initialization
     initSync();
     
-    // Poll for updates every 3 seconds to simulate real-time
-    setInterval(initSync, 3000);
+    // Connect to SSE for instant updates
+    function connectSSE() {
+        if (!window.API_BASE) return;
+        try {
+            const eventSource = new EventSource(`${window.API_BASE}/api/stream`);
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'sync') {
+                        // Debounce slightly to prevent API spam if multiple changes happen instantly
+                        if (window._syncDebounce) clearTimeout(window._syncDebounce);
+                        window._syncDebounce = setTimeout(() => {
+                            initSync();
+                        }, 200);
+                    }
+                } catch (e) {}
+            };
+            eventSource.onerror = () => {
+                eventSource.close();
+                setTimeout(connectSSE, 5000); // Attempt to reconnect after 5s
+            };
+        } catch (e) {
+            console.warn('[sync] SSE connection failed:', e);
+        }
+    }
+    
+    connectSSE();
+    
+    // Keep a slower background poll as a safety net (10 seconds instead of 3)
+    setInterval(initSync, 10000);
 
 })();

@@ -78,6 +78,41 @@ const optionalToken = (req, res, next) => {
 };
 
 // ==========================================
+// 2.5 REAL-TIME SERVER-SENT EVENTS (SSE)
+// ==========================================
+const sseClients = new Set();
+
+app.get('/api/stream', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    // Important for CORS and avoiding proxy buffering
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('X-Accel-Buffering', 'no');
+    
+    res.flushHeaders();
+
+    // Send initial ping
+    res.write('data: {"type":"ping"}\n\n');
+
+    sseClients.add(res);
+
+    req.on('close', () => {
+        sseClients.delete(res);
+    });
+});
+
+const broadcastSyncTrigger = () => {
+    for (const client of sseClients) {
+        try {
+            client.write('data: {"type":"sync"}\n\n');
+        } catch (e) {
+            sseClients.delete(client);
+        }
+    }
+};
+
+// ==========================================
 // 3. AUTHENTICATION & USER ROUTES
 // ==========================================
 app.post('/api/login', async (req, res) => {
@@ -624,6 +659,9 @@ app.post('/api/sync/up', authenticateToken, async (req, res) => {
                 key: item.key, value: parsedValue, updated_at: new Date().toISOString()
             }, { onConflict: 'key' });
         }
+        
+        broadcastSyncTrigger(); // Instantly trigger connected clients
+        
         res.json({ success: true, message: 'Sync complete' });
     } catch (err) {
         res.status(500).json({ success: false, error: 'Internal server error.' });
@@ -729,6 +767,10 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
                 if (deleteError) console.error(`[sync-items] delete error on ${table}:`, deleteError.message);
             }
         }
+        
+        // Broadcast change so all active frontend users fetch the update instantly
+        broadcastSyncTrigger();
+        
         res.json({ success: true });
     } catch (err) {
         console.error('[sync-items] Fatal error:', err.message);
