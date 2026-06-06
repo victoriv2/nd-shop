@@ -336,39 +336,58 @@ function _pdRenderDetails(p) {
             `<span style="font-weight:800;color:#ef4444;">₦${Math.round(parseFloat(bVal)).toLocaleString()}</span></div>`;
         html += `<div style="height:1px;background:#e2e8f0;margin:4px 0;"></div>`;
 
+        const getPackTitle = (key1, key2, defaultTitle) => {
+            if (!p.packTypes) return defaultTitle;
+            if (p.isFlexible && p.packTypes[key1] && p.packTypes[key1].title) return p.packTypes[key1].title;
+            if (p.isSpecial && p.packTypes[key2] && p.packTypes[key2].title) return p.packTypes[key2].title;
+            if (p.packTypes[key1] && p.packTypes[key1].title) return p.packTypes[key1].title;
+            if (p.packTypes[key2] && p.packTypes[key2].title) return p.packTypes[key2].title;
+            return defaultTitle;
+        };
+
+        const getKey = (flexKey, specKey) => {
+            if (p.isFlexible) return (p.packTypes && p.packTypes[flexKey]) ? flexKey : specKey;
+            if (p.isSpecial) return (p.packTypes && p.packTypes[specKey]) ? specKey : flexKey;
+            return (p.packTypes && p.packTypes[flexKey]) ? flexKey : specKey;
+        };
+
+        const t1Key = getKey('c1', 'bag');
+        const t2Key = getKey('c2', 'custard');
+        const t3Key = getKey('c3', 'cup');
+
         const tierConfigs = [
             { 
-                key: p.packTypes?.c1 ? 'c1' : 'bag', 
+                key: t1Key, 
                 color: '#1e40af', 
                 bg: '#f0f4f8', 
                 border: '#bfdbfe', 
                 costVal: perUnitCost, 
                 perParent: null, 
                 parentLabel: null, 
-                profitKey: p.packTypes?.c1 ? 'c1Profit' : 'bagProfit', 
-                profitPctKey: p.packTypes?.c1 ? 'c1ProfitPercent' : 'bagProfitPercent' 
+                profitKey: t1Key === 'c1' ? 'c1Profit' : 'bagProfit', 
+                profitPctKey: t1Key === 'c1' ? 'c1ProfitPercent' : 'bagProfitPercent' 
             },
             { 
-                key: p.packTypes?.c2 ? 'c2' : 'custard', 
+                key: t2Key, 
                 color: '#86198f', 
                 bg: '#fdf4ff', 
                 border: '#f5d0fe', 
                 costVal: cCost, 
                 perParent: cpb, 
-                parentLabel: ((p.packTypes && (p.packTypes.bag || p.packTypes.c1) && (p.packTypes.bag || p.packTypes.c1).title) || 'Container 1'), 
-                profitKey: p.packTypes?.c2 ? 'c2Profit' : 'custardProfit', 
-                profitPctKey: p.packTypes?.c2 ? 'c2ProfitPercent' : 'custardProfitPercent' 
+                parentLabel: getPackTitle('c1', 'bag', 'Container 1'), 
+                profitKey: t2Key === 'c2' ? 'c2Profit' : 'custardProfit', 
+                profitPctKey: t2Key === 'c2' ? 'c2ProfitPercent' : 'custardProfitPercent' 
             },
             { 
-                key: p.packTypes?.c3 ? 'c3' : 'cup', 
+                key: t3Key, 
                 color: '#9f1239', 
                 bg: '#fff1f2', 
                 border: '#fecdd3', 
                 costVal: cupCostVal, 
                 perParent: cpc, 
-                parentLabel: ((p.packTypes && (p.packTypes.custard || p.packTypes.c2) && (p.packTypes.custard || p.packTypes.c2).title) || 'Container 2'), 
-                profitKey: p.packTypes?.c3 ? 'c3Profit' : 'cupProfit', 
-                profitPctKey: p.packTypes?.c3 ? 'c3ProfitPercent' : 'cupProfitPercent' 
+                parentLabel: getPackTitle('c2', 'custard', 'Container 2'), 
+                profitKey: t3Key === 'c3' ? 'c3Profit' : 'cupProfit', 
+                profitPctKey: t3Key === 'c3' ? 'c3ProfitPercent' : 'cupProfitPercent' 
             }
         ];
 
@@ -584,9 +603,9 @@ function _pdCalculateStock(p) {
         const cpb = parseInt(s.custardsPerBag) || 1;
         const cpc = parseInt(s.cupsPerCustard) || 1;
         const maxCPB = cpb * cpc;
-        const bagT = (p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || (p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) || p.bulkUnit || 'Container 1';
-        const cusT = (p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || (p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) || 'Container 2';
-        const cupT = (p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || (p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) || 'Container 3';
+        const bagT = (p.isFlexible && p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) ? p.packTypes.c1.title : ((p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || (p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) || p.bulkUnit || 'Container 1');
+        const cusT = (p.isFlexible && p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) ? p.packTypes.c2.title : ((p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || (p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) || 'Container 2');
+        const cupT = (p.isFlexible && p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) ? p.packTypes.c3.title : ((p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || (p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) || 'Container 3');
 
         let totalBags = 0;
         allProducts.forEach(item => { if (!item.isDeleted && item.name === p.name && (item.isSpecial || item.packTypes)) totalBags += (parseFloat(item.boughtQuantity) || 1); });
@@ -739,9 +758,9 @@ function _pdOpenEditPriceForm() {
         if (defContainer) defContainer.style.display = 'none';
         if (anaContainer) anaContainer.style.display = 'flex';
 
-        const bagTitle = (p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || (p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) || p.bulkUnit || 'Container 1';
-        const custardTitle = (p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || (p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) || 'Container 2';
-        const cupTitle = (p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || (p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) || 'Container 3';
+        const bagTitle = (p.isFlexible && p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) ? p.packTypes.c1.title : ((p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || (p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) || p.bulkUnit || 'Container 1');
+        const custardTitle = (p.isFlexible && p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) ? p.packTypes.c2.title : ((p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || (p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) || 'Container 2');
+        const cupTitle = (p.isFlexible && p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) ? p.packTypes.c3.title : ((p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || (p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) || 'Container 3');
         const s = p.structure || {};
 
         _setVal('pdEditPriceAnaBagTitleText', bagTitle);
@@ -1480,9 +1499,9 @@ window.openFlexibleVariantsModal = function(name, dateAdded, isTogglingOn = fals
 
     let containers = [];
     if (p.isSpecial || p.packTypes) {
-        const bagTitle = (p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || (p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) || p.bulkUnit || 'Container 1';
-        const custardTitle = (p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || (p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) || 'Container 2';
-        const cupTitle = (p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || (p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) || 'Container 3';
+        const bagTitle = (p.isFlexible && p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) ? p.packTypes.c1.title : ((p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || (p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) || p.bulkUnit || 'Container 1');
+        const custardTitle = (p.isFlexible && p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) ? p.packTypes.c2.title : ((p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || (p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) || 'Container 2');
+        const cupTitle = (p.isFlexible && p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) ? p.packTypes.c3.title : ((p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || (p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) || 'Container 3');
         if (p.packTypes?.bag || p.packTypes?.c1) containers.push({ key: 'c1', title: bagTitle });
         if (p.packTypes?.custard || p.packTypes?.c2) containers.push({ key: 'c2', title: custardTitle });
         if (p.packTypes?.cup || p.packTypes?.c3) containers.push({ key: 'c3', title: cupTitle });
