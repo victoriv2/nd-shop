@@ -139,6 +139,16 @@ function initProductModalLogic() {
                 } catch(e) {}
             }
 
+            // Always override with freshest data from localStorage to reflect latest admin changes
+            // (e.g. flexible pricing toggle) without needing a page refresh
+            try {
+                const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+                const freshProduct = dbProducts.find(p => p.name === product.name);
+                if (freshProduct) {
+                    product = freshProduct;
+                }
+            } catch(e) {}
+
             currentProduct = product;
 
             let variants = [];
