@@ -1560,48 +1560,4 @@ window.openCameraCapture = function(onCapture) {
         }
     });
 
-    // --- ISSUE: Mobile Keyboard Overlaying Inputs ---
-    // Fix for inputs (text, number, password, etc) being covered by the soft keyboard,
-    // especially in modals, community messages, etc.
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => {
-            const activeElement = document.activeElement;
-            if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
-                setTimeout(() => {
-                    activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 100);
-            }
-        });
-    }
-
-    document.addEventListener('focusin', (e) => {
-        const target = e.target;
-        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-            const type = target.type ? target.type.toLowerCase() : '';
-            if (['text', 'number', 'password', 'email', 'tel', 'search', 'url'].includes(type) || target.tagName === 'TEXTAREA') {
-                setTimeout(() => {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Extra push for scrollable containers (modals, chats)
-                    const scrollContainer = target.closest('.modal-content, .admin-modal-content, .community-messages, .chat-messages');
-                    if (scrollContainer && window.getComputedStyle(scrollContainer).overflowY !== 'hidden') {
-                        // Ensure we aren't at the very bottom where scrollIntoView might not do enough
-                        const originalPadding = scrollContainer.style.paddingBottom;
-                        scrollContainer.style.paddingBottom = '40vh'; // Add space at bottom
-                        setTimeout(() => {
-                            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 50);
-                        
-                        // Remove the space when focus is lost
-                        const blurHandler = () => {
-                            scrollContainer.style.paddingBottom = originalPadding;
-                            target.removeEventListener('focusout', blurHandler);
-                        };
-                        target.addEventListener('focusout', blurHandler);
-                    }
-                }, 300); // 300ms allows the soft keyboard animation to finish
-            }
-        }
-    });
-
 })();

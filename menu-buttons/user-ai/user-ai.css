@@ -1153,7 +1153,7 @@
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     height: 100dvh;
     background: rgba(15, 23, 42, 0.5);
     backdrop-filter: blur(5px);
