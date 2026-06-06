@@ -1560,4 +1560,82 @@ window.openCameraCapture = function(onCapture) {
         }
     });
 
+    // --- FORCE FIX: Visual Viewport Modal Resizer ---
+    // This forcibly resizes and repositions all overlay elements, chat pages, and modals
+    // when the mobile virtual keyboard opens, keeping inputs perfectly visible and above the keyboard.
+    if (window.visualViewport) {
+        function forceAdjustViewportOverlays() {
+            const height = window.visualViewport.height;
+            const offsetTop = window.visualViewport.offsetTop;
+
+            // Set global CSS variables in case CSS styles need them
+            document.documentElement.style.setProperty('--visual-viewport-height', `${height}px`);
+            document.documentElement.style.setProperty('--visual-viewport-top', `${offsetTop}px`);
+
+            // Find all overlays, pages, and modals that might be active
+            const overlaySelectors = [
+                '#aiChatModalOverlay',
+                '.ai-chat-modal',
+                '.community-page',
+                '.messaging-page',
+                '.admin-modal-overlay',
+                '.comm-modal-overlay',
+                '.modal-overlay',
+                '.transaction-modal-overlay',
+                '#cartModalContainer',
+                '#cartOverlay'
+            ];
+
+            const elements = document.querySelectorAll(overlaySelectors.join(', '));
+            elements.forEach(el => {
+                const style = window.getComputedStyle(el);
+                if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+                    // Force height and maxHeight to match the visible viewport
+                    el.style.height = `${height}px`;
+                    el.style.maxHeight = `${height}px`;
+                    
+                    // If it is position fixed/absolute and pinned to top, adjust it to visual viewport offset
+                    const pos = style.position;
+                    if (pos === 'fixed' || pos === 'absolute') {
+                        el.style.top = `${offsetTop}px`;
+                        el.style.bottom = 'auto';
+                    }
+                } else {
+                    // Reset custom inline styles when hidden so they don't break default desktop layouts
+                    el.style.height = '';
+                    el.style.maxHeight = '';
+                    el.style.top = '';
+                    el.style.bottom = '';
+                }
+            });
+        }
+
+        window.visualViewport.addEventListener('resize', forceAdjustViewportOverlays);
+        window.visualViewport.addEventListener('scroll', forceAdjustViewportOverlays);
+
+        // Setup MutationObserver to apply updates whenever class/style attributes change (e.g. modals opening/closing)
+        const viewportObserver = new MutationObserver((mutations) => {
+            forceAdjustViewportOverlays();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            forceAdjustViewportOverlays();
+            viewportObserver.observe(document.body, {
+                attributes: true,
+                subtree: true,
+                attributeFilter: ['class', 'style']
+            });
+        });
+
+        // Trigger adjustments on input focus events just in case resize is delayed
+        document.addEventListener('focusin', () => {
+            setTimeout(forceAdjustViewportOverlays, 50);
+            setTimeout(forceAdjustViewportOverlays, 250);
+        });
+        document.addEventListener('focusout', () => {
+            setTimeout(forceAdjustViewportOverlays, 50);
+            setTimeout(forceAdjustViewportOverlays, 250);
+        });
+    }
+
 })();
