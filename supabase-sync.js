@@ -76,9 +76,10 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout
 
-                const res = await fetch(`${window.API_BASE}/api/get-table/${tableName}?userId=${userId}`, {
+                const res = await fetch(`${window.API_BASE}/api/get-table/${tableName}?userId=${userId}&_t=${Date.now()}`, {
                     headers: authHeaders,
-                    signal: controller.signal
+                    signal: controller.signal,
+                    cache: 'no-store'
                 });
                 clearTimeout(timeoutId);
                 const data = await res.json();
@@ -109,9 +110,10 @@
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout
 
-            const res = await fetch(`${window.API_BASE}/api/get-table/admin_settings`, {
+            const res = await fetch(`${window.API_BASE}/api/get-table/admin_settings?_t=${Date.now()}`, {
                 headers: authHeaders,
-                signal: controller.signal
+                signal: controller.signal,
+                cache: 'no-store'
             });
             clearTimeout(timeoutId);
             const data = await res.json();
@@ -172,13 +174,31 @@
         } catch (e) {}
         
         operations.forEach(op => {
-            const isDup = queue.some(q => {
-                if (q.table !== table || q.operation.type !== op.type) return false;
+            let existingIdx = queue.findIndex(q => {
+                if (q.table !== table) return false;
                 if (op.id && q.operation.id === op.id) return true;
                 if (op.data && op.data.id && q.operation.data && q.operation.data.id === op.data.id) return true;
                 return false;
             });
-            if (!isDup) {
+
+            if (existingIdx !== -1) {
+                if (op.type === 'DELETE') {
+                    queue[existingIdx].operation = op;
+                    queue[existingIdx].timestamp = Date.now();
+                } else if (op.type === 'UPDATE') {
+                    if (queue[existingIdx].operation.type === 'INSERT') {
+                        queue[existingIdx].operation.data = op.data;
+                        queue[existingIdx].timestamp = Date.now();
+                    } else {
+                        queue[existingIdx].operation = op;
+                        queue[existingIdx].timestamp = Date.now();
+                    }
+                } else if (op.type === 'INSERT') {
+                     // Should not normally happen, but overwrite anyway
+                     queue[existingIdx].operation = op;
+                     queue[existingIdx].timestamp = Date.now();
+                }
+            } else {
                 queue.push({
                     id: 'sync_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                     table,

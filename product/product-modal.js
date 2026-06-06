@@ -678,10 +678,31 @@ function initProductModalLogic() {
                         flexToggleWrapper.style.display = latest.allowUserFlexiblePricing ? 'flex' : 'none';
                     }
 
-                    const flexToggleInput = document.getElementById('pmFlexPriceToggle');
-                    const isChecked = flexToggleInput ? flexToggleInput.checked : false;
-
                     const flexVars = latest.flexibleVariants || [];
+                    
+                    // Force toggle ON automatically if admin just made the selected variant flexible!
+                    let forceToggleOn = false;
+                    if (latest.allowUserFlexiblePricing) {
+                        const activeVariantTitle = currentVariants[selectedIdx].title;
+                        if (flexVars.length === 0 || flexVars.includes(activeVariantTitle) || (activeVariantTitle === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
+                            forceToggleOn = true;
+                        }
+                    }
+
+                    const flexToggleInput = document.getElementById('pmFlexPriceToggle');
+                    let isChecked = flexToggleInput ? flexToggleInput.checked : false;
+
+                    if (forceToggleOn) {
+                        isChecked = true;
+                        if (flexToggleInput) {
+                            flexToggleInput.checked = true;
+                            const slider = document.getElementById('pmFlexPriceSlider');
+                            const knob = document.getElementById('pmFlexPriceKnob');
+                            if (slider) slider.style.backgroundColor = '#c026d3';
+                            if (knob) knob.style.left = '24px';
+                        }
+                    }
+
                     currentVariants.forEach((v, i) => {
                         let isAllowed = false;
                         if (latest.allowUserFlexiblePricing) {
