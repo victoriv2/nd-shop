@@ -81,6 +81,12 @@ async function openFinancialSettings() {
                             // Re-render both admin and user product lists so change applies immediately
                             if (typeof window.renderProductsGlobal === 'function') window.renderProductsGlobal();
                             if (typeof window.refreshProducts === 'function') window.refreshProducts();
+                            
+                            // Re-render cart instantly
+                            if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
+                            if (document.getElementById('cartModalContainer') && document.getElementById('cartModalContainer').classList.contains('show') && typeof window.renderCartItems === 'function') {
+                                window.renderCartItems();
+                            }
                         }
                         closeFinancialSettings();
                     });

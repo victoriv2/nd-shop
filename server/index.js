@@ -736,21 +736,26 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
         //     return res.status(403).json({ success: false, error: 'Access denied: Admin privileges required to modify this table.' });
         // }
 
+        const upsertPayloads = [];
+        const deleteIds = [];
+        let upsertOptions = {};
+
+        if (settingsTables.includes(table)) upsertOptions = { onConflict: 'key' };
+        else if (table === 'user_carts') upsertOptions = { onConflict: 'local_id' };
+        else upsertOptions = { onConflict: 'id' };
+
         for (const op of operations) {
             if (op.type === 'INSERT' || op.type === 'UPDATE') {
                 let upsertPayload;
-                let upsertOptions = {};
                 if (settingsTables.includes(table)) {
                     // admin_settings uses { key, value } columns
                     upsertPayload = { key: op.data.id, value: op.data.value, updated_at: new Date().toISOString() };
-                    upsertOptions = { onConflict: 'key' };
                 } else if (table === 'user_carts') {
                     // user_carts table uses local_id as the unique string ID, and id as UUID
                     upsertPayload = { local_id: op.data.id, data: op.data };
-                    upsertOptions = { onConflict: 'local_id' };
                 } else {
                     // All data tables use { id, data } JSONB pattern
-                    upsertPayload = { id: op.data.id, data: op.data };
+                    upsertPayload = { id: op.data.id, data: op.data, updated_at: new Date().toISOString() };
                     // Extra indexed columns for filtering
                     if (table === 'requests') upsertPayload.user_id = op.data.user ? op.data.user.id : (op.data.userId || '');
                     else if (table === 'messages') {
@@ -758,18 +763,21 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
                         upsertPayload.receiver_id = op.data.receiverId || '';
                     }
                 }
-                const { error: upsertError } = await supabase.from(table).upsert(upsertPayload, upsertOptions);
-                if (upsertError) console.error(`[sync-items] upsert error on ${table}:`, upsertError.message);
+                upsertPayloads.push(upsertPayload);
             } else if (op.type === 'DELETE') {
-                let deleteQuery = supabase.from(table).delete();
-                if (table === 'user_carts') {
-                    deleteQuery = deleteQuery.eq('local_id', op.id);
-                } else {
-                    deleteQuery = deleteQuery.eq('id', op.id);
-                }
-                const { error: deleteError } = await deleteQuery;
-                if (deleteError) console.error(`[sync-items] delete error on ${table}:`, deleteError.message);
+                deleteIds.push(op.id);
             }
+        }
+
+        if (upsertPayloads.length > 0) {
+            const { error: upsertError } = await supabase.from(table).upsert(upsertPayloads, upsertOptions);
+            if (upsertError) console.error(`[sync-items] upsert error on ${table}:`, upsertError.message);
+        }
+
+        if (deleteIds.length > 0) {
+            let idColumn = table === 'user_carts' ? 'local_id' : 'id';
+            const { error: deleteError } = await supabase.from(table).delete().in(idColumn, deleteIds);
+            if (deleteError) console.error(`[sync-items] delete error on ${table}:`, deleteError.message);
         }
         
         // Broadcast change with specific payload so clients can update locally
