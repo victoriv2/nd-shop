@@ -657,8 +657,8 @@ app.post('/api/sync/up', authenticateToken, async (req, res) => {
                 try { parsedValue = JSON.parse(item.value); } catch (e) {}
             }
             await supabase.from('admin_settings').upsert({ 
-                key: item.key, value: parsedValue, updated_at: new Date().toISOString()
-            }, { onConflict: 'key' });
+                id: item.key, value: parsedValue, updated_at: new Date().toISOString()
+            }, { onConflict: 'id' });
         }
         const operations = updates.map(u => ({
             type: 'UPDATE',
@@ -740,7 +740,7 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
         const deleteIds = [];
         let upsertOptions = {};
 
-        if (settingsTables.includes(table)) upsertOptions = { onConflict: 'key' };
+        if (settingsTables.includes(table)) upsertOptions = { onConflict: 'id' };
         else if (table === 'user_carts') upsertOptions = { onConflict: 'local_id' };
         else upsertOptions = { onConflict: 'id' };
 
@@ -748,8 +748,8 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
             if (op.type === 'INSERT' || op.type === 'UPDATE') {
                 let upsertPayload;
                 if (settingsTables.includes(table)) {
-                    // admin_settings uses { key, value } columns
-                    upsertPayload = { key: op.data.id, value: op.data.value, updated_at: new Date().toISOString() };
+                    // admin_settings uses { id, value } columns
+                    upsertPayload = { id: op.data.id, value: op.data.value, updated_at: new Date().toISOString() };
                 } else if (table === 'user_carts') {
                     // user_carts table uses local_id as the unique string ID, and id as UUID
                     upsertPayload = { local_id: op.data.id, data: op.data, updated_at: new Date().toISOString() };

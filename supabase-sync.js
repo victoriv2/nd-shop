@@ -124,15 +124,15 @@
                 if (!hasPendingSettings) {
                     for (const setting of data.data) {
                         // Check if a local write occurred while the fetch was in progress
-                        if (lastLocalWrite[setting.key] && lastLocalWrite[setting.key] >= fetchStartTime) {
+                        if (lastLocalWrite[setting.id] && lastLocalWrite[setting.id] >= fetchStartTime) {
                             continue;
                         }
-                        // admin_settings rows have { key, value } columns
+                        // admin_settings rows have { id, value } columns
                         const val = typeof setting.value === 'object' && setting.value !== null
                             ? JSON.stringify(setting.value)
                             : String(setting.value ?? '');
-                        nativeSetItem.call(localStorage, setting.key, val);
-                        stateCache[setting.key] = val;
+                        nativeSetItem.call(localStorage, setting.id, val);
+                        stateCache[setting.id] = val;
                     }
                 }
             }
