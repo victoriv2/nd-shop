@@ -69,7 +69,7 @@ function getCartData() {
     return allCarts.filter(item => item.userId === user.id);
 }
 
-function saveCartData(cart, skipRender = false) {
+function saveCartData(cart) {
     const allCarts = JSON.parse(localStorage.getItem('nd_user_cart_data') || '[]');
     const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user')) || { id: '00000ND' };
     
@@ -87,9 +87,7 @@ function saveCartData(cart, skipRender = false) {
     const mergedCarts = [...otherUsersCarts, ...cart];
     localStorage.setItem('nd_user_cart_data', JSON.stringify(mergedCarts));
     updateCartBadge();
-    if (!skipRender) {
-        renderCartItems();
-    }
+    renderCartItems();
 }
 
 function updateCartBadge() {
@@ -119,57 +117,7 @@ function renderCartItems() {
     
     if (!list) return;
 
-    // --- Dynamic Recalculation ---
-    let cart = getCartData();
-    let changed = false;
-    let dbProducts = [];
-    try { dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]'); } catch(e) {}
-    
-    const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
-    const globalPayoutRate = parseFloat(localStorage.getItem('nd_payout_rate') || 2);
-
-    cart.forEach(item => {
-        const matched = dbProducts.find(p => (p.name === item.name || p.name === item.name.replace(/\s+\([^)]+\)$/, '')) && !p.isDeleted);
-        
-        if (matched && !item.isFlexible && !item.isCustom) {
-            const currentDbPrice = Number(matched.price) || 0;
-            const currentDbCost = Number(matched.unitCost) || 0;
-            if (item.unitPrice !== currentDbPrice) { item.unitPrice = currentDbPrice; changed = true; }
-            if (item.unitCost !== currentDbCost) { item.unitCost = currentDbCost; changed = true; }
-        }
-        
-        const newTotal = item.isFlexible ? item.unitPrice : item.qty * item.unitPrice;
-        if (item.total !== newTotal) { item.total = newTotal; changed = true; }
-
-        let newPayout = 0;
-        if (payoutEnabled) {
-            let itemRate = globalPayoutRate;
-            let isFlat = false;
-            
-            if (item.isCustom && item.customPayoutRate !== undefined) {
-                itemRate = item.customPayoutRate;
-                isFlat = item.customPayoutType === 'flat';
-            } else if (matched && matched.payoutRate !== undefined) {
-                itemRate = parseFloat(matched.payoutRate);
-            }
-
-            if (item.isFlexible) {
-                newPayout = 0;
-            } else if (isFlat) {
-                newPayout = item.qty * itemRate;
-            } else {
-                const profit = item.total - (item.qty * (item.unitCost || 0));
-                newPayout = Math.max(0, profit) * (itemRate / 100);
-            }
-        }
-        
-        if (item.payout !== newPayout) { item.payout = newPayout; changed = true; }
-    });
-
-    if (changed) {
-        saveCartData(cart, true); // true = skipRender to avoid infinite loop
-    }
-    // -----------------------------
+    const cart = getCartData();
     
     if (cart.length === 0) {
         list.innerHTML = `

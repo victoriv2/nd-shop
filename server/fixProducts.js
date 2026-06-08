@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 const { createClient } = require('@supabase/supabase-js');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://obydxcefymdjvebrxata.supabase.co';
@@ -10,6 +10,17 @@ if (!SUPABASE_SERVICE_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+function cleanObject(obj) {
+    if (obj && typeof obj === 'object') {
+        if (obj.payoutRate !== undefined) {
+            delete obj.payoutRate;
+        }
+        for (const key in obj) {
+            cleanObject(obj[key]);
+        }
+    }
+}
 
 async function fix() {
     console.log("Fetching products...");
@@ -23,18 +34,22 @@ async function fix() {
     let count = 0;
     
     for (const p of products) {
-        if (p.data && p.data.payoutRate !== undefined) {
-            delete p.data.payoutRate;
-            const { error: updErr } = await supabase.from('products').update({ data: p.data }).eq('id', p.id);
-            if (updErr) {
-                console.error(`Error updating product ${p.id}:`, updErr);
-            } else {
-                count++;
+        if (p.data) {
+            const originalStr = JSON.stringify(p.data);
+            cleanObject(p.data);
+            if (JSON.stringify(p.data) !== originalStr) {
+                console.log(`Cleaning product: ${p.data.name} (ID: ${p.id})`);
+                const { error: updErr } = await supabase.from('products').update({ data: p.data }).eq('id', p.id);
+                if (updErr) {
+                    console.error(`Error updating product ${p.id}:`, updErr);
+                } else {
+                    count++;
+                }
             }
         }
     }
     
-    console.log(`Successfully removed payoutRate from ${count} products!`);
+    console.log(`Successfully cleaned and updated ${count} products!`);
 }
 
 fix();

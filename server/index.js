@@ -752,10 +752,13 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
                     upsertPayload = { key: op.data.id, value: op.data.value, updated_at: new Date().toISOString() };
                 } else if (table === 'user_carts') {
                     // user_carts table uses local_id as the unique string ID, and id as UUID
-                    upsertPayload = { local_id: op.data.id, data: op.data };
+                    upsertPayload = { local_id: op.data.id, data: op.data, updated_at: new Date().toISOString() };
                 } else {
                     // All data tables use { id, data } JSONB pattern
-                    upsertPayload = { id: op.data.id, data: op.data, updated_at: new Date().toISOString() };
+                    upsertPayload = { id: op.data.id, data: op.data };
+                    if (table === 'messages') {
+                        upsertPayload.updated_at = new Date().toISOString();
+                    }
                     // Extra indexed columns for filtering
                     if (table === 'requests') upsertPayload.user_id = op.data.user ? op.data.user.id : (op.data.userId || '');
                     else if (table === 'messages') {
@@ -771,13 +774,19 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
 
         if (upsertPayloads.length > 0) {
             const { error: upsertError } = await supabase.from(table).upsert(upsertPayloads, upsertOptions);
-            if (upsertError) console.error(`[sync-items] upsert error on ${table}:`, upsertError.message);
+            if (upsertError) {
+                console.error(`[sync-items] upsert error on ${table}:`, upsertError.message);
+                return res.status(500).json({ success: false, error: upsertError.message });
+            }
         }
 
         if (deleteIds.length > 0) {
             let idColumn = table === 'user_carts' ? 'local_id' : 'id';
             const { error: deleteError } = await supabase.from(table).delete().in(idColumn, deleteIds);
-            if (deleteError) console.error(`[sync-items] delete error on ${table}:`, deleteError.message);
+            if (deleteError) {
+                console.error(`[sync-items] delete error on ${table}:`, deleteError.message);
+                return res.status(500).json({ success: false, error: deleteError.message });
+            }
         }
         
         // Broadcast change with specific payload so clients can update locally

@@ -673,7 +673,8 @@
  * Used by both Admin and User sides to track stock levels accurately
  */
 window.checkProductOutOfStock = function(productName) {
-    const products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+    const allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+    const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared);
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     const p = products.find(item => item.name === productName);
     if (!p) return false;
@@ -782,7 +783,8 @@ window.checkProductOutOfStock = function(productName) {
 };
 
 window.checkProductRunningLow = function(productName) {
-    const products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+    const allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+    const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared);
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     const p = products.find(item => item.name === productName);
     if (!p) return false;

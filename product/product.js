@@ -158,16 +158,7 @@ window.loadProductTab = function() {
                                         </div>
                                 `;
                             } else if (typeof item.price === 'number') {
-                                const costVal = item.rawProduct && item.rawProduct.unitCost !== undefined ? Number(item.rawProduct.unitCost) : 0;
-                                const profit = item.price - costVal;
-                                
-                                let payout = 0;
-                                if (item.rawProduct && item.rawProduct.isCustom && item.rawProduct.customPayoutType === 'flat') {
-                                    payout = Number(item.rawProduct.customPayoutRate) || 0;
-                                } else {
-                                    payout = Math.max(0, profit) * (currentRate / 100);
-                                }
-                                
+                                const payout = item.price * (currentRate / 100);
                                 const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
                                 payoutHTML = payoutEnabled ? `
                                         <div class="product-info-right">

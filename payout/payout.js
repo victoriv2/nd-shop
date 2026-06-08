@@ -1886,3 +1886,12 @@ if (window.realtimeSync) {
         }
     });
 }
+
+window.addEventListener('nd_sync_complete', () => {
+    if (typeof window.refreshPayouts === 'function') {
+        const container = document.getElementById('payout-container');
+        if (container && container.style.display !== 'none') {
+            window.refreshPayouts();
+        }
+    }
+});
