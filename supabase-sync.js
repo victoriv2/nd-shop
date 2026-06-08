@@ -336,20 +336,82 @@
     // Start initialization
     initSync();
     
+    function applyServerDelta(table, operations) {
+        let localKey = null;
+        for (const [key, t] of Object.entries(TABLES_TO_SYNC)) {
+            if (t === table) { localKey = key; break; }
+        }
+        
+        if (!localKey && table === 'admin_settings') {
+            operations.forEach(op => {
+                if (op.type === 'INSERT' || op.type === 'UPDATE') {
+                    if (op.data && op.data.id) {
+                        const key = op.data.id;
+                        const val = typeof op.data.value === 'object' ? JSON.stringify(op.data.value) : String(op.data.value ?? '');
+                        nativeSetItem.call(localStorage, key, val);
+                        stateCache[key] = val;
+                    }
+                } else if (op.type === 'DELETE') {
+                    localStorage.removeItem(op.id);
+                    delete stateCache[op.id];
+                }
+            });
+            window.dispatchEvent(new Event('nd_sync_complete'));
+            return;
+        }
+
+        if (!localKey) return;
+
+        let currentList = [];
+        try {
+            currentList = JSON.parse(localStorage.getItem(localKey) || '[]');
+        } catch(e) {}
+
+        let changed = false;
+        operations.forEach(op => {
+            if (op.type === 'INSERT' || op.type === 'UPDATE') {
+                const idx = currentList.findIndex(item => item.id === op.data.id);
+                if (idx !== -1) {
+                    currentList[idx] = op.data;
+                } else {
+                    currentList.push(op.data);
+                }
+                changed = true;
+            } else if (op.type === 'DELETE') {
+                const oldLen = currentList.length;
+                currentList = currentList.filter(item => item.id !== op.id);
+                if (currentList.length !== oldLen) changed = true;
+            }
+        });
+
+        if (changed) {
+            nativeSetItem.call(localStorage, localKey, JSON.stringify(currentList));
+            stateCache[localKey] = currentList;
+            window.dispatchEvent(new Event('nd_sync_complete'));
+        }
+    }
+
     // Connect to SSE for instant updates
     function connectSSE() {
         if (!window.API_BASE) return;
         try {
             const eventSource = new EventSource(`${window.API_BASE}/api/stream`);
+            eventSource.onopen = () => {
+                // Ensure we are fully synced upon connection (catches missed updates while disconnected)
+                initSync();
+            };
             eventSource.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
                     if (data.type === 'sync') {
-                        // Debounce slightly to prevent API spam if multiple changes happen instantly
-                        if (window._syncDebounce) clearTimeout(window._syncDebounce);
-                        window._syncDebounce = setTimeout(() => {
-                            initSync();
-                        }, 200);
+                        if (data.payload && data.payload.table && data.payload.operations) {
+                            applyServerDelta(data.payload.table, data.payload.operations);
+                        } else {
+                            if (window._syncDebounce) clearTimeout(window._syncDebounce);
+                            window._syncDebounce = setTimeout(() => {
+                                initSync();
+                            }, 200);
+                        }
                     }
                 } catch (e) {}
             };
@@ -363,9 +425,6 @@
     }
     
     connectSSE();
-    
-    // Keep a slower background poll as a safety net (10 seconds instead of 3)
-    setInterval(initSync, 10000);
     
     // Listen for storage changes from other tabs to keep stateCache in sync
     window.addEventListener('storage', (e) => {

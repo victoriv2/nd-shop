@@ -102,10 +102,11 @@ app.get('/api/stream', (req, res) => {
     });
 });
 
-const broadcastSyncTrigger = () => {
+const broadcastSyncTrigger = (payload = null) => {
+    const message = payload ? JSON.stringify({ type: 'sync', payload }) : JSON.stringify({ type: 'sync' });
     for (const client of sseClients) {
         try {
-            client.write('data: {"type":"sync"}\n\n');
+            client.write(`data: ${message}\n\n`);
         } catch (e) {
             sseClients.delete(client);
         }
@@ -659,8 +660,11 @@ app.post('/api/sync/up', authenticateToken, async (req, res) => {
                 key: item.key, value: parsedValue, updated_at: new Date().toISOString()
             }, { onConflict: 'key' });
         }
-        
-        broadcastSyncTrigger(); // Instantly trigger connected clients
+        const operations = updates.map(u => ({
+            type: 'UPDATE',
+            data: { id: u.key, value: typeof u.value === 'object' ? JSON.stringify(u.value) : String(u.value ?? '') }
+        }));
+        broadcastSyncTrigger({ table: 'admin_settings', operations }); // Instantly trigger connected clients with delta
         
         res.json({ success: true, message: 'Sync complete' });
     } catch (err) {
@@ -768,8 +772,8 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
             }
         }
         
-        // Broadcast change so all active frontend users fetch the update instantly
-        broadcastSyncTrigger();
+        // Broadcast change with specific payload so clients can update locally
+        broadcastSyncTrigger({ table, operations });
         
         res.json({ success: true });
     } catch (err) {
