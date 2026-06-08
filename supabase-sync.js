@@ -246,7 +246,7 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout
 
-                const res = await fetch(`${window.API_BASE}/api/sync-items`, {
+                 const res = await fetch(`${window.API_BASE}/api/sync-items`, {
                     method: 'POST',
                     headers,
                     body: JSON.stringify({ table, operations }),
@@ -257,7 +257,14 @@
                 if (data.success) {
                     const itemIds = items.map(item => item.id);
                     let currentQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
-                    currentQueue = currentQueue.filter(item => !itemIds.includes(item.id));
+                    currentQueue = currentQueue.filter(item => {
+                        if (!itemIds.includes(item.id)) return true;
+                        const originalItem = items.find(x => x.id === item.id);
+                        if (originalItem && item.timestamp > originalItem.timestamp) {
+                            return true;
+                        }
+                        return false;
+                    });
                     localStorage.setItem('nd_sync_retry_queue', JSON.stringify(currentQueue));
                     console.log(`[sync-queue] Successfully synced ${operations.length} pending ops for ${table}`);
                 } else {
@@ -270,6 +277,12 @@
         }
         
         isSyncingQueue = false;
+
+        let freshQueue = [];
+        try { freshQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]'); } catch(e){}
+        if (freshQueue.length > 0) {
+            processSyncQueue();
+        }
     }
 
     // Attempt to process queue when user comes online
