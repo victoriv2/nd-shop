@@ -295,13 +295,11 @@ function initSalesTable() {
                     
                     if (flexVars.length === 0) isAllowed = true;
                     else if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-                } else if (val === 'c3') {
-                    isAllowed = true; // Legacy default
                 }
                 
                 // If there's a toggleWrapper, hide/show it. (Depends on HTML structure)
                 // We mainly care about un-checking the toggle if not allowed
-                if (!isAllowed && toggleCb && toggleCb.checked) {
+                if (!isAllowed && toggleCb) {
                     toggleCb.checked = false;
                     toggleCb.dispatchEvent(new Event('change'));
                 }
@@ -363,8 +361,6 @@ function initSalesTable() {
                     
                     if (flexVars.length === 0) isAllowed = true;
                     else if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-                } else if (val === 'c3') {
-                    isAllowed = true; // Legacy default
                 }
 
                 if (flexCustomPriceContainer) {

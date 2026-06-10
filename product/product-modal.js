@@ -228,8 +228,6 @@ function initProductModalLogic() {
                             }
                             if (isChecked && isAllowed) {
                                 v.flex = true;
-                            } else if (v.variantType === 'c3') {
-                                v.flex = true;
                             } else {
                                 v.flex = false;
                             }
@@ -253,10 +251,29 @@ function initProductModalLogic() {
                 const unitStr = v.unit || `per ${v.title.toLowerCase()}`;
                 
                 const flexToggleWrapper = document.getElementById('pmFlexPriceToggleWrapper');
-                if (flexToggleWrapper && currentProduct.allowUserFlexiblePricing) {
-                    flexToggleWrapper.style.display = 'flex';
-                } else if (flexToggleWrapper) {
-                    flexToggleWrapper.style.display = 'none';
+                if (flexToggleWrapper) {
+                    // Only show toggle if this specific variant is allowed to be flexible
+                    let variantIsFlexible = false;
+                    if (currentProduct.allowUserFlexiblePricing) {
+                        const flexVars = currentProduct.flexibleVariants || [];
+                        if (flexVars.length === 0) variantIsFlexible = true;
+                        else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) variantIsFlexible = true;
+                    }
+                    if (variantIsFlexible) {
+                        flexToggleWrapper.style.display = 'flex';
+                    } else {
+                        // Hide and reset the toggle when the variant isn't flexible
+                        flexToggleWrapper.style.display = 'none';
+                        if (flexToggleInput && flexToggleInput.checked) {
+                            flexToggleInput.checked = false;
+                            const slider = document.getElementById('pmFlexPriceSlider');
+                            const knob = document.getElementById('pmFlexPriceKnob');
+                            if (slider) slider.style.backgroundColor = '#cbd5e1';
+                            if (knob) knob.style.left = '4px';
+                            // Force flex off for this variant
+                            v.flex = false;
+                        }
+                    }
                 }
                 
                 let displayName = currentProduct.name || (productCard.querySelector('.product-name') ? productCard.querySelector('.product-name').textContent : '');
@@ -372,10 +389,6 @@ function initProductModalLogic() {
                                             v.flex = true;
                                         } else {
                                             v.flex = false;
-                                            if (!isAllowed && flexToggleInput && flexToggleInput.checked) {
-                                                flexToggleInput.checked = false;
-                                                flexToggleInput.dispatchEvent(new Event('change'));
-                                            }
                                         }
                                     } else {
                                         v.flex = false;

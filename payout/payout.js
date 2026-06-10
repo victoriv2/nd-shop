@@ -1006,18 +1006,13 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 
                 if (flexVars.length === 0) isAllowed = true;
                 else if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-            } else if (val === 'c3') {
-                isAllowed = true;
             }
 
             if (isAllowed) {
                 if (toggleWrapper) toggleWrapper.style.display = 'flex';
             } else {
                 if (toggleWrapper) toggleWrapper.style.display = 'none';
-                if (toggleCb && toggleCb.checked) {
-                    toggleCb.checked = false;
-                    toggleCb.dispatchEvent(new Event('change'));
-                }
+                if (toggleCb) toggleCb.checked = false;
             }
             if (customPriceContainer) {
                 customPriceContainer.style.display = (toggleCb && toggleCb.checked) ? 'block' : 'none';

@@ -150,18 +150,13 @@ function _initPayoutPurchaseLogic(modal) {
                 
                 if (flexVars.length === 0) isAllowed = true;
                 else if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-            } else if (val === 'c3') {
-                isAllowed = true; // Legacy default
             }
 
             if (isAllowed) {
                 if (toggleWrapper) toggleWrapper.style.display = 'flex';
             } else {
                 if (toggleWrapper) toggleWrapper.style.display = 'none';
-                if (toggleCb && toggleCb.checked) {
-                    toggleCb.checked = false;
-                    toggleCb.dispatchEvent(new Event('change'));
-                }
+                if (toggleCb) toggleCb.checked = false; // Turn off toggle if not allowed
             }
             if (customPriceContainer) {
                 customPriceContainer.style.display = (toggleCb && toggleCb.checked) ? 'block' : 'none';
@@ -1453,6 +1448,38 @@ function initPPToggles() {
                 const cFixed = t.cFixed ? document.getElementById(t.cFixed) : null;
                 const cFlex = document.getElementById(t.cFlex);
                 const cVar = t.cVar ? document.getElementById(t.cVar) : null;
+
+                // If there's a variant container, check if the selected variant is actually flexible
+                if (this.checked && cVar && t.radioName) {
+                    const checkedRadio = cVar.querySelector(`input[name="${t.radioName}"]:checked`);
+                    if (checkedRadio) {
+                        const val = checkedRadio.value;
+                        // Try to find the selected product for spec/flex tabs
+                        let selectedProduct = null;
+                        let inventoryKey = null;
+                        if (t.id === 'ppSpecFlexToggle') {
+                            const sel = document.getElementById('ppSpecItemSelect');
+                            if (sel && typeof specialInventory !== 'undefined') selectedProduct = specialInventory.find(p => p.name === sel.value);
+                        } else if (t.id === 'ppFlexFlexToggle') {
+                            const sel = document.getElementById('ppFlexItemSelect');
+                            if (sel && typeof flexInventory !== 'undefined') selectedProduct = flexInventory.find(p => p.name === sel.value);
+                        }
+                        if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
+                            const flexVars = selectedProduct.flexibleVariants || [];
+                            const pt = selectedProduct.packTypes || {};
+                            let title = '';
+                            if (val === 'c1') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
+                            else if (val === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
+                            else if (val === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
+                            const isAllowed = flexVars.length === 0 || flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')));
+                            if (!isAllowed) {
+                                // Prevent toggle from turning on for non-flexible variant
+                                this.checked = false;
+                                return;
+                            }
+                        }
+                    }
+                }
 
                 if (this.checked) {
                     if (bg) bg.style.backgroundColor = '#f0abfc';
