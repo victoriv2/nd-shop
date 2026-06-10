@@ -66,6 +66,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    text-align: left;
     padding: 16px 20px;
     border-radius: 12px;
     background-color: transparent;
@@ -78,6 +79,12 @@
     font-family: inherit;
     transition: all 0.2s ease;
     -webkit-tap-highlight-color: transparent;
+}
+
+.btn-text {
+    flex: 1;
+    text-align: left;
+    margin-right: 15px;
 }
 
 /* Outline style specified by user */
