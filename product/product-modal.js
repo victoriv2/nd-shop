@@ -245,24 +245,20 @@ function initProductModalLogic() {
             }
 
             function updateModalForVariant(v) {
-                const isFlex = v.flex;
-                basePriceValue = isFlex ? 0 : v.price;
-                baseCostValue = v.cost || 0;
-                const unitStr = v.unit || `per ${v.title.toLowerCase()}`;
-                
+                // === STEP 1: Determine if this variant is allowed to be flexible ===
                 const flexToggleWrapper = document.getElementById('pmFlexPriceToggleWrapper');
+                let variantIsFlexible = false;
+                if (currentProduct.allowUserFlexiblePricing) {
+                    const flexVars = currentProduct.flexibleVariants || [];
+                    if (flexVars.length === 0) variantIsFlexible = true;
+                    else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) variantIsFlexible = true;
+                }
+
                 if (flexToggleWrapper) {
-                    // Only show toggle if this specific variant is allowed to be flexible
-                    let variantIsFlexible = false;
-                    if (currentProduct.allowUserFlexiblePricing) {
-                        const flexVars = currentProduct.flexibleVariants || [];
-                        if (flexVars.length === 0) variantIsFlexible = true;
-                        else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) variantIsFlexible = true;
-                    }
                     if (variantIsFlexible) {
                         flexToggleWrapper.style.display = 'flex';
                     } else {
-                        // Hide and reset the toggle when the variant isn't flexible
+                        // Hide toggle and force it OFF for non-flexible variants
                         flexToggleWrapper.style.display = 'none';
                         if (flexToggleInput && flexToggleInput.checked) {
                             flexToggleInput.checked = false;
@@ -270,11 +266,17 @@ function initProductModalLogic() {
                             const knob = document.getElementById('pmFlexPriceKnob');
                             if (slider) slider.style.backgroundColor = '#cbd5e1';
                             if (knob) knob.style.left = '4px';
-                            // Force flex off for this variant
-                            v.flex = false;
                         }
+                        // Always force flex off for non-flexible variants regardless of toggle state
+                        v.flex = false;
                     }
                 }
+
+                // === STEP 2: NOW capture isFlex after the above may have reset v.flex ===
+                const isFlex = v.flex;
+                basePriceValue = isFlex ? 0 : v.price;
+                baseCostValue = v.cost || 0;
+                const unitStr = v.unit || `per ${v.title.toLowerCase()}`;
                 
                 let displayName = currentProduct.name || (productCard.querySelector('.product-name') ? productCard.querySelector('.product-name').textContent : '');
                 if (v.title !== 'Default') {
