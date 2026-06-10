@@ -372,6 +372,10 @@ function initProductModalLogic() {
                                             v.flex = true;
                                         } else {
                                             v.flex = false;
+                                            if (!isAllowed && flexToggleInput && flexToggleInput.checked) {
+                                                flexToggleInput.checked = false;
+                                                flexToggleInput.dispatchEvent(new Event('change'));
+                                            }
                                         }
                                     } else {
                                         v.flex = false;

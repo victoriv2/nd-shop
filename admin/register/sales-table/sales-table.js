@@ -301,7 +301,7 @@ function initSalesTable() {
                 
                 // If there's a toggleWrapper, hide/show it. (Depends on HTML structure)
                 // We mainly care about un-checking the toggle if not allowed
-                if (!isAllowed && toggleCb) {
+                if (!isAllowed && toggleCb && toggleCb.checked) {
                     toggleCb.checked = false;
                     toggleCb.dispatchEvent(new Event('change'));
                 }

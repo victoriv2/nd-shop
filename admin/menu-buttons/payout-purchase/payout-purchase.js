@@ -158,7 +158,10 @@ function _initPayoutPurchaseLogic(modal) {
                 if (toggleWrapper) toggleWrapper.style.display = 'flex';
             } else {
                 if (toggleWrapper) toggleWrapper.style.display = 'none';
-                if (toggleCb) toggleCb.checked = false; // Turn off toggle if not allowed
+                if (toggleCb && toggleCb.checked) {
+                    toggleCb.checked = false;
+                    toggleCb.dispatchEvent(new Event('change'));
+                }
             }
             if (customPriceContainer) {
                 customPriceContainer.style.display = (toggleCb && toggleCb.checked) ? 'block' : 'none';
