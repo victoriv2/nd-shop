@@ -293,8 +293,7 @@ function initSalesTable() {
                     else if (val === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
                     else if (val === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
                     
-                    if (flexVars.length === 0) isAllowed = true;
-                    else if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
+                    if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
                 }
                 
                 // If there's a toggleWrapper, hide/show it. (Depends on HTML structure)
@@ -359,8 +358,7 @@ function initSalesTable() {
                     else if (val === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
                     else if (val === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
                     
-                    if (flexVars.length === 0) isAllowed = true;
-                    else if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
+                    if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
                 }
 
                 if (flexCustomPriceContainer) {

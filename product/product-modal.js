@@ -217,18 +217,26 @@ function initProductModalLogic() {
                     }
                     
                     const flexVars = currentProduct.flexibleVariants || [];
+                    
+                    let isAllowed = false;
+                    if (currentProduct.allowUserFlexiblePricing) {
+                        const vTitle = currentVariants[selectedIdx].title;
+                        if (flexVars.includes(vTitle) || (vTitle === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
+                            isAllowed = true;
+                        }
+                    }
+
+                    if (isChecked && !isAllowed) {
+                        // FORCE THE RESTRICTION: Do not allow toggle to turn on!
+                        e.target.checked = false;
+                        if (slider) slider.style.backgroundColor = '#cbd5e1';
+                        if (knob) knob.style.left = '4px';
+                        return;
+                    }
+
                     currentVariants.forEach((v, i) => {
-                        if (i === selectedIdx) {
-                            let isAllowed = false;
-                            if (currentProduct.allowUserFlexiblePricing) {
-                                if (flexVars.length === 0) isAllowed = true;
-                                else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-                            }
-                            if (isChecked && isAllowed) {
-                                v.flex = true;
-                            } else {
-                                v.flex = false;
-                            }
+                        if (i === selectedIdx && isChecked && isAllowed) {
+                            v.flex = true;
                         } else {
                             v.flex = false;
                         }
@@ -247,8 +255,9 @@ function initProductModalLogic() {
                 const flexVars = currentProduct.flexibleVariants || [];
                 let variantIsFlexible = false;
                 if (currentProduct.allowUserFlexiblePricing) {
-                    if (flexVars.length === 0) variantIsFlexible = true;
-                    else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) variantIsFlexible = true;
+                    if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
+                        variantIsFlexible = true;
+                    }
                 }
 
                 // If this variant is NOT flexible, force its flex state off
@@ -387,8 +396,9 @@ function initProductModalLogic() {
                                     if (idx === newSelectedIdx) {
                                         let isAllowed = false;
                                         if (currentProduct.allowUserFlexiblePricing) {
-                                            if (flexVars.length === 0) isAllowed = true;
-                                            else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
+                                            if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
+                                                isAllowed = true;
+                                            }
                                         }
                                         if (isChecked && isAllowed) {
                                             v.flex = true;
