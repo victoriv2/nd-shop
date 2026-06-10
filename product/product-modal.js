@@ -370,8 +370,6 @@ function initProductModalLogic() {
                                         }
                                         if (isChecked && isAllowed) {
                                             v.flex = true;
-                                        } else if (v.variantType === 'c3') {
-                                            v.flex = true;
                                         } else {
                                             v.flex = false;
                                         }
@@ -437,11 +435,7 @@ function initProductModalLogic() {
                             if (flexVars.length === 0) isAllowed = true;
                             else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
                         }
-                        if (v.variantType === 'c3') {
-                            v.flex = true;
-                        } else {
-                            v.flex = false;
-                        }
+                        v.flex = false; // Initially toggle is OFF, so flex is false
                     } else {
                         v.flex = false;
                     }

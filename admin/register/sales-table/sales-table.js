@@ -264,8 +264,6 @@ function initSalesTable() {
     // Visual feedback for Special Variant selection
     document.querySelectorAll('.spec-variant-label').forEach(label => {
         label.addEventListener('click', function() {
-            // Wait a tick for the radio to be checked natively if needed, but not strictly required
-            // We just update the styling of all labels based on selection
             document.querySelectorAll('.spec-variant-label').forEach(l => {
                 l.style.borderColor = '#bfdbfe';
                 l.style.borderWidth = '1px';
@@ -275,11 +273,40 @@ function initSalesTable() {
             this.style.borderWidth = '2px';
             this.style.background = '#f0f4f8';
             
-            // Also ensure the native radio inside is actually checked securely
             const radio = this.querySelector('input[type="radio"]');
             if(radio) {
                 radio.checked = true;
-                const isFlexibleChecked = document.getElementById('specFlexiblePriceToggle')?.checked || false;
+                const val = radio.value;
+                const specItemSelect = document.getElementById('specItemSelect');
+                const selectedProduct = specialInventory.find(p => p.name === (specItemSelect ? specItemSelect.value : ''));
+                
+                const toggleCb = document.getElementById('specFlexiblePriceToggle');
+                const toggleWrapper = document.getElementById('specFlexiblePriceToggle')?.closest('.toggle-wrapper') || document.getElementById('specFlexToggleWrapper'); // Ensure correct wrapper ID
+                const customPriceGroup = document.getElementById('specCustomPriceGroup');
+                
+                let isAllowed = false;
+                if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
+                    const flexVars = selectedProduct.flexibleVariants || [];
+                    const pt = selectedProduct.packTypes || {};
+                    let title = '';
+                    if (val === 'c1') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
+                    else if (val === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
+                    else if (val === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
+                    
+                    if (flexVars.length === 0) isAllowed = true;
+                    else if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
+                } else if (val === 'c3') {
+                    isAllowed = true; // Legacy default
+                }
+                
+                // If there's a toggleWrapper, hide/show it. (Depends on HTML structure)
+                // We mainly care about un-checking the toggle if not allowed
+                if (!isAllowed && toggleCb) {
+                    toggleCb.checked = false;
+                    toggleCb.dispatchEvent(new Event('change'));
+                }
+
+                const isFlexibleChecked = toggleCb?.checked || false;
                 if (typeof window.updateVariantPricesVisibility === 'function') {
                     window.updateVariantPricesVisibility(document.getElementById('specVariantContainer'), 'specVariant', isFlexibleChecked);
                 }
@@ -321,13 +348,31 @@ function initSalesTable() {
             const radio = this.querySelector('input[type="radio"]');
             if(radio) {
                 radio.checked = true;
-                // Cut to all 3 containers: always show custom price container
-                if (flexCustomPriceContainer) flexCustomPriceContainer.style.display = 'block';
+                const val = radio.value;
+                const flexItemSelect = document.getElementById('flexItemSelect');
+                const selectedProduct = flexInventory.find(p => p.name === (flexItemSelect ? flexItemSelect.value : ''));
+                
+                let isAllowed = false;
+                if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
+                    const flexVars = selectedProduct.flexibleVariants || [];
+                    const pt = selectedProduct.packTypes || {};
+                    let title = '';
+                    if (val === 'c1') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
+                    else if (val === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
+                    else if (val === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
+                    
+                    if (flexVars.length === 0) isAllowed = true;
+                    else if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
+                } else if (val === 'c3') {
+                    isAllowed = true; // Legacy default
+                }
+
+                if (flexCustomPriceContainer) {
+                    flexCustomPriceContainer.style.display = isAllowed ? 'block' : 'none';
+                }
                 if (flexItemPrice) {
-                    flexItemPrice.required = true;
+                    flexItemPrice.required = isAllowed;
                     // Pre-fill the price input with the variant's pre-set price if it exists
-                    const val = radio.value;
-                    const selectedProduct = flexInventory.find(p => p.name === flexItemSelect.value);
                     if (selectedProduct) {
                         const pt = selectedProduct.packTypes || {};
                         const presetPrice = (pt[val] || {}).price || (val === 'c1' ? selectedProduct.price : 0);

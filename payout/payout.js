@@ -969,81 +969,87 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
     const urpFlexCustomPriceContainer = modal.querySelector('#urpFlexCustomPriceContainer');
     const urpFlexItemPrice = modal.querySelector('#urpFlexItemPrice');
 
-    // Visual feedback for Special Variant selection
-    modal.querySelectorAll('.urp-spec-variant-label').forEach(label => {
-        label.addEventListener('click', function() {
-            modal.querySelectorAll('.urp-spec-variant-label').forEach(l => {
-                l.style.borderColor = '#bfdbfe';
-                l.style.borderWidth = '1px';
-                l.style.background = 'white';
-            });
-            this.style.borderColor = '#6366f1';
-            this.style.borderWidth = '2px';
-            this.style.background = '#f0f4f8';
+    function handleUrpVariantClick(label, isSpec) {
+        label.parentNode.querySelectorAll(isSpec ? '.urp-spec-variant-label' : '.urp-flex-variant-label').forEach(l => {
+            l.style.borderColor = '#bfdbfe';
+            l.style.borderWidth = '1px';
+            l.style.background = 'white';
+        });
+        label.style.borderColor = '#6366f1';
+        label.style.borderWidth = '2px';
+        label.style.background = '#f0f4f8';
+        
+        const radio = label.querySelector('input[type="radio"]');
+        if(radio) {
+            radio.checked = true;
+            const val = radio.value;
             
-            const radio = this.querySelector('input[type="radio"]');
-            if(radio) {
-                radio.checked = true;
-                const isFlexibleChecked = document.getElementById('urpSpecFlexToggle')?.checked || false;
-                if (typeof window.updateVariantPricesVisibility === 'function') {
-                    window.updateVariantPricesVisibility(document.getElementById('urpSpecVariantContainer'), 'urpSpecVariant', isFlexibleChecked);
+            const urpSpecItemSelect = modal.querySelector('#urpSpecItemSelect');
+            const urpFlexItemSelect = modal.querySelector('#urpFlexItemSelect');
+            const selectedProduct = isSpec 
+                ? specialInventory.find(p => p.name === (urpSpecItemSelect ? urpSpecItemSelect.value : '')) 
+                : flexInventory.find(p => p.name === (urpFlexItemSelect ? urpFlexItemSelect.value : ''));
+
+            const toggleCb = modal.querySelector(isSpec ? '#urpSpecFlexToggle' : '#urpFlexFlexToggle');
+            const toggleWrapper = modal.querySelector(isSpec ? '#urpSpecFlexToggleWrapper' : '#urpFlexFlexPriceToggleWrapper');
+            const customPriceContainer = modal.querySelector(isSpec ? '#urpSpecFlexPriceContainer' : '#urpFlexCustomPriceContainer');
+            const itemPriceInput = modal.querySelector(isSpec ? '#urpSpecItemPrice' : '#urpFlexItemPrice');
+
+            let isAllowed = false;
+            if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
+                const flexVars = selectedProduct.flexibleVariants || [];
+                const pt = selectedProduct.packTypes || {};
+                let title = '';
+                if (val === 'c1') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
+                else if (val === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
+                else if (val === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
+                
+                if (flexVars.length === 0) isAllowed = true;
+                else if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
+            } else if (val === 'c3') {
+                isAllowed = true;
+            }
+
+            if (isAllowed) {
+                if (toggleWrapper) toggleWrapper.style.display = 'flex';
+            } else {
+                if (toggleWrapper) toggleWrapper.style.display = 'none';
+                if (toggleCb) toggleCb.checked = false;
+            }
+            if (customPriceContainer) {
+                customPriceContainer.style.display = (toggleCb && toggleCb.checked) ? 'block' : 'none';
+            }
+
+            if (itemPriceInput) {
+                itemPriceInput.required = true;
+                if (selectedProduct) {
+                    const pt = selectedProduct.packTypes || {};
+                    const presetPrice = (pt[val] || {}).price || (val === 'c1' ? selectedProduct.price : 0);
+                    itemPriceInput.value = presetPrice || '';
+                } else {
+                    itemPriceInput.value = '';
                 }
             }
-        });
+
+            const isFlexibleChecked = toggleCb?.checked || false;
+            if (typeof window.updateVariantPricesVisibility === 'function') {
+                window.updateVariantPricesVisibility(
+                    modal.querySelector(isSpec ? '#urpSpecVariantContainer' : '#urpFlexVariantContainer'), 
+                    isSpec ? 'urpSpecVariant' : 'urpFlexVariant', 
+                    isFlexibleChecked
+                );
+            }
+        }
+    }
+
+    // Visual feedback for Special Variant selection
+    modal.querySelectorAll('.urp-spec-variant-label').forEach(label => {
+        label.addEventListener('click', function() { handleUrpVariantClick(this, true); });
     });
 
     // Visual feedback for Flex Variant selection
     modal.querySelectorAll('.urp-flex-variant-label').forEach(label => {
-        label.addEventListener('click', function() {
-            modal.querySelectorAll('.urp-flex-variant-label').forEach(l => {
-                l.style.borderColor = '#bfdbfe';
-                l.style.borderWidth = '1px';
-                l.style.background = 'white';
-            });
-            this.style.borderColor = '#6366f1';
-            this.style.borderWidth = '2px';
-            this.style.background = '#f0f4f8';
-            
-            const radio = this.querySelector('input[type="radio"]');
-            if(radio) {
-                radio.checked = true;
-                const val = radio.value;
-                const selectedProduct = flexInventory.find(p => p.name === urpFlexItemSelect.value);
-                if (val === 'c3') {
-                    if (urpFlexCustomPriceContainer) urpFlexCustomPriceContainer.style.display = 'block';
-                    const toggleWrapper = modal.querySelector('#urpFlexFlexPriceToggleWrapper');
-                    if (toggleWrapper) toggleWrapper.style.display = 'none';
-                } else {
-                    const toggleWrapper = modal.querySelector('#urpFlexFlexPriceToggleWrapper');
-                    if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
-                        if (toggleWrapper) toggleWrapper.style.display = 'flex';
-                    } else {
-                        if (toggleWrapper) toggleWrapper.style.display = 'none';
-                    }
-                    const toggleCb = modal.querySelector('#urpFlexFlexToggle');
-                    if (urpFlexCustomPriceContainer) {
-                        urpFlexCustomPriceContainer.style.display = (toggleCb && toggleCb.checked) ? 'block' : 'none';
-                    }
-                }
-                if (urpFlexItemPrice) {
-                    urpFlexItemPrice.required = true;
-                    // Pre-fill the price input with the variant's pre-set price if it exists
-                    const val = radio.value;
-                    const selectedProduct = flexInventory.find(p => p.name === urpFlexItemSelect.value);
-                    if (selectedProduct) {
-                        const pt = selectedProduct.packTypes || {};
-                        const presetPrice = (pt[val] || {}).price || (val === 'c1' ? selectedProduct.price : 0);
-                        urpFlexItemPrice.value = presetPrice || '';
-                    } else {
-                        urpFlexItemPrice.value = '';
-                    }
-                }
-                const isFlexibleChecked = document.getElementById('urpFlexFlexToggle')?.checked || false;
-                if (typeof window.updateVariantPricesVisibility === 'function') {
-                    window.updateVariantPricesVisibility(document.getElementById('urpFlexVariantContainer'), 'urpFlexVariant', isFlexibleChecked);
-                }
-            }
-        });
+        label.addEventListener('click', function() { handleUrpVariantClick(this, false); });
     });
 
     // Tab Logic
