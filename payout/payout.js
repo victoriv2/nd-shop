@@ -880,12 +880,120 @@ function closeUserRewardPurchaseModal() {
 }
 
 
+function syncUrpFlexUI(tabType) {
+    const modal = document.getElementById('userRewardPurchaseModal') || document;
+    let inventory = [];
+    let selectId = '';
+    let radioName = '';
+    let containerId = '';
+    let toggleId = '';
+    let wrapperId = '';
+    let flexContainerId = '';
+
+    if (tabType === 'spec') {
+        const inventoryRaw = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+        inventory = inventoryRaw.filter(p => p.isSpecial && !p.isDeleted && !(p.isHidden || p.cleared));
+        selectId = 'urpSpecItemSelect';
+        radioName = 'urpSpecVariant';
+        containerId = 'urpSpecVariantContainer';
+        toggleId = 'urpSpecFlexToggle';
+        wrapperId = 'urpSpecFlexPriceToggleWrapper';
+        flexContainerId = 'urpSpecFlexPriceContainer';
+    } else if (tabType === 'flex') {
+        const inventoryRaw = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+        inventory = inventoryRaw.filter(p => p.isFlexible && !p.isSpecial && !p.isDeleted && !(p.isHidden || p.cleared));
+        selectId = 'urpFlexItemSelect';
+        radioName = 'urpFlexVariant';
+        containerId = 'urpFlexVariantContainer';
+        toggleId = 'urpFlexFlexToggle';
+        wrapperId = 'urpFlexFlexPriceToggleWrapper';
+        flexContainerId = 'urpFlexCustomPriceContainer';
+    } else if (tabType === 'existing') {
+        const inventoryRaw = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+        inventory = inventoryRaw.filter(p => !p.isSpecial && !p.isCustom && !p.isFlexible && !p.isDeleted && !(p.isHidden || p.cleared));
+        if (inventory.length === 0) inventory = inventoryRaw.filter(p => !p.isDeleted && !(p.isHidden || p.cleared) && !p.isSpecial && !p.isCustom && !p.isFlexible);
+        selectId = 'urpExistingItemSelect';
+        radioName = 'urpDefaultVariant';
+        containerId = 'urpDefaultVariantContainer';
+        toggleId = 'urpExistingFlexToggle';
+        wrapperId = 'urpExistingFlexPriceToggleWrapper';
+        flexContainerId = 'urpExistingFlexPriceContainer';
+    } else if (tabType === 'custom') {
+        const inventoryRaw = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+        inventory = inventoryRaw.filter(p => p.isCustom && !p.isDeleted && !(p.isHidden || p.cleared));
+        selectId = 'urpCustomItemSelect';
+        radioName = '';
+        containerId = '';
+        toggleId = 'urpCustomFlexToggle';
+        wrapperId = 'urpCustomFlexPriceToggleWrapper';
+        flexContainerId = 'urpCustomFlexPriceContainer';
+    }
+
+    const selectEl = modal.querySelector('#' + selectId);
+    const selectedProductName = selectEl ? selectEl.value : '';
+    const selectedProduct = inventory.find(p => p.name === selectedProductName);
+
+    const toggleCb = modal.querySelector('#' + toggleId);
+    const toggleWrapper = modal.querySelector('#' + wrapperId);
+    const customPriceContainer = modal.querySelector('#' + flexContainerId);
+
+    if (!selectedProduct) {
+        if (toggleWrapper) toggleWrapper.style.display = 'none';
+        if (customPriceContainer) customPriceContainer.style.display = 'none';
+        return;
+    }
+
+    const productAllowsFlex = !!selectedProduct.allowUserFlexiblePricing;
+    if (toggleWrapper) {
+        toggleWrapper.style.display = productAllowsFlex ? 'flex' : 'none';
+    }
+
+    let isAllowed = false;
+    if (productAllowsFlex) {
+        if (!radioName) {
+            isAllowed = true;
+        } else {
+            const checkedRadio = modal.querySelector(`input[name="${radioName}"]:checked`);
+            const val = checkedRadio ? checkedRadio.value : '';
+            const flexVars = selectedProduct.flexibleVariants || [];
+            const pt = selectedProduct.packTypes || {};
+            let title = '';
+
+            if (tabType === 'existing') {
+                title = val === 'wholesale' ? (selectedProduct.bulkUnit || 'Carton') : (selectedProduct.unit || 'Piece');
+            } else {
+                if (val === 'c1' || val === 'bag') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
+                else if (val === 'c2' || val === 'custard') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
+                else if (val === 'c3' || val === 'cup') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
+            }
+
+            if (title && (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default ('))))) {
+                isAllowed = true;
+            }
+        }
+    }
+
+    const toggleChecked = toggleCb && toggleCb.checked;
+    const showFlexibleInput = productAllowsFlex && toggleChecked && isAllowed;
+
+    if (customPriceContainer) {
+        customPriceContainer.style.display = showFlexibleInput ? 'block' : 'none';
+    }
+
+    if (containerId && radioName) {
+        const containerEl = modal.querySelector('#' + containerId);
+        if (typeof window.updateVariantPricesVisibility === 'function') {
+            window.updateVariantPricesVisibility(containerEl, radioName, showFlexibleInput);
+        }
+    }
+}
+
 function initURPToggles() {
     const toggles = [
-        { id: 'urpExistingFlexToggle', cFixed: 'urpExistingPriceContainer', cVar: 'urpDefaultVariantContainer', radioName: 'urpDefaultVariant', cFlex: 'urpExistingFlexPriceContainer' },
-        { id: 'urpSpecFlexToggle', cFixed: null, cVar: 'urpSpecVariantContainer', radioName: 'urpSpecVariant', cFlex: 'urpSpecFlexPriceContainer' },
-        { id: 'urpCustomFlexToggle', cFixed: 'urpCustomPriceContainer', cVar: null, radioName: null, cFlex: 'urpCustomFlexPriceContainer' },
-        { id: 'urpFlexFlexToggle', cFixed: null, cVar: 'urpFlexVariantContainer', radioName: 'urpFlexVariant', cFlex: 'urpFlexCustomPriceContainer' }
+        { id: 'urpExistingFlexToggle', tab: 'existing' },
+        { id: 'urpSpecFlexToggle', tab: 'spec' },
+        { id: 'urpCustomFlexToggle', tab: 'custom' },
+        { id: 'urpFlexFlexToggle', tab: 'flex' }
     ];
 
     toggles.forEach(t => {
@@ -894,38 +1002,15 @@ function initURPToggles() {
             toggle.addEventListener('change', function() {
                 const bg = document.getElementById(t.id + 'Bg');
                 const knob = document.getElementById(t.id + 'Knob');
-                const cFixed = t.cFixed ? document.getElementById(t.cFixed) : null;
-                const cFlex = document.getElementById(t.cFlex);
-                const cVar = t.cVar ? document.getElementById(t.cVar) : null;
 
                 if (this.checked) {
                     if (bg) bg.style.backgroundColor = '#f0abfc';
                     if (knob) knob.style.transform = 'translateX(20px)';
-                    if (cFixed) cFixed.style.display = 'none';
-                    if (cFlex) cFlex.style.display = 'block';
-                    if (cVar) {
-                        cVar.style.display = 'block';
-                        if (t.radioName && typeof window.updateVariantPricesVisibility === 'function') {
-                            window.updateVariantPricesVisibility(cVar, t.radioName, true);
-                        } else {
-                            cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = 'none');
-                        }
-                        cVar.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
-                    }
                 } else {
                     if (bg) bg.style.backgroundColor = '#e2e8f0';
                     if (knob) knob.style.transform = 'translateX(0)';
-                    if (cFixed) cFixed.style.display = 'block';
-                    if (cFlex) cFlex.style.display = 'none';
-                    if (cVar) {
-                        if (t.radioName && typeof window.updateVariantPricesVisibility === 'function') {
-                            window.updateVariantPricesVisibility(cVar, t.radioName, false);
-                        } else {
-                            cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = '');
-                        }
-                        cVar.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
-                    }
                 }
+                syncUrpFlexUI(t.tab);
             });
         }
     });
@@ -990,32 +1075,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 ? specialInventory.find(p => p.name === (urpSpecItemSelect ? urpSpecItemSelect.value : '')) 
                 : flexInventory.find(p => p.name === (urpFlexItemSelect ? urpFlexItemSelect.value : ''));
 
-            const toggleCb = modal.querySelector(isSpec ? '#urpSpecFlexToggle' : '#urpFlexFlexToggle');
-            const toggleWrapper = modal.querySelector(isSpec ? '#urpSpecFlexToggleWrapper' : '#urpFlexFlexPriceToggleWrapper');
-            const customPriceContainer = modal.querySelector(isSpec ? '#urpSpecFlexPriceContainer' : '#urpFlexCustomPriceContainer');
             const itemPriceInput = modal.querySelector(isSpec ? '#urpSpecItemPrice' : '#urpFlexItemPrice');
-
-            let isAllowed = false;
-            if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
-                const flexVars = selectedProduct.flexibleVariants || [];
-                const pt = selectedProduct.packTypes || {};
-                let title = '';
-                if (val === 'c1') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
-                else if (val === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
-                else if (val === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
-                
-                if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-            }
-
-            if (isAllowed) {
-                if (toggleWrapper) toggleWrapper.style.display = 'flex';
-            } else {
-                if (toggleWrapper) toggleWrapper.style.display = 'none';
-                if (toggleCb) toggleCb.checked = false;
-            }
-            if (customPriceContainer) {
-                customPriceContainer.style.display = (toggleCb && toggleCb.checked) ? 'block' : 'none';
-            }
 
             if (itemPriceInput) {
                 itemPriceInput.required = true;
@@ -1028,14 +1088,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 }
             }
 
-            const isFlexibleChecked = toggleCb?.checked || false;
-            if (typeof window.updateVariantPricesVisibility === 'function') {
-                window.updateVariantPricesVisibility(
-                    modal.querySelector(isSpec ? '#urpSpecVariantContainer' : '#urpFlexVariantContainer'), 
-                    isSpec ? 'urpSpecVariant' : 'urpFlexVariant', 
-                    isFlexibleChecked
-                );
-            }
+            syncUrpFlexUI(isSpec ? 'spec' : 'flex');
         }
     }
 
@@ -1107,10 +1160,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                     urpExistingPrice.value = '₦' + formatCurrency(Number(price)) + ' per ' + unitText.toLowerCase();
                     urpExistingPrice.dataset.price = price;
                 }
-                const isFlexibleChecked = document.getElementById('urpExistingFlexToggle')?.checked || false;
-                if (typeof window.updateVariantPricesVisibility === 'function') {
-                    window.updateVariantPricesVisibility(document.getElementById('urpDefaultVariantContainer'), 'urpDefaultVariant', isFlexibleChecked);
-                }
+                syncUrpFlexUI('existing');
             }
         });
     });
@@ -1308,14 +1358,9 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                     const cupTxt = modal.querySelector('#urpSpecVariantCupLabelTxt');
                     if (cupTxt) cupTxt.textContent = (pt.cup || {}).title || 'Container 3';
 
-                    const toggleWrapper = modal.querySelector('#urpSpecFlexPriceToggleWrapper');
-                    if (item.allowUserFlexiblePricing) {
-                        if (toggleWrapper) toggleWrapper.style.display = 'flex';
-                    } else {
-                        if (toggleWrapper) toggleWrapper.style.display = 'none';
-                    }
                     const toggleCb = modal.querySelector('#urpSpecFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
+                    if (toggleCb) { toggleCb.checked = false; }
+                    syncUrpFlexUI('spec');
 
                     const variants = [
                         { val: 'bag', labelId: 'urpSpecVariantBagLabelTxt' },
@@ -1413,14 +1458,9 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                         urpCustomItemPrice.value = '₦' + formatCurrency(Number(priceVal)) + (unitStr ? ' ' + unitStr : '');
                         urpCustomItemPrice.dataset.price = priceVal;
                     }
-                    const toggleWrapper = modal.querySelector('#urpCustomFlexPriceToggleWrapper');
-                    if (item.allowUserFlexiblePricing) {
-                        if (toggleWrapper) toggleWrapper.style.display = 'flex';
-                    } else {
-                        if (toggleWrapper) toggleWrapper.style.display = 'none';
-                    }
                     const toggleCb = modal.querySelector('#urpCustomFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
+                    if (toggleCb) { toggleCb.checked = false; }
+                    syncUrpFlexUI('custom');
                     urpCustomDropdownWrapper.classList.remove('open');
                 });
                 optionsContainer.appendChild(option);
@@ -1488,11 +1528,9 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                     const c3Txt = modal.querySelector('#urpFlexVariantC3LabelTxt');
                     if (c3Txt) c3Txt.textContent = (pt.c3 || {}).title || 'Container 3';
 
-                    if (urpFlexCustomPriceContainer) urpFlexCustomPriceContainer.style.display = 'none';
-                    const toggleWrapper = modal.querySelector('#urpFlexFlexPriceToggleWrapper');
-                    if (toggleWrapper) toggleWrapper.style.display = 'none';
                     const toggleCb = modal.querySelector('#urpFlexFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
+                    if (toggleCb) { toggleCb.checked = false; }
+                    syncUrpFlexUI('flex');
                     if (urpFlexItemPrice) urpFlexItemPrice.value = '';
 
                     const flexVariants = [
@@ -1574,15 +1612,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
         });
         document.addEventListener('click', (e) => {
             if (urpSpecDropdownWrapper.classList.contains('open') && !urpSpecDropdownWrapper.contains(e.target)) {
-                const toggleWrapper = modal.querySelector('#urpSpecFlexPriceToggleWrapper');
-                    if (item.allowUserFlexiblePricing) {
-                        if (toggleWrapper) toggleWrapper.style.display = 'flex';
-                    } else {
-                        if (toggleWrapper) toggleWrapper.style.display = 'none';
-                    }
-                    const toggleCb = modal.querySelector('#urpSpecFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
-                    urpSpecDropdownWrapper.classList.remove('open');
+                urpSpecDropdownWrapper.classList.remove('open');
             }
         });
     }
@@ -1599,15 +1629,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
         });
         document.addEventListener('click', (e) => {
             if (urpCustomDropdownWrapper.classList.contains('open') && !urpCustomDropdownWrapper.contains(e.target)) {
-                const toggleWrapper = modal.querySelector('#urpCustomFlexPriceToggleWrapper');
-                    if (item.allowUserFlexiblePricing) {
-                        if (toggleWrapper) toggleWrapper.style.display = 'flex';
-                    } else {
-                        if (toggleWrapper) toggleWrapper.style.display = 'none';
-                    }
-                    const toggleCb = modal.querySelector('#urpCustomFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
-                    urpCustomDropdownWrapper.classList.remove('open');
+                urpCustomDropdownWrapper.classList.remove('open');
             }
         });
     }
@@ -1648,7 +1670,25 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
         const existingToggle = modal.querySelector('#urpExistingFlexToggle');
         const prodLookup = defaultInventory.find(p => p.name === itemName);
         let isFlexPrice = false;
-        if (prodLookup && prodLookup.allowUserFlexiblePricing && existingToggle && existingToggle.checked) {
+
+        let isVariantAllowed = false;
+        if (prodLookup && prodLookup.allowUserFlexiblePricing) {
+            const urpDefaultVariantContainer = modal.querySelector('#urpDefaultVariantContainer');
+            const hasWholesale = prodLookup.wholesalePrice && Number(prodLookup.wholesalePrice) > 0;
+            if (hasWholesale && urpDefaultVariantContainer && urpDefaultVariantContainer.style.display !== 'none') {
+                const checkedVariant = modal.querySelector('input[name="urpDefaultVariant"]:checked');
+                const variantParam = checkedVariant ? checkedVariant.value : 'retail';
+                const flexVars = prodLookup.flexibleVariants || [];
+                const title = variantParam === 'wholesale' ? (prodLookup.bulkUnit || 'Carton') : (prodLookup.unit || 'Piece');
+                if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
+                    isVariantAllowed = true;
+                }
+            } else {
+                isVariantAllowed = true;
+            }
+        }
+
+        if (prodLookup && prodLookup.allowUserFlexiblePricing && existingToggle && existingToggle.checked && isVariantAllowed) {
             const fPrice = modal.querySelector('#urpExistingFlexPrice').value;
             if(fPrice) { price = fPrice; isFlexPrice = true; }
         }
@@ -1756,7 +1796,22 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
             
             const prodLookup = specialInventory.find(p => p.name === itemName);
             const specToggle = modal.querySelector('#urpSpecFlexToggle');
-            if (prodLookup && prodLookup.allowUserFlexiblePricing && specToggle && specToggle.checked) {
+
+            let isVariantAllowed = false;
+            if (prodLookup && prodLookup.allowUserFlexiblePricing) {
+                const flexVars = prodLookup.flexibleVariants || [];
+                const pt = prodLookup.packTypes || {};
+                let title = '';
+                if (variantKey === 'bag') title = (pt.bag || {}).title || (pt.c1 || {}).title || 'Container 1';
+                else if (variantKey === 'custard') title = (pt.custard || {}).title || (pt.c2 || {}).title || 'Container 2';
+                else if (variantKey === 'cup') title = (pt.cup || {}).title || (pt.c3 || {}).title || 'Container 3';
+                
+                if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
+                    isVariantAllowed = true;
+                }
+            }
+
+            if (prodLookup && prodLookup.allowUserFlexiblePricing && specToggle && specToggle.checked && isVariantAllowed) {
                 const fPrice = modal.querySelector('#urpSpecFlexPrice').value;
                 if (!fPrice) {
                     alert('Please enter a flexible unit price.');
@@ -1874,17 +1929,28 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 return;
             }
             
+            let isVariantAllowed = false;
+            if (prod && prod.allowUserFlexiblePricing) {
+                const flexVars = prod.flexibleVariants || [];
+                const pt = prod.packTypes || {};
+                let title = '';
+                if (variantKey === 'c1') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
+                else if (variantKey === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
+                else if (variantKey === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
+                
+                if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
+                    isVariantAllowed = true;
+                }
+            }
+
             let price = '';
-            if (variantKey === 'c3') {
+            const flexToggle = modal.querySelector('#urpFlexFlexToggle');
+            const isFlexChecked = flexToggle && flexToggle.checked;
+            if (prod && prod.allowUserFlexiblePricing && isFlexChecked && isVariantAllowed) {
                 price = urpFlexItemPrice ? urpFlexItemPrice.value : '';
             } else {
-                const flexToggle = modal.querySelector('#urpFlexFlexToggle');
-                if (prod && prod.allowUserFlexiblePricing && flexToggle && flexToggle.checked) {
-                    price = urpFlexItemPrice ? urpFlexItemPrice.value : '';
-                } else {
-                    const presetPrice = (prod && prod.packTypes && prod.packTypes[variantKey]) ? prod.packTypes[variantKey].price : (variantKey === 'c1' && prod ? prod.price : 0);
-                    price = presetPrice;
-                }
+                const presetPrice = (prod && prod.packTypes && prod.packTypes[variantKey]) ? prod.packTypes[variantKey].price : (variantKey === 'c1' && prod ? prod.price : 0);
+                price = presetPrice;
             }
             if (!price) {
                 alert("Please enter a retail unit price.");

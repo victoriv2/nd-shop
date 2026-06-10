@@ -261,6 +261,58 @@ function initSalesTable() {
     const specVariantCustardPrice = document.getElementById('specVariantCustardPrice');
     const specVariantCupPrice = document.getElementById('specVariantCupPrice');
 
+    window.syncSpecFlexUI = function() {
+        const specItemSelect = document.getElementById('specItemSelect');
+        const selectedProductName = specItemSelect ? specItemSelect.value : '';
+        const selectedProduct = specialInventory.find(p => p.name === selectedProductName);
+
+        const toggleCb = document.getElementById('specFlexiblePriceToggle');
+        const toggleWrapper = document.getElementById('specFlexToggleWrapper') || document.getElementById('specFlexiblePriceToggle')?.closest('.toggle-wrapper');
+        const customPriceGroup = document.getElementById('specCustomPriceGroup');
+
+        if (!selectedProduct) {
+            if (toggleWrapper) toggleWrapper.style.display = 'none';
+            if (customPriceGroup) customPriceGroup.style.display = 'none';
+            return;
+        }
+
+        const productAllowsFlex = !!selectedProduct.allowUserFlexiblePricing;
+        if (toggleWrapper) {
+            toggleWrapper.style.display = productAllowsFlex ? 'flex' : 'none';
+        }
+
+        let isAllowed = false;
+        if (productAllowsFlex) {
+            const checkedRadio = document.querySelector('input[name="specVariant"]:checked');
+            const val = checkedRadio ? checkedRadio.value : '';
+            const flexVars = selectedProduct.flexibleVariants || [];
+            const pt = selectedProduct.packTypes || {};
+            let title = '';
+
+            if (val === 'c1' || val === 'bag') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
+            else if (val === 'c2' || val === 'custard') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
+            else if (val === 'c3' || val === 'cup') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
+
+            if (title && (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default ('))))) {
+                isAllowed = true;
+            }
+        }
+
+        const toggleChecked = toggleCb && toggleCb.checked;
+        const showFlexibleInput = productAllowsFlex && toggleChecked && isAllowed;
+
+        if (customPriceGroup) {
+            customPriceGroup.style.display = showFlexibleInput ? 'block' : 'none';
+        }
+
+        const containerEl = document.getElementById('specVariantContainer');
+        if (containerEl) {
+            if (typeof window.updateVariantPricesVisibility === 'function') {
+                window.updateVariantPricesVisibility(containerEl, 'specVariant', showFlexibleInput);
+            }
+        }
+    };
+
     // Visual feedback for Special Variant selection
     document.querySelectorAll('.spec-variant-label').forEach(label => {
         label.addEventListener('click', function() {
@@ -276,37 +328,7 @@ function initSalesTable() {
             const radio = this.querySelector('input[type="radio"]');
             if(radio) {
                 radio.checked = true;
-                const val = radio.value;
-                const specItemSelect = document.getElementById('specItemSelect');
-                const selectedProduct = specialInventory.find(p => p.name === (specItemSelect ? specItemSelect.value : ''));
-                
-                const toggleCb = document.getElementById('specFlexiblePriceToggle');
-                const toggleWrapper = document.getElementById('specFlexiblePriceToggle')?.closest('.toggle-wrapper') || document.getElementById('specFlexToggleWrapper'); // Ensure correct wrapper ID
-                const customPriceGroup = document.getElementById('specCustomPriceGroup');
-                
-                let isAllowed = false;
-                if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
-                    const flexVars = selectedProduct.flexibleVariants || [];
-                    const pt = selectedProduct.packTypes || {};
-                    let title = '';
-                    if (val === 'c1') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
-                    else if (val === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
-                    else if (val === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
-                    
-                    if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-                }
-                
-                // If there's a toggleWrapper, hide/show it. (Depends on HTML structure)
-                // We mainly care about un-checking the toggle if not allowed
-                if (!isAllowed && toggleCb) {
-                    toggleCb.checked = false;
-                    toggleCb.dispatchEvent(new Event('change'));
-                }
-
-                const isFlexibleChecked = toggleCb?.checked || false;
-                if (typeof window.updateVariantPricesVisibility === 'function') {
-                    window.updateVariantPricesVisibility(document.getElementById('specVariantContainer'), 'specVariant', isFlexibleChecked);
-                }
+                window.syncSpecFlexUI();
             }
         });
     });
@@ -620,21 +642,8 @@ function initSalesTable() {
                     const specFlexibleContainer = document.getElementById('specFlexibleContainer');
                     if (specFlexibleContainer) specFlexibleContainer.style.display = 'block';
 
-                    // Reset flexible price switch and input
-                    const specFlexiblePriceToggle = document.getElementById('specFlexiblePriceToggle');
-                    if (specFlexiblePriceToggle) {
-                        specFlexiblePriceToggle.checked = false;
-                        const slider = specFlexiblePriceToggle.nextElementSibling;
-                        if (slider) {
-                            slider.style.backgroundColor = '#cbd5e1';
-                            const knob = slider.querySelector('.knob');
-                            if (knob) knob.style.transform = 'translateX(0)';
-                        }
-                    }
-                    const specCustomPriceGroup = document.getElementById('specCustomPriceGroup');
-                    if (specCustomPriceGroup) specCustomPriceGroup.style.display = 'none';
-                    const specItemPrice = document.getElementById('specItemPrice');
-                    if (specItemPrice) specItemPrice.value = '';
+                    // Sync flexible price UI based on the current toggle state
+                    window.syncSpecFlexUI();
 
                     const pt = item.packTypes || {};
                     
@@ -1288,9 +1297,9 @@ function initSalesTable() {
             const itemName = specItemSelect.value;
             const qty = document.getElementById('specItemQty').value;
             
-            const isFlexiblePrice = document.getElementById('specFlexiblePriceToggle')?.checked || false;
+            const isFlexibleToggleChecked = document.getElementById('specFlexiblePriceToggle')?.checked || false;
             let checkedVariant = document.querySelector('input[name="specVariant"]:checked');
-            if (isFlexiblePrice && !checkedVariant) {
+            if (isFlexibleToggleChecked && !checkedVariant) {
                 const specVariantContainer = document.getElementById('specVariantContainer');
                 if (specVariantContainer) {
                     const firstRadio = specVariantContainer.querySelector('input[type="radio"]');
@@ -1316,7 +1325,22 @@ function initSalesTable() {
                     return;
                 }
                 
-                const isFlexiblePrice = document.getElementById('specFlexiblePriceToggle')?.checked || false;
+                // Read from database to check allowed status
+                const selectedProduct = specialInventory.find(p => p.name === itemName);
+                let variantAllowsFlex = false;
+                if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
+                    const flexVars = selectedProduct.flexibleVariants || [];
+                    const pt = selectedProduct.packTypes || {};
+                    let title = '';
+                    if (variantKey === 'c1' || variantKey === 'bag') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
+                    else if (variantKey === 'c2' || variantKey === 'custard') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
+                    else if (variantKey === 'c3' || variantKey === 'cup') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
+
+                    if (title && (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default ('))))) {
+                        variantAllowsFlex = true;
+                    }
+                }
+                const isFlexiblePrice = isFlexibleToggleChecked && variantAllowsFlex;
                 let price;
                 if (isFlexiblePrice) {
                     const customPriceVal = document.getElementById('specItemPrice')?.value;

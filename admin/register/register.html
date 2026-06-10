@@ -159,7 +159,7 @@
                                 <div style="font-size: 0.75rem; color: #7c3aed;">Enable to input a custom selling price for this sale</div>
                             </div>
                             <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px; margin-bottom: 0;">
-                                <input type="checkbox" id="specFlexiblePriceToggle" style="opacity: 0; width: 0; height: 0;" onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#7c3aed':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)';document.getElementById('specCustomPriceGroup').style.display=this.checked?'block':'none';if(typeof window.updateVariantPricesVisibility==='function'){window.updateVariantPricesVisibility(document.getElementById('specVariantContainer'),'specVariant',this.checked);}">
+                                <input type="checkbox" id="specFlexiblePriceToggle" style="opacity: 0; width: 0; height: 0;" onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#7c3aed':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(20px)':'translateX(0)';if(typeof window.syncSpecFlexUI==='function'){window.syncSpecFlexUI();}">
                                 <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;">
                                     <span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: translateX(0);"></span>
                                 </span>

@@ -134,32 +134,7 @@ function _initPayoutPurchaseLogic(modal) {
                 ? specialInventory.find(p => p.name === (ppSpecItemSelect ? ppSpecItemSelect.value : '')) 
                 : flexInventory.find(p => p.name === (ppFlexItemSelect ? ppFlexItemSelect.value : ''));
 
-            const toggleCb = modal.querySelector(isSpec ? '#ppSpecFlexToggle' : '#ppFlexFlexToggle');
-            const toggleWrapper = modal.querySelector(isSpec ? '#ppSpecFlexToggleWrapper' : '#ppFlexFlexPriceToggleWrapper'); // Note: spec might be #ppSpecFlexToggleWrapper
-            const customPriceContainer = modal.querySelector(isSpec ? '#ppSpecFlexPriceContainer' : '#ppFlexCustomPriceContainer');
             const itemPriceInput = modal.querySelector(isSpec ? '#ppSpecItemPrice' : '#ppFlexItemPrice');
-
-            let isAllowed = false;
-            if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
-                const flexVars = selectedProduct.flexibleVariants || [];
-                const pt = selectedProduct.packTypes || {};
-                let title = '';
-                if (val === 'c1') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
-                else if (val === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
-                else if (val === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
-                
-                if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-            }
-
-            if (isAllowed) {
-                if (toggleWrapper) toggleWrapper.style.display = 'flex';
-            } else {
-                if (toggleWrapper) toggleWrapper.style.display = 'none';
-                if (toggleCb) toggleCb.checked = false; // Turn off toggle if not allowed
-            }
-            if (customPriceContainer) {
-                customPriceContainer.style.display = (toggleCb && toggleCb.checked) ? 'block' : 'none';
-            }
 
             if (itemPriceInput) {
                 itemPriceInput.required = true;
@@ -172,14 +147,7 @@ function _initPayoutPurchaseLogic(modal) {
                 }
             }
 
-            const isFlexibleChecked = toggleCb?.checked || false;
-            if (typeof window.updateVariantPricesVisibility === 'function') {
-                window.updateVariantPricesVisibility(
-                    modal.querySelector(isSpec ? '#ppSpecVariantContainer' : '#ppFlexVariantContainer'), 
-                    isSpec ? 'ppSpecVariant' : 'ppFlexVariant', 
-                    isFlexibleChecked
-                );
-            }
+            syncPpFlexUI(isSpec ? 'spec' : 'flex');
         }
     }
 
@@ -256,10 +224,7 @@ function _initPayoutPurchaseLogic(modal) {
                     ppExistingPrice.value = '₦' + formatCurrency(Number(price)) + ' per ' + unitText.toLowerCase();
                     ppExistingPrice.dataset.price = price;
                 }
-                const isFlexibleChecked = modal.querySelector('#ppExistingFlexToggle')?.checked || false;
-                if (typeof window.updateVariantPricesVisibility === 'function') {
-                    window.updateVariantPricesVisibility(modal.querySelector('#ppDefaultVariantContainer'), 'ppDefaultVariant', isFlexibleChecked);
-                }
+                syncPpFlexUI('existing');
             }
         });
     });
@@ -485,14 +450,9 @@ function _initPayoutPurchaseLogic(modal) {
                     const cupTxt = modal.querySelector('#ppSpecVariantCupLabelTxt');
                     if (cupTxt) cupTxt.textContent = (pt.cup || {}).title || (pt.c3 || {}).title || 'Container 3';
 
-                    const toggleWrapper = modal.querySelector('#ppSpecFlexPriceToggleWrapper');
-                    if (item.allowUserFlexiblePricing) {
-                        if (toggleWrapper) toggleWrapper.style.display = 'flex';
-                    } else {
-                        if (toggleWrapper) toggleWrapper.style.display = 'none';
-                    }
                     const toggleCb = modal.querySelector('#ppSpecFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
+                    if (toggleCb) { toggleCb.checked = false; }
+                    syncPpFlexUI('spec');
 
                     const variants = [
                         { val: 'bag', labelId: 'ppSpecVariantBagLabelTxt' },
@@ -601,18 +561,9 @@ function _initPayoutPurchaseLogic(modal) {
                         ppStaticDisplay.textContent = '₦' + formatCurrency(Number(priceVal)) + (unitStr ? ' ' + unitStr : '');
                     }
                     
-                    const flexContainer = modal.querySelector('#ppCustomFlexibleContainer');
-                    const flexToggle = modal.querySelector('#ppCustomFlexiblePriceToggle');
-                    if (item.allowUserFlexiblePricing) {
-                        // Show toggle, reset it to OFF state
-                        if (flexContainer) flexContainer.style.display = 'block';
-                        if (flexToggle) { flexToggle.checked = false; flexToggle.dispatchEvent(new Event('change')); }
-                    } else {
-                        // Hide toggle, always show static price
-                        if (flexContainer) flexContainer.style.display = 'none';
-                        if (ppFlexWrap) ppFlexWrap.style.display = 'none';
-                        if (ppStaticDisplay) ppStaticDisplay.style.display = 'flex';
-                    }
+                    const toggleCb = modal.querySelector('#ppCustomFlexToggle');
+                    if (toggleCb) { toggleCb.checked = false; }
+                    syncPpFlexUI('custom');
     
 
                     ppCustomDropdownWrapper.classList.remove('open');
@@ -688,11 +639,9 @@ function _initPayoutPurchaseLogic(modal) {
                     const c3Txt = modal.querySelector('#ppFlexVariantC3LabelTxt');
                     if (c3Txt) c3Txt.textContent = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
 
-                    if (ppFlexCustomPriceContainer) ppFlexCustomPriceContainer.style.display = 'none';
-                    const toggleWrapper = modal.querySelector('#ppFlexFlexPriceToggleWrapper');
-                    if (toggleWrapper) toggleWrapper.style.display = 'none';
                     const toggleCb = modal.querySelector('#ppFlexFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
+                    if (toggleCb) { toggleCb.checked = false; }
+                    syncPpFlexUI('flex');
                     if (ppFlexItemPrice) ppFlexItemPrice.value = '';
 
                     const flexVariants = [
@@ -864,7 +813,23 @@ function _initPayoutPurchaseLogic(modal) {
             const prodLookup = defaultInventory.find(p => p.name === itemName);
             let isFlexPrice = false;
             const existingToggle = modal.querySelector('#ppExistingFlexToggle');
-            if (prodLookup && prodLookup.allowUserFlexiblePricing && existingToggle && existingToggle.checked) {
+
+            let isVariantAllowed = false;
+            if (prodLookup && prodLookup.allowUserFlexiblePricing) {
+                if (hasWholesale && ppDefaultVariantContainer && ppDefaultVariantContainer.style.display !== 'none') {
+                    const checkedVariant = modal.querySelector('input[name="ppDefaultVariant"]:checked');
+                    const variantParam = checkedVariant ? checkedVariant.value : 'retail';
+                    const flexVars = prodLookup.flexibleVariants || [];
+                    const title = variantParam === 'wholesale' ? (prodLookup.bulkUnit || 'Carton') : (prodLookup.unit || 'Piece');
+                    if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
+                        isVariantAllowed = true;
+                    }
+                } else {
+                    isVariantAllowed = true;
+                }
+            }
+
+            if (prodLookup && prodLookup.allowUserFlexiblePricing && existingToggle && existingToggle.checked && isVariantAllowed) {
                 const fPrice = modal.querySelector('#ppExistingFlexPrice').value;
                 if (!fPrice) {
                     alert('Please enter a flexible unit price.');
@@ -938,7 +903,22 @@ function _initPayoutPurchaseLogic(modal) {
             let isFlexPrice = false;
             const prodLookup = specialInventory.find(p => p.name === itemName);
             const specToggle = modal.querySelector('#ppSpecFlexToggle');
-            if (prodLookup && prodLookup.allowUserFlexiblePricing && specToggle && specToggle.checked) {
+
+            let isVariantAllowed = false;
+            if (prodLookup && prodLookup.allowUserFlexiblePricing) {
+                const flexVars = prodLookup.flexibleVariants || [];
+                const pt = prodLookup.packTypes || {};
+                let title = '';
+                if (variantKey === 'bag') title = (pt.bag || {}).title || (pt.c1 || {}).title || 'Container 1';
+                else if (variantKey === 'custard') title = (pt.custard || {}).title || (pt.c2 || {}).title || 'Container 2';
+                else if (variantKey === 'cup') title = (pt.cup || {}).title || (pt.c3 || {}).title || 'Container 3';
+                
+                if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
+                    isVariantAllowed = true;
+                }
+            }
+
+            if (prodLookup && prodLookup.allowUserFlexiblePricing && specToggle && specToggle.checked && isVariantAllowed) {
                 const fPrice = modal.querySelector('#ppSpecFlexPrice').value;
                 if (!fPrice) {
                     alert('Please enter a flexible unit price.');
@@ -1053,17 +1033,28 @@ function _initPayoutPurchaseLogic(modal) {
                 return;
             }
             
+            let isVariantAllowed = false;
+            if (prod && prod.allowUserFlexiblePricing) {
+                const flexVars = prod.flexibleVariants || [];
+                const pt = prod.packTypes || {};
+                let title = '';
+                if (variantKey === 'c1') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
+                else if (variantKey === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
+                else if (variantKey === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
+                
+                if (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
+                    isVariantAllowed = true;
+                }
+            }
+
             let price = '';
-            if (variantKey === 'c3') {
+            const flexToggle = modal.querySelector('#ppFlexFlexToggle');
+            const isFlexChecked = flexToggle && flexToggle.checked;
+            if (prod && prod.allowUserFlexiblePricing && isFlexChecked && isVariantAllowed) {
                 price = ppFlexItemPrice ? ppFlexItemPrice.value : '';
             } else {
-                const flexToggle = modal.querySelector('#ppFlexFlexToggle');
-                if (prod && prod.allowUserFlexiblePricing && flexToggle && flexToggle.checked) {
-                    price = ppFlexItemPrice ? ppFlexItemPrice.value : '';
-                } else {
-                    const presetPrice = (pt[variantKey] || {}).price || (variantKey === 'c1' ? prod.price : 0);
-                    price = presetPrice;
-                }
+                const presetPrice = (pt[variantKey] || {}).price || (variantKey === 'c1' ? prod.price : 0);
+                price = presetPrice;
             }
             if (!price) {
                 alert("Please enter a retail unit price.");
@@ -1429,13 +1420,121 @@ function _resetPayoutPurchaseForm(modal) {
 }
 
 
+function syncPpFlexUI(tabType) {
+    const modal = document.getElementById('payoutPurchaseModal') || document;
+    let inventory = [];
+    let selectId = '';
+    let radioName = '';
+    let containerId = '';
+    let toggleId = '';
+    let wrapperId = '';
+    let flexContainerId = '';
+
+    if (tabType === 'spec') {
+        const inventoryRaw = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+        inventory = inventoryRaw.filter(p => p.isSpecial && !p.isDeleted && !(p.isHidden || p.cleared));
+        selectId = 'ppSpecItemSelect';
+        radioName = 'ppSpecVariant';
+        containerId = 'ppSpecVariantContainer';
+        toggleId = 'ppSpecFlexToggle';
+        wrapperId = 'ppSpecFlexPriceToggleWrapper';
+        flexContainerId = 'ppSpecFlexPriceContainer';
+    } else if (tabType === 'flex') {
+        const inventoryRaw = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+        inventory = inventoryRaw.filter(p => p.isFlexible && !p.isSpecial && !p.isDeleted && !(p.isHidden || p.cleared));
+        selectId = 'ppFlexItemSelect';
+        radioName = 'ppFlexVariant';
+        containerId = 'ppFlexVariantContainer';
+        toggleId = 'ppFlexFlexToggle';
+        wrapperId = 'ppFlexFlexPriceToggleWrapper';
+        flexContainerId = 'ppFlexCustomPriceContainer';
+    } else if (tabType === 'existing') {
+        const inventoryRaw = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+        inventory = inventoryRaw.filter(p => !p.isSpecial && !p.isCustom && !p.isFlexible && !p.isDeleted && !(p.isHidden || p.cleared));
+        if (inventory.length === 0) inventory = inventoryRaw.filter(p => !p.isDeleted && !(p.isHidden || p.cleared) && !p.isSpecial && !p.isCustom && !p.isFlexible);
+        selectId = 'ppExistingItemSelect';
+        radioName = 'ppDefaultVariant';
+        containerId = 'ppDefaultVariantContainer';
+        toggleId = 'ppExistingFlexToggle';
+        wrapperId = 'ppExistingFlexPriceToggleWrapper';
+        flexContainerId = 'ppExistingFlexPriceContainer';
+    } else if (tabType === 'custom') {
+        const inventoryRaw = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+        inventory = inventoryRaw.filter(p => p.isCustom && !p.isDeleted && !(p.isHidden || p.cleared));
+        selectId = 'ppCustomItemSelect';
+        radioName = '';
+        containerId = '';
+        toggleId = 'ppCustomFlexToggle';
+        wrapperId = 'ppCustomFlexPriceToggleWrapper';
+        flexContainerId = 'ppCustomFlexPriceContainer';
+    }
+
+    const selectEl = modal.querySelector('#' + selectId);
+    const selectedProductName = selectEl ? selectEl.value : '';
+    const selectedProduct = inventory.find(p => p.name === selectedProductName);
+
+    const toggleCb = modal.querySelector('#' + toggleId);
+    const toggleWrapper = modal.querySelector('#' + wrapperId);
+    const customPriceContainer = modal.querySelector('#' + flexContainerId);
+
+    if (!selectedProduct) {
+        if (toggleWrapper) toggleWrapper.style.display = 'none';
+        if (customPriceContainer) customPriceContainer.style.display = 'none';
+        return;
+    }
+
+    const productAllowsFlex = !!selectedProduct.allowUserFlexiblePricing;
+    if (toggleWrapper) {
+        toggleWrapper.style.display = productAllowsFlex ? 'flex' : 'none';
+    }
+
+    let isAllowed = false;
+    if (productAllowsFlex) {
+        if (!radioName) {
+            isAllowed = true;
+        } else {
+            const checkedRadio = modal.querySelector(`input[name="${radioName}"]:checked`);
+            const val = checkedRadio ? checkedRadio.value : '';
+            const flexVars = selectedProduct.flexibleVariants || [];
+            const pt = selectedProduct.packTypes || {};
+            let title = '';
+
+            if (tabType === 'existing') {
+                title = val === 'wholesale' ? (selectedProduct.bulkUnit || 'Carton') : (selectedProduct.unit || 'Piece');
+            } else {
+                if (val === 'c1' || val === 'bag') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
+                else if (val === 'c2' || val === 'custard') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
+                else if (val === 'c3' || val === 'cup') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
+            }
+
+            if (title && (flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default ('))))) {
+                isAllowed = true;
+            }
+        }
+    }
+
+    const toggleChecked = toggleCb && toggleCb.checked;
+    const showFlexibleInput = productAllowsFlex && toggleChecked && isAllowed;
+
+    if (customPriceContainer) {
+        customPriceContainer.style.display = showFlexibleInput ? 'block' : 'none';
+    }
+
+    if (containerId && radioName) {
+        const containerEl = modal.querySelector('#' + containerId);
+        if (typeof window.updateVariantPricesVisibility === 'function') {
+            window.updateVariantPricesVisibility(containerEl, radioName, showFlexibleInput);
+        }
+    }
+}
+
 // Initialize Flexible Pricing Toggles for Payout Purchase
 function initPPToggles() {
     const toggles = [
-        { id: 'ppExistingFlexToggle', cFixed: 'ppExistingPriceContainer', cVar: 'ppDefaultVariantContainer', radioName: 'ppDefaultVariant', cFlex: 'ppExistingFlexPriceContainer' },
-        { id: 'ppSpecFlexToggle', cFixed: null, cVar: 'ppSpecVariantContainer', radioName: 'ppSpecVariant', cFlex: 'ppSpecFlexPriceContainer' },
-        { id: 'ppCustomFlexToggle', cFixed: 'ppCustomPriceContainer', cVar: null, radioName: null, cFlex: 'ppCustomFlexPriceContainer' },
-        { id: 'ppFlexFlexToggle', cFixed: null, cVar: 'ppFlexVariantContainer', radioName: 'ppFlexVariant', cFlex: 'ppFlexCustomPriceContainer' }
+        { id: 'ppExistingFlexToggle', tab: 'existing' },
+        { id: 'ppSpecFlexToggle', tab: 'spec' },
+        { id: 'ppCustomFlexToggle', tab: 'custom' },
+        { id: 'ppFlexFlexToggle', tab: 'flex' }
     ];
 
     toggles.forEach(t => {
@@ -1444,70 +1543,15 @@ function initPPToggles() {
             toggle.addEventListener('change', function() {
                 const bg = document.getElementById(t.id + 'Bg');
                 const knob = document.getElementById(t.id + 'Knob');
-                const cFixed = t.cFixed ? document.getElementById(t.cFixed) : null;
-                const cFlex = document.getElementById(t.cFlex);
-                const cVar = t.cVar ? document.getElementById(t.cVar) : null;
-
-                // If there's a variant container, check if the selected variant is actually flexible
-                if (this.checked && cVar && t.radioName) {
-                    const checkedRadio = cVar.querySelector(`input[name="${t.radioName}"]:checked`);
-                    if (checkedRadio) {
-                        const val = checkedRadio.value;
-                        // Try to find the selected product for spec/flex tabs
-                        let selectedProduct = null;
-                        let inventoryKey = null;
-                        if (t.id === 'ppSpecFlexToggle') {
-                            const sel = document.getElementById('ppSpecItemSelect');
-                            if (sel && typeof specialInventory !== 'undefined') selectedProduct = specialInventory.find(p => p.name === sel.value);
-                        } else if (t.id === 'ppFlexFlexToggle') {
-                            const sel = document.getElementById('ppFlexItemSelect');
-                            if (sel && typeof flexInventory !== 'undefined') selectedProduct = flexInventory.find(p => p.name === sel.value);
-                        }
-                        if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
-                            const flexVars = selectedProduct.flexibleVariants || [];
-                            const pt = selectedProduct.packTypes || {};
-                            let title = '';
-                            if (val === 'c1') title = (pt.c1 || {}).title || (pt.bag || {}).title || 'Container 1';
-                            else if (val === 'c2') title = (pt.c2 || {}).title || (pt.custard || {}).title || 'Container 2';
-                            else if (val === 'c3') title = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
-                            const isAllowed = flexVars.includes(title) || (title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')));
-                            if (!isAllowed) {
-                                // Prevent toggle from turning on for non-flexible variant
-                                this.checked = false;
-                                return;
-                            }
-                        }
-                    }
-                }
 
                 if (this.checked) {
                     if (bg) bg.style.backgroundColor = '#f0abfc';
                     if (knob) knob.style.transform = 'translateX(20px)';
-                    if (cFixed) cFixed.style.display = 'none';
-                    if (cFlex) cFlex.style.display = 'block';
-                    if (cVar) {
-                        cVar.style.display = 'block';
-                        if (t.radioName && typeof window.updateVariantPricesVisibility === 'function') {
-                            window.updateVariantPricesVisibility(cVar, t.radioName, true);
-                        } else {
-                            cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = 'none');
-                        }
-                        cVar.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
-                    }
                 } else {
                     if (bg) bg.style.backgroundColor = '#e2e8f0';
                     if (knob) knob.style.transform = 'translateX(0)';
-                    if (cFixed) cFixed.style.display = 'block';
-                    if (cFlex) cFlex.style.display = 'none';
-                    if (cVar) {
-                        if (t.radioName && typeof window.updateVariantPricesVisibility === 'function') {
-                            window.updateVariantPricesVisibility(cVar, t.radioName, false);
-                        } else {
-                            cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = '');
-                        }
-                        cVar.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
-                    }
                 }
+                syncPpFlexUI(t.tab);
             });
         }
     });

@@ -218,25 +218,15 @@ function initProductModalLogic() {
                     
                     const flexVars = currentProduct.flexibleVariants || [];
                     
-                    let isAllowed = false;
-                    if (currentProduct.allowUserFlexiblePricing) {
-                        const vTitle = currentVariants[selectedIdx].title;
-                        if (flexVars.includes(vTitle) || (vTitle === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
-                            isAllowed = true;
-                        }
-                    }
-
-                    if (isChecked && !isAllowed) {
-                        // FORCE THE RESTRICTION: Do not allow toggle to turn on!
-                        e.target.checked = false;
-                        if (slider) slider.style.backgroundColor = '#cbd5e1';
-                        if (knob) knob.style.left = '4px';
-                        return;
-                    }
-
                     currentVariants.forEach((v, i) => {
-                        if (i === selectedIdx && isChecked && isAllowed) {
-                            v.flex = true;
+                        if (i === selectedIdx) {
+                            let isAllowed = false;
+                            if (currentProduct.allowUserFlexiblePricing) {
+                                if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
+                                    isAllowed = true;
+                                }
+                            }
+                            v.flex = (isChecked && isAllowed);
                         } else {
                             v.flex = false;
                         }
@@ -792,27 +782,8 @@ function initProductModalLogic() {
                     const flexVars = latest.flexibleVariants || [];
                     
                     // Force toggle ON automatically if admin just made the selected variant flexible!
-                    let forceToggleOn = false;
-                    if (latest.allowUserFlexiblePricing) {
-                        const activeVariantTitle = currentVariants[selectedIdx].title;
-                        if (flexVars.length === 0 || flexVars.includes(activeVariantTitle) || (activeVariantTitle === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
-                            forceToggleOn = true;
-                        }
-                    }
-
                     const flexToggleInput = document.getElementById('pmFlexPriceToggle');
                     let isChecked = flexToggleInput ? flexToggleInput.checked : false;
-
-                    if (forceToggleOn) {
-                        isChecked = true;
-                        if (flexToggleInput) {
-                            flexToggleInput.checked = true;
-                            const slider = document.getElementById('pmFlexPriceSlider');
-                            const knob = document.getElementById('pmFlexPriceKnob');
-                            if (slider) slider.style.backgroundColor = '#c026d3';
-                            if (knob) knob.style.left = '24px';
-                        }
-                    }
 
                     currentVariants.forEach((v, i) => {
                         let isAllowed = false;
@@ -820,7 +791,7 @@ function initProductModalLogic() {
                             if (flexVars.length === 0) isAllowed = true;
                             else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
                         }
-                        v.flex = (isChecked && isAllowed) ? true : originalVariants[i].flex;
+                        v.flex = (i === selectedIdx && isChecked && isAllowed);
                     });
 
                     if (newVariants.length > 1) {
