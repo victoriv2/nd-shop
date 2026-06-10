@@ -771,9 +771,9 @@ function initSalesTable() {
                     const flexContainer = document.getElementById('customFlexibleContainer');
                     const flexToggle = document.getElementById('customFlexiblePriceToggle');
                     if (item.allowUserFlexiblePricing) {
-                        // Show toggle, reset it to OFF state
+                        // Show toggle
                         if (flexContainer) flexContainer.style.display = 'block';
-                        if (flexToggle) { flexToggle.checked = false; flexToggle.dispatchEvent(new Event('change')); }
+                        if (flexToggle) { flexToggle.dispatchEvent(new Event('change')); }
                     } else {
                         // Hide toggle, always show static price
                         if (flexContainer) flexContainer.style.display = 'none';

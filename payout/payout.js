@@ -1358,8 +1358,6 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                     const cupTxt = modal.querySelector('#urpSpecVariantCupLabelTxt');
                     if (cupTxt) cupTxt.textContent = (pt.cup || {}).title || 'Container 3';
 
-                    const toggleCb = modal.querySelector('#urpSpecFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; }
                     syncUrpFlexUI('spec');
 
                     const variants = [
@@ -1458,8 +1456,6 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                         urpCustomItemPrice.value = '₦' + formatCurrency(Number(priceVal)) + (unitStr ? ' ' + unitStr : '');
                         urpCustomItemPrice.dataset.price = priceVal;
                     }
-                    const toggleCb = modal.querySelector('#urpCustomFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; }
                     syncUrpFlexUI('custom');
                     urpCustomDropdownWrapper.classList.remove('open');
                 });
@@ -1528,8 +1524,6 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                     const c3Txt = modal.querySelector('#urpFlexVariantC3LabelTxt');
                     if (c3Txt) c3Txt.textContent = (pt.c3 || {}).title || 'Container 3';
 
-                    const toggleCb = modal.querySelector('#urpFlexFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; }
                     syncUrpFlexUI('flex');
                     if (urpFlexItemPrice) urpFlexItemPrice.value = '';
 

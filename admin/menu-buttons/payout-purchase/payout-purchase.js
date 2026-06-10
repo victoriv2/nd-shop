@@ -363,8 +363,7 @@ function _initPayoutPurchaseLogic(modal) {
                     } else {
                         if (toggleWrapper) toggleWrapper.style.display = 'none';
                     }
-                    const toggleCb = modal.querySelector('#ppExistingFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
+                    syncPpFlexUI('existing');
     
 
                     const priceLabel = modal.querySelector('#lblPpExistingPrice');
@@ -450,8 +449,6 @@ function _initPayoutPurchaseLogic(modal) {
                     const cupTxt = modal.querySelector('#ppSpecVariantCupLabelTxt');
                     if (cupTxt) cupTxt.textContent = (pt.cup || {}).title || (pt.c3 || {}).title || 'Container 3';
 
-                    const toggleCb = modal.querySelector('#ppSpecFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; }
                     syncPpFlexUI('spec');
 
                     const variants = [
@@ -561,8 +558,6 @@ function _initPayoutPurchaseLogic(modal) {
                         ppStaticDisplay.textContent = '₦' + formatCurrency(Number(priceVal)) + (unitStr ? ' ' + unitStr : '');
                     }
                     
-                    const toggleCb = modal.querySelector('#ppCustomFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; }
                     syncPpFlexUI('custom');
     
 
@@ -639,8 +634,6 @@ function _initPayoutPurchaseLogic(modal) {
                     const c3Txt = modal.querySelector('#ppFlexVariantC3LabelTxt');
                     if (c3Txt) c3Txt.textContent = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
 
-                    const toggleCb = modal.querySelector('#ppFlexFlexToggle');
-                    if (toggleCb) { toggleCb.checked = false; }
                     syncPpFlexUI('flex');
                     if (ppFlexItemPrice) ppFlexItemPrice.value = '';
 
