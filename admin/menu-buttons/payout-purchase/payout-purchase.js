@@ -1246,10 +1246,13 @@ function _submitPayoutPurchase() {
 
     // Add each basket item to sales ledger
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+    let userBal = sales.filter(s => s.customerID === ppCurrentUser.id).reduce((sum, s) => sum + (s.payoutEarned !== undefined ? s.payoutEarned : s.payout || 0), 0);
 
     // Calculate the payout deduction per item, proportionally
     ppBasketItems.forEach(item => {
-        const itemTotal = item.qty * item.price;
+        const itemTotal = item.isFlexible ? item.price : item.qty * item.price;
+        let delta = -Math.abs(itemTotal);
+        userBal += delta;
 
         const newSale = {
             id: `PP-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
@@ -1260,7 +1263,8 @@ function _submitPayoutPurchase() {
             qty: item.qty,
             unitPrice: item.price,
             price: itemTotal,
-            payout: Math.abs(itemTotal), // Record the deduction absolute value
+            payoutEarned: delta,
+            payout: userBal, // Record the running balance
             isRewardPurchase: true,
             type: 'Payout Purchase',
             unit: item.unit || '',

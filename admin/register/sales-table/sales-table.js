@@ -80,12 +80,14 @@ function initSalesTable() {
         data.forEach((row, index) => {
             const isRequest = row.type === 'Request';
             const baseTotal = row.qty * row.unitPrice;
-            const payout = isRequest ? (row.payout != null ? row.payout : (baseTotal * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100))) : 0; // Payout only counts for app requests
+            // Payout calculation for new rows, but for existing rows it's already in the object
+            let delta = row.payoutEarned !== undefined ? row.payoutEarned : (isRequest ? (row.payout != null ? row.payout : (baseTotal * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100))) : 0);
+            
             // Use recorded price (which has payout deducted) if available, otherwise fallback to deduction
-            const total = (row.price !== undefined && row.price !== null && row.price !== '') ? Number(row.price) : (baseTotal - payout);
+            const total = (row.price !== undefined && row.price !== null && row.price !== '') ? Number(row.price) : (baseTotal - delta);
             totalItems += Number(row.qty) || 1;
             totalSales += total;
-            totalPayout += (row.isRewardPurchase || row.type === 'Payout Purchase') ? -Math.abs(payout) : Math.abs(payout);
+            totalPayout += (row.isRewardPurchase || row.type === 'Payout Purchase') ? -Math.abs(delta) : Math.abs(delta);
 
             const unitText = row.unit ? row.unit.replace(/^per\s+/i, '') : '';
             const qtyStr = row.qty + (unitText ? ' ' + unitText + (row.qty > 1 ? 's' : '') : '');
@@ -107,7 +109,7 @@ function initSalesTable() {
                 <td>${qtyStr}</td>
                 <td>₦${formatCurrency(unitPriceToDisplay)}</td>
                 <td>₦${formatCurrency(total)}</td>
-                <td class="payout-cell">${isRequest ? ((row.isRewardPurchase || row.type === 'Payout Purchase') ? `₦${formatCurrency(Math.abs(payout))} <span style="font-size: 0.7rem; color: #166534; font-weight: 600;">(Redeemed)</span>` : '₦' + formatCurrency(Math.abs(payout))) : '-'}</td>
+                <td class="payout-cell">${isRequest ? ((row.isRewardPurchase || row.type === 'Payout Purchase') ? `₦${formatCurrency(Math.abs(row.payout))} <span style="font-size: 0.7rem; color: #166534; font-weight: 600;">(Remaining)</span>` : '₦' + formatCurrency(Math.abs(row.payout)) + ' <span style="font-size: 0.7rem; color: #555;">(Remaining)</span>') : '-'}</td>
             `;
             tableBody.appendChild(tr);
         });

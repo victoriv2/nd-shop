@@ -298,14 +298,8 @@ function initDynamicPayoutLogic() {
 
         // Calculate Totals based on ALL user sales (unaffected by filters)
         let chronologicalSales = [...allUserSales].sort((a,b) => (parseSaleDate(a.date)||new Date(0)) - (parseSaleDate(b.date)||new Date(0)));
-        let runningBal = 0;
-        chronologicalSales.forEach(s => {
-            const isDeduct = (s.payout < 0) || s.isRewardPurchase || s.type === 'Payout Purchase';
-            runningBal += isDeduct ? -Math.abs(s.payout || 0) : Math.abs(s.payout || 0);
-            s.runningBalance = runningBal;
-        });
-
-        let totalPayout = runningBal;
+        let totalPayout = chronologicalSales.length > 0 ? (chronologicalSales[chronologicalSales.length - 1].payout || 0) : 0;
+        
         let totalSpending = 0;
         allUserSales.forEach(s => {
             totalSpending += (s.price || (s.qty * s.unitPrice)) || 0;
@@ -411,19 +405,12 @@ function initDynamicPayoutLogic() {
                 }
             }
 
-            const isDeduct = (sale.payout < 0) || sale.isRewardPurchase || sale.type === 'Payout Purchase';
-            let amountDisplay;
-            let labelDisplay;
-            let plusSpan = '';
+            const isDeduct = sale.isRewardPurchase || sale.type === 'Payout Purchase' || (sale.payoutEarned < 0);
             
-            if (isDeduct) {
-                amountDisplay = Math.round(sale.runningBalance || 0).toLocaleString();
-                labelDisplay = "Remaining";
-            } else {
-                plusSpan = '<span class="green-plus">+</span>';
-                amountDisplay = Math.round(Math.abs(sale.payout || 0)).toLocaleString();
-                labelDisplay = "Reward";
-            }
+            // Per user request, the history should ALWAYS show the remaining balance, not the delta/percentage.
+            let amountDisplay = Math.round(sale.payout || 0).toLocaleString();
+            let labelDisplay = "Remaining";
+            let plusSpan = '';
 
             return `
                 <div class="regular-card" style="opacity: 1;">

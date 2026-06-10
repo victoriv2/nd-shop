@@ -10,20 +10,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Core app initialization
 
-    // --- MIGRATION: Convert negative payouts to positive with isRewardPurchase flag ---
+    // --- MIGRATION v2: Switch payout to running balance and preserve delta in payoutEarned ---
     try {
         let salesHistory = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
         let migrated = false;
-        salesHistory = salesHistory.map(sale => {
-            if (sale.payout < 0) {
-                sale.payout = Math.abs(sale.payout);
-                sale.isRewardPurchase = true;
+        
+        // Ensure every sale has payoutEarned recorded
+        salesHistory.forEach(sale => {
+            if (sale.payoutEarned === undefined) {
+                let delta = sale.payout || 0;
+                let isDeduct = sale.isRewardPurchase || sale.type === 'Payout Purchase' || delta < 0;
+                sale.payoutEarned = isDeduct ? -Math.abs(delta) : Math.abs(delta);
                 migrated = true;
             }
-            return sale;
         });
+
         if (migrated) {
+            // Sort chronologically to recalculate running balances
+            function parseSaleDate(dateStr) {
+                if (!dateStr) return 0;
+                try {
+                    if (dateStr.includes('·')) {
+                        const parts = dateStr.split('·');
+                        const d = new Date(parts[0].trim());
+                        const timeParts = parts[1].trim().match(/(\d+):(\d+)\s*(am|pm)/i);
+                        if (timeParts) {
+                            let h = parseInt(timeParts[1]);
+                            if (timeParts[3].toLowerCase() === 'pm' && h < 12) h += 12;
+                            if (timeParts[3].toLowerCase() === 'am' && h === 12) h = 0;
+                            d.setHours(h, parseInt(timeParts[2]), 0, 0);
+                        }
+                        return d.getTime();
+                    }
+                    return new Date(dateStr).getTime();
+                } catch(e) { return 0; }
+            }
+
+            salesHistory.sort((a,b) => parseSaleDate(a.date) - parseSaleDate(b.date));
+            
+            let userBalances = {};
+            salesHistory.forEach(sale => {
+                let cid = sale.customerID;
+                if (!cid) return;
+                let bal = userBalances[cid] || 0;
+                bal += sale.payoutEarned;
+                userBalances[cid] = bal;
+                sale.payout = bal; // The actual requested change!
+            });
+
             localStorage.setItem('nd_sales_history', JSON.stringify(salesHistory));
+            if (window.realtimeSync && typeof window.realtimeSync.syncNow === 'function') {
+                window.realtimeSync.syncNow('nd_sales_history');
+            }
         }
     } catch (e) {
         console.error("Migration error:", e);

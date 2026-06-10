@@ -835,32 +835,43 @@ function recordSaleFromRequest(req) {
     hours = hours % 12 || 12;
     const timeStr = `${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()} · ${hours}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`;
 
+    let currentSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+    let userBal = currentSales.filter(s => s.customerID === req.user.id).reduce((sum, s) => sum + (s.payoutEarned !== undefined ? s.payoutEarned : s.payout), 0);
+
     if (req.isGroupedOrder && req.items) {
         // Reverse array initially so after unshifting them all out they remain in logical order
         const itemsToProcess = [...req.items].reverse();
-        itemsToProcess.forEach(item => {
-            sales.unshift({
-                date: timeStr,
-                item: item.name,
-                qty: item.qty,
-                unitPrice: item.unitPrice,
-                price: req.isRewardPurchase ? item.total : item.total - (item.payout || 0),
-                payout: req.isRewardPurchase ? Math.abs(item.total) : (item.payout || 0),
-                isRewardPurchase: req.isRewardPurchase || false,
-                isFlexible: item.isFlexible || false,
-                customerID: req.user.id,
-                customerName: req.user.name,
-                type: 'Request'
+        if (itemsToProcess && itemsToProcess.length > 0) {
+            itemsToProcess.forEach(item => {
+                let delta = req.isRewardPurchase ? -Math.abs(item.total) : (item.payout || 0);
+                userBal += delta;
+                sales.unshift({
+                    date: timeStr,
+                    item: item.name,
+                    qty: item.qty,
+                    unitPrice: item.unitPrice,
+                    price: req.isRewardPurchase ? item.total : item.total - (item.payout || 0),
+                    payoutEarned: delta,
+                    payout: userBal,
+                    isRewardPurchase: req.isRewardPurchase || false,
+                    isFlexible: item.isFlexible || false,
+                    customerID: req.user.id,
+                    customerName: req.user.name,
+                    type: 'Request'
+                });
             });
-        });
+        }
     } else if (req.product) {
+        let delta = req.isRewardPurchase ? -Math.abs(req.product.total) : (req.product.payout || 0);
+        userBal += delta;
         sales.unshift({
             date: timeStr,
             item: req.product.name,
             qty: req.product.qty,
             unitPrice: req.product.total / req.product.qty,
             price: req.isRewardPurchase ? req.product.total : req.product.total - (req.product.payout || 0),
-            payout: req.isRewardPurchase ? Math.abs(req.product.total) : (req.product.payout || 0),
+            payoutEarned: delta,
+            payout: userBal,
             isRewardPurchase: req.isRewardPurchase || false,
             customerID: req.user.id,
             customerName: req.user.name,
