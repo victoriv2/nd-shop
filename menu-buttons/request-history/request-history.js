@@ -160,11 +160,21 @@ window.renderRequestHistory = function() {
             `;
         }
 
+        const rewardBadge = r.isRewardPurchase 
+            ? `<span style="font-size:0.75rem; background:#f5f3ff; color:#7c3aed; border: 1px solid #ddd6fe; padding:2px 8px; border-radius:6px; font-weight:700; display:inline-flex; align-items:center; gap:4px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                Payout Order
+               </span>`
+            : '';
+
         return `
             <div class="rh-card">
                 <div class="rh-card-header">
                     <span class="rh-date">${dateStr}</span>
-                    <span class="rh-status ${statusClass}">${r.status}</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        ${rewardBadge}
+                        <span class="rh-status ${statusClass}">${r.status}</span>
+                    </div>
                 </div>
                 <div class="rh-product-name">${mainTitle}</div>
                 <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">ID: ${r.id}</div>

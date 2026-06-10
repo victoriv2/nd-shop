@@ -817,7 +817,7 @@ function _initPayoutPurchaseLogic(modal) {
     if (ppExistingItemForm) ppExistingItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = ppHiddenItemInput.value;
-        const price = ppExistingPrice.dataset.price;
+        let price = ppExistingPrice.dataset.price;
         const qty = modal.querySelector('#ppExistingItemQty').value;
         
         const prod = defaultInventory.find(p => p.name === itemName);
@@ -930,7 +930,7 @@ function _initPayoutPurchaseLogic(modal) {
                 return;
             }
             
-            const price = modal.querySelector('#' + variantId).dataset.price;
+            let price = modal.querySelector('#' + variantId).dataset.price;
             const finalName = `${itemName} (${titleStr})`;
             let isFlexPrice = false;
             const prodLookup = specialInventory.find(p => p.name === itemName);
@@ -968,18 +968,25 @@ function _initPayoutPurchaseLogic(modal) {
     if (ppCustomItemForm) ppCustomItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = ppCustomItemSelect.value;
-        const ppFlexToggle = modal.querySelector('#ppCustomFlexiblePriceToggle');
-        const ppCustomFlexInput = modal.querySelector('#ppCustomFlexPriceInput');
+        const ppFlexToggle = modal.querySelector('#ppCustomFlexToggle');
+        const ppCustomFlexInput = modal.querySelector('#ppCustomFlexPrice');
         let price;
-        if (ppFlexToggle && ppFlexToggle.checked && ppCustomFlexInput) {
-            price = parseFloat(ppCustomFlexInput.value) || 0;
+        let isFlexPrice = false;
+        const prod = customInventory.find(p => p.name === itemName);
+        if (prod && prod.allowUserFlexiblePricing && ppFlexToggle && ppFlexToggle.checked && ppCustomFlexInput) {
+            const fPrice = ppCustomFlexInput.value;
+            if (!fPrice) {
+                alert('Please enter a flexible unit price.');
+                return;
+            }
+            price = fPrice;
+            isFlexPrice = true;
         } else {
             price = Number(ppCustomItemPrice ? ppCustomItemPrice.dataset.price : 0);
         }
         const qty = modal.querySelector('#ppCustomItemQty').value;
         if (itemName && price && qty) {
             const requiredQty = parseFloat(qty);
-            const prod = customInventory.find(p => p.name === itemName);
             const unit = prod ? prod.unit : '';
             const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName) : Infinity;
             
@@ -990,17 +997,6 @@ function _initPayoutPurchaseLogic(modal) {
                     alert(`Cannot add to basket. Only ${remaining} items remaining in stock.`);
                 }
                 return;
-            }
-
-            let isFlexPrice = false;
-            if (prod && prod.allowUserFlexiblePricing) {
-                const fPrice = modal.querySelector('#ppCustomFlexPrice').value;
-                if (!fPrice) {
-                    alert('Please enter a flexible unit price.');
-                    return;
-                }
-                price = fPrice;
-                isFlexPrice = true;
             }
 
             _addToPPBasket(`${itemName}`, requiredQty, Number(price), unit, isFlexPrice);
