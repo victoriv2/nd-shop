@@ -220,16 +220,22 @@ function initProductModalLogic() {
                     
                     const flexVars = currentProduct.flexibleVariants || [];
                     currentVariants.forEach((v, i) => {
-                        if (v.variantType === 'c3') {
-                            v.flex = true;
-                            return;
+                        if (i === selectedIdx) {
+                            let isAllowed = false;
+                            if (currentProduct.allowUserFlexiblePricing) {
+                                if (flexVars.length === 0) isAllowed = true;
+                                else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
+                            }
+                            if (isChecked && isAllowed) {
+                                v.flex = true;
+                            } else if (v.variantType === 'c3') {
+                                v.flex = true;
+                            } else {
+                                v.flex = false;
+                            }
+                        } else {
+                            v.flex = false;
                         }
-                        let isAllowed = false;
-                        if (currentProduct.allowUserFlexiblePricing) {
-                            if (flexVars.length === 0) isAllowed = true;
-                            else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-                        }
-                        v.flex = (isChecked && i === selectedIdx && isAllowed) ? true : originalVariants[i].flex;
                     });
                     
                     if (currentVariants.length > 1) {
@@ -356,19 +362,21 @@ function initProductModalLogic() {
                                 const isChecked = flexToggleInput ? flexToggleInput.checked : false;
                                 const flexVars = currentProduct.flexibleVariants || [];
                                 currentVariants.forEach((v, idx) => {
-                                    if (v.variantType === 'c3') {
-                                        v.flex = true;
-                                        return;
-                                    }
-                                    let isAllowed = false;
-                                    if (currentProduct.allowUserFlexiblePricing) {
-                                        if (flexVars.length === 0) isAllowed = true;
-                                        else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-                                    }
-                                    if (isChecked && idx === newSelectedIdx && isAllowed) {
-                                        v.flex = true;
+                                    if (idx === newSelectedIdx) {
+                                        let isAllowed = false;
+                                        if (currentProduct.allowUserFlexiblePricing) {
+                                            if (flexVars.length === 0) isAllowed = true;
+                                            else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
+                                        }
+                                        if (isChecked && isAllowed) {
+                                            v.flex = true;
+                                        } else if (v.variantType === 'c3') {
+                                            v.flex = true;
+                                        } else {
+                                            v.flex = false;
+                                        }
                                     } else {
-                                        v.flex = originalVariants[idx].flex;
+                                        v.flex = false;
                                     }
                                 });
                                 
@@ -419,6 +427,26 @@ function initProductModalLogic() {
 
             if (variants.length > 1) {
                 if (pmVariantsSection) pmVariantsSection.style.display = 'block';
+                
+                // Align initial flex states with defaultIdx selection (initial toggle is OFF)
+                const flexVars = product.flexibleVariants || [];
+                variants.forEach((v, idx) => {
+                    if (idx === defaultIdx) {
+                        let isAllowed = false;
+                        if (product.allowUserFlexiblePricing) {
+                            if (flexVars.length === 0) isAllowed = true;
+                            else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
+                        }
+                        if (v.variantType === 'c3') {
+                            v.flex = true;
+                        } else {
+                            v.flex = false;
+                        }
+                    } else {
+                        v.flex = false;
+                    }
+                });
+                
                 renderVariantsList(defaultIdx);
                 updateModalForVariant(variants[defaultIdx]);
             } else {
