@@ -194,16 +194,14 @@ function initProductModalLogic() {
             const flexToggleWrapper = document.getElementById('pmFlexPriceToggleWrapper');
             const flexToggleInput = document.getElementById('pmFlexPriceToggle');
             
-            // Initial hide; updateModalForVariant will handle logic
-            if (flexToggleWrapper) {
-                flexToggleWrapper.style.display = 'none';
-            }
+            // Reset toggle to OFF state on each product open
             if (flexToggleInput) {
                 flexToggleInput.checked = false;
                 const slider = document.getElementById('pmFlexPriceSlider');
                 const knob = document.getElementById('pmFlexPriceKnob');
                 if (slider) slider.style.backgroundColor = '#cbd5e1';
                 if (knob) knob.style.left = '4px';
+            }
                 
                 flexToggleInput.onchange = function(e) {
                     const isChecked = e.target.checked;
@@ -246,44 +244,48 @@ function initProductModalLogic() {
 
             function updateModalForVariant(v) {
                 // === STEP 1: Determine if this variant is allowed to be flexible ===
-                const flexToggleWrapper = document.getElementById('pmFlexPriceToggleWrapper');
+                const flexVars = currentProduct.flexibleVariants || [];
                 let variantIsFlexible = false;
                 if (currentProduct.allowUserFlexiblePricing) {
-                    const flexVars = currentProduct.flexibleVariants || [];
                     if (flexVars.length === 0) variantIsFlexible = true;
                     else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) variantIsFlexible = true;
                 }
 
-                if (flexToggleWrapper) {
-                    if (variantIsFlexible) {
-                        flexToggleWrapper.style.display = 'flex';
+                // If this variant is NOT flexible, force its flex state off
+                if (!variantIsFlexible) {
+                    v.flex = false;
+                } else {
+                    // If it IS flexible, sync its flex state with the current toggle state
+                    const flexToggleInput = document.getElementById('pmFlexPriceToggle');
+                    if (flexToggleInput && flexToggleInput.checked) {
+                        v.flex = true;
                     } else {
-                        // Hide toggle and force it OFF for non-flexible variants
-                        flexToggleWrapper.style.display = 'none';
-                        if (flexToggleInput && flexToggleInput.checked) {
-                            flexToggleInput.checked = false;
-                            const slider = document.getElementById('pmFlexPriceSlider');
-                            const knob = document.getElementById('pmFlexPriceKnob');
-                            if (slider) slider.style.backgroundColor = '#cbd5e1';
-                            if (knob) knob.style.left = '4px';
-                        }
-                        // Always force flex off for non-flexible variants regardless of toggle state
                         v.flex = false;
                     }
                 }
 
-                // === STEP 2: NOW capture isFlex after the above may have reset v.flex ===
-                const isFlex = v.flex;
+                // === STEP 2: Capture isFlex AFTER enforcing the above ===
+                const isFlex = v.flex;  // true only if toggle ON + this variant is flexible
                 basePriceValue = isFlex ? 0 : v.price;
                 baseCostValue = v.cost || 0;
                 const unitStr = v.unit || `per ${v.title.toLowerCase()}`;
-                
+
+                // === STEP 3: Toggle wrapper — ALWAYS visible if product allows flex pricing ===
+                const flexToggleWrapper = document.getElementById('pmFlexPriceToggleWrapper');
+                if (flexToggleWrapper) {
+                    if (currentProduct.allowUserFlexiblePricing) {
+                        flexToggleWrapper.style.display = 'flex';
+                    } else {
+                        flexToggleWrapper.style.display = 'none';
+                    }
+                }
+
                 let displayName = currentProduct.name || (productCard.querySelector('.product-name') ? productCard.querySelector('.product-name').textContent : '');
                 if (v.title !== 'Default') {
                     displayName += ` (${v.title})`;
                 }
                 if (destName) destName.textContent = displayName;
-                
+
                 if (destPrice) {
                     if (isFlex) {
                         destPrice.textContent = 'Flexible Price';
@@ -291,13 +293,14 @@ function initProductModalLogic() {
                         destPrice.textContent = '₦' + Math.round(v.price).toLocaleString();
                     }
                 }
-                
+
                 if (destUnit) destUnit.textContent = unitStr;
 
                 const staticTotal = document.getElementById('pmTotalPriceDetail');
                 const flexWrapper = document.getElementById('pmFlexPriceInputWrapper');
                 const flexInput = document.getElementById('pmFlexPriceInput');
-                
+
+                // Flex price input only shows when toggle ON AND this variant is flexible
                 if (isFlex) {
                     if (staticTotal) staticTotal.style.display = 'none';
                     if (flexWrapper) flexWrapper.style.display = 'inline-flex';
