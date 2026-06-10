@@ -1640,4 +1640,22 @@ window.openCameraCapture = function(onCapture) {
         });
     }
 
+    window.updateVariantPricesVisibility = function(container, radioName, isFlexibleChecked) {
+        if (!container) return;
+        const radios = container.querySelectorAll(`input[name="${radioName}"]`);
+        radios.forEach(radio => {
+            const label = radio.closest('label');
+            if (label) {
+                const priceEl = label.querySelector('[id$="Price"]') || label.querySelector('[id$="price"]') || label.querySelector('.price') || label.querySelector('.variant-price');
+                if (priceEl) {
+                    if (isFlexibleChecked && radio.checked) {
+                        priceEl.style.display = 'none';
+                    } else {
+                        priceEl.style.display = '';
+                    }
+                }
+            }
+        });
+    };
+
 })();

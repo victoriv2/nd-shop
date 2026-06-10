@@ -164,7 +164,7 @@ function initProductModalLogic() {
                             const cupProfit = s.cupProfit !== undefined ? s.cupProfit : (s.c3Profit !== undefined ? s.c3Profit : 0);
                             cupPrice = Math.round(c3Cost + cupProfit) || 0;
                         }
-                        variants.push({ title: pts.cup.title || 'Container 3', price: cupPrice, flex: false, cost: c3Cost, variantType: 'c3' });
+                        variants.push({ title: pts.cup.title || 'Container 3', price: cupPrice, flex: true, cost: c3Cost, variantType: 'c3' });
                     }
                 } else if (product.isFlexible) {
                     const pts = product.packTypes || {};
@@ -220,12 +220,16 @@ function initProductModalLogic() {
                     
                     const flexVars = currentProduct.flexibleVariants || [];
                     currentVariants.forEach((v, i) => {
+                        if (v.variantType === 'c3') {
+                            v.flex = true;
+                            return;
+                        }
                         let isAllowed = false;
                         if (currentProduct.allowUserFlexiblePricing) {
                             if (flexVars.length === 0) isAllowed = true;
                             else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
                         }
-                        v.flex = (isChecked && isAllowed) ? true : originalVariants[i].flex;
+                        v.flex = (isChecked && i === selectedIdx && isAllowed) ? true : originalVariants[i].flex;
                     });
                     
                     if (currentVariants.length > 1) {
@@ -343,26 +347,34 @@ function initProductModalLogic() {
                             const stock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.name, currentVariants[i].variantType) : Infinity;
                             if (stock <= 0) return; // locked out
                             
-                            labels.forEach((l, idx) => {
-                                const lStock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.name, currentVariants[idx].variantType) : Infinity;
-                                if (lStock <= 0) {
-                                    l.style.borderColor = '#e2e8f0';
-                                    l.style.borderWidth = '1px';
-                                    l.style.background = '#f1f5f9';
-                                } else {
-                                    l.style.borderColor = '#bfdbfe';
-                                    l.style.borderWidth = '1px';
-                                    l.style.background = 'white';
-                                }
-                            });
-                            this.style.borderColor = '#8b5cf6';
-                            this.style.borderWidth = '2px';
-                            this.style.background = '#f0f4f8';
-                            
                             const radio = this.querySelector('input[type="radio"]');
                             if (radio) {
                                 radio.checked = true;
-                                updateModalForVariant(currentVariants[parseInt(radio.value)]);
+                                const newSelectedIdx = parseInt(radio.value);
+                                
+                                // Recompute flex states based on new selection
+                                const isChecked = flexToggleInput ? flexToggleInput.checked : false;
+                                const flexVars = currentProduct.flexibleVariants || [];
+                                currentVariants.forEach((v, idx) => {
+                                    if (v.variantType === 'c3') {
+                                        v.flex = true;
+                                        return;
+                                    }
+                                    let isAllowed = false;
+                                    if (currentProduct.allowUserFlexiblePricing) {
+                                        if (flexVars.length === 0) isAllowed = true;
+                                        else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
+                                    }
+                                    if (isChecked && idx === newSelectedIdx && isAllowed) {
+                                        v.flex = true;
+                                    } else {
+                                        v.flex = originalVariants[idx].flex;
+                                    }
+                                });
+                                
+                                // Re-render the list so the pricing and styling update correctly
+                                renderVariantsList(newSelectedIdx);
+                                updateModalForVariant(currentVariants[newSelectedIdx]);
                             }
                         });
                     });

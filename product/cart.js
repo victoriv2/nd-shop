@@ -287,7 +287,21 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
         maxStock = window.getRemainingProductStock(productName, variantType);
     }
 
-    const currentQtyInCart = existingIndex > -1 ? cart[existingIndex].qty : 0;
+    let currentQtyInCart = 0;
+    cart.forEach(item => {
+        let itemVarType = null;
+        if (item.unit) {
+            if (item.unit.toLowerCase().includes('carton') || item.unit.toLowerCase().includes('bag') || item.unit.toLowerCase().includes('wholesale')) itemVarType = 'wholesale';
+            else if (item.unit.toLowerCase().includes('container 1') || item.unit.toLowerCase().includes('c1')) itemVarType = 'c1';
+            else if (item.unit.toLowerCase().includes('container 2') || item.unit.toLowerCase().includes('c2') || item.unit.toLowerCase().includes('custard')) itemVarType = 'c2';
+            else if (item.unit.toLowerCase().includes('container 3') || item.unit.toLowerCase().includes('c3') || item.unit.toLowerCase().includes('cup')) itemVarType = 'c3';
+        }
+        const cleanItemName = item.name.replace(/\s+\([^)]+\)$/, '');
+        const cleanProdName = productName.replace(/\s+\([^)]+\)$/, '');
+        if (cleanItemName === cleanProdName && itemVarType === variantType) {
+            currentQtyInCart += Number(item.qty) || 0;
+        }
+    });
     if (currentQtyInCart + qty > maxStock) {
         if (typeof window.showCustomAlert === 'function') {
             window.showCustomAlert(`Only ${maxStock} remaining in stock!`, 'warning');

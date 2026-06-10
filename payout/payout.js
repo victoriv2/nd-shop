@@ -882,10 +882,10 @@ function closeUserRewardPurchaseModal() {
 
 function initURPToggles() {
     const toggles = [
-        { id: 'urpExistingFlexToggle', cFixed: 'urpExistingPriceContainer', cVar: 'urpDefaultVariantContainer', cFlex: 'urpExistingFlexPriceContainer' },
-        { id: 'urpSpecFlexToggle', cFixed: null, cVar: 'urpSpecVariantContainer', cFlex: 'urpSpecFlexPriceContainer' },
-        { id: 'urpCustomFlexToggle', cFixed: 'urpCustomPriceContainer', cVar: null, cFlex: 'urpCustomFlexPriceContainer' },
-        { id: 'urpFlexFlexToggle', cFixed: null, cVar: 'urpFlexVariantContainer', cFlex: 'urpFlexCustomPriceContainer' }
+        { id: 'urpExistingFlexToggle', cFixed: 'urpExistingPriceContainer', cVar: 'urpDefaultVariantContainer', radioName: 'urpDefaultVariant', cFlex: 'urpExistingFlexPriceContainer' },
+        { id: 'urpSpecFlexToggle', cFixed: null, cVar: 'urpSpecVariantContainer', radioName: 'urpSpecVariant', cFlex: 'urpSpecFlexPriceContainer' },
+        { id: 'urpCustomFlexToggle', cFixed: 'urpCustomPriceContainer', cVar: null, radioName: null, cFlex: 'urpCustomFlexPriceContainer' },
+        { id: 'urpFlexFlexToggle', cFixed: null, cVar: 'urpFlexVariantContainer', radioName: 'urpFlexVariant', cFlex: 'urpFlexCustomPriceContainer' }
     ];
 
     toggles.forEach(t => {
@@ -905,7 +905,11 @@ function initURPToggles() {
                     if (cFlex) cFlex.style.display = 'block';
                     if (cVar) {
                         cVar.style.display = 'block';
-                        cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = 'none');
+                        if (t.radioName && typeof window.updateVariantPricesVisibility === 'function') {
+                            window.updateVariantPricesVisibility(cVar, t.radioName, true);
+                        } else {
+                            cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = 'none');
+                        }
                         cVar.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
                     }
                 } else {
@@ -914,7 +918,11 @@ function initURPToggles() {
                     if (cFixed) cFixed.style.display = 'block';
                     if (cFlex) cFlex.style.display = 'none';
                     if (cVar) {
-                        cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = '');
+                        if (t.radioName && typeof window.updateVariantPricesVisibility === 'function') {
+                            window.updateVariantPricesVisibility(cVar, t.radioName, false);
+                        } else {
+                            cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = '');
+                        }
                         cVar.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
                     }
                 }
@@ -974,7 +982,13 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
             this.style.background = '#f0f4f8';
             
             const radio = this.querySelector('input[type="radio"]');
-            if(radio) radio.checked = true;
+            if(radio) {
+                radio.checked = true;
+                const isFlexibleChecked = document.getElementById('urpSpecFlexToggle')?.checked || false;
+                if (typeof window.updateVariantPricesVisibility === 'function') {
+                    window.updateVariantPricesVisibility(document.getElementById('urpSpecVariantContainer'), 'urpSpecVariant', isFlexibleChecked);
+                }
+            }
         });
     });
 
@@ -1023,6 +1037,10 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                     } else {
                         urpFlexItemPrice.value = '';
                     }
+                }
+                const isFlexibleChecked = document.getElementById('urpFlexFlexToggle')?.checked || false;
+                if (typeof window.updateVariantPricesVisibility === 'function') {
+                    window.updateVariantPricesVisibility(document.getElementById('urpFlexVariantContainer'), 'urpFlexVariant', isFlexibleChecked);
                 }
             }
         });
@@ -1085,6 +1103,10 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 if (urpExistingPrice) {
                     urpExistingPrice.value = '₦' + formatCurrency(Number(price)) + ' per ' + unitText.toLowerCase();
                     urpExistingPrice.dataset.price = price;
+                }
+                const isFlexibleChecked = document.getElementById('urpExistingFlexToggle')?.checked || false;
+                if (typeof window.updateVariantPricesVisibility === 'function') {
+                    window.updateVariantPricesVisibility(document.getElementById('urpDefaultVariantContainer'), 'urpDefaultVariant', isFlexibleChecked);
                 }
             }
         });

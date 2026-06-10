@@ -126,7 +126,13 @@ function _initPayoutPurchaseLogic(modal) {
             this.style.background = '#f0f4f8';
             
             const radio = this.querySelector('input[type="radio"]');
-            if(radio) radio.checked = true;
+            if(radio) {
+                radio.checked = true;
+                const isFlexibleChecked = modal.querySelector('#ppSpecFlexToggle')?.checked || false;
+                if (typeof window.updateVariantPricesVisibility === 'function') {
+                    window.updateVariantPricesVisibility(modal.querySelector('#ppSpecVariantContainer'), 'ppSpecVariant', isFlexibleChecked);
+                }
+            }
         });
     });
 
@@ -175,6 +181,10 @@ function _initPayoutPurchaseLogic(modal) {
                     } else {
                         ppFlexItemPrice.value = '';
                     }
+                }
+                const isFlexibleChecked = modal.querySelector('#ppFlexFlexToggle')?.checked || false;
+                if (typeof window.updateVariantPricesVisibility === 'function') {
+                    window.updateVariantPricesVisibility(modal.querySelector('#ppFlexVariantContainer'), 'ppFlexVariant', isFlexibleChecked);
                 }
             }
         });
@@ -242,6 +252,10 @@ function _initPayoutPurchaseLogic(modal) {
                 if (ppExistingPrice) {
                     ppExistingPrice.value = '₦' + formatCurrency(Number(price)) + ' per ' + unitText.toLowerCase();
                     ppExistingPrice.dataset.price = price;
+                }
+                const isFlexibleChecked = modal.querySelector('#ppExistingFlexToggle')?.checked || false;
+                if (typeof window.updateVariantPricesVisibility === 'function') {
+                    window.updateVariantPricesVisibility(modal.querySelector('#ppDefaultVariantContainer'), 'ppDefaultVariant', isFlexibleChecked);
                 }
             }
         });
@@ -1419,10 +1433,10 @@ function _resetPayoutPurchaseForm(modal) {
 // Initialize Flexible Pricing Toggles for Payout Purchase
 function initPPToggles() {
     const toggles = [
-        { id: 'ppExistingFlexToggle', cFixed: 'ppExistingPriceContainer', cVar: 'ppDefaultVariantContainer', cFlex: 'ppExistingFlexPriceContainer' },
-        { id: 'ppSpecFlexToggle', cFixed: null, cVar: 'ppSpecVariantContainer', cFlex: 'ppSpecFlexPriceContainer' },
-        { id: 'ppCustomFlexToggle', cFixed: 'ppCustomPriceContainer', cVar: null, cFlex: 'ppCustomFlexPriceContainer' },
-        { id: 'ppFlexFlexToggle', cFixed: null, cVar: 'ppFlexVariantContainer', cFlex: 'ppFlexCustomPriceContainer' }
+        { id: 'ppExistingFlexToggle', cFixed: 'ppExistingPriceContainer', cVar: 'ppDefaultVariantContainer', radioName: 'ppDefaultVariant', cFlex: 'ppExistingFlexPriceContainer' },
+        { id: 'ppSpecFlexToggle', cFixed: null, cVar: 'ppSpecVariantContainer', radioName: 'ppSpecVariant', cFlex: 'ppSpecFlexPriceContainer' },
+        { id: 'ppCustomFlexToggle', cFixed: 'ppCustomPriceContainer', cVar: null, radioName: null, cFlex: 'ppCustomFlexPriceContainer' },
+        { id: 'ppFlexFlexToggle', cFixed: null, cVar: 'ppFlexVariantContainer', radioName: 'ppFlexVariant', cFlex: 'ppFlexCustomPriceContainer' }
     ];
 
     toggles.forEach(t => {
@@ -1442,7 +1456,11 @@ function initPPToggles() {
                     if (cFlex) cFlex.style.display = 'block';
                     if (cVar) {
                         cVar.style.display = 'block';
-                        cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = 'none');
+                        if (t.radioName && typeof window.updateVariantPricesVisibility === 'function') {
+                            window.updateVariantPricesVisibility(cVar, t.radioName, true);
+                        } else {
+                            cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = 'none');
+                        }
                         cVar.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
                     }
                 } else {
@@ -1451,7 +1469,11 @@ function initPPToggles() {
                     if (cFixed) cFixed.style.display = 'block';
                     if (cFlex) cFlex.style.display = 'none';
                     if (cVar) {
-                        cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = '');
+                        if (t.radioName && typeof window.updateVariantPricesVisibility === 'function') {
+                            window.updateVariantPricesVisibility(cVar, t.radioName, false);
+                        } else {
+                            cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = '');
+                        }
                         cVar.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
                     }
                 }

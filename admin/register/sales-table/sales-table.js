@@ -277,7 +277,13 @@ function initSalesTable() {
             
             // Also ensure the native radio inside is actually checked securely
             const radio = this.querySelector('input[type="radio"]');
-            if(radio) radio.checked = true;
+            if(radio) {
+                radio.checked = true;
+                const isFlexibleChecked = document.getElementById('specFlexiblePriceToggle')?.checked || false;
+                if (typeof window.updateVariantPricesVisibility === 'function') {
+                    window.updateVariantPricesVisibility(document.getElementById('specVariantContainer'), 'specVariant', isFlexibleChecked);
+                }
+            }
         });
     });
 
