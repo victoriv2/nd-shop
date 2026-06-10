@@ -149,7 +149,10 @@ function renderAdminRequests() {
                  
                 <div class="request-header">
                     <span class="request-date" style="font-size: 0.8rem; font-weight: 700; color: #888; background: #f5f5f5; padding: 4px 10px; border-radius: 8px;">${formattedDate}</span>
-                    <span class="request-status status-${req.status.toLowerCase()}">${req.status}</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        ${req.isRewardPurchase ? `<span style="font-size: 0.7rem; font-weight: 800; color: #166534; background: #dcfce7; padding: 3px 8px; border-radius: 6px; border: 1px solid #bbf7d0;">Paid with Payout</span>` : ''}
+                        <span class="request-status status-${req.status.toLowerCase()}">${req.status}</span>
+                    </div>
                 </div>
                 
                 <div class="user-profile-row">
@@ -279,6 +282,13 @@ function _renderOrderModal(req, id, isPending, itemsHtml, totalCost) {
                             <p>Requested: ${new Date(req.timestamp).toLocaleString()}</p>
                         </div>
                     </div>
+                    
+                    ${req.isRewardPurchase ? `
+                    <div style="background:#dcfce7; border:1px solid #bbf7d0; border-radius:10px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem; color:#166534; font-weight:700; display:flex; align-items:center; gap:6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/></svg>
+                        PAID WITH PAYOUT REWARD (No Payment Required)
+                    </div>
+                    ` : ''}
                     
                     ${isPending ? `<div style="background:#f0f4f8;border:1px solid #bfdbfe;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:0.82rem;color:#1e40af;font-weight:600;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>

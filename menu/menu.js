@@ -88,6 +88,13 @@ function initMenuLogic() {
         });
     }
 
+    const referralEarningsBtn = document.getElementById('referralEarningsBtn');
+    if (referralEarningsBtn) {
+        referralEarningsBtn.addEventListener('click', () => {
+            window.open('https://ec5.empoweredconsumerism.com/index.html#', '_blank');
+        });
+    }
+
     // Real-time listener for admin toggles
     if (!window.hasRewardPurchaseToggleListener) {
         window.addEventListener('local-storage-update', (e) => {
