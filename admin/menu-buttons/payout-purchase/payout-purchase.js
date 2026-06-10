@@ -145,6 +145,9 @@ function _initPayoutPurchaseLogic(modal) {
             const radio = this.querySelector('input[type="radio"]');
             if(radio) {
                 radio.checked = true;
+                const val = radio.value;
+                const selectedProduct = flexInventory.find(p => p.name === ppFlexItemSelect.value);
+                
                 // Cut to all 3 containers: always show custom price container
                 if (val === 'c3') {
                         if (ppFlexCustomPriceContainer) ppFlexCustomPriceContainer.style.display = 'block';
@@ -162,8 +165,6 @@ function _initPayoutPurchaseLogic(modal) {
                 if (ppFlexItemPrice) {
                     ppFlexItemPrice.required = true;
                     // Pre-fill the price input with the variant's pre-set price if it exists
-                    const val = radio.value;
-                    const selectedProduct = flexInventory.find(p => p.name === ppFlexItemSelect.value);
                     if (selectedProduct) {
                         const pt = selectedProduct.packTypes || {};
                         const presetPrice = (pt[val] || {}).price || (val === 'c1' ? selectedProduct.price : 0);
@@ -789,7 +790,20 @@ function _initPayoutPurchaseLogic(modal) {
         e.preventDefault();
         const itemName = ppSpecItemSelect.value;
         const qty = modal.querySelector('#ppSpecItemQty').value;
-        const checkedVariant = modal.querySelector('input[name="ppSpecVariant"]:checked');
+        
+        const specToggle = modal.querySelector('#ppSpecFlexToggle');
+        const isFlexiblePrice = specToggle && specToggle.checked;
+        let checkedVariant = modal.querySelector('input[name="ppSpecVariant"]:checked');
+        if (isFlexiblePrice && !checkedVariant) {
+            const specVarContainer = modal.querySelector('#ppSpecVariantContainer');
+            if (specVarContainer) {
+                const firstRadio = specVarContainer.querySelector('input[type="radio"]');
+                if (firstRadio) {
+                    firstRadio.checked = true;
+                    checkedVariant = firstRadio;
+                }
+            }
+        }
         
         if (itemName && qty && checkedVariant) {
             const variantKey = checkedVariant.value; // bag, custard, cup
@@ -898,7 +912,20 @@ function _initPayoutPurchaseLogic(modal) {
     if (ppFlexItemForm) ppFlexItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = ppFlexItemSelect.value;
-        const checkedVariant = modal.querySelector('input[name="ppFlexVariant"]:checked');
+        
+        const flexToggle = modal.querySelector('#ppFlexFlexToggle');
+        const isFlexiblePrice = flexToggle && flexToggle.checked;
+        let checkedVariant = modal.querySelector('input[name="ppFlexVariant"]:checked');
+        if (isFlexiblePrice && !checkedVariant) {
+            const flexVarContainer = modal.querySelector('#ppFlexVariantContainer');
+            if (flexVarContainer) {
+                const firstRadio = flexVarContainer.querySelector('input[type="radio"]');
+                if (firstRadio) {
+                    firstRadio.checked = true;
+                    checkedVariant = firstRadio;
+                }
+            }
+        }
         const qty = modal.querySelector('#ppFlexItemQty').value;
         
         if (itemName && qty && checkedVariant) {
@@ -1301,9 +1328,9 @@ function _resetPayoutPurchaseForm(modal) {
 function initPPToggles() {
     const toggles = [
         { id: 'ppExistingFlexToggle', cFixed: 'ppExistingPriceContainer', cFlex: 'ppExistingFlexPriceContainer' },
-        { id: 'ppSpecFlexToggle', cFixed: null, cFlex: 'ppSpecFlexPriceContainer' },
+        { id: 'ppSpecFlexToggle', cFixed: 'ppSpecVariantContainer', cFlex: 'ppSpecFlexPriceContainer' },
         { id: 'ppCustomFlexToggle', cFixed: 'ppCustomPriceContainer', cFlex: 'ppCustomFlexPriceContainer' },
-        { id: 'ppFlexFlexToggle', cFixed: null, cFlex: 'ppFlexCustomPriceContainer' }
+        { id: 'ppFlexFlexToggle', cFixed: 'ppFlexVariantContainer', cFlex: 'ppFlexCustomPriceContainer' }
     ];
 
     toggles.forEach(t => {
@@ -1318,12 +1345,18 @@ function initPPToggles() {
                 if (this.checked) {
                     if (bg) bg.style.backgroundColor = '#f0abfc';
                     if (knob) knob.style.transform = 'translateX(20px)';
-                    if (cFixed) cFixed.style.display = 'none';
+                    if (cFixed) {
+                        cFixed.style.display = 'none';
+                        cFixed.querySelectorAll('input[type="radio"]').forEach(r => r.removeAttribute('required'));
+                    }
                     if (cFlex) cFlex.style.display = 'block';
                 } else {
                     if (bg) bg.style.backgroundColor = '#e2e8f0';
                     if (knob) knob.style.transform = 'translateX(0)';
-                    if (cFixed) cFixed.style.display = 'block';
+                    if (cFixed) {
+                        cFixed.style.display = 'block';
+                        cFixed.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
+                    }
                     if (cFlex) cFlex.style.display = 'none';
                 }
             });

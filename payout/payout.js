@@ -883,9 +883,9 @@ function closeUserRewardPurchaseModal() {
 function initURPToggles() {
     const toggles = [
         { id: 'urpExistingFlexToggle', cFixed: 'urpExistingPriceContainer', cFlex: 'urpExistingFlexPriceContainer' },
-        { id: 'urpSpecFlexToggle', cFixed: null, cFlex: 'urpSpecFlexPriceContainer' },
+        { id: 'urpSpecFlexToggle', cFixed: 'urpSpecVariantContainer', cFlex: 'urpSpecFlexPriceContainer' },
         { id: 'urpCustomFlexToggle', cFixed: 'urpCustomPriceContainer', cFlex: 'urpCustomFlexPriceContainer' },
-        { id: 'urpFlexFlexToggle', cFixed: null, cFlex: 'urpFlexCustomPriceContainer' }
+        { id: 'urpFlexFlexToggle', cFixed: 'urpFlexVariantContainer', cFlex: 'urpFlexCustomPriceContainer' }
     ];
 
     toggles.forEach(t => {
@@ -900,12 +900,18 @@ function initURPToggles() {
                 if (this.checked) {
                     if (bg) bg.style.backgroundColor = '#f0abfc';
                     if (knob) knob.style.transform = 'translateX(20px)';
-                    if (cFixed) cFixed.style.display = 'none';
+                    if (cFixed) {
+                        cFixed.style.display = 'none';
+                        cFixed.querySelectorAll('input[type="radio"]').forEach(r => r.removeAttribute('required'));
+                    }
                     if (cFlex) cFlex.style.display = 'block';
                 } else {
                     if (bg) bg.style.backgroundColor = '#e2e8f0';
                     if (knob) knob.style.transform = 'translateX(0)';
-                    if (cFixed) cFixed.style.display = 'block';
+                    if (cFixed) {
+                        cFixed.style.display = 'block';
+                        cFixed.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
+                    }
                     if (cFlex) cFlex.style.display = 'none';
                 }
             });
@@ -1573,7 +1579,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 }
                 return;
             }
-            _addToURPBasket(finalName, qty, price, finalUnit);
+            _addToURPBasket(finalName, qty, price, finalUnit, isFlexPrice);
 
             // Reset
             urpHiddenItemInput.value = '';
@@ -1598,7 +1604,20 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
         e.preventDefault();
         const itemName = urpSpecItemSelect.value;
         const qty = modal.querySelector('#urpSpecItemQty').value;
-        const checkedVariant = modal.querySelector('input[name="urpSpecVariant"]:checked');
+        
+        const specToggle = modal.querySelector('#urpSpecFlexToggle');
+        const isFlexiblePrice = specToggle && specToggle.checked;
+        let checkedVariant = modal.querySelector('input[name="urpSpecVariant"]:checked');
+        if (isFlexiblePrice && !checkedVariant) {
+            const specVarContainer = modal.querySelector('#urpSpecVariantContainer');
+            if (specVarContainer) {
+                const firstRadio = specVarContainer.querySelector('input[type="radio"]');
+                if (firstRadio) {
+                    firstRadio.checked = true;
+                    checkedVariant = firstRadio;
+                }
+            }
+        }
         
         if (itemName && qty && checkedVariant) {
             const variantKey = checkedVariant.value;
@@ -1618,9 +1637,23 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 return;
             }
             
-            const price = modal.querySelector('#' + variantId).dataset.price;
+            let price = modal.querySelector('#' + variantId).dataset.price;
             const finalName = `${itemName} (${titleStr})`;
-            _addToURPBasket(finalName, qty, price, titleStr);
+            let isFlexPrice = false;
+            
+            const prodLookup = specialInventory.find(p => p.name === itemName);
+            const specToggle = modal.querySelector('#urpSpecFlexToggle');
+            if (prodLookup && prodLookup.allowUserFlexiblePricing && specToggle && specToggle.checked) {
+                const fPrice = modal.querySelector('#urpSpecFlexPrice').value;
+                if (!fPrice) {
+                    alert('Please enter a flexible unit price.');
+                    return;
+                }
+                price = fPrice;
+                isFlexPrice = true;
+            }
+            
+            _addToURPBasket(finalName, qty, price, titleStr, isFlexPrice);
 
             // Reset
             urpSpecItemSelect.value = '';
@@ -1646,8 +1679,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
 
     if (urpCustomItemForm) urpCustomItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const itemName = urpCustomItemSelect.value;
-        const price = urpCustomItemPrice ? urpCustomItemPrice.dataset.price : '';
+        let price = urpCustomItemPrice ? urpCustomItemPrice.dataset.price : '';
         const qty = modal.querySelector('#urpCustomItemQty').value;
         if (itemName && price && qty) {
             const requiredQty = parseFloat(qty);
@@ -1664,7 +1696,19 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 return;
             }
 
-            _addToURPBasket(itemName, requiredQty, Number(price), unit);
+            let isFlexPrice = false;
+            const customToggle = modal.querySelector('#urpCustomFlexToggle');
+            if (prod && prod.allowUserFlexiblePricing && customToggle && customToggle.checked) {
+                const fPrice = modal.querySelector('#urpCustomFlexPrice').value;
+                if (!fPrice) {
+                    alert('Please enter a flexible unit price.');
+                    return;
+                }
+                price = fPrice;
+                isFlexPrice = true;
+            }
+
+            _addToURPBasket(itemName, requiredQty, Number(price), unit, isFlexPrice);
 
             // Reset
             urpCustomItemSelect.value = '';
@@ -1683,7 +1727,20 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
     if (urpFlexibleItemForm) urpFlexibleItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = urpFlexItemSelect.value;
-        const checkedVariant = modal.querySelector('input[name="urpFlexVariant"]:checked');
+        
+        const flexToggle = modal.querySelector('#urpFlexFlexToggle');
+        const isFlexiblePrice = flexToggle && flexToggle.checked;
+        let checkedVariant = modal.querySelector('input[name="urpFlexVariant"]:checked');
+        if (isFlexiblePrice && !checkedVariant) {
+            const flexVarContainer = modal.querySelector('#urpFlexVariantContainer');
+            if (flexVarContainer) {
+                const firstRadio = flexVarContainer.querySelector('input[type="radio"]');
+                if (firstRadio) {
+                    firstRadio.checked = true;
+                    checkedVariant = firstRadio;
+                }
+            }
+        }
         const qty = modal.querySelector('#urpFlexItemQty').value;
         
         if (itemName && qty && checkedVariant) {
@@ -1773,7 +1830,7 @@ function _updateURPBasketUI(spendableRewardBalance) {
     }
 
     urpBasketItems.forEach((item, index) => {
-        const itemTotal = item.isFlexible ? item.price : item.qty * item.price;
+        const itemTotal = item.qty * item.price;
         total += itemTotal;
 
         const itemDiv = document.createElement('div');
@@ -1781,7 +1838,7 @@ function _updateURPBasketUI(spendableRewardBalance) {
         itemDiv.innerHTML = `
             <div class="basket-item-info">
                 <span class="basket-item-name">${item.name}</span>
-                <span class="basket-item-meta">${item.isFlexible ? 'Flexible' : item.qty + ' × ₦' + formatCurrency(item.price)}</span>
+                <span class="basket-item-meta">${item.isFlexible ? 'Flexible: ' : ''}${item.qty} × ₦${formatCurrency(item.price)}</span>
             </div>
             <span class="basket-item-total">₦${formatCurrency(itemTotal)}</span>
             <button class="remove-basket-item" data-index="${index}">
@@ -1824,7 +1881,7 @@ function _submitURPRequest(spendableRewardBalance, user) {
 
     let total = 0;
     urpBasketItems.forEach(item => {
-        total += item.isFlexible ? item.price : item.qty * item.price;
+        total += item.qty * item.price;
     });
 
     if (total <= 0) {
@@ -1857,7 +1914,7 @@ function _submitURPRequest(spendableRewardBalance, user) {
             qty: item.qty,
             unit: item.unit || '',
             unitPrice: item.price,
-            total: item.isFlexible ? item.price : item.qty * item.price,
+            total: item.qty * item.price,
             isFlexible: item.isFlexible || false
         }))
     };

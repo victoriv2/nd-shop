@@ -1150,7 +1150,19 @@ function initSalesTable() {
             e.preventDefault();
             const itemName = specItemSelect.value;
             const qty = document.getElementById('specItemQty').value;
-            const checkedVariant = document.querySelector('input[name="specVariant"]:checked');
+            
+            const isFlexiblePrice = document.getElementById('specFlexiblePriceToggle')?.checked || false;
+            let checkedVariant = document.querySelector('input[name="specVariant"]:checked');
+            if (isFlexiblePrice && !checkedVariant) {
+                const specVariantContainer = document.getElementById('specVariantContainer');
+                if (specVariantContainer) {
+                    const firstRadio = specVariantContainer.querySelector('input[type="radio"]');
+                    if (firstRadio) {
+                        firstRadio.checked = true;
+                        checkedVariant = firstRadio;
+                    }
+                }
+            }
             
             if (itemName && qty && checkedVariant) {
                 const variantKey = checkedVariant.value; // bag, custard, cup

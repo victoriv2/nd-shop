@@ -212,23 +212,25 @@
                 Retail Cost per <span class="lbl-retail-unit">piece</span>: <span id="adminNewProductRetailCostVal" style="color: #8b5cf6;">₦0</span>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-                <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                    <label>Retail Profit per <span class="lbl-retail-unit">piece</span> (₦)</label>
-                    <input type="number" id="adminNewProductProfit" class="form-input" placeholder="100" min="0" step="0.01">
+            <div id="adminDefFixedPriceFields">
+                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Retail Profit per <span class="lbl-retail-unit">piece</span> (₦)</label>
+                        <input type="number" id="adminNewProductProfit" class="form-input" placeholder="100" min="0" step="0.01">
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label style="display: flex; align-items: center; gap: 6px;">
+                            Profit Margin (%)
+                        </label>
+                        <input type="number" id="adminNewProductProfitPercent" class="form-input" placeholder="e.g. 10" min="0" step="0.01" style="font-weight: 600;">
+                        <span id="adminProfitPercentBadge" style="font-size: 0.7rem; background: #e0f2fe; color: #8b5cf6; padding: 2px 8px; border-radius: 20px; font-weight: 700; display: none; margin-top: 4px;"></span>
+                    </div>
                 </div>
-                <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                    <label style="display: flex; align-items: center; gap: 6px;">
-                        Profit Margin (%)
-                    </label>
-                    <input type="number" id="adminNewProductProfitPercent" class="form-input" placeholder="e.g. 10" min="0" step="0.01" style="font-weight: 600;">
-                    <span id="adminProfitPercentBadge" style="font-size: 0.7rem; background: #e0f2fe; color: #8b5cf6; padding: 2px 8px; border-radius: 20px; font-weight: 700; display: none; margin-top: 4px;"></span>
-                </div>
-            </div>
 
-            <div class="form-group">
-                <label>Final Unit Price (₦)</label>
-                <input type="number" id="adminNewProductPrice" class="form-input" placeholder="0" readonly style="background: #f8fafc; font-weight: 700; color: #8b5cf6; cursor: not-allowed;">
+                <div class="form-group">
+                    <label>Final Unit Price (₦)</label>
+                    <input type="number" id="adminNewProductPrice" class="form-input" placeholder="0" readonly style="background: #f8fafc; font-weight: 700; color: #8b5cf6; cursor: not-allowed;">
+                </div>
             </div>
 
             <!-- Allow User Flexible Pricing Toggle -->
@@ -314,19 +316,21 @@
                         Total Cost: <span id="adminSpecBagTotalCostVal" style="color: #16a34a;">₦0</span>
                     </div>
 
-                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label><span id="lblAdminSpecBagProfit">Container 1</span> Profit (₦)</label>
-                            <input type="number" id="adminSpecBagProfit" class="form-input" placeholder="5000" min="0" step="0.01">
+                    <div class="admin-spec-price-fields">
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label><span id="lblAdminSpecBagProfit">Container 1</span> Profit (₦)</label>
+                                <input type="number" id="adminSpecBagProfit" class="form-input" placeholder="5000" min="0" step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Profit Margin (%)</label>
+                                <input type="number" id="adminSpecBagProfitPercent" class="form-input" placeholder="10" min="0" step="0.01">
+                            </div>
                         </div>
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label>Profit Margin (%)</label>
-                            <input type="number" id="adminSpecBagProfitPercent" class="form-input" placeholder="10" min="0" step="0.01">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Final Selling Price per <span id="lblAdminSpecBagPrice">Container 1</span> (₦)</label>
+                            <input type="number" id="adminSpecBagPrice" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
                         </div>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Final Selling Price per <span id="lblAdminSpecBagPrice">Container 1</span> (₦)</label>
-                        <input type="number" id="adminSpecBagPrice" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
                     </div>
                 </div>
 
@@ -341,19 +345,21 @@
                         <input type="number" id="adminSpecCustardsPerBag" class="form-input" placeholder="e.g. 10" min="1" step="1">
                         <div style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">Cost per unit: <span id="adminSpecCustardCostVal" style="color: #8b5cf6;">₦0</span></div>
                     </div>
-                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label><span id="lblAdminSpecCustardProfit">Container 2</span> Profit (₦)</label>
-                            <input type="number" id="adminSpecCustardProfit" class="form-input" placeholder="1000" min="0" step="0.01">
+                    <div class="admin-spec-price-fields">
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label><span id="lblAdminSpecCustardProfit">Container 2</span> Profit (₦)</label>
+                                <input type="number" id="adminSpecCustardProfit" class="form-input" placeholder="1000" min="0" step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Profit Margin (%)</label>
+                                <input type="number" id="adminSpecCustardProfitPercent" class="form-input" placeholder="20" min="0" step="0.01">
+                            </div>
                         </div>
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label>Profit Margin (%)</label>
-                            <input type="number" id="adminSpecCustardProfitPercent" class="form-input" placeholder="20" min="0" step="0.01">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Final Selling Price per <span id="lblAdminSpecCustardPrice">Container 2</span> (₦)</label>
+                            <input type="number" id="adminSpecCustardPrice" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
                         </div>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Final Selling Price per <span id="lblAdminSpecCustardPrice">Container 2</span> (₦)</label>
-                        <input type="number" id="adminSpecCustardPrice" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
                     </div>
                 </div>
 
@@ -368,19 +374,21 @@
                         <input type="number" id="adminSpecCupsPerCustard" class="form-input" placeholder="e.g. 20" min="1" step="1">
                         <div style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">Cost per unit: <span id="adminSpecCupCostVal" style="color: #8b5cf6;">₦0</span></div>
                     </div>
-                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label><span id="lblAdminSpecCupProfit">Container 3</span> Profit (₦)</label>
-                            <input type="number" id="adminSpecCupProfit" class="form-input" placeholder="50" min="0" step="0.01">
+                    <div class="admin-spec-price-fields">
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label><span id="lblAdminSpecCupProfit">Container 3</span> Profit (₦)</label>
+                                <input type="number" id="adminSpecCupProfit" class="form-input" placeholder="50" min="0" step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Profit Margin (%)</label>
+                                <input type="number" id="adminSpecCupProfitPercent" class="form-input" placeholder="20" min="0" step="0.01">
+                            </div>
                         </div>
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label>Profit Margin (%)</label>
-                            <input type="number" id="adminSpecCupProfitPercent" class="form-input" placeholder="20" min="0" step="0.01">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Final Selling Price per <span id="lblAdminSpecCupPrice">Container 3</span> (₦)</label>
+                            <input type="number" id="adminSpecCupPrice" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
                         </div>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Final Selling Price per <span id="lblAdminSpecCupPrice">Container 3</span> (₦)</label>
-                        <input type="number" id="adminSpecCupPrice" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
                     </div>
                 </div>
 
@@ -514,7 +522,7 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 24px;">
+                <div id="adminCustomFixedPriceFields" class="form-group" style="margin-bottom: 24px;">
                     <label>Retail Price per <span class="lbl-custom-retail">piece</span> (₦)</label>
                     <input type="number" id="adminCustomProductPrice" class="form-input" placeholder="e.g. 1500" min="0" step="0.01" style="background: #f8fafc; font-weight: 700; color: #0f172a;">
                     <div style="font-size: 0.75rem; color: #64748b; margin-top: 6px;">This is the price customers will pay per <span class="lbl-custom-retail">piece</span>.</div>
@@ -598,19 +606,21 @@
                         Total Cost: <span id="adminFlexC1TotalCostVal" style="color: #16a34a;">₦0</span>
                     </div>
 
-                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label><span id="lblAdminFlexC1Profit">Container 1</span> Profit (₦)</label>
-                            <input type="number" id="adminFlexC1Profit" class="form-input" placeholder="5000" min="0" step="0.01">
+                    <div class="admin-flex-price-fields">
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label><span id="lblAdminFlexC1Profit">Container 1</span> Profit (₦)</label>
+                                <input type="number" id="adminFlexC1Profit" class="form-input" placeholder="5000" min="0" step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Profit Margin (%)</label>
+                                <input type="number" id="adminFlexC1ProfitPercent" class="form-input" placeholder="10" min="0" step="0.01">
+                            </div>
                         </div>
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label>Profit Margin (%)</label>
-                            <input type="number" id="adminFlexC1ProfitPercent" class="form-input" placeholder="10" min="0" step="0.01">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Final Selling Price per <span id="lblAdminFlexC1Price">Container 1</span> (₦)</label>
+                            <input type="number" id="adminFlexC1Price" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
                         </div>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Final Selling Price per <span id="lblAdminFlexC1Price">Container 1</span> (₦)</label>
-                        <input type="number" id="adminFlexC1Price" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
                     </div>
                 </div>
 
@@ -625,19 +635,21 @@
                         <input type="number" id="adminFlexC2Qty" class="form-input" placeholder="e.g. 10" min="1" step="1">
                         <div style="font-size: 0.95rem; color: #1e293b; margin-top: 8px; font-weight: 700; background: #f0f4f8; padding: 6px 10px; border-radius: 6px; display: inline-block;">Cost per unit: <span id="adminFlexC2CostVal" style="color: #8b5cf6;">₦0</span></div>
                     </div>
-                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label><span id="lblAdminFlexC2Profit">Container 2</span> Profit (₦)</label>
-                            <input type="number" id="adminFlexC2Profit" class="form-input" placeholder="1000" min="0" step="0.01">
+                    <div class="admin-flex-price-fields">
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label><span id="lblAdminFlexC2Profit">Container 2</span> Profit (₦)</label>
+                                <input type="number" id="adminFlexC2Profit" class="form-input" placeholder="1000" min="0" step="0.01">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label>Profit Margin (%)</label>
+                                <input type="number" id="adminFlexC2ProfitPercent" class="form-input" placeholder="20" min="0" step="0.01">
+                            </div>
                         </div>
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label>Profit Margin (%)</label>
-                            <input type="number" id="adminFlexC2ProfitPercent" class="form-input" placeholder="20" min="0" step="0.01">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Final Selling Price per <span id="lblAdminFlexC2Price">Container 2</span> (₦)</label>
+                            <input type="number" id="adminFlexC2Price" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
                         </div>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Final Selling Price per <span id="lblAdminFlexC2Price">Container 2</span> (₦)</label>
-                        <input type="number" id="adminFlexC2Price" class="form-input" readonly style="background: #f0f4f8; font-weight: 700; color: #8b5cf6; border-color: #bfdbfe;">
                     </div>
                 </div>
 

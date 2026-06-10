@@ -138,6 +138,31 @@ function initAdminProductLogic() {
     }
 
     // ========================================
+    // Flexible Pricing Toggles
+    // ========================================
+    const pricingSwitches = [
+        { switchId: 'adminDefFlexiblePricingSwitch', containerId: 'adminDefFixedPriceFields', isClass: false },
+        { switchId: 'adminSpecFlexiblePricingSwitch', containerId: 'admin-spec-price-fields', isClass: true },
+        { switchId: 'adminCustomFlexiblePricingSwitch', containerId: 'adminCustomFixedPriceFields', isClass: false },
+        { switchId: 'adminFlexFlexiblePricingSwitch', containerId: 'admin-flex-price-fields', isClass: true }
+    ];
+
+    pricingSwitches.forEach(ps => {
+        const sw = document.getElementById(ps.switchId);
+        if (sw) {
+            sw.addEventListener('change', () => {
+                const display = sw.checked ? 'none' : 'block';
+                if (ps.isClass) {
+                    document.querySelectorAll('.' + ps.containerId).forEach(el => el.style.display = display);
+                } else {
+                    const el = document.getElementById(ps.containerId);
+                    if (el) el.style.display = display;
+                }
+            });
+        }
+    });
+
+    // ========================================
     // Category Tabs Logic
     // ========================================
     const tabBtns = document.querySelectorAll('.ap-tab-btn');
@@ -590,6 +615,22 @@ function initAdminProductLogic() {
                             const knob = slider.querySelector('.knob');
                             if (knob) knob.style.transform = 'translateX(20px)';
                         }
+                    }
+                });
+
+                // Reset Flexible Pricing Toggles to OFF by default
+                ['adminDefFlexiblePricingSwitch', 'adminSpecFlexiblePricingSwitch', 'adminCustomFlexiblePricingSwitch', 'adminFlexFlexiblePricingSwitch'].forEach(id => {
+                    const sw = document.getElementById(id);
+                    if (sw) {
+                        sw.checked = false;
+                        const slider = sw.nextElementSibling;
+                        if (slider) {
+                            slider.style.backgroundColor = '#cbd5e1';
+                            const knob = slider.querySelector('.knob');
+                            if (knob) knob.style.transform = 'translateX(0)';
+                        }
+                        // Trigger change listener to show pricing fields
+                        sw.dispatchEvent(new Event('change'));
                     }
                 });
                 
