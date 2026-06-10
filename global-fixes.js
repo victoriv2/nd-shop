@@ -1648,10 +1648,14 @@ window.openCameraCapture = function(onCapture) {
             if (label) {
                 const priceEl = label.querySelector('[id$="Price"]') || label.querySelector('[id$="price"]') || label.querySelector('.price') || label.querySelector('.variant-price');
                 if (priceEl) {
+                    if (priceEl.textContent.trim() !== 'Flexible') {
+                        priceEl.dataset.originalText = priceEl.textContent.trim();
+                    }
+                    priceEl.style.display = ''; // Make sure it is not hidden completely
                     if (isFlexibleChecked && radio.checked) {
-                        priceEl.style.display = 'none';
+                        priceEl.textContent = 'Flexible';
                     } else {
-                        priceEl.style.display = '';
+                        priceEl.textContent = priceEl.dataset.originalText || '';
                     }
                 }
             }
