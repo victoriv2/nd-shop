@@ -454,14 +454,42 @@ function initSalesTable() {
                             wholesaleLabelText.textContent = item.bulkUnit || 'Carton';
                         }
                         
-                        // Reset selection
-                        document.querySelectorAll('.default-variant-label').forEach(l => {
-                            l.style.borderColor = '#bfdbfe';
-                            l.style.borderWidth = '1px';
-                            l.style.background = 'white';
+                        // Stock-aware selection & disabling
+                        const defaultVariants = [
+                            { val: 'retail', labelId: 'defaultVariantRetailLabelTxt' },
+                            { val: 'wholesale', labelId: 'defaultVariantWholesaleLabelTxt' }
+                        ];
+                        let firstDefaultInStockLabel = null;
+                        defaultVariants.forEach(v => {
+                            const radio = document.querySelector(`input[name="defaultVariant"][value="${v.val}"]`);
+                            const label = radio ? radio.closest('label') : null;
+                            if (radio && label) {
+                                const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                                if (stock <= 0) {
+                                    radio.disabled = true;
+                                    label.style.opacity = '0.5';
+                                    label.style.pointerEvents = 'none';
+                                    label.style.background = '#f1f5f9';
+                                } else {
+                                    radio.disabled = false;
+                                    label.style.opacity = '1';
+                                    label.style.pointerEvents = 'auto';
+                                    label.style.background = 'white';
+                                    if (!firstDefaultInStockLabel) firstDefaultInStockLabel = label;
+                                }
+                            }
                         });
-                        const radioButtons = document.getElementsByName('defaultVariant');
-                        radioButtons.forEach(r => r.checked = false);
+                        if (firstDefaultInStockLabel) {
+                            firstDefaultInStockLabel.click();
+                        } else {
+                            const radioButtons = document.getElementsByName('defaultVariant');
+                            radioButtons.forEach(r => r.checked = false);
+                            document.querySelectorAll('.default-variant-label').forEach(l => {
+                                l.style.borderColor = '#bfdbfe';
+                                l.style.borderWidth = '1px';
+                                l.style.background = 'white';
+                            });
+                        }
                         
                         if (existingPrice) {
                             existingPrice.value = '';
@@ -577,6 +605,42 @@ function initSalesTable() {
                     
                     const cupTxt = document.getElementById('specVariantCupLabelTxt');
                     if (cupTxt) cupTxt.textContent = (pt.cup || {}).title || (pt.c3 || {}).title || 'Container 3';
+
+                    const variants = [
+                        { val: 'bag', labelId: 'specVariantBagLabelTxt' },
+                        { val: 'custard', labelId: 'specVariantCustardLabelTxt' },
+                        { val: 'cup', labelId: 'specVariantCupLabelTxt' }
+                    ];
+                    let firstInStockLabel = null;
+                    variants.forEach(v => {
+                        const radio = document.querySelector(`input[name="specVariant"][value="${v.val}"]`);
+                        const label = radio ? radio.closest('label') : null;
+                        if (radio && label) {
+                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                            if (stock <= 0) {
+                                radio.disabled = true;
+                                label.style.opacity = '0.5';
+                                label.style.pointerEvents = 'none';
+                                label.style.background = '#f1f5f9';
+                            } else {
+                                radio.disabled = false;
+                                label.style.opacity = '1';
+                                label.style.pointerEvents = 'auto';
+                                label.style.background = 'white';
+                                if (!firstInStockLabel) firstInStockLabel = label;
+                            }
+                        }
+                    });
+                    if (firstInStockLabel) {
+                        firstInStockLabel.click();
+                    } else {
+                        document.querySelectorAll('input[name="specVariant"]').forEach(r => r.checked = false);
+                        document.querySelectorAll('.spec-variant-label').forEach(l => {
+                            l.style.borderColor = '#bfdbfe';
+                            l.style.borderWidth = '1px';
+                            l.style.background = 'white';
+                        });
+                    }
 
                     specDropdownWrapper.classList.remove('open');
                 });
@@ -743,17 +807,45 @@ function initSalesTable() {
                     const c3Txt = document.getElementById('flexVariantC3LabelTxt');
                     if (c3Txt) c3Txt.textContent = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
 
-                    const checkedRad = document.querySelector('input[name="flexVariant"]:checked');
-                    if (checkedRad) checkedRad.checked = false;
-                    document.querySelectorAll('.flex-variant-label').forEach(l => {
-                        l.style.borderColor = '#bfdbfe';
-                        l.style.borderWidth = '1px';
-                        l.style.background = 'white';
-                    });
-
                     if (flexCustomPriceContainer) flexCustomPriceContainer.style.display = 'none';
                     if (flexItemPrice) flexItemPrice.value = '';
-                    
+
+                    const flexVariants = [
+                        { val: 'c1', labelId: 'flexVariantC1LabelTxt' },
+                        { val: 'c2', labelId: 'flexVariantC2LabelTxt' },
+                        { val: 'c3', labelId: 'flexVariantC3LabelTxt' }
+                    ];
+                    let firstFlexInStockLabel = null;
+                    flexVariants.forEach(v => {
+                        const radio = document.querySelector(`input[name="flexVariant"][value="${v.val}"]`);
+                        const label = radio ? radio.closest('label') : null;
+                        if (radio && label) {
+                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                            if (stock <= 0) {
+                                radio.disabled = true;
+                                label.style.opacity = '0.5';
+                                label.style.pointerEvents = 'none';
+                                label.style.background = '#f1f5f9';
+                            } else {
+                                radio.disabled = false;
+                                label.style.opacity = '1';
+                                label.style.pointerEvents = 'auto';
+                                label.style.background = 'white';
+                                if (!firstFlexInStockLabel) firstFlexInStockLabel = label;
+                            }
+                        }
+                    });
+                    if (firstFlexInStockLabel) {
+                        firstFlexInStockLabel.click();
+                    } else {
+                        document.querySelectorAll('input[name="flexVariant"]').forEach(r => r.checked = false);
+                        document.querySelectorAll('.flex-variant-label').forEach(l => {
+                            l.style.borderColor = '#bfdbfe';
+                            l.style.borderWidth = '1px';
+                            l.style.background = 'white';
+                        });
+                    }
+
                     flexDropdownWrapper.classList.remove('open');
                 });
                 optionsContainer.appendChild(option);

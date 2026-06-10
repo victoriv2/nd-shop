@@ -148,19 +148,22 @@ function _initPayoutPurchaseLogic(modal) {
                 const val = radio.value;
                 const selectedProduct = flexInventory.find(p => p.name === ppFlexItemSelect.value);
                 
-                // Cut to all 3 containers: always show custom price container
                 if (val === 'c3') {
-                        if (ppFlexCustomPriceContainer) ppFlexCustomPriceContainer.style.display = 'block';
-                        const toggleWrapper = modal.querySelector('#ppFlexFlexPriceToggleWrapper');
-                        if (toggleWrapper) toggleWrapper.style.display = 'none';
+                    if (ppFlexCustomPriceContainer) ppFlexCustomPriceContainer.style.display = 'block';
+                    const toggleWrapper = modal.querySelector('#ppFlexFlexPriceToggleWrapper');
+                    if (toggleWrapper) toggleWrapper.style.display = 'none';
+                } else {
+                    const toggleWrapper = modal.querySelector('#ppFlexFlexPriceToggleWrapper');
+                    if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
+                        if (toggleWrapper) toggleWrapper.style.display = 'flex';
                     } else {
-                        const toggleWrapper = modal.querySelector('#ppFlexFlexPriceToggleWrapper');
-                        if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
-                            if (toggleWrapper) toggleWrapper.style.display = 'flex';
-                        } else {
-                            if (toggleWrapper) toggleWrapper.style.display = 'none';
-                        }
+                        if (toggleWrapper) toggleWrapper.style.display = 'none';
                     }
+                    const toggleCb = modal.querySelector('#ppFlexFlexToggle');
+                    if (ppFlexCustomPriceContainer) {
+                        ppFlexCustomPriceContainer.style.display = (toggleCb && toggleCb.checked) ? 'block' : 'none';
+                    }
+                }
     
                 if (ppFlexItemPrice) {
                     ppFlexItemPrice.required = true;
@@ -323,14 +326,41 @@ function _initPayoutPurchaseLogic(modal) {
                             wholesaleLabelText.textContent = item.bulkUnit || 'Carton';
                         }
 
-                        // Reset selection
-                        modal.querySelectorAll('.pp-default-variant-label').forEach(l => {
-                            l.style.borderColor = '#bfdbfe';
-                            l.style.borderWidth = '1px';
-                            l.style.background = 'white';
+                        // Stock-aware selection & disabling
+                        const defaultVariants = [
+                            { val: 'retail', labelId: 'ppDefaultVariantRetailLabelTxt' },
+                            { val: 'wholesale', labelId: 'ppDefaultVariantWholesaleLabelTxt' }
+                        ];
+                        let firstDefaultInStockLabel = null;
+                        defaultVariants.forEach(v => {
+                            const radio = modal.querySelector(`input[name="ppDefaultVariant"][value="${v.val}"]`);
+                            const label = radio ? radio.closest('label') : null;
+                            if (radio && label) {
+                                const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                                if (stock <= 0) {
+                                    radio.disabled = true;
+                                    label.style.opacity = '0.5';
+                                    label.style.pointerEvents = 'none';
+                                    label.style.background = '#f1f5f9';
+                                } else {
+                                    radio.disabled = false;
+                                    label.style.opacity = '1';
+                                    label.style.pointerEvents = 'auto';
+                                    label.style.background = 'white';
+                                    if (!firstDefaultInStockLabel) firstDefaultInStockLabel = label;
+                                }
+                            }
                         });
-                        const radioButtons = modal.querySelectorAll('input[name="ppDefaultVariant"]');
-                        radioButtons.forEach(r => r.checked = false);
+                        if (firstDefaultInStockLabel) {
+                            firstDefaultInStockLabel.click();
+                        } else {
+                            modal.querySelectorAll('input[name="ppDefaultVariant"]').forEach(r => r.checked = false);
+                            modal.querySelectorAll('.pp-default-variant-label').forEach(l => {
+                                l.style.borderColor = '#bfdbfe';
+                                l.style.borderWidth = '1px';
+                                l.style.background = 'white';
+                            });
+                        }
 
                         if (ppExistingPrice) {
                             ppExistingPrice.value = '';
@@ -446,7 +476,42 @@ function _initPayoutPurchaseLogic(modal) {
                     }
                     const toggleCb = modal.querySelector('#ppSpecFlexToggle');
                     if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
-    
+
+                    const variants = [
+                        { val: 'bag', labelId: 'ppSpecVariantBagLabelTxt' },
+                        { val: 'custard', labelId: 'ppSpecVariantCustardLabelTxt' },
+                        { val: 'cup', labelId: 'ppSpecVariantCupLabelTxt' }
+                    ];
+                    let firstInStockLabel = null;
+                    variants.forEach(v => {
+                        const radio = modal.querySelector(`input[name="ppSpecVariant"][value="${v.val}"]`);
+                        const label = radio ? radio.closest('label') : null;
+                        if (radio && label) {
+                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                            if (stock <= 0) {
+                                radio.disabled = true;
+                                label.style.opacity = '0.5';
+                                label.style.pointerEvents = 'none';
+                                label.style.background = '#f1f5f9';
+                            } else {
+                                radio.disabled = false;
+                                label.style.opacity = '1';
+                                label.style.pointerEvents = 'auto';
+                                label.style.background = 'white';
+                                if (!firstInStockLabel) firstInStockLabel = label;
+                            }
+                        }
+                    });
+                    if (firstInStockLabel) {
+                        firstInStockLabel.click();
+                    } else {
+                        modal.querySelectorAll('input[name="ppSpecVariant"]').forEach(r => r.checked = false);
+                        modal.querySelectorAll('.pp-spec-variant-label').forEach(l => {
+                            l.style.borderColor = '#bfdbfe';
+                            l.style.borderWidth = '1px';
+                            l.style.background = 'white';
+                        });
+                    }
 
                     ppSpecDropdownWrapper.classList.remove('open');
                 });
@@ -606,22 +671,49 @@ function _initPayoutPurchaseLogic(modal) {
                     const c3Txt = modal.querySelector('#ppFlexVariantC3LabelTxt');
                     if (c3Txt) c3Txt.textContent = (pt.c3 || {}).title || (pt.cup || {}).title || 'Container 3';
 
-                    const checkedRad = modal.querySelector('input[name="ppFlexVariant"]:checked');
-                    if (checkedRad) checkedRad.checked = false;
-                    modal.querySelectorAll('.pp-flex-variant-label').forEach(l => {
-                        l.style.borderColor = '#bfdbfe';
-                        l.style.borderWidth = '1px';
-                        l.style.background = 'white';
-                    });
-
                     if (ppFlexCustomPriceContainer) ppFlexCustomPriceContainer.style.display = 'none';
-                      const toggleWrapper = modal.querySelector('#ppFlexFlexPriceToggleWrapper');
-                      if (toggleWrapper) toggleWrapper.style.display = 'none';
-                      const toggleCb = modal.querySelector('#ppFlexFlexToggle');
-                      if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
-    
+                    const toggleWrapper = modal.querySelector('#ppFlexFlexPriceToggleWrapper');
+                    if (toggleWrapper) toggleWrapper.style.display = 'none';
+                    const toggleCb = modal.querySelector('#ppFlexFlexToggle');
+                    if (toggleCb) { toggleCb.checked = false; toggleCb.dispatchEvent(new Event('change')); }
                     if (ppFlexItemPrice) ppFlexItemPrice.value = '';
-                    
+
+                    const flexVariants = [
+                        { val: 'c1', labelId: 'ppFlexVariantC1LabelTxt' },
+                        { val: 'c2', labelId: 'ppFlexVariantC2LabelTxt' },
+                        { val: 'c3', labelId: 'ppFlexVariantC3LabelTxt' }
+                    ];
+                    let firstFlexInStockLabel = null;
+                    flexVariants.forEach(v => {
+                        const radio = modal.querySelector(`input[name="ppFlexVariant"][value="${v.val}"]`);
+                        const label = radio ? radio.closest('label') : null;
+                        if (radio && label) {
+                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                            if (stock <= 0) {
+                                radio.disabled = true;
+                                label.style.opacity = '0.5';
+                                label.style.pointerEvents = 'none';
+                                label.style.background = '#f1f5f9';
+                            } else {
+                                radio.disabled = false;
+                                label.style.opacity = '1';
+                                label.style.pointerEvents = 'auto';
+                                label.style.background = 'white';
+                                if (!firstFlexInStockLabel) firstFlexInStockLabel = label;
+                            }
+                        }
+                    });
+                    if (firstFlexInStockLabel) {
+                        firstFlexInStockLabel.click();
+                    } else {
+                        modal.querySelectorAll('input[name="ppFlexVariant"]').forEach(r => r.checked = false);
+                        modal.querySelectorAll('.pp-flex-variant-label').forEach(l => {
+                            l.style.borderColor = '#bfdbfe';
+                            l.style.borderWidth = '1px';
+                            l.style.background = 'white';
+                        });
+                    }
+
                     ppFlexDropdownWrapper.classList.remove('open');
                 });
                 optionsContainer.appendChild(option);
@@ -1327,10 +1419,10 @@ function _resetPayoutPurchaseForm(modal) {
 // Initialize Flexible Pricing Toggles for Payout Purchase
 function initPPToggles() {
     const toggles = [
-        { id: 'ppExistingFlexToggle', cFixed: 'ppExistingPriceContainer', cFlex: 'ppExistingFlexPriceContainer' },
-        { id: 'ppSpecFlexToggle', cFixed: 'ppSpecVariantContainer', cFlex: 'ppSpecFlexPriceContainer' },
-        { id: 'ppCustomFlexToggle', cFixed: 'ppCustomPriceContainer', cFlex: 'ppCustomFlexPriceContainer' },
-        { id: 'ppFlexFlexToggle', cFixed: 'ppFlexVariantContainer', cFlex: 'ppFlexCustomPriceContainer' }
+        { id: 'ppExistingFlexToggle', cFixed: 'ppExistingPriceContainer', cVar: 'ppDefaultVariantContainer', cFlex: 'ppExistingFlexPriceContainer' },
+        { id: 'ppSpecFlexToggle', cFixed: null, cVar: 'ppSpecVariantContainer', cFlex: 'ppSpecFlexPriceContainer' },
+        { id: 'ppCustomFlexToggle', cFixed: 'ppCustomPriceContainer', cVar: null, cFlex: 'ppCustomFlexPriceContainer' },
+        { id: 'ppFlexFlexToggle', cFixed: null, cVar: 'ppFlexVariantContainer', cFlex: 'ppFlexCustomPriceContainer' }
     ];
 
     toggles.forEach(t => {
@@ -1341,23 +1433,27 @@ function initPPToggles() {
                 const knob = document.getElementById(t.id + 'Knob');
                 const cFixed = t.cFixed ? document.getElementById(t.cFixed) : null;
                 const cFlex = document.getElementById(t.cFlex);
+                const cVar = t.cVar ? document.getElementById(t.cVar) : null;
 
                 if (this.checked) {
                     if (bg) bg.style.backgroundColor = '#f0abfc';
                     if (knob) knob.style.transform = 'translateX(20px)';
-                    if (cFixed) {
-                        cFixed.style.display = 'none';
-                        cFixed.querySelectorAll('input[type="radio"]').forEach(r => r.removeAttribute('required'));
-                    }
+                    if (cFixed) cFixed.style.display = 'none';
                     if (cFlex) cFlex.style.display = 'block';
+                    if (cVar) {
+                        cVar.style.display = 'block';
+                        cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = 'none');
+                        cVar.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
+                    }
                 } else {
                     if (bg) bg.style.backgroundColor = '#e2e8f0';
                     if (knob) knob.style.transform = 'translateX(0)';
-                    if (cFixed) {
-                        cFixed.style.display = 'block';
-                        cFixed.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
-                    }
+                    if (cFixed) cFixed.style.display = 'block';
                     if (cFlex) cFlex.style.display = 'none';
+                    if (cVar) {
+                        cVar.querySelectorAll('[id$="Price"]').forEach(p => p.style.display = '');
+                        cVar.querySelectorAll('input[type="radio"]').forEach(r => r.setAttribute('required', 'required'));
+                    }
                 }
             });
         }

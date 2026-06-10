@@ -318,23 +318,42 @@ function initProductModalLogic() {
 
             function renderVariantsList(selectedIdx = 0) {
                 if (pmVariantsContainer) {
-                    pmVariantsContainer.innerHTML = currentVariants.map((v, i) => `
-                        <label class="pm-variant-label" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid #bfdbfe; border-radius:8px; cursor:pointer; background:white; transition:all 0.2s;">
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <input type="radio" name="pmVariant" value="${i}" ${i===selectedIdx?'checked':''} style="accent-color:#8b5cf6; width:18px; height:18px; cursor:pointer;">
-                                <span style="font-weight:600; color:#8b5cf6; font-size:0.95rem;">${v.title}</span>
-                            </div>
-                            <span style="font-weight:700; color:#334155;">${v.flex ? 'Flexible' : '₦' + Math.round(v.price).toLocaleString()}</span>
-                        </label>
-                    `).join('');
+                    pmVariantsContainer.innerHTML = currentVariants.map((v, i) => {
+                        const stock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.name, v.variantType) : Infinity;
+                        const isDisabled = stock <= 0;
+                        const labelStyle = isDisabled 
+                            ? 'display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; background:#f1f5f9; transition:all 0.2s; opacity:0.5; pointer-events:none;'
+                            : (i === selectedIdx
+                                ? 'display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:2px solid #8b5cf6; border-radius:8px; cursor:pointer; background:#f0f4f8; transition:all 0.2s;'
+                                : 'display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid #bfdbfe; border-radius:8px; cursor:pointer; background:white; transition:all 0.2s;');
+                        return `
+                            <label class="pm-variant-label" style="${labelStyle}">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <input type="radio" name="pmVariant" value="${i}" ${i===selectedIdx?'checked':''} ${isDisabled?'disabled':''} style="accent-color:#8b5cf6; width:18px; height:18px; cursor:pointer;">
+                                    <span style="font-weight:600; color:#8b5cf6; font-size:0.95rem;">${v.title}</span>
+                                </div>
+                                <span style="font-weight:700; color:#334155;">${v.flex ? 'Flexible' : '₦' + Math.round(v.price).toLocaleString()}</span>
+                            </label>
+                        `;
+                    }).join('');
                     
                     const labels = pmVariantsContainer.querySelectorAll('.pm-variant-label');
                     labels.forEach((label, i) => {
                         label.addEventListener('click', function() {
-                            labels.forEach(l => {
-                                l.style.borderColor = '#bfdbfe';
-                                l.style.borderWidth = '1px';
-                                l.style.background = 'white';
+                            const stock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.name, currentVariants[i].variantType) : Infinity;
+                            if (stock <= 0) return; // locked out
+                            
+                            labels.forEach((l, idx) => {
+                                const lStock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.name, currentVariants[idx].variantType) : Infinity;
+                                if (lStock <= 0) {
+                                    l.style.borderColor = '#e2e8f0';
+                                    l.style.borderWidth = '1px';
+                                    l.style.background = '#f1f5f9';
+                                } else {
+                                    l.style.borderColor = '#bfdbfe';
+                                    l.style.borderWidth = '1px';
+                                    l.style.background = 'white';
+                                }
                             });
                             this.style.borderColor = '#8b5cf6';
                             this.style.borderWidth = '2px';
@@ -350,24 +369,46 @@ function initProductModalLogic() {
                     
                     if (labels.length > 0) {
                         labels.forEach((l, idx) => {
-                            if (idx === selectedIdx) {
+                            const lStock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.name, currentVariants[idx].variantType) : Infinity;
+                            if (lStock <= 0) {
+                                l.style.borderColor = '#e2e8f0';
+                                l.style.borderWidth = '1px';
+                                l.style.background = '#f1f5f9';
+                                l.style.opacity = '0.5';
+                                l.style.pointerEvents = 'none';
+                            } else if (idx === selectedIdx) {
                                 l.style.borderColor = '#8b5cf6';
                                 l.style.borderWidth = '2px';
                                 l.style.background = '#f0f4f8';
+                                l.style.opacity = '1';
+                                l.style.pointerEvents = 'auto';
                             } else {
                                 l.style.borderColor = '#bfdbfe';
                                 l.style.borderWidth = '1px';
                                 l.style.background = 'white';
+                                l.style.opacity = '1';
+                                l.style.pointerEvents = 'auto';
                             }
                         });
                     }
                 }
             }
 
+            let defaultIdx = 0;
+            if (typeof window.getRemainingProductStock === 'function') {
+                for (let i = 0; i < variants.length; i++) {
+                    const s = window.getRemainingProductStock(product.name, variants[i].variantType);
+                    if (s > 0) {
+                        defaultIdx = i;
+                        break;
+                    }
+                }
+            }
+
             if (variants.length > 1) {
                 if (pmVariantsSection) pmVariantsSection.style.display = 'block';
-                renderVariantsList(0);
-                updateModalForVariant(variants[0]);
+                renderVariantsList(defaultIdx);
+                updateModalForVariant(variants[defaultIdx]);
             } else {
                 if (pmVariantsSection) pmVariantsSection.style.display = 'none';
                 if (variants.length === 1) {
@@ -477,12 +518,16 @@ function initProductModalLogic() {
         const unit = document.getElementById('pmProductUnitValue').textContent;
 
         // --- NEW PRE-CHECK LOGIC ---
-        if (typeof window.getRemainingProductStock === 'function' && !isCustomMode && !isFlex && currentProduct && activeVariant) {
+        if (typeof window.getRemainingProductStock === 'function' && !isCustomMode && currentProduct && activeVariant) {
             const maxStock = window.getRemainingProductStock(currentProduct.name, activeVariant.variantType);
             
             const cart = JSON.parse(localStorage.getItem('nd_cart') || '[]');
-            const existingItem = cart.find(item => item.name === currentProduct.name && !item.isCustom && !item.isFlexible);
-            const currentQtyInCart = existingItem ? parseFloat(existingItem.qty) : 0;
+            let currentQtyInCart = 0;
+            cart.forEach(item => {
+                if (item.name === name) {
+                    currentQtyInCart += parseFloat(item.qty) || 0;
+                }
+            });
             
             if (currentQtyInCart + currentQuantity > maxStock) {
                 // Determine alternatives

@@ -978,9 +978,9 @@ window.getRemainingProductStock = function(productName, variantType = null) {
             else if (extractedVariantTitle === cpTitle || extractedVariantTitle === 'Container 3') targetVariantType = 'cup';
         }
 
-        if (targetVariantType === 'bag' || targetVariantType === 'c1') {
+        if (targetVariantType === 'bag' || targetVariantType === 'c1' || ((p.isSpecial || p.packTypes) && targetVariantType === 'wholesale')) {
             return Math.floor(remainingCups / maxCupsPerBag);
-        } else if (targetVariantType === 'custard' || targetVariantType === 'c2') {
+        } else if (targetVariantType === 'custard' || targetVariantType === 'c2' || ((p.isSpecial || p.packTypes) && targetVariantType === 'retail')) {
             return Math.floor(remainingCups / cpc);
         } else {
             return remainingCups;

@@ -190,9 +190,9 @@ function updateCartItemQty(index, delta) {
                 let variantType = null;
                 const unitStr = cart[index].unit || '';
                 if (unitStr.toLowerCase().includes('carton') || unitStr.toLowerCase().includes('bag')) variantType = 'wholesale';
-                else if (unitStr.toLowerCase().includes('container 1')) variantType = 'c1';
-                else if (unitStr.toLowerCase().includes('container 2')) variantType = 'c2';
-                else if (unitStr.toLowerCase().includes('container 3')) variantType = 'c3';
+                else if (unitStr.toLowerCase().includes('container 1') || unitStr.toLowerCase().includes('c1')) variantType = 'c1';
+                else if (unitStr.toLowerCase().includes('container 2') || unitStr.toLowerCase().includes('c2') || unitStr.toLowerCase().includes('custard')) variantType = 'c2';
+                else if (unitStr.toLowerCase().includes('container 3') || unitStr.toLowerCase().includes('c3') || unitStr.toLowerCase().includes('cup')) variantType = 'c3';
                 maxStock = window.getRemainingProductStock(cart[index].name, variantType);
             }
             if (cart[index].qty + delta > maxStock) {
@@ -280,9 +280,9 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
         let variantType = null;
         if (unit) {
             if (unit.toLowerCase().includes('carton') || unit.toLowerCase().includes('bag')) variantType = 'wholesale';
-            else if (unit.toLowerCase().includes('container 1')) variantType = 'c1';
-            else if (unit.toLowerCase().includes('container 2')) variantType = 'c2';
-            else if (unit.toLowerCase().includes('container 3')) variantType = 'c3';
+            else if (unit.toLowerCase().includes('container 1') || unit.toLowerCase().includes('c1')) variantType = 'c1';
+            else if (unit.toLowerCase().includes('container 2') || unit.toLowerCase().includes('c2') || unit.toLowerCase().includes('custard')) variantType = 'c2';
+            else if (unit.toLowerCase().includes('container 3') || unit.toLowerCase().includes('c3') || unit.toLowerCase().includes('cup')) variantType = 'c3';
         }
         maxStock = window.getRemainingProductStock(productName, variantType);
     }
