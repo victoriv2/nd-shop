@@ -297,10 +297,17 @@ function initDynamicPayoutLogic() {
         const allUserSales = sales.filter(s => s.customerID === user.id);
 
         // Calculate Totals based on ALL user sales (unaffected by filters)
-        let totalPayout = 0;
+        let chronologicalSales = [...allUserSales].sort((a,b) => (parseSaleDate(a.date)||new Date(0)) - (parseSaleDate(b.date)||new Date(0)));
+        let runningBal = 0;
+        chronologicalSales.forEach(s => {
+            const isDeduct = (s.payout < 0) || s.isRewardPurchase || s.type === 'Payout Purchase';
+            runningBal += isDeduct ? -Math.abs(s.payout || 0) : Math.abs(s.payout || 0);
+            s.runningBalance = runningBal;
+        });
+
+        let totalPayout = runningBal;
         let totalSpending = 0;
         allUserSales.forEach(s => {
-            totalPayout += s.payout || 0;
             totalSpending += (s.price || (s.qty * s.unitPrice)) || 0;
         });
 
@@ -404,10 +411,24 @@ function initDynamicPayoutLogic() {
                 }
             }
 
+            const isDeduct = (sale.payout < 0) || sale.isRewardPurchase || sale.type === 'Payout Purchase';
+            let amountDisplay;
+            let labelDisplay;
+            let plusSpan = '';
+            
+            if (isDeduct) {
+                amountDisplay = Math.round(sale.runningBalance || 0).toLocaleString();
+                labelDisplay = "Remaining";
+            } else {
+                plusSpan = '<span class="green-plus">+</span>';
+                amountDisplay = Math.round(Math.abs(sale.payout || 0)).toLocaleString();
+                labelDisplay = "Reward";
+            }
+
             return `
                 <div class="regular-card" style="opacity: 1;">
                     <div class="card-main-amount">
-                        <span class="green-plus">+</span>${Math.round(sale.payout || 0).toLocaleString()} <span class="card-payout-text">Reward</span>
+                        ${plusSpan}${amountDisplay} <span class="card-payout-text">${labelDisplay}</span>
                     </div>
                     <div class="card-details-row">
                         <span class="card-buying-text">${descriptionText}</span>

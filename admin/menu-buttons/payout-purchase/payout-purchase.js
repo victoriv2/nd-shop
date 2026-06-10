@@ -1260,7 +1260,8 @@ function _submitPayoutPurchase() {
             qty: item.qty,
             unitPrice: item.price,
             price: itemTotal,
-            payout: -Math.abs(itemTotal), // Deduct the cost from their payout balance
+            payout: Math.abs(itemTotal), // Record the deduction absolute value
+            isRewardPurchase: true,
             type: 'Payout Purchase',
             unit: item.unit || '',
             isFlexible: item.isFlexible || false

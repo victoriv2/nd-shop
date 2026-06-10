@@ -537,7 +537,7 @@ USER PROFILE:
 
 YOUR PURCHASE HISTORY (last 50):
 (Format: 'item' = product name, 'qty' = quantity bought, 'price' = total amount spent, 'payout' = payout earned, 'date' = transaction time)
-${JSON.stringify(userSales.slice(0, 50).map(s => ({ item: s.item, qty: s.qty, price: s.price || (s.qty * s.unitPrice), payout: s.payout, date: s.date, type: s.type })))}
+${JSON.stringify(userSales.slice(0, 50).map(s => ({ item: s.item, qty: s.qty, price: s.price || (s.qty * s.unitPrice), payout: s.payout, isRewardPurchase: s.isRewardPurchase || s.type === 'Payout Purchase' || s.payout < 0, date: s.date, type: s.type })))}
 
 AVAILABLE PRODUCTS IN STORE:
 (Format: 'name' = exact product name, 'price' = selling price per unit in Naira, 'unit' = measurement/size, 'category' = product type)

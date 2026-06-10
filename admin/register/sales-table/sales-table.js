@@ -85,7 +85,7 @@ function initSalesTable() {
             const total = (row.price !== undefined && row.price !== null && row.price !== '') ? Number(row.price) : (baseTotal - payout);
             totalItems += Number(row.qty) || 1;
             totalSales += total;
-            totalPayout += payout;
+            totalPayout += (row.isRewardPurchase || row.type === 'Payout Purchase') ? -Math.abs(payout) : Math.abs(payout);
 
             const unitText = row.unit ? row.unit.replace(/^per\s+/i, '') : '';
             const qtyStr = row.qty + (unitText ? ' ' + unitText + (row.qty > 1 ? 's' : '') : '');
@@ -107,7 +107,7 @@ function initSalesTable() {
                 <td>${qtyStr}</td>
                 <td>₦${formatCurrency(unitPriceToDisplay)}</td>
                 <td>₦${formatCurrency(total)}</td>
-                <td class="payout-cell">${isRequest ? '₦' + formatCurrency(payout) : '-'}</td>
+                <td class="payout-cell">${isRequest ? ((row.isRewardPurchase || row.type === 'Payout Purchase') ? `₦${formatCurrency(Math.abs(payout))} <span style="font-size: 0.7rem; color: #166534; font-weight: 600;">(Redeemed)</span>` : '₦' + formatCurrency(Math.abs(payout))) : '-'}</td>
             `;
             tableBody.appendChild(tr);
         });

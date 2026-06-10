@@ -10,6 +10,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Core app initialization
 
+    // --- MIGRATION: Convert negative payouts to positive with isRewardPurchase flag ---
+    try {
+        let salesHistory = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+        let migrated = false;
+        salesHistory = salesHistory.map(sale => {
+            if (sale.payout < 0) {
+                sale.payout = Math.abs(sale.payout);
+                sale.isRewardPurchase = true;
+                migrated = true;
+            }
+            return sale;
+        });
+        if (migrated) {
+            localStorage.setItem('nd_sales_history', JSON.stringify(salesHistory));
+        }
+    } catch (e) {
+        console.error("Migration error:", e);
+    }
+
     // Carousel state (declared early so all listeners can reference them)
     let touchStartX = 0;
     let touchStartY = 0;
