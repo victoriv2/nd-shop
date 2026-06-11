@@ -201,7 +201,6 @@ function initProductModalLogic() {
                 const knob = document.getElementById('pmFlexPriceKnob');
                 if (slider) slider.style.backgroundColor = '#cbd5e1';
                 if (knob) knob.style.left = '4px';
-            }
                 
                 flexToggleInput.onchange = function(e) {
                     const isChecked = e.target.checked;
