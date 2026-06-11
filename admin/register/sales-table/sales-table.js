@@ -117,7 +117,7 @@ function initSalesTable() {
         // Update footer
         if (footerTotalItems) footerTotalItems.textContent = `${data.length} / ${totalItems}`;
         if (footerTotalSales) footerTotalSales.textContent = '₦' + formatCurrency(totalSales);
-        if (footerTotalPayout) footerTotalPayout.textContent = '₦' + formatCurrency(totalPayout);
+        if (footerTotalPayout) footerTotalPayout.textContent = '₦' + formatCurrency(Math.max(0, totalPayout));
     }
 
     function formatCurrency(amount) {

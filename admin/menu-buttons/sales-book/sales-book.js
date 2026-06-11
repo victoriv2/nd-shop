@@ -355,7 +355,7 @@ window.renderSalesBook = function renderSalesBook() {
     const totSalesCard = document.getElementById('sbTotalSales');
     const totPayoutCard = document.getElementById('sbTotalPayout');
     if (totSalesCard) totSalesCard.textContent = '₦' + formatSbCurrency(monthTotalSales);
-    if (totPayoutCard) totPayoutCard.textContent = '₦' + formatSbCurrency(monthTotalPayout);
+    if (totPayoutCard) totPayoutCard.textContent = '₦' + formatSbCurrency(Math.max(0, monthTotalPayout));
 
     // Table rendering and bottom Daily total
     const tbody = document.getElementById('sbTableBody');

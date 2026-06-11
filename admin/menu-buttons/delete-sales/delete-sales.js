@@ -268,7 +268,7 @@ function initDeleteSales() {
         const monthTotalPayout = currentMonthSales.reduce((acc, curr) => acc + (curr.payout || 0), 0);
         
         if (monthTotalBalanceEl) monthTotalBalanceEl.textContent = '₦' + formatCurrency(monthTotalSales);
-        if (monthTotalPayoutEl) monthTotalPayoutEl.textContent = '₦' + formatCurrency(monthTotalPayout);
+        if (monthTotalPayoutEl) monthTotalPayoutEl.textContent = '₦' + formatCurrency(Math.max(0, monthTotalPayout));
 
         // 2. Filter by Current Selected Day
         let daySales = mappedSales.filter(s => isSameDay(s.parsedDateObj, currentDate));
@@ -278,7 +278,7 @@ function initDeleteSales() {
         const dayTotalPayout = daySales.reduce((acc, curr) => acc + (curr.payout || 0), 0);
         
         totalBalanceEl.textContent = '₦' + formatCurrency(dayTotalSales);
-        totalPayoutEl.textContent = '₦' + formatCurrency(dayTotalPayout);
+        totalPayoutEl.textContent = '₦' + formatCurrency(Math.max(0, dayTotalPayout));
 
         // 2. Filter by Search
         if (currentSearch) {

@@ -1684,5 +1684,5 @@ window.calculateTrueSpendableBalance = function(userId) {
         }
     });
 
-    return totalPayoutEarned - totalSpent;
+    return Math.max(0, totalPayoutEarned - totalSpent);
 };
