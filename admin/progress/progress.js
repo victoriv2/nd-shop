@@ -827,9 +827,10 @@ function initProgressLogic() {
         ` : '';
 
         const printArea = document.createElement('div');
-        printArea.style.position = 'fixed';
-        printArea.style.left = '-9999px';
+        printArea.style.position = 'absolute';
+        printArea.style.left = '0';
         printArea.style.top = '0';
+        printArea.style.zIndex = '-9999';
         printArea.style.width = '816px';
         printArea.style.background = '#ffffff';
         printArea.style.color = '#333';
