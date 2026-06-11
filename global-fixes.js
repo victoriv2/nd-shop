@@ -1665,8 +1665,8 @@ window.openCameraCapture = function(onCapture) {
 })();
 
 
-// Calculate the exact true spendable balance for a given user.
-window.calculateTrueSpendableBalance = function(userId) {
+// Calculate the lifetime accumulated reward for a given user (no deductions).
+window.calculateLifetimePayoutEarned = function(userId) {
     if (!userId) return 0;
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     const allUserSales = sales.filter(s => s.customerID === userId);
@@ -1674,6 +1674,13 @@ window.calculateTrueSpendableBalance = function(userId) {
     allUserSales.forEach(s => {
         totalPayoutEarned += (s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
     });
+    return totalPayoutEarned;
+};
+
+// Calculate the exact true spendable balance for a given user.
+window.calculateTrueSpendableBalance = function(userId) {
+    if (!userId) return 0;
+    const totalPayoutEarned = window.calculateLifetimePayoutEarned(userId);
 
     const allRequests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
     const userRequests = allRequests.filter(r => (r.user && r.user.id === userId) || r.user_id === userId);

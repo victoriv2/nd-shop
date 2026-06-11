@@ -232,7 +232,7 @@ function openUserInfoModal(id) {
             const pendingRequests = userRequests.filter(r => r.status === 'Pending').length;
 
             let calculatedSpending = 0;
-            let calculatedPayout = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(id) : 0;
+            let calculatedPayout = typeof calculateLifetimePayoutEarned === 'function' ? calculateLifetimePayoutEarned(id) : 0;
             let totalItemsPurchased = 0;
 
             userSales.forEach(s => {

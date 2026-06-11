@@ -298,7 +298,7 @@ function initDynamicPayoutLogic() {
 
         // Calculate Totals based on ALL user sales (unaffected by filters)
         // Calculate Totals based on ALL user sales (unaffected by filters)
-        let totalPayout = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(user.id) : 0;
+        let totalPayout = typeof calculateLifetimePayoutEarned === 'function' ? calculateLifetimePayoutEarned(user.id) : 0;
         
         let totalSpending = 0;
         allUserSales.forEach(s => {
