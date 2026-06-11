@@ -1672,7 +1672,10 @@ window.calculateLifetimePayoutEarned = function(userId) {
     const allUserSales = sales.filter(s => s.customerID === userId);
     let totalPayoutEarned = 0;
     allUserSales.forEach(s => {
-        totalPayoutEarned += (s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
+        let amt = parseFloat(s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
+        if (amt > 0) {
+            totalPayoutEarned += amt;
+        }
     });
     return totalPayoutEarned;
 };
@@ -1680,16 +1683,15 @@ window.calculateLifetimePayoutEarned = function(userId) {
 // Calculate the exact true spendable balance for a given user.
 window.calculateTrueSpendableBalance = function(userId) {
     if (!userId) return 0;
-    const totalPayoutEarned = window.calculateLifetimePayoutEarned(userId);
-
-    const allRequests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
-    const userRequests = allRequests.filter(r => (r.user && r.user.id === userId) || r.user_id === userId);
-    let totalSpent = 0;
-    userRequests.forEach(r => {
-        if (r.isRewardPurchase === true && r.status === 'Approved') {
-            totalSpent += parseFloat(r.orderTotal) || 0;
-        }
+    const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+    const allUserSales = sales.filter(s => s.customerID === userId);
+    let spendable = 0;
+    allUserSales.forEach(s => {
+        let amt = parseFloat(s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
+        spendable += amt;
     });
 
-    return Math.max(0, totalPayoutEarned - totalSpent);
+    // nd_sales_history natively records Reward Purchases as negative payoutEarned
+    // So simply summing it up gives the exact spendable balance.
+    return Math.max(0, spendable);
 };
