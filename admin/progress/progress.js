@@ -172,12 +172,16 @@ function initProgressLogic() {
                                 payout = (sale.payoutEarned !== undefined) ? Number(sale.payoutEarned) : ((sale.payout !== undefined && sale.payout !== null && sale.payout !== '') ? Number(sale.payout) : (grossPrice * rate));
                             }
                             
-                            totalPayout += payout;
+                            // For "payout out", sum the spent payouts (negative values) as positive numbers
+                            if (payout < 0) {
+                                const spentAmt = Math.abs(payout);
+                                totalPayout += spentAmt;
 
-                            if (!currentMonthDailyPayoutMap[sDay]) {
-                                currentMonthDailyPayoutMap[sDay] = 0;
+                                if (!currentMonthDailyPayoutMap[sDay]) {
+                                    currentMonthDailyPayoutMap[sDay] = 0;
+                                }
+                                currentMonthDailyPayoutMap[sDay] += spentAmt;
                             }
-                            currentMonthDailyPayoutMap[sDay] += payout;
                         }
                     }
                 });
@@ -646,11 +650,6 @@ function initProgressLogic() {
                             const index = elements[0].index;
                             const day = labels[index];
                             const value = dataPoints[index];
-                            if (s.isRewardPurchase || s.type === 'Payout Purchase') {
-                                payout = -Math.abs(s.payoutEarned !== undefined ? s.payoutEarned : s.payout);
-                            } else {
-                                payout = Math.abs(s.payoutEarned !== undefined ? s.payoutEarned : s.payout);
-                            }
                             if (value !== null) {
                                 showDetailPopup(day, value);
                             }

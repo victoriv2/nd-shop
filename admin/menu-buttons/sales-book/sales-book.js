@@ -346,8 +346,8 @@ window.renderSalesBook = function renderSalesBook() {
                 if (payoutEnabled) {
                     const rate = parseFloat(localStorage.getItem('nd_payout_rate') || 2) / 100;
                     const po = (row.payoutEarned !== undefined) ? Number(row.payoutEarned) : ((row.payout !== undefined && row.payout !== null && row.payout !== '') ? Number(row.payout) : (grossTotal * rate));
-                    if (po > 0) {
-                        monthTotalPayout += po;
+                    if (po < 0) {
+                        monthTotalPayout += Math.abs(po);
                     }
                 }
             }

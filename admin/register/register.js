@@ -120,7 +120,14 @@ window.loadRegister = function () {
                         const tot = parseFloat(r.price) || (r.isFlexible ? parseFloat(r.unitPrice || 0) : ((parseFloat(r.qty) || 1) * (parseFloat(r.unitPrice) || 0)));
                         totalSalesAmt += tot;
                         totalQty += parseInt(r.qty) || 1;
-                        if (r.type === 'Request') totalPayoutAmt += (r.payout || tot * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100));
+                        
+                        const isReq = r.type === 'Request';
+                        const baseTot = (parseInt(r.qty) || 1) * (parseFloat(r.unitPrice) || 0);
+                        const delta = r.payoutEarned !== undefined ? r.payoutEarned : (isReq ? (r.payout != null ? r.payout : (baseTot * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100))) : 0);
+                        
+                        if (isReq && !r.isRewardPurchase && r.type !== 'Payout Purchase') {
+                            totalPayoutAmt += Math.abs(delta);
+                        }
                     });
 
                     function fmtCurr(v) { return '₦' + Number(v).toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2}); }

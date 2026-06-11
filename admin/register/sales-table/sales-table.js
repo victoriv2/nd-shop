@@ -87,7 +87,7 @@ function initSalesTable() {
             const total = (row.price !== undefined && row.price !== null && row.price !== '') ? Number(row.price) : (baseTotal - delta);
             totalItems += Number(row.qty) || 1;
             totalSales += total;
-            totalPayout += (row.isRewardPurchase || row.type === 'Payout Purchase') ? -Math.abs(delta) : Math.abs(delta);
+            totalPayout += (row.isRewardPurchase || row.type === 'Payout Purchase') ? 0 : Math.abs(delta);
 
             const unitText = row.unit ? row.unit.replace(/^per\s+/i, '') : '';
             const qtyStr = row.qty + (unitText ? ' ' + unitText + (row.qty > 1 ? 's' : '') : '');
@@ -96,6 +96,11 @@ function initSalesTable() {
             if (isRequest) tr.classList.add('row-request');
 
             const unitPriceToDisplay = row.unitPrice;
+
+            const isSpent = row.isRewardPurchase || row.type === 'Payout Purchase';
+            const deltaText = `₦${formatCurrency(Math.abs(delta))}`;
+            const labelText = isSpent ? `<span style="font-size: 0.7rem; color: #dc2626; font-weight: 600;">(Spent)</span>` : `<span style="font-size: 0.7rem; color: #166534; font-weight: 600;">(Earned)</span>`;
+            const remainingText = `<span style="font-size: 0.65rem; color: #64748b; display: block; margin-top: 2px;">Bal: ₦${formatCurrency(Math.max(0, row.payout))}</span>`;
 
             tr.innerHTML = `
                 <td>${index + 1}</td>
@@ -109,7 +114,7 @@ function initSalesTable() {
                 <td>${qtyStr}</td>
                 <td>₦${formatCurrency(unitPriceToDisplay)}</td>
                 <td>₦${formatCurrency(total)}</td>
-                <td class="payout-cell">${isRequest ? ((row.isRewardPurchase || row.type === 'Payout Purchase') ? `₦${formatCurrency(Math.abs(row.payout))} <span style="font-size: 0.7rem; color: #166534; font-weight: 600;">(Remaining)</span>` : '₦' + formatCurrency(Math.abs(row.payout)) + ' <span style="font-size: 0.7rem; color: #555;">(Remaining)</span>') : '-'}</td>
+                <td class="payout-cell">${isRequest ? `${deltaText} ${labelText} ${remainingText}` : '-'}</td>
             `;
             tableBody.appendChild(tr);
         });
