@@ -357,7 +357,14 @@ window.renderSalesBook = function renderSalesBook() {
     const totSalesCard = document.getElementById('sbTotalSales');
     const totPayoutCard = document.getElementById('sbTotalPayout');
     if (totSalesCard) totSalesCard.textContent = '₦' + formatSbCurrency(monthTotalSales);
-    if (totPayoutCard) totPayoutCard.textContent = '₦' + formatSbCurrency(Math.max(0, monthTotalPayout));
+    let totalPayoutRemaining = 0;
+    const usersList = JSON.parse(localStorage.getItem('nd_users') || '[]');
+    usersList.forEach(u => {
+        if (!u.is_admin) {
+            totalPayoutRemaining += typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(u.id) : 0;
+        }
+    });
+    if (totPayoutCard) totPayoutCard.textContent = '₦' + formatSbCurrency(totalPayoutRemaining);
 
     // Table rendering and bottom Daily total
     const tbody = document.getElementById('sbTableBody');

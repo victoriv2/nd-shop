@@ -206,7 +206,14 @@ function initProgressLogic() {
             }
         }
         
-        document.getElementById('kpiTotalPayout').textContent = '₦' + Math.round(totalPayout).toLocaleString();
+        let totalPayoutRemaining = 0;
+        const usersList = JSON.parse(localStorage.getItem('nd_users') || '[]');
+        usersList.forEach(u => {
+            if (!u.is_admin) {
+                totalPayoutRemaining += typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(u.id) : 0;
+            }
+        });
+        document.getElementById('kpiTotalPayout').textContent = '₦' + Math.round(totalPayoutRemaining).toLocaleString();
 
         renderChart();
     }
