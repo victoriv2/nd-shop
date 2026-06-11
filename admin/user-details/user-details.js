@@ -6,13 +6,11 @@ function openUserDetailsModal(userId) {
 
     // Calculate real spending and payout from sales history
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+    let calculatedPayout = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(userId) : 0;
+    let calculatedSpending = 0;
     const userSales = sales.filter(s => s.customerID === userId);
 
-    let calculatedSpending = 0;
-    let calculatedPayout = 0;
-
     userSales.forEach(s => {
-        calculatedPayout += parseFloat(s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
         calculatedSpending += parseFloat(s.price || (s.qty * s.unitPrice)) || 0;
     });
 

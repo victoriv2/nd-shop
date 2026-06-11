@@ -836,7 +836,7 @@ function recordSaleFromRequest(req) {
     const timeStr = `${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()} · ${hours}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`;
 
     let currentSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
-    let userBal = currentSales.filter(s => s.customerID === req.user.id).reduce((sum, s) => sum + (s.payoutEarned !== undefined ? s.payoutEarned : s.payout), 0);
+    let userBal = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(req.user.id) : 0;
 
     if (req.isGroupedOrder && req.items) {
         // Reverse array initially so after unshifting them all out they remain in logical order

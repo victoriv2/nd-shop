@@ -297,8 +297,8 @@ function initDynamicPayoutLogic() {
         const allUserSales = sales.filter(s => s.customerID === user.id);
 
         // Calculate Totals based on ALL user sales (unaffected by filters)
-        let chronologicalSales = [...allUserSales].sort((a,b) => (parseSaleDate(a.date)||new Date(0)) - (parseSaleDate(b.date)||new Date(0)));
-        let totalPayout = chronologicalSales.length > 0 ? (chronologicalSales[chronologicalSales.length - 1].payout || 0) : 0;
+        // Calculate Totals based on ALL user sales (unaffected by filters)
+        let totalPayout = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(user.id) : 0;
         
         let totalSpending = 0;
         allUserSales.forEach(s => {
@@ -580,12 +580,7 @@ function openUserRewardPurchaseModal() {
     
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     const allUserSales = sales.filter(s => s.customerID === user.id);
-    let totalPayout = 0;
-    allUserSales.forEach(s => {
-        totalPayout += (s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
-    });
-
-    let spendableRewardBalance = totalPayout;
+    let spendableRewardBalance = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(user.id) : 0;
     
     modal.innerHTML = `
         <div class="admin-modal-content" style="max-height: 90vh;">

@@ -1246,7 +1246,7 @@ function _submitPayoutPurchase() {
 
     // Add each basket item to sales ledger
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
-    let userBal = sales.filter(s => s.customerID === ppCurrentUser.id).reduce((sum, s) => sum + (s.payoutEarned !== undefined ? s.payoutEarned : s.payout || 0), 0);
+    let userBal = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(ppCurrentUser.id) : 0;
 
     // Calculate the payout deduction per item, proportionally
     ppBasketItems.forEach(item => {

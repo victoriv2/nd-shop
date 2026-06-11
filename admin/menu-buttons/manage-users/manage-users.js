@@ -232,11 +232,10 @@ function openUserInfoModal(id) {
             const pendingRequests = userRequests.filter(r => r.status === 'Pending').length;
 
             let calculatedSpending = 0;
-            let calculatedPayout = 0;
+            let calculatedPayout = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(id) : 0;
             let totalItemsPurchased = 0;
 
             userSales.forEach(s => {
-                calculatedPayout += parseFloat(s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
                 calculatedSpending += parseFloat(s.price || (s.qty * s.unitPrice)) || 0;
                 totalItemsPurchased += parseInt(s.qty) || 1;
             });
