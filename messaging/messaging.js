@@ -344,6 +344,7 @@ function initMessagingLogic() {
     // Auto-refresh when cloud sync completes
     window.addEventListener('nd_sync_complete', () => {
         if (page && page.classList.contains('show')) {
+            _markMessagesAsRead();
             renderMessages();
         }
     });
@@ -2295,14 +2296,34 @@ function _getFileExt(filename) {
 // --- Badge Count (for admin menu) ---
 window.getUnreadMessageCount = function() {
     const messages = JSON.parse(localStorage.getItem('nd_messages') || '[]');
-    return messages.filter(m => m.receiverId === 'ADMIN' && !(m.readBy || []).includes('ADMIN') && !(m.deletedFor || []).includes('ADMIN')).length;
+    const page = document.getElementById('messagingPage');
+    const chatOpen = page && page.classList.contains('show');
+    const activeThreadKey = chatOpen ? getConversationKey() : null;
+
+    return messages.filter(m => {
+        if (m.receiverId !== 'ADMIN') return false;
+        if ((m.readBy || []).includes('ADMIN')) return false;
+        if ((m.deletedFor || []).includes('ADMIN')) return false;
+        if (chatOpen && m.threadKey === activeThreadKey) return false;
+        return true;
+    }).length;
 };
 
 // --- Badge Count (for user) ---
 window.getUserUnreadCount = function() {
     const myId = _getMyId();
     const messages = JSON.parse(localStorage.getItem('nd_messages') || '[]');
-    return messages.filter(m => m.receiverId === myId && !(m.readBy || []).includes(myId) && !(m.deletedFor || []).includes(myId)).length;
+    const page = document.getElementById('messagingPage');
+    const chatOpen = page && page.classList.contains('show');
+    const activeThreadKey = chatOpen ? getConversationKey() : null;
+
+    return messages.filter(m => {
+        if (m.receiverId !== myId) return false;
+        if ((m.readBy || []).includes(myId)) return false;
+        if ((m.deletedFor || []).includes(myId)) return false;
+        if (chatOpen && m.threadKey === activeThreadKey) return false;
+        return true;
+    }).length;
 };
 
 

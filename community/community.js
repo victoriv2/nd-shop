@@ -130,6 +130,9 @@ function _realOpenCommunity() {
 
 function _closeCommunity() {
     const page = document.getElementById('communityPage');
+    const myId = _getMyId();
+    localStorage.setItem(`nd_comm_last_viewed_${myId}`, new Date().toISOString());
+
     if (page) {
         page.style.animation = 'none';
         page.style.transform = 'translateX(100%)';
@@ -1434,6 +1437,9 @@ function _startCommPolling() {
             commLastKnownCount = messages.length; // Keep backward compatibility for other places if needed
             renderCommMessages();
             
+            const myId = _getMyId();
+            localStorage.setItem(`nd_comm_last_viewed_${myId}`, new Date().toISOString());
+
             // Check if settings changed (lock status, mute status)
             _updateInputVisibility();
         }
@@ -1461,6 +1467,10 @@ function _highlightSearch(text, query) {
 
 // Global hook for unread badge on community button
 window.getCommUnreadCount = function() {
+    const page = document.getElementById('communityPage');
+    if (page && page.classList.contains('show')) {
+        return 0;
+    }
     const messages = JSON.parse(localStorage.getItem('nd_comm_messages') || '[]');
     const myId = _getMyId();
     
