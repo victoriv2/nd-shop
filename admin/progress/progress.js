@@ -164,9 +164,10 @@ function initProgressLogic() {
                             currentMonthDailySalesMap[sDay] += price;
 
                             const isRequest = sale.type === 'Request';
+                            const isPayoutPurchase = sale.type === 'Payout Purchase';
                             const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
                             let payout = 0;
-                            if (payoutEnabled && isRequest) {
+                            if (payoutEnabled && (isRequest || isPayoutPurchase)) {
                                 // Respect recorded payout, even if 0. Only fallback to dynamic rate if field is missing.
                                 const rate = parseFloat(localStorage.getItem('nd_payout_rate') || 2) / 100;
                                 payout = (sale.payoutEarned !== undefined) ? Number(sale.payoutEarned) : ((sale.payout !== undefined && sale.payout !== null && sale.payout !== '') ? Number(sale.payout) : (grossPrice * rate));

@@ -341,7 +341,7 @@ window.renderSalesBook = function renderSalesBook() {
             const tot = (row.price !== undefined && row.price !== null && row.price !== '') ? Number(row.price) : grossTotal;
             
             monthTotalSales += tot;
-            if (row.type === 'Request') {
+            if (row.type === 'Request' || row.type === 'Payout Purchase') {
                 const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
                 if (payoutEnabled) {
                     const rate = parseFloat(localStorage.getItem('nd_payout_rate') || 2) / 100;
