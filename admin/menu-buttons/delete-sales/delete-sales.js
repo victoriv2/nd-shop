@@ -244,7 +244,11 @@ function initDeleteSales() {
         const mappedSales = allSales.map((sale, originalIndex) => {
             const isRequest = sale.type === 'Request';
             const baseTotal = sale.isFlexible ? (parseFloat(sale.unitPrice) || 0) : (parseFloat(sale.qty) || 1) * (parseFloat(sale.unitPrice) || 0);
-            const payout = isRequest ? (sale.payout != null ? sale.payout : (baseTotal * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100))) : 0;
+            const payout = isRequest ? (
+                sale.payoutEarned !== undefined ? Number(sale.payoutEarned) : (
+                    sale.payout != null ? Number(sale.payout) : (baseTotal * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100))
+                )
+            ) : 0;
             const total = (sale.price !== undefined && sale.price !== null && sale.price !== '') ? Number(sale.price) : (baseTotal - payout);
             return {
                 ...sale,
@@ -265,7 +269,7 @@ function initDeleteSales() {
 
         // 1. Calculate Monthly Summary
         const monthTotalSales = currentMonthSales.reduce((acc, curr) => acc + curr.totalCalc, 0);
-        const monthTotalPayout = currentMonthSales.reduce((acc, curr) => acc + (curr.payout || 0), 0);
+        const monthTotalPayout = currentMonthSales.reduce((acc, curr) => acc + Math.max(0, curr.payout || 0), 0);
         
         if (monthTotalBalanceEl) monthTotalBalanceEl.textContent = '₦' + formatCurrency(monthTotalSales);
         if (monthTotalPayoutEl) monthTotalPayoutEl.textContent = '₦' + formatCurrency(Math.max(0, monthTotalPayout));
@@ -275,7 +279,7 @@ function initDeleteSales() {
 
         // Update real-time balance metrics for the specific day BEFORE search filter is applied
         const dayTotalSales = daySales.reduce((acc, curr) => acc + curr.totalCalc, 0);
-        const dayTotalPayout = daySales.reduce((acc, curr) => acc + (curr.payout || 0), 0);
+        const dayTotalPayout = daySales.reduce((acc, curr) => acc + Math.max(0, curr.payout || 0), 0);
         
         totalBalanceEl.textContent = '₦' + formatCurrency(dayTotalSales);
         totalPayoutEl.textContent = '₦' + formatCurrency(Math.max(0, dayTotalPayout));

@@ -6,7 +6,7 @@ function openUserDetailsModal(userId) {
 
     // Calculate real spending and payout from sales history
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
-    let calculatedPayout = typeof calculateLifetimePayoutEarned === 'function' ? calculateLifetimePayoutEarned(userId) : 0;
+    let calculatedPayout = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(userId) : 0;
     let calculatedSpending = 0;
     const userSales = sales.filter(s => s.customerID === userId);
 
@@ -97,7 +97,7 @@ function openUserDetailsModal(userId) {
                         <span class="ud-stat-value">₦${user.totalSpending.toLocaleString()}</span>
                     </div>
                     <div class="ud-stat-box highlight-stat">
-                        <span class="ud-stat-label">Total Payout</span>
+                        <span class="ud-stat-label">Payout Balance</span>
                         <span class="ud-stat-value">₦${user.totalPayout.toLocaleString()}</span>
                     </div>
                 </div>

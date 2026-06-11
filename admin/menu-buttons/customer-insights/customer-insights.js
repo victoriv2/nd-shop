@@ -388,7 +388,7 @@ function ciOpenUserInfo(userId) {
             const pendingRequests = userRequests.filter(r => r.status === 'Pending').length;
 
             let calculatedSpending = 0;
-            let calculatedPayout = typeof calculateLifetimePayoutEarned === 'function' ? calculateLifetimePayoutEarned(userId) : 0;
+            let calculatedPayout = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(userId) : 0;
             let totalItemsPurchased = 0;
 
             userSales.forEach(s => {
@@ -435,7 +435,7 @@ function ciOpenUserInfo(userId) {
                         <span class="mu-stat-value">₦${calculatedSpending.toLocaleString()}</span>
                     </div>
                     <div class="mu-stat-box highlight">
-                        <span class="mu-stat-label">Total Payout</span>
+                        <span class="mu-stat-label">Payout Balance</span>
                         <span class="mu-stat-value">₦${calculatedPayout.toLocaleString()}</span>
                     </div>
                 </div>

@@ -232,7 +232,7 @@ function openUserInfoModal(id) {
             const pendingRequests = userRequests.filter(r => r.status === 'Pending').length;
 
             let calculatedSpending = 0;
-            let calculatedPayout = typeof calculateLifetimePayoutEarned === 'function' ? calculateLifetimePayoutEarned(id) : 0;
+            let calculatedPayout = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(id) : 0;
             let totalItemsPurchased = 0;
 
             userSales.forEach(s => {
@@ -264,7 +264,7 @@ function openUserInfoModal(id) {
                         <span class="mu-stat-value">₦${calculatedSpending.toLocaleString()}</span>
                     </div>
                     <div class="mu-stat-box highlight">
-                        <span class="mu-stat-label">Total Payout</span>
+                        <span class="mu-stat-label">Payout Balance</span>
                         <span class="mu-stat-value">₦${calculatedPayout.toLocaleString()}</span>
                     </div>
                 </div>

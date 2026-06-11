@@ -296,9 +296,22 @@ function initDynamicPayoutLogic() {
         // Filter for current user
         const allUserSales = sales.filter(s => s.customerID === user.id);
 
+        // Sort oldest to newest to compute running balance chronologically
+        allUserSales.sort((a, b) => {
+            const da = parseSaleDate(a.date) || new Date(0);
+            const db = parseSaleDate(b.date) || new Date(0);
+            return da - db;
+        });
+
+        let runningBalance = 0;
+        allUserSales.forEach(s => {
+            let amt = parseFloat(s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
+            runningBalance = Math.max(0, runningBalance + amt);
+            s.computedRunningBalance = runningBalance;
+        });
+
         // Calculate Totals based on ALL user sales (unaffected by filters)
-        // Calculate Totals based on ALL user sales (unaffected by filters)
-        let totalPayout = typeof calculateLifetimePayoutEarned === 'function' ? calculateLifetimePayoutEarned(user.id) : 0;
+        let totalPayout = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(user.id) : 0;
         
         let totalSpending = 0;
         allUserSales.forEach(s => {
@@ -324,7 +337,7 @@ function initDynamicPayoutLogic() {
         }
 
         // --- Apply Month/Year Filter for Display Only ---
-        let displayedSales = allUserSales;
+        let displayedSales = [...allUserSales];
         if (selectedMonth !== 'all' || selectedYear !== 'all') {
             displayedSales = allUserSales.filter(s => {
                 const d = parseSaleDate(s.date);
@@ -338,8 +351,8 @@ function initDynamicPayoutLogic() {
         // Apply sorting
         displayedSales.sort((a, b) => {
             if (currentSort === 'highest' || currentSort === 'lowest') {
-                const payoutA = a.payout || 0;
-                const payoutB = b.payout || 0;
+                const payoutA = a.computedRunningBalance || 0;
+                const payoutB = b.computedRunningBalance || 0;
                 return currentSort === 'highest' ? payoutB - payoutA : payoutA - payoutB;
             } else {
                 const dateA = parseSaleDate(a.date) || new Date(0);
@@ -408,7 +421,7 @@ function initDynamicPayoutLogic() {
             const isDeduct = sale.isRewardPurchase || sale.type === 'Payout Purchase' || (sale.payoutEarned < 0);
             
             // Per user request, the history should ALWAYS show the remaining balance, not the delta/percentage.
-            let amountDisplay = Math.round(sale.payout || 0).toLocaleString();
+            let amountDisplay = Math.round(sale.computedRunningBalance || 0).toLocaleString();
             let labelDisplay = "Remaining";
             let plusSpan = '';
 
@@ -430,7 +443,6 @@ function initDynamicPayoutLogic() {
         }
         payoutRenderCount++;
         return;
-    }
 
     function animateValuePulse(el) {
         el.style.transition = 'none';

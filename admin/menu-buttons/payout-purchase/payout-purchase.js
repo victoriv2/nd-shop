@@ -1107,10 +1107,7 @@ function _verifyPPUser(searchTerm) {
         const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
         const userSales = sales.filter(s => s.customerID === user.id);
 
-        ppUserPayoutBalance = 0;
-        userSales.forEach(s => {
-            ppUserPayoutBalance += (s.payout || 0);
-        });
+        ppUserPayoutBalance = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(user.id) : 0;
 
         document.getElementById('ppUserBalance').textContent = `₦${ppUserPayoutBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
