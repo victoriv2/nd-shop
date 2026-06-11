@@ -407,10 +407,7 @@ window.printReceiptGen = function() {
 
     // Build temporary print container styled as A4 (794px)
     const printArea = document.createElement('div');
-    printArea.style.position = 'absolute';
-    printArea.style.left = '0';
-    printArea.style.top = '0';
-    printArea.style.zIndex = '-9999';
+
     printArea.style.width = '794px';
     printArea.style.background = '#ffffff';
     printArea.style.color = '#000';
@@ -431,7 +428,6 @@ window.printReceiptGen = function() {
         phoneLabel.style.fontSize = '1.05rem';
     }
 
-    document.body.appendChild(printArea);
     
     const opt = {
         margin: 0,
@@ -449,8 +445,7 @@ window.printReceiptGen = function() {
         btn.style.pointerEvents = 'none';
     }
 
-    html2pdf().set(opt).from(printArea).save().then(() => {
-        printArea.remove();
+    html2pdf().set(opt).from(printArea.outerHTML).save().then(() => {
         if (btn) {
             btn.textContent = originalText;
             btn.style.opacity = '1';
@@ -458,7 +453,6 @@ window.printReceiptGen = function() {
         }
     }).catch(err => {
         console.error("PDF generation failed:", err);
-        printArea.remove();
         if (btn) {
             btn.textContent = originalText;
             btn.style.opacity = '1';

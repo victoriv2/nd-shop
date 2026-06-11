@@ -2654,10 +2654,7 @@ window.generateProductPDF = function (btn) {
     });
 
     const printArea = document.createElement('div');
-    printArea.style.position = 'absolute';
-    printArea.style.left = '0';
-    printArea.style.top = '0';
-    printArea.style.zIndex = '-9999';
+
     printArea.style.width = '816px'; // Exact width for Letter size at 96 DPI
     printArea.style.background = '#ffffff';
     printArea.style.fontFamily = "'Inter', -apple-system, sans-serif";
@@ -2683,7 +2680,6 @@ window.generateProductPDF = function (btn) {
         </div>
     `;
 
-    document.body.appendChild(printArea);
 
     const opt = {
         margin: 0,
@@ -2698,14 +2694,12 @@ window.generateProductPDF = function (btn) {
     btn.style.opacity = '0.7';
     btn.style.pointerEvents = 'none';
 
-    html2pdf().set(opt).from(printArea).save().then(() => {
-        printArea.remove();
+    html2pdf().set(opt).from(printArea.outerHTML).save().then(() => {
         btn.textContent = originalText;
         btn.style.opacity = '1';
         btn.style.pointerEvents = 'auto';
     }).catch(err => {
         console.error("PDF Error: ", err);
-        printArea.remove();
         btn.textContent = originalText;
         btn.style.opacity = '1';
         btn.style.pointerEvents = 'auto';

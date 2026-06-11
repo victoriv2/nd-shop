@@ -827,10 +827,7 @@ function initProgressLogic() {
         ` : '';
 
         const printArea = document.createElement('div');
-        printArea.style.position = 'absolute';
-        printArea.style.left = '0';
-        printArea.style.top = '0';
-        printArea.style.zIndex = '-9999';
+
         printArea.style.width = '816px';
         printArea.style.background = '#ffffff';
         printArea.style.color = '#333';
@@ -898,7 +895,6 @@ function initProgressLogic() {
             </div>
         `;
 
-        document.body.appendChild(printArea);
 
         const opt = {
             margin: 0,
@@ -915,23 +911,17 @@ function initProgressLogic() {
             btn.style.opacity = '0.7';
             btn.style.pointerEvents = 'none';
 
-            html2pdf().set(opt).from(printArea).save().then(() => {
-                printArea.remove();
+            html2pdf().set(opt).from(printArea.outerHTML).save().then(() => {
                 btn.textContent = originalText;
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
             }).catch(() => {
-                printArea.remove();
                 btn.textContent = originalText;
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
             });
         } else {
-            html2pdf().set(opt).from(printArea).save().then(() => {
-                printArea.remove();
-            }).catch(() => {
-                printArea.remove();
-            });
+            html2pdf().set(opt).from(printArea.outerHTML).save();
         }
     }
 
