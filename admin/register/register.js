@@ -133,24 +133,44 @@ window.loadRegister = function () {
                     function fmtCurr(v) { return '₦' + Number(v).toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2}); }
 
                     const rowsHTML = filteredSales.length === 0
-                        ? `<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa;">No sales recorded for ${day} ${monthFull} ${year}</td></tr>`
+                        ? `<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa;">No sales recorded for ${day} ${monthFull} ${year}</td></tr>`
                         : filteredSales.map((r, i) => {
                             const tot = parseFloat(r.price) || (r.isFlexible ? parseFloat(r.unitPrice || 0) : ((parseFloat(r.qty) || 1) * (parseFloat(r.unitPrice) || 0)));
                             const unitPriceVal = r.unitPrice !== undefined ? r.unitPrice : (parseFloat(r.price || 0) / (parseFloat(r.qty) || 1));
                             const unitText = r.unit ? r.unit.replace(/^per\s+/i, '') : '';
                             const qtyStr = r.qty + (unitText ? ' ' + unitText + (r.qty > 1 ? 's' : '') : '');
+                            
+                            const isReq = r.type === 'Request';
+                            const isSpent = r.isRewardPurchase || r.type === 'Payout Purchase';
+                            const baseTot = (parseInt(r.qty) || 1) * (parseFloat(r.unitPrice) || 0);
+                            const delta = r.payoutEarned !== undefined ? r.payoutEarned : (isReq ? (r.payout != null ? r.payout : (baseTot * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100))) : 0);
+                            
+                            let payoutText = '-';
+                            if (isReq && !isSpent) {
+                                payoutText = `+₦${Math.round(Math.abs(delta)).toLocaleString()}`;
+                            }
+
                             return `<tr style="border-bottom:1px solid #f0f0f0;">
                                 <td style="padding:12px;color:#999;font-weight:600;">${i+1}</td>
                                 <td style="padding:12px;font-weight:600;">${r.item || ''}</td>
                                 <td style="padding:12px;text-align:center;color:#8b5cf6;font-weight:700;">${qtyStr}</td>
-                                <td style="padding:12px;">₦${(unitPriceVal||0).toLocaleString()}</td>
+                                <td style="padding:12px;text-align:right;">₦${(unitPriceVal||0).toLocaleString()}</td>
                                 <td style="padding:12px;text-align:right;font-weight:700;color:#8b5cf6;">${fmtCurr(tot)}</td>
+                                <td style="padding:12px;text-align:right;font-weight:700;color:#166534;">${payoutText}</td>
                             </tr>`;
                         }).join('');
 
                     const printArea = document.createElement('div');
+                    printArea.style.position = 'absolute';
+                    printArea.style.left = '-9999px';
+                    printArea.style.top = '0';
+                    printArea.style.width = '794px';
+                    printArea.style.height = 'auto';
+                    printArea.style.overflow = 'visible';
+                    printArea.style.background = '#ffffff';
+
                     printArea.innerHTML = `
-                        <div style="width:794px; font-family: 'Inter', -apple-system, sans-serif; color: #333; background:#fff;">
+                        <div style="width:794px; font-family: 'Inter', -apple-system, sans-serif; color: #333; background:#fff; height:auto; overflow:visible; position:relative;">
                             <!-- Header -->
                             <div style="background: #8b5cf6; padding: 32px 40px; color: white; display:flex; justify-content:space-between; align-items:flex-end;">
                                 <div>
@@ -185,8 +205,9 @@ window.loadRegister = function () {
                                             <th style="padding:11px 10px; text-align:left; border-radius:8px 0 0 0; font-weight:700; width:40px;">S/N</th>
                                             <th style="padding:11px 10px; text-align:left; font-weight:700;">Description</th>
                                             <th style="padding:11px 10px; text-align:center; font-weight:700; width:80px;">Qty</th>
-                                            <th style="padding:11px 10px; text-align:right; font-weight:700; width:100px;">Unit Price</th>
-                                            <th style="padding:11px 10px; text-align:right; border-radius:0 8px 0 0; font-weight:700; width:110px;">Total</th>
+                                            <th style="padding:11px 10px; text-align:right; font-weight:700; width:90px;">Unit Price</th>
+                                            <th style="padding:11px 10px; text-align:right; font-weight:700; width:100px;">Total</th>
+                                            <th style="padding:11px 10px; text-align:right; border-radius:0 8px 0 0; font-weight:700; width:110px;">Payout</th>
                                         </tr>
                                     </thead>
                                     <tbody>${rowsHTML}</tbody>
@@ -212,11 +233,15 @@ window.loadRegister = function () {
                     btn.style.opacity = '0.7';
                     btn.style.pointerEvents = 'none';
 
-                    html2pdf().set(opt).from(printArea.innerHTML).save().then(() => {
+                    document.body.appendChild(printArea);
+
+                    html2pdf().set(opt).from(printArea).save().then(() => {
+                        printArea.remove();
                         btn.textContent = originalText;
                         btn.style.opacity = '1';
                         btn.style.pointerEvents = 'auto';
                     }).catch(() => {
+                        printArea.remove();
                         btn.textContent = originalText;
                         btn.style.opacity = '1';
                         btn.style.pointerEvents = 'auto';
