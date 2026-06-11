@@ -100,7 +100,6 @@ function initSalesTable() {
             const isSpent = row.isRewardPurchase || row.type === 'Payout Purchase';
             const deltaText = `₦${formatCurrency(Math.abs(delta))}`;
             const labelText = isSpent ? `<span style="font-size: 0.7rem; color: #dc2626; font-weight: 600;">(Spent)</span>` : `<span style="font-size: 0.7rem; color: #166534; font-weight: 600;">(Earned)</span>`;
-            const remainingText = `<span style="font-size: 0.65rem; color: #64748b; display: block; margin-top: 2px;">Bal: ₦${formatCurrency(Math.max(0, row.payout))}</span>`;
 
             tr.innerHTML = `
                 <td>${index + 1}</td>
@@ -114,7 +113,7 @@ function initSalesTable() {
                 <td>${qtyStr}</td>
                 <td>₦${formatCurrency(unitPriceToDisplay)}</td>
                 <td>₦${formatCurrency(total)}</td>
-                <td class="payout-cell">${isRequest ? `${deltaText} ${labelText} ${remainingText}` : '-'}</td>
+                <td class="payout-cell">${isRequest ? `${deltaText} ${labelText}` : '-'}</td>
             `;
             tableBody.appendChild(tr);
         });
