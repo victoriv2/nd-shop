@@ -2654,32 +2654,41 @@ window.generateProductPDF = function (btn) {
     });
 
     const printArea = document.createElement('div');
+    printArea.style.position = 'fixed';
+    printArea.style.left = '-9999px';
+    printArea.style.top = '0';
+    printArea.style.width = '816px'; // Exact width for Letter size at 96 DPI
+    printArea.style.background = '#ffffff';
+    printArea.style.fontFamily = "'Inter', -apple-system, sans-serif";
+    printArea.style.boxSizing = 'border-box';
+    printArea.style.padding = '50px';
+
     // Using CSS columns for a cool magazine-style layout
     printArea.innerHTML = `
-        <div style="padding: 50px; font-family: 'Inter', -apple-system, sans-serif; background: #ffffff;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 3px solid #6366f1; padding-bottom: 25px;">
-                <div style="color: #6366f1; font-weight: 900; font-size: 34px; letter-spacing: -1.5px; text-transform: uppercase; font-family: 'Outfit', sans-serif;">${shopName}</div>
-                <div style="text-align: right;">
-                    <h2 style="margin: 0; color: #111; font-size: 28px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Product Catalog</h2>
-                    <p style="margin: 6px 0 0 0; color: #666; font-size: 15px; font-weight: 600;">Active Inventory: <strong style="color:#6366f1;">${adminProducts.length} Items</strong></p>
-                </div>
-            </div>
-            
-            <div style="column-count: 2; column-gap: 30px;">
-                ${cardsHtml}
-            </div>
-
-            <div style="margin-top: 50px; text-align: center; color: #999; font-size: 13px; font-weight: 600; border-top: 1px solid #eaeaea; padding-top: 30px;">
-                ${shopName} • Official Inventory Catalog • Generated on ${new Date().toLocaleDateString('en-GB')} at ${new Date().toLocaleTimeString('en-US')}
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 3px solid #6366f1; padding-bottom: 25px;">
+            <div style="color: #6366f1; font-weight: 900; font-size: 34px; letter-spacing: -1.5px; text-transform: uppercase; font-family: 'Outfit', sans-serif;">${shopName}</div>
+            <div style="text-align: right;">
+                <h2 style="margin: 0; color: #111; font-size: 28px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Product Catalog</h2>
+                <p style="margin: 6px 0 0 0; color: #666; font-size: 15px; font-weight: 600;">Active Inventory: <strong style="color:#6366f1;">${adminProducts.length} Items</strong></p>
             </div>
         </div>
+        
+        <div style="column-count: 2; column-gap: 30px;">
+            ${cardsHtml}
+        </div>
+
+        <div style="margin-top: 50px; text-align: center; color: #999; font-size: 13px; font-weight: 600; border-top: 1px solid #eaeaea; padding-top: 30px;">
+            ${shopName} • Official Inventory Catalog • Generated on ${new Date().toLocaleDateString('en-GB')} at ${new Date().toLocaleTimeString('en-US')}
+        </div>
     `;
+
+    document.body.appendChild(printArea);
 
     const opt = {
         margin: 0,
         filename: 'nd_Product_Catalog.pdf',
         image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true, windowWidth: 1000 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true, windowWidth: 816, scrollX: 0, scrollY: 0 },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
@@ -2688,12 +2697,14 @@ window.generateProductPDF = function (btn) {
     btn.style.opacity = '0.7';
     btn.style.pointerEvents = 'none';
 
-    html2pdf().set(opt).from(printArea.innerHTML).save().then(() => {
+    html2pdf().set(opt).from(printArea).save().then(() => {
+        printArea.remove();
         btn.textContent = originalText;
         btn.style.opacity = '1';
         btn.style.pointerEvents = 'auto';
     }).catch(err => {
         console.error("PDF Error: ", err);
+        printArea.remove();
         btn.textContent = originalText;
         btn.style.opacity = '1';
         btn.style.pointerEvents = 'auto';

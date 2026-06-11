@@ -407,11 +407,17 @@ window.printReceiptGen = function() {
 
     // Build temporary print container styled as A4 (794px)
     const printArea = document.createElement('div');
-    printArea.innerHTML = `
-        <div style="width: 794px; padding: 60px 80px; background: #ffffff; color: #000; font-family: 'Courier New', Courier, monospace; box-sizing: border-box;">
-            ${previewDoc.innerHTML}
-        </div>
-    `;
+    printArea.style.position = 'fixed';
+    printArea.style.left = '-9999px';
+    printArea.style.top = '0';
+    printArea.style.width = '794px';
+    printArea.style.background = '#ffffff';
+    printArea.style.color = '#000';
+    printArea.style.fontFamily = "'Courier New', Courier, monospace";
+    printArea.style.boxSizing = 'border-box';
+    printArea.style.padding = '60px 80px';
+    
+    printArea.innerHTML = previewDoc.innerHTML;
     
     // Adjust layout sizes in temp print to look premium on A4
     const headerTitle = printArea.querySelector('#rgPreviewShopName');
@@ -423,12 +429,14 @@ window.printReceiptGen = function() {
     if (phoneLabel) {
         phoneLabel.style.fontSize = '1.05rem';
     }
+
+    document.body.appendChild(printArea);
     
     const opt = {
         margin: 0,
         filename: `Receipt_${receiptNum}.pdf`,
         image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false, windowWidth: 794 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false, windowWidth: 794, scrollX: 0, scrollY: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
@@ -440,7 +448,8 @@ window.printReceiptGen = function() {
         btn.style.pointerEvents = 'none';
     }
 
-    html2pdf().set(opt).from(printArea.innerHTML).save().then(() => {
+    html2pdf().set(opt).from(printArea).save().then(() => {
+        printArea.remove();
         if (btn) {
             btn.textContent = originalText;
             btn.style.opacity = '1';
@@ -448,6 +457,7 @@ window.printReceiptGen = function() {
         }
     }).catch(err => {
         console.error("PDF generation failed:", err);
+        printArea.remove();
         if (btn) {
             btn.textContent = originalText;
             btn.style.opacity = '1';

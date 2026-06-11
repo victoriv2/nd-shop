@@ -161,62 +161,71 @@ window.loadRegister = function () {
                         }).join('');
 
                     const printArea = document.createElement('div');
+                    printArea.style.position = 'fixed';
+                    printArea.style.left = '-9999px';
+                    printArea.style.top = '0';
+                    printArea.style.width = '794px';
+                    printArea.style.background = '#ffffff';
+                    printArea.style.color = '#333';
+                    printArea.style.fontFamily = "'Inter', -apple-system, sans-serif";
+                    printArea.style.boxSizing = 'border-box';
+
                     printArea.innerHTML = `
-                        <div style="width:794px; font-family: 'Inter', -apple-system, sans-serif; color: #333; background:#fff; height:auto; overflow:visible; position:relative; display:block;">
-                            <!-- Header -->
-                            <div style="background: #8b5cf6; padding: 32px 40px; color: white; display:flex; justify-content:space-between; align-items:flex-end;">
-                                <div>
-                                    <div style="font-size:26px; font-weight:900; letter-spacing:-1px; font-family:'Outfit',sans-serif;">${shopName}</div>
-                                    <div style="font-size:13px; font-weight:600; opacity:0.8; margin-top:4px;">Daily Sales Book</div>
-                                </div>
-                                <div style="text-align:right;">
-                                    <div style="font-size:22px; font-weight:800;">${day} ${monthFull}</div>
-                                    <div style="font-size:16px; font-weight:600; opacity:0.85;">${year}</div>
-                                </div>
+                        <!-- Header -->
+                        <div style="background: #8b5cf6; padding: 32px 40px; color: white; display:flex; justify-content:space-between; align-items:flex-end;">
+                            <div>
+                                <div style="font-size:26px; font-weight:900; letter-spacing:-1px; font-family:'Outfit',sans-serif;">${shopName}</div>
+                                <div style="font-size:13px; font-weight:600; opacity:0.8; margin-top:4px;">Daily Sales Book</div>
                             </div>
-                            <!-- KPI Summary -->
-                            <div style="display:flex; gap:16px; padding:20px 40px; background:#f8fafc; border-bottom:1px solid #e8edf3;">
-                                <div style="flex:1; background:white; padding:16px; border-radius:10px; border:1px solid #dce8f5; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
-                                    <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:6px;">Total Entries / Qty</div>
-                                    <div style="font-size:22px; font-weight:900; color:#8b5cf6;">${filteredSales.length} / ${totalQty}</div>
-                                </div>
-                                <div style="flex:1; background:white; padding:16px; border-radius:10px; border:1px solid #dce8f5; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
-                                    <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:6px;">Total Sales</div>
-                                    <div style="font-size:22px; font-weight:900; color:#8b5cf6;">${fmtCurr(totalSalesAmt)}</div>
-                                </div>
-                                <div style="flex:1; background:white; padding:16px; border-radius:10px; border:1px solid #ffd6d6; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
-                                    <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:6px;">Total Payout</div>
-                                    <div style="font-size:22px; font-weight:900; color:#8b5cf6;">${fmtCurr(totalPayoutAmt)}</div>
-                                </div>
-                            </div>
-                            <!-- Table -->
-                            <div style="padding:20px 40px;">
-                                <table style="width:100%; border-collapse:collapse; font-size:12px;">
-                                    <thead>
-                                        <tr style="background:#8b5cf6; color:white;">
-                                            <th style="padding:11px 10px; text-align:left; border-radius:8px 0 0 0; font-weight:700; width:40px;">S/N</th>
-                                            <th style="padding:11px 10px; text-align:left; font-weight:700;">Description</th>
-                                            <th style="padding:11px 10px; text-align:center; font-weight:700; width:80px;">Qty</th>
-                                            <th style="padding:11px 10px; text-align:right; font-weight:700; width:90px;">Unit Price</th>
-                                            <th style="padding:11px 10px; text-align:right; font-weight:700; width:100px;">Total</th>
-                                            <th style="padding:11px 10px; text-align:right; border-radius:0 8px 0 0; font-weight:700; width:110px;">Payout</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${rowsHTML}</tbody>
-                                </table>
-                            </div>
-                            <!-- Footer -->
-                            <div style="padding:20px 40px; text-align:center; border-top:1px solid #eee; margin-top:8px;">
-                                <p style="color:#bbb; font-size:10px; margin:0; font-weight:600;">${shopName} | Salesbook Report | Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                            <div style="text-align:right;">
+                                <div style="font-size:22px; font-weight:800;">${day} ${monthFull}</div>
+                                <div style="font-size:16px; font-weight:600; opacity:0.85;">${year}</div>
                             </div>
                         </div>
+                        <!-- KPI Summary -->
+                        <div style="display:flex; gap:16px; padding:20px 40px; background:#f8fafc; border-bottom:1px solid #e8edf3;">
+                            <div style="flex:1; background:white; padding:16px; border-radius:10px; border:1px solid #dce8f5; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                                <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:6px;">Total Entries / Qty</div>
+                                <div style="font-size:22px; font-weight:900; color:#8b5cf6;">${filteredSales.length} / ${totalQty}</div>
+                            </div>
+                            <div style="flex:1; background:white; padding:16px; border-radius:10px; border:1px solid #dce8f5; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                                <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:6px;">Total Sales</div>
+                                <div style="font-size:22px; font-weight:900; color:#8b5cf6;">${fmtCurr(totalSalesAmt)}</div>
+                            </div>
+                            <div style="flex:1; background:white; padding:16px; border-radius:10px; border:1px solid #ffd6d6; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                                <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:6px;">Total Payout</div>
+                                <div style="font-size:22px; font-weight:900; color:#8b5cf6;">${fmtCurr(totalPayoutAmt)}</div>
+                            </div>
+                        </div>
+                        <!-- Table -->
+                        <div style="padding:20px 40px;">
+                            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                                <thead>
+                                    <tr style="background:#8b5cf6; color:white;">
+                                        <th style="padding:11px 10px; text-align:left; border-radius:8px 0 0 0; font-weight:700; width:40px;">S/N</th>
+                                        <th style="padding:11px 10px; text-align:left; font-weight:700;">Description</th>
+                                        <th style="padding:11px 10px; text-align:center; font-weight:700; width:80px;">Qty</th>
+                                        <th style="padding:11px 10px; text-align:right; font-weight:700; width:90px;">Unit Price</th>
+                                        <th style="padding:11px 10px; text-align:right; font-weight:700; width:100px;">Total</th>
+                                        <th style="padding:11px 10px; text-align:right; border-radius:0 8px 0 0; font-weight:700; width:110px;">Payout</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rowsHTML}</tbody>
+                            </table>
+                        </div>
+                        <!-- Footer -->
+                        <div style="padding:20px 40px; text-align:center; border-top:1px solid #eee; margin-top:8px;">
+                            <p style="color:#bbb; font-size:10px; margin:0; font-weight:600;">${shopName} | Salesbook Report | Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                        </div>
                     `;
+
+                    document.body.appendChild(printArea);
 
                     const opt = {
                         margin: 0,
                         filename: `Salesbook_${day}_${monthFull}_${year}.pdf`,
                         image: { type: 'jpeg', quality: 1 },
-                        html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false, windowWidth: 794 },
+                        html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false, windowWidth: 794, scrollX: 0, scrollY: 0 },
                         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
 
@@ -225,11 +234,13 @@ window.loadRegister = function () {
                     btn.style.opacity = '0.7';
                     btn.style.pointerEvents = 'none';
 
-                    html2pdf().set(opt).from(printArea.innerHTML).save().then(() => {
+                    html2pdf().set(opt).from(printArea).save().then(() => {
+                        printArea.remove();
                         btn.textContent = originalText;
                         btn.style.opacity = '1';
                         btn.style.pointerEvents = 'auto';
                     }).catch(() => {
+                        printArea.remove();
                         btn.textContent = originalText;
                         btn.style.opacity = '1';
                         btn.style.pointerEvents = 'auto';

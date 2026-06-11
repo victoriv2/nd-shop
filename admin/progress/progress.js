@@ -827,74 +827,83 @@ function initProgressLogic() {
         ` : '';
 
         const printArea = document.createElement('div');
+        printArea.style.position = 'fixed';
+        printArea.style.left = '-9999px';
+        printArea.style.top = '0';
+        printArea.style.width = '816px';
+        printArea.style.background = '#ffffff';
+        printArea.style.color = '#333';
+        printArea.style.fontFamily = "'Inter', -apple-system, sans-serif";
+        printArea.style.boxSizing = 'border-box';
+
         printArea.innerHTML = `
-            <div style="width:816px; font-family: 'Inter', -apple-system, sans-serif; background: #fff; color:#333;">
-                <!-- Header -->
-                <div style="background: #8b5cf6; padding: 36px 48px 30px; color: white; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -20px; right: -20px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,0.07);"></div>
-                    <div style="position: absolute; bottom: -30px; left: 40px; width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.04);"></div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end; position: relative; z-index: 1;">
-                        <div>
-                            <div style="font-size: 28px; font-weight: 900; letter-spacing: -1px; margin-bottom: 5px; font-family:'Outfit',sans-serif;">${shopName}</div>
-                            <div style="font-size: 13px; font-weight: 600; opacity: 0.8;">Monthly Progress Report</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 30px; font-weight: 900; letter-spacing: -1px;">${monthName}</div>
-                            <div style="font-size: 18px; font-weight: 700; opacity: 0.9;">${year}</div>
-                        </div>
+            <!-- Header -->
+            <div style="background: #8b5cf6; padding: 36px 48px 30px; color: white; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -20px; right: -20px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,0.07);"></div>
+                <div style="position: absolute; bottom: -30px; left: 40px; width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.04);"></div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; position: relative; z-index: 1;">
+                    <div>
+                        <div style="font-size: 28px; font-weight: 900; letter-spacing: -1px; margin-bottom: 5px; font-family:'Outfit',sans-serif;">${shopName}</div>
+                        <div style="font-size: 13px; font-weight: 600; opacity: 0.8;">Monthly Progress Report</div>
                     </div>
-                </div>
-
-                <!-- KPI Summary -->
-                <div style="display: flex; gap: 16px; padding: 20px 48px; background: #f8fafc; border-bottom: 1px solid #e8edf3;">
-                    <div style="flex:1; background:white; padding:18px; border-radius:12px; border:1px solid #dce8f5; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
-                        <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:8px;">Items Sold</div>
-                        <div style="font-size:24px; font-weight:900; color:#8b5cf6;">${itemsSold}</div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 30px; font-weight: 900; letter-spacing: -1px;">${monthName}</div>
+                        <div style="font-size: 18px; font-weight: 700; opacity: 0.9;">${year}</div>
                     </div>
-                    <div style="flex:1; background:white; padding:18px; border-radius:12px; border:1px solid #dce8f5; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
-                        <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:8px;">Total Sales</div>
-                        <div style="font-size:24px; font-weight:900; color:#8b5cf6;">${totalSales}</div>
-                    </div>
-                    ${payoutEnabled ? `
-                    <div style="flex:1; background:white; padding:18px; border-radius:12px; border:1px solid #ffd6d6; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
-                        <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:8px;">Your Payout</div>
-                        <div style="font-size:24px; font-weight:900; color:#8b5cf6;">${totalPayout}</div>
-                    </div>
-                    ` : ''}
-                </div>
-
-                ${chartSection}
-
-                <!-- Daily Breakdown Table -->
-                <div style="padding: 24px 48px 20px;">
-                    <h3 style="margin: 0 0 16px 0; font-size: 14px; font-weight: 800; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">📊 Daily Breakdown</h3>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                        <thead>
-                            <tr style="background: #1a1a1a; color: white;">
-                                <th style="padding: 11px 14px; text-align: left; border-radius: 8px 0 0 0; font-weight: 700;">Day</th>
-                                <th style="padding: 11px 14px; text-align: left; font-weight: 700;">Date</th>
-                                <th style="padding: 11px 14px; text-align: right; font-weight: 700; ${!payoutEnabled ? 'border-radius: 0 8px 0 0;' : ''}">Revenue</th>
-                                ${payoutEnabled ? '<th style="padding: 11px 14px; text-align: right; border-radius: 0 8px 0 0; font-weight: 700;">Payout</th>' : ''}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${dailyRowsHtml}
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Footer -->
-                <div style="padding: 20px 48px; text-align: center; border-top: 1px solid #eee; margin-top: 10px;">
-                    <p style="color: #bbb; font-size: 10px; font-weight: 600; margin: 0;">${shopName} • Monthly Progress Report • Generated on ${new Date().toLocaleDateString('en-GB')} at ${new Date().toLocaleTimeString('en-US')}</p>
                 </div>
             </div>
+
+            <!-- KPI Summary -->
+            <div style="display: flex; gap: 16px; padding: 20px 48px; background: #f8fafc; border-bottom: 1px solid #e8edf3;">
+                <div style="flex:1; background:white; padding:18px; border-radius:12px; border:1px solid #dce8f5; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                    <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:8px;">Items Sold</div>
+                    <div style="font-size:24px; font-weight:900; color:#8b5cf6;">${itemsSold}</div>
+                </div>
+                <div style="flex:1; background:white; padding:18px; border-radius:12px; border:1px solid #dce8f5; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                    <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:8px;">Total Sales</div>
+                    <div style="font-size:24px; font-weight:900; color:#8b5cf6;">${totalSales}</div>
+                </div>
+                ${payoutEnabled ? `
+                <div style="flex:1; background:white; padding:18px; border-radius:12px; border:1px solid #ffd6d6; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                    <div style="font-size:10px; color:#999; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:8px;">Your Payout</div>
+                    <div style="font-size:24px; font-weight:900; color:#8b5cf6;">${totalPayout}</div>
+                </div>
+                ` : ''}
+            </div>
+
+            ${chartSection}
+
+            <!-- Daily Breakdown Table -->
+            <div style="padding: 24px 48px 20px;">
+                <h3 style="margin: 0 0 16px 0; font-size: 14px; font-weight: 800; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">📊 Daily Breakdown</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #1a1a1a; color: white;">
+                            <th style="padding: 11px 14px; text-align: left; border-radius: 8px 0 0 0; font-weight: 700;">Day</th>
+                            <th style="padding: 11px 14px; text-align: left; font-weight: 700;">Date</th>
+                            <th style="padding: 11px 14px; text-align: right; font-weight: 700; ${!payoutEnabled ? 'border-radius: 0 8px 0 0;' : ''}">Revenue</th>
+                            ${payoutEnabled ? '<th style="padding: 11px 14px; text-align: right; border-radius: 0 8px 0 0; font-weight: 700;">Payout</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${dailyRowsHtml}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div style="padding: 20px 48px; text-align: center; border-top: 1px solid #eee; margin-top: 10px;">
+                <p style="color: #bbb; font-size: 10px; font-weight: 600; margin: 0;">${shopName} • Monthly Progress Report • Generated on ${new Date().toLocaleDateString('en-GB')} at ${new Date().toLocaleTimeString('en-US')}</p>
+            </div>
         `;
+
+        document.body.appendChild(printArea);
 
         const opt = {
             margin: 0,
             filename: `nd_Progress_${monthName}_${year}.pdf`,
             image: { type: 'jpeg', quality: 1 },
-            html2canvas: { scale: 2, useCORS: true, letterRendering: true, windowWidth: 816 },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true, windowWidth: 816, scrollX: 0, scrollY: 0 },
             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
 
@@ -905,17 +914,23 @@ function initProgressLogic() {
             btn.style.opacity = '0.7';
             btn.style.pointerEvents = 'none';
 
-            html2pdf().set(opt).from(printArea.innerHTML).save().then(() => {
+            html2pdf().set(opt).from(printArea).save().then(() => {
+                printArea.remove();
                 btn.textContent = originalText;
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
             }).catch(() => {
+                printArea.remove();
                 btn.textContent = originalText;
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
             });
         } else {
-            html2pdf().set(opt).from(printArea.innerHTML).save();
+            html2pdf().set(opt).from(printArea).save().then(() => {
+                printArea.remove();
+            }).catch(() => {
+                printArea.remove();
+            });
         }
     }
 
