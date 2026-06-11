@@ -443,6 +443,7 @@ function initDynamicPayoutLogic() {
         }
         payoutRenderCount++;
         return;
+    }
 
     function animateValuePulse(el) {
         el.style.transition = 'none';
