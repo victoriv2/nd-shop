@@ -161,16 +161,8 @@ window.loadRegister = function () {
                         }).join('');
 
                     const printArea = document.createElement('div');
-                    printArea.style.position = 'absolute';
-                    printArea.style.left = '-9999px';
-                    printArea.style.top = '0';
-                    printArea.style.width = '794px';
-                    printArea.style.height = 'auto';
-                    printArea.style.overflow = 'visible';
-                    printArea.style.background = '#ffffff';
-
                     printArea.innerHTML = `
-                        <div style="width:794px; font-family: 'Inter', -apple-system, sans-serif; color: #333; background:#fff; height:auto; overflow:visible; position:relative;">
+                        <div style="width:794px; font-family: 'Inter', -apple-system, sans-serif; color: #333; background:#fff; height:auto; overflow:visible; position:relative; display:block;">
                             <!-- Header -->
                             <div style="background: #8b5cf6; padding: 32px 40px; color: white; display:flex; justify-content:space-between; align-items:flex-end;">
                                 <div>
@@ -233,15 +225,11 @@ window.loadRegister = function () {
                     btn.style.opacity = '0.7';
                     btn.style.pointerEvents = 'none';
 
-                    document.body.appendChild(printArea);
-
-                    html2pdf().set(opt).from(printArea).save().then(() => {
-                        printArea.remove();
+                    html2pdf().set(opt).from(printArea.innerHTML).save().then(() => {
                         btn.textContent = originalText;
                         btn.style.opacity = '1';
                         btn.style.pointerEvents = 'auto';
                     }).catch(() => {
-                        printArea.remove();
                         btn.textContent = originalText;
                         btn.style.opacity = '1';
                         btn.style.pointerEvents = 'auto';
