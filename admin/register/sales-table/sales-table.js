@@ -105,15 +105,15 @@ function initSalesTable() {
                 <td>${index + 1}</td>
                 <td>${row.date}</td>
                 <td>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        ${row.item}
-                        ${isRequest ? '<span class="request-badge">User</span>' : ''}
+                    <div style="display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0;">
+                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;" title="${row.item || ''}">${row.item || ''}</span>
+                        ${isRequest ? '<span class="request-badge" style="flex-shrink: 0;">User</span>' : ''}
                     </div>
                 </td>
                 <td>${qtyStr}</td>
                 <td>₦${formatCurrency(unitPriceToDisplay)}</td>
                 <td>₦${formatCurrency(total)}</td>
-                <td class="payout-cell">${isRequest ? `${deltaText} ${labelText}` : '-'}</td>
+                <td class="payout-cell">${(isRequest && !isSpent) ? `${deltaText} ${labelText}` : '-'}</td>
             `;
             tableBody.appendChild(tr);
         });
