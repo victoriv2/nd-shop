@@ -498,8 +498,8 @@ function _handleCommSend(input) {
         return;
     }
 
-    let content = input.value;
-    if (!content || !content.trim()) return;
+    let content = input.value.trim();
+    if (!content) return;
     sendCommMessage(content, 'text');
     input.value = '';
     input.style.height = 'auto';
@@ -959,8 +959,8 @@ function renderCommMessages(searchQuery = '') {
         html += `
             <div class="comm-row ${isMe ? 'msg-me' : 'msg-other'}" data-id="${msg.id}" data-sender="${msg.senderId}" style="max-width: 100%; min-width: 0;">
                 <div class="comm-sender-name">${senderName}</div>
-                <div class="comm-bubble-wrapper" style="position:relative; display:flex; align-items:center; gap:4px; flex-direction:${isMe ? 'row-reverse' : 'row'}; cursor:pointer; max-width: 100%; min-width: 0; box-sizing: border-box;" onclick="window._showCommContextMenu(event, this)">
-                    <div class="comm-bubble" style="min-width: 0; max-width: ${bubbleMaxWidth}; overflow: hidden; word-wrap: break-word; overflow-wrap: break-word; box-sizing: border-box;">
+                <div class="comm-bubble-wrapper" style="position:relative; display:flex; align-items:center; gap:4px; flex-direction:${isMe ? 'row-reverse' : 'row'}; cursor:pointer; max-width: 100%; min-width: 0; width: 100%; box-sizing: border-box;" onclick="window._showCommContextMenu(event, this)">
+                    <div class="comm-bubble" style="width: fit-content; min-width: 0; max-width: ${bubbleMaxWidth}; overflow: hidden; word-wrap: break-word; overflow-wrap: break-word; box-sizing: border-box;">
                         ${msg.isPinned ? `<div class="comm-pin-badge">${_svgIcons.pin(11,'#6366f1')} Pinned</div>` : ''}
                         ${replyHtml}
                         ${contentHtml}

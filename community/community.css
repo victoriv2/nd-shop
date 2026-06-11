@@ -149,7 +149,11 @@
 }
 .comm-row.msg-me .comm-sender-name { display: none; }
 
-.comm-bubble { min-width: 0; box-sizing: border-box; word-break: break-word;
+.comm-bubble-wrapper {
+    width: 100%;
+}
+
+.comm-bubble { width: fit-content; min-width: 0; box-sizing: border-box; word-break: break-word;
     max-width: 90%;
     padding: 10px 14px;
     border-radius: 16px;
@@ -160,13 +164,13 @@
     overflow-wrap: break-word;
 }
 
-.comm-row.msg-me .comm-bubble { min-width: 0; box-sizing: border-box; word-break: break-word;
+.comm-row.msg-me .comm-bubble { width: fit-content; min-width: 0; box-sizing: border-box; word-break: break-word;
     background: #8b5cf6;
     color: #ffffff;
     border-bottom-right-radius: 4px;
 }
 
-.comm-row.msg-other .comm-bubble { min-width: 0; box-sizing: border-box; word-break: break-word;
+.comm-row.msg-other .comm-bubble { width: fit-content; min-width: 0; box-sizing: border-box; word-break: break-word;
     background: #ffffff;
     color: #1a1a2e;
     border: 1px solid #e5e7eb;
@@ -186,6 +190,16 @@
 
 .comm-text {
     white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    padding: 0;
+    line-height: 1.35;
+}
+
+.comm-text p {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.35 !important;
 }
 
 /* Mentions styling */

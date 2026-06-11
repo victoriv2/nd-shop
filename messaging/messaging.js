@@ -374,10 +374,13 @@ function _handleSend(input) {
         return;
     }
 
+    const trimmedVal = input.value.trim();
+    if (!trimmedVal) return;
+
     if (msgEditingId) {
-        _finishEditing(input.value);
+        _finishEditing(trimmedVal);
     } else {
-        sendMessage(input.value, 'text', null, null, msgReplyToId);
+        sendMessage(trimmedVal, 'text', null, null, msgReplyToId);
     }
     input.value = '';
     input.style.height = 'auto';
