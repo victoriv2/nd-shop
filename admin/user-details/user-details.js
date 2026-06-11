@@ -12,8 +12,7 @@ function openUserDetailsModal(userId) {
     let calculatedPayout = 0;
 
     userSales.forEach(s => {
-        const isDeduct = (s.payout < 0) || s.isRewardPurchase || s.type === 'Payout Purchase';
-        calculatedPayout += isDeduct ? -Math.abs(parseFloat(s.payout) || 0) : Math.abs(parseFloat(s.payout) || 0);
+        calculatedPayout += parseFloat(s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
         calculatedSpending += parseFloat(s.price || (s.qty * s.unitPrice)) || 0;
     });
 

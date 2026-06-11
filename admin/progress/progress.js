@@ -169,7 +169,7 @@ function initProgressLogic() {
                             if (payoutEnabled && isRequest) {
                                 // Respect recorded payout, even if 0. Only fallback to dynamic rate if field is missing.
                                 const rate = parseFloat(localStorage.getItem('nd_payout_rate') || 2) / 100;
-                                payout = (sale.payout !== undefined && sale.payout !== null && sale.payout !== '') ? Number(sale.payout) : (grossPrice * rate);
+                                payout = (sale.payoutEarned !== undefined) ? Number(sale.payoutEarned) : ((sale.payout !== undefined && sale.payout !== null && sale.payout !== '') ? Number(sale.payout) : (grossPrice * rate));
                             }
                             
                             totalPayout += payout;
@@ -646,6 +646,11 @@ function initProgressLogic() {
                             const index = elements[0].index;
                             const day = labels[index];
                             const value = dataPoints[index];
+                            if (s.isRewardPurchase || s.type === 'Payout Purchase') {
+                                payout = -Math.abs(s.payoutEarned !== undefined ? s.payoutEarned : s.payout);
+                            } else {
+                                payout = Math.abs(s.payoutEarned !== undefined ? s.payoutEarned : s.payout);
+                            }
                             if (value !== null) {
                                 showDetailPopup(day, value);
                             }

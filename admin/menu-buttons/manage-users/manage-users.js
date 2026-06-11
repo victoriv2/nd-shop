@@ -236,7 +236,7 @@ function openUserInfoModal(id) {
             let totalItemsPurchased = 0;
 
             userSales.forEach(s => {
-                calculatedPayout += parseFloat(s.payout) || 0;
+                calculatedPayout += parseFloat(s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
                 calculatedSpending += parseFloat(s.price || (s.qty * s.unitPrice)) || 0;
                 totalItemsPurchased += parseInt(s.qty) || 1;
             });

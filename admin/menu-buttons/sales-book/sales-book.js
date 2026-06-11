@@ -345,7 +345,7 @@ window.renderSalesBook = function renderSalesBook() {
                 const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
                 if (payoutEnabled) {
                     const rate = parseFloat(localStorage.getItem('nd_payout_rate') || 2) / 100;
-                    const po = (row.payout !== undefined && row.payout !== null && row.payout !== '') ? Number(row.payout) : (grossTotal * rate);
+                    const po = (row.payoutEarned !== undefined) ? Number(row.payoutEarned) : ((row.payout !== undefined && row.payout !== null && row.payout !== '') ? Number(row.payout) : (grossTotal * rate));
                     monthTotalPayout += po;
                 }
             }

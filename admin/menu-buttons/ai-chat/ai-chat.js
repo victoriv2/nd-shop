@@ -763,7 +763,7 @@ function initAiChatLogic() {
                 let payoutPurchaseCount = 0, payoutPurchaseTotal = 0;
                 userSales.forEach(s => {
                     totalSpending += parseFloat(s.price || (s.qty * s.unitPrice)) || 0;
-                    totalPayout += parseFloat(s.payout) || 0;
+                    totalPayout += parseFloat(s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
                     itemsBought += parseInt(s.qty) || 1;
                     if (s.type === 'Payout Purchase') {
                         payoutPurchaseCount++;

@@ -582,7 +582,7 @@ function openUserRewardPurchaseModal() {
     const allUserSales = sales.filter(s => s.customerID === user.id);
     let totalPayout = 0;
     allUserSales.forEach(s => {
-        totalPayout += s.payout || 0;
+        totalPayout += (s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
     });
 
     let spendableRewardBalance = totalPayout;
