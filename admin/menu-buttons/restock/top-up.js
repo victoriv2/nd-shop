@@ -28,12 +28,19 @@ window._triggerTopUpFlow = function(productName) {
 
     // 1. Fetch product FIRST
     const products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-    const p = products.find(x => x.name === productName && !x.isDeleted);
+    const p = products.find(x => (x.id ? x.id === productName : x.name === productName) && !x.isDeleted);
     if (!p) {
-        alert("Product not found.");
-        return;
+        // Fallback: search by name if productName might be a name not an id
+        const pByName = products.find(x => x.name === productName && !x.isDeleted);
+        if (!pByName) {
+            alert("Product not found.");
+            return;
+        }
+        window._currentTopUpProduct = pByName;
+    } else {
+        window._currentTopUpProduct = p;
     }
-    window._currentTopUpProduct = p;
+    const pResolved = window._currentTopUpProduct;
 
     // 2. Set header to "Top Up Stock" BEFORE showing
     const header = modal.querySelector('.admin-modal-header h3');
@@ -52,12 +59,6 @@ window._triggerTopUpFlow = function(productName) {
         }
     });
 
-    // 5. Hide all "Top Up Stock" buttons
-    ['rsAddExistingBtn', 'rsSpecAddExistingBtn', 'rsCustomAddExistingBtn', 'rsFlexAddExistingBtn'].forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.style.display = 'none';
-    });
-
     // 6. Directly show/hide the correct form (NO dependency on type button listeners)
     const specialForm = document.getElementById('rsSpecialProductForm');
     const defaultForm = document.getElementById('rsDefaultProductForm');
@@ -71,26 +72,26 @@ window._triggerTopUpFlow = function(productName) {
     if (flexForm) flexForm.style.display = 'none';
 
     // Show the correct one and populate
-    if (p.isSpecial) {
+    if (pResolved.isSpecial) {
         if (specialForm) specialForm.style.display = 'block';
         // IMPORTANT: Init listeners first so calculations work
         if (typeof _initRestockProductForm === 'function') _initRestockProductForm();
-        _populateSpecialTopUp(p);
-    } else if (p.isCustom) {
+        _populateSpecialTopUp(pResolved);
+    } else if (pResolved.isCustom) {
         if (customForm) customForm.style.display = 'block';
         // IMPORTANT: Init listeners first so calculations work
         if (typeof window._initRsCustomForm === 'function') window._initRsCustomForm();
-        _populateCustomTopUp(p);
-    } else if (p.isFlexible) {
+        _populateCustomTopUp(pResolved);
+    } else if (pResolved.isFlexible) {
         if (flexForm) flexForm.style.display = 'block';
         // IMPORTANT: Init listeners first so calculations work
         if (typeof window._initRsFlexForm === 'function') window._initRsFlexForm();
-        _populateFlexTopUp(p);
+        _populateFlexTopUp(pResolved);
     } else {
         if (defaultForm) defaultForm.style.display = 'block';
         // IMPORTANT: Init listeners first so calculations work
         if (typeof _initRestockProductForm === 'function') _initRestockProductForm();
-        _populateDefaultTopUp(p);
+        _populateDefaultTopUp(pResolved);
     }
 
     // 7. NOW show the modal — everything is already customized
@@ -101,15 +102,8 @@ window._triggerTopUpFlow = function(productName) {
 function _injectProcessTopUpBtn(formId, oldSubBtnId, handler) {
     const oldSubBtn = document.getElementById(oldSubBtnId);
     if (!oldSubBtn) return;
-    
-    // Hide standard buttons, also hide 'Top Up Stock' if any
+    // Hide standard buttons
     oldSubBtn.style.display = 'none';
-    const form = document.getElementById(formId);
-    const btns = form.querySelectorAll('button');
-    btns.forEach(b => {
-        if (b.textContent.includes('Top Up Stock')) b.style.display = 'none';
-        if (b.id && b.id.includes('AddExistingBtn')) b.style.display = 'none';
-    });
 
     // Create or show custom top up button
     let topUpBtn = document.getElementById(oldSubBtnId + '_TopUp');
@@ -436,7 +430,10 @@ function _populateSpecialTopUp(p) {
         }
         
         let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-        const existingIdx = products.findIndex(x => x.name === p.name && x.dateAdded === p.dateAdded);
+        // Find by unique id first (for new products), fallback to name+dateAdded for legacy
+        const existingIdx = p.id
+            ? products.findIndex(x => x.id === p.id)
+            : products.findIndex(x => x.name === p.name && x.dateAdded === p.dateAdded);
         if (existingIdx !== -1) {
             const old = products[existingIdx];
             old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
@@ -545,7 +542,10 @@ function _populateCustomTopUp(p) {
         const pcs = parseInt(document.getElementById('rsCustomProductPieces').value) || 1;
         
         let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-        const existingIdx = products.findIndex(x => x.name === p.name && x.dateAdded === p.dateAdded);
+        // Find by unique id first (for new products), fallback to name+dateAdded for legacy
+        const existingIdx = p.id
+            ? products.findIndex(x => x.id === p.id)
+            : products.findIndex(x => x.name === p.name && x.dateAdded === p.dateAdded);
         if (existingIdx !== -1) {
             const old = products[existingIdx];
             old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
@@ -634,7 +634,10 @@ function _populateDefaultTopUp(p) {
         const profitPct = parseFloat(document.getElementById('rsNewProductProfitPercent').value) || 0;
 
         let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-        const existingIdx = products.findIndex(x => x.name === p.name && x.dateAdded === p.dateAdded);
+        // Find by unique id first (for new products), fallback to name+dateAdded for legacy
+        const existingIdx = p.id
+            ? products.findIndex(x => x.id === p.id)
+            : products.findIndex(x => x.name === p.name && x.dateAdded === p.dateAdded);
         if (existingIdx !== -1) {
             const old = products[existingIdx];
             old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
@@ -710,7 +713,10 @@ function _populateFlexTopUp(p) {
         const newTotalCost = c1Cost * qty;
         
         let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-        const existingIdx = products.findIndex(x => x.name === p.name && x.dateAdded === p.dateAdded);
+        // Find by unique id first (for new products), fallback to name+dateAdded for legacy
+        const existingIdx = p.id
+            ? products.findIndex(x => x.id === p.id)
+            : products.findIndex(x => x.name === p.name && x.dateAdded === p.dateAdded);
         if (existingIdx !== -1) {
             const old = products[existingIdx];
             old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;

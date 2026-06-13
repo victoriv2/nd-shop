@@ -517,7 +517,7 @@ function initAdminProductLogic() {
             
             const imageHtml = p.imageData ? `<img src="${p.imageData}" class="admin-product-card-img" alt="Product Image" onclick="event.stopPropagation(); if(typeof window.openImageViewer === 'function') window.openImageViewer('${p.imageData}')" style="cursor:zoom-in;">` : `<div class="admin-product-card-img-placeholder"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`;
             return `
-                <div class="admin-product-card" onclick="if(window.openProductDetailsModal) window.openProductDetailsModal('${safeName}'${p.dateAdded ? `, '${p.dateAdded}'` : ''})" style="cursor: pointer; ${cardBgStyle}">
+                <div class="admin-product-card" onclick="if(window.openProductDetailsModal) window.openProductDetailsModal('${safeName}', '${p.dateAdded || ''}', '${p.id || ''}')" style="cursor: pointer; ${cardBgStyle}">
                     <div class="admin-product-card-left">
                         ${imageHtml}
                         <div class="admin-product-card-text">
@@ -633,9 +633,7 @@ function initAdminProductLogic() {
                         sw.dispatchEvent(new Event('change'));
                     }
                 });
-                
-                if(document.getElementById('adminApmAddExistingBtn')) document.getElementById('adminApmAddExistingBtn').style.display = 'none';
-                if(document.getElementById('adminSpecAddExistingBtn')) document.getElementById('adminSpecAddExistingBtn').style.display = 'none';
+
 
                 // Refresh payout calculations to reflect global state immediately
                 if (typeof updateFinalPriceAndPayout === 'function') updateFinalPriceAndPayout();
@@ -772,8 +770,6 @@ function initAdminProductLogic() {
                     // Pre-fill dropdown text
                     trigger.querySelector('.trigger-text').textContent = 'Copied: ' + p.name;
                     wrapper.classList.remove('open');
-                    
-                    if(document.getElementById('adminApmAddExistingBtn')) document.getElementById('adminApmAddExistingBtn').style.display = 'flex';
                     if(document.getElementById('adminApmSubmitBtn')) document.getElementById('adminApmSubmitBtn').style.display = 'flex';
                 });
                 optionsContainer.appendChild(opt);
@@ -888,8 +884,6 @@ function initAdminProductLogic() {
 
                     trigger.querySelector('.trigger-text').textContent = 'Copied: ' + p.name;
                     wrapper.classList.remove('open');
-                    
-                    if(document.getElementById('adminSpecAddExistingBtn')) document.getElementById('adminSpecAddExistingBtn').style.display = 'flex';
                     if(document.getElementById('adminSpecProductSubmitBtn')) document.getElementById('adminSpecProductSubmitBtn').style.display = 'flex';
                 });
                 optionsContainer.appendChild(opt);
@@ -1017,8 +1011,6 @@ function initAdminProductLogic() {
 
                     trigger.querySelector('.trigger-text').textContent = 'Copied: ' + p.name;
                     wrapper.classList.remove('open');
-                    
-                    if(document.getElementById('adminCustomAddExistingBtn')) document.getElementById('adminCustomAddExistingBtn').style.display = 'flex';
                     if(document.getElementById('adminCustomProductSubmitBtn')) document.getElementById('adminCustomProductSubmitBtn').style.display = 'flex';
                 });
                 optionsContainer.appendChild(opt);
@@ -1146,8 +1138,6 @@ function initAdminProductLogic() {
 
                     trigger.querySelector('.trigger-text').textContent = 'Copied: ' + p.name;
                     wrapper.classList.remove('open');
-                    
-                    if(document.getElementById('adminFlexAddExistingBtn')) document.getElementById('adminFlexAddExistingBtn').style.display = 'flex';
                     if(document.getElementById('adminFlexProductSubmitBtn')) document.getElementById('adminFlexProductSubmitBtn').style.display = 'flex';
                 });
                 optionsContainer.appendChild(opt);
@@ -1337,9 +1327,7 @@ function initAdminProductLogic() {
         if (fUnitT) { const t = fUnitT.querySelector('.trigger-text'); if(t) { t.textContent = '— Select —'; t.style.color = '#94a3b8'; } }
         if (fUnitM) { fUnitM.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('active')); fUnitM.querySelectorAll('.custom-added-unit').forEach(o => o.remove()); }
 
-        // Reset Custom/Flex import buttons
-        if(document.getElementById('adminApmAddExistingBtn')) document.getElementById('adminApmAddExistingBtn').style.display = 'none';
-        if(document.getElementById('adminSpecAddExistingBtn')) document.getElementById('adminSpecAddExistingBtn').style.display = 'none';
+
         
         // --- Reset Special Product Form ---
         const specInputs = [
@@ -2099,7 +2087,9 @@ function initAdminProductLogic() {
             const custardsPerBag = parseInt(specCustardsPerBag.value) || 0;
             const cupsPerCustard = parseInt(specCupsPerCustard.value) || 0;
 
+            const newProductId = 'ndp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
             adminProducts.unshift({
+                id: newProductId,
                 name,
                 price: bagPrice,
                 unit: 'per ' + bagTitle.toLowerCase(),
@@ -2141,63 +2131,7 @@ function initAdminProductLogic() {
         });
     }
 
-    const specAddEngBtn = document.getElementById('adminSpecAddExistingBtn');
-    if (specAddEngBtn) {
-        specAddEngBtn.addEventListener('click', () => {
-            const name = specName ? specName.value.trim() : '';
-            if (!name) return;
-            const bagCost = parseFloat(specBagCost.value) || 0;
-            const bagQty = parseFloat(specBagQuantity ? specBagQuantity.value : 1) || 1;
-            const newTotalCost = bagCost * bagQty;
 
-            const existingIdx = adminProducts.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && p.isSpecial);
-            if (existingIdx !== -1) {
-                const old = adminProducts[existingIdx];
-                old.cost = bagCost;
-                
-                // Accumulate purchase totals so stock tracker sees the new stock
-                old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
-                old.boughtQuantity = (parseFloat(old.boughtQuantity) || 0) + bagQty;
-                
-                // Update new profit margins
-                const bagPrice = parseFloat(specBagPrice.value) || bagCost;
-                old.price = bagPrice;
-                old.profit = parseFloat(specBagProfit.value) || 0;
-                
-                const bagTitle = document.getElementById('adminSpecBagTitle')?.value.trim() || 'Container 1';
-                const custTitle = document.getElementById('adminSpecCustardTitle')?.value.trim() || 'Container 2';
-                const cupTitle = document.getElementById('adminSpecCupTitle')?.value.trim() || 'Container 3';
-
-                old.unit = 'per ' + bagTitle.toLowerCase();
-                old.bulkUnit = bagTitle;
-                
-                const newImgData = document.getElementById('adminProductImageData') ? document.getElementById('adminProductImageData').value : '';
-                if(newImgData) old.imageData = newImgData;
-                
-                old.structure = {
-                    custardsPerBag: parseInt(specCustardsPerBag.value) || 0,
-                    cupsPerCustard: parseInt(specCupsPerCustard.value) || 0,
-                    bagProfit: parseFloat(specBagProfit.value) || 0,
-                    bagProfitPercent: parseFloat(specBagProfitPercent.value) || 0,
-                    custardProfit: parseFloat(specCustardProfit.value) || 0,
-                    custardProfitPercent: parseFloat(specCustardProfitPercent.value) || 0,
-                    cupProfit: parseFloat(specCupProfit.value) || 0,
-                    cupProfitPercent: parseFloat(specCupProfitPercent.value) || 0
-                };
-                old.packTypes = {
-                    bag: { price: bagPrice, title: bagTitle },
-                    custard: { price: parseFloat(specCustardPrice.value) || 0, title: custTitle },
-                    cup: { price: parseFloat(specCupPrice.value) || 0, title: cupTitle }
-                };
-                
-                saveProductsToMemory();
-                renderProducts(searchInput ? searchInput.value.trim() : '');
-                closeModal();
-            } else {
-                alert("Could not find analytical product to merge into. Please use 'Create Product'.");
-            }
-        });
-    }
 
     // ========================================
     // Submit New Default Product
@@ -2241,7 +2175,9 @@ function initAdminProductLogic() {
             const wholesaleProfitPercent = wholesaleProfitPercentInput ? (parseFloat(wholesaleProfitPercentInput.value) || 0) : 0;
             const wholesalePrice = wholesalePriceInput ? (parseFloat(wholesalePriceInput.value) || 0) : 0;
 
+            const newProductId = 'ndp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
             adminProducts.unshift({ 
+                id: newProductId,
                 name, price, unit, 
                 cost, purchaseCost: purchaseCost, pieces, boughtQuantity: quantity, bulkUnit,
                 addedViaProductTab: true,
@@ -2262,51 +2198,6 @@ function initAdminProductLogic() {
         });
     }
 
-    const defaultAddEngBtn = document.getElementById('adminApmAddExistingBtn');
-    if (defaultAddEngBtn) {
-        defaultAddEngBtn.addEventListener('click', () => {
-            const name = nameInput ? nameInput.value.trim() : '';
-            if (!name) return;
-            
-            const purchaseCostVal = purchaseCostInput ? (parseFloat(purchaseCostInput.value) || 0) : 0;
-            const quantity = typeof quantityInput !== 'undefined' && quantityInput ? (parseInt(quantityInput.value) || 1) : 1;
-            const newTotalCost = purchaseCostVal * quantity;
-
-            const existingIdx = adminProducts.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && !p.isSpecial);
-            if (existingIdx !== -1) {
-                const old = adminProducts[existingIdx];
-                
-                const pieces = piecesInput ? (parseInt(piecesInput.value) || 1) : 1;
-                old.cost = purchaseCostVal / pieces;
-                old.pieces = pieces;
-                
-                // Accumulate purchase totals so stock tracker sees the new stock
-                old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
-                old.boughtQuantity = (parseFloat(old.boughtQuantity) || 0) + quantity;
-                
-                old.price = priceInput ? (parseFloat(priceInput.value) || 0) : old.price;
-                old.profit = profitInput ? (parseFloat(profitInput.value) || 0) : old.profit;
-                old.profitPercent = profitPercentInput ? (parseFloat(profitPercentInput.value) || 0) : old.profitPercent;
-                
-                old.unit = unitHidden ? unitHidden.value : old.unit;
-                const bulkSel = document.getElementById('adminBulkUnitSelect');
-                old.bulkUnit = bulkSel ? bulkSel.value : old.bulkUnit;
-                
-                old.wholesaleProfit = wholesaleProfitInput ? (parseFloat(wholesaleProfitInput.value) || 0) : old.wholesaleProfit;
-                old.wholesaleProfitPercent = wholesaleProfitPercentInput ? (parseFloat(wholesaleProfitPercentInput.value) || 0) : old.wholesaleProfitPercent;
-                old.wholesalePrice = wholesalePriceInput ? (parseFloat(wholesalePriceInput.value) || 0) : old.wholesalePrice;
-                
-                const newImgData = document.getElementById('adminProductImageData') ? document.getElementById('adminProductImageData').value : '';
-                if(newImgData) old.imageData = newImgData;
-                
-                saveProductsToMemory();
-                renderProducts(searchInput ? searchInput.value.trim() : '');
-                closeModal();
-            } else {
-                alert("Could not find basic product to merge into. Please use 'Create Product'.");
-            }
-        });
-    }
 
     // ========================================
     // Submit Flexible Product
@@ -2352,7 +2243,9 @@ function initAdminProductLogic() {
             
             const oldStockToggle = document.getElementById('adminFlexOldStockSwitch');
 
+            const newProductId = 'ndp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
             adminProducts.unshift({
+                id: newProductId,
                 name: name,
                 price: c1Price,
                 unit: 'per ' + c1Title.toLowerCase(),
@@ -2395,77 +2288,6 @@ function initAdminProductLogic() {
         });
     }
 
-    const flexAddEngBtn = document.getElementById('adminFlexAddExistingBtn');
-    if (flexAddEngBtn) {
-        flexAddEngBtn.addEventListener('click', () => {
-            const nameInput = document.getElementById('adminFlexProductName');
-            const name = nameInput ? nameInput.value.trim() : '';
-            if (!name) return;
-
-            const existingIdx = adminProducts.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && p.isFlexible);
-            if (existingIdx !== -1) {
-                const old = adminProducts[existingIdx];
-                const c1Cost = parseFloat(fC1CostInp ? fC1CostInp.value : 0) || 0;
-                const boughtQuantity = parseInt(fC1QtyInp ? fC1QtyInp.value : 1) || 1;
-                const newTotalCost = c1Cost * boughtQuantity;
-                
-                old.cost = c1Cost;
-                old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
-                old.boughtQuantity = (parseFloat(old.boughtQuantity) || 0) + boughtQuantity;
-                
-                const c1Price = parseFloat(fC1PriceInp ? fC1PriceInp.value : 0) || c1Cost;
-                old.price = c1Price;
-                old.profit = parseFloat(fC1ProfitInp ? fC1ProfitInp.value : 0) || 0;
-
-                const c1Title = fC1TitleInp && fC1TitleInp.value.trim() ? fC1TitleInp.value.trim() : 'Container 1';
-                const c2Title = fC2TitleInp && fC2TitleInp.value.trim() ? fC2TitleInp.value.trim() : 'Container 2';
-                const c3Title = fC3TitleInp && fC3TitleInp.value.trim() ? fC3TitleInp.value.trim() : 'Container 3';
-
-                old.unit = 'per ' + c1Title.toLowerCase();
-                old.bulkUnit = c1Title;
-
-                const oldStockToggle = document.getElementById('adminFlexOldStockSwitch');
-                old.isOldStock = oldStockToggle ? oldStockToggle.checked : false;
-
-                const c2sPerC1 = parseInt(fC2QtyInp ? fC2QtyInp.value : 1) || 1;
-                const c3sPerC2 = parseInt(fC3QtyInp ? fC3QtyInp.value : 1) || 1;
-                
-                const c2Cost = c2sPerC1 > 0 ? c1Cost / c2sPerC1 : 0;
-                const c2Price = parseFloat(fC2PriceInp ? fC2PriceInp.value : 0) || c2Cost;
-                
-                const c3Cost = c3sPerC2 > 0 ? c2Cost / c3sPerC2 : 0;
-                const c3Price = c3Cost; // Container 3 is purely flexible, no fixed price input
-                
-                const newImgData = document.getElementById('adminProductImageData') ? document.getElementById('adminProductImageData').value : '';
-                if(newImgData) old.imageData = newImgData;
-
-                old.structure = {
-                    c2sPerC1: c2sPerC1,
-                    c3sPerC2: c3sPerC2,
-                    c1Profit: parseFloat(fC1ProfitInp ? fC1ProfitInp.value : 0) || 0,
-                    c1ProfitPercent: parseFloat(fC1ProfitPctInp ? fC1ProfitPctInp.value : 0) || 0,
-                    c2Profit: parseFloat(fC2ProfitInp ? fC2ProfitInp.value : 0) || 0,
-                    c2ProfitPercent: parseFloat(fC2ProfitPctInp ? fC2ProfitPctInp.value : 0) || 0,
-                    c3Profit: 0,
-                    c3ProfitPercent: 0
-                };
-                old.packTypes = {
-                    c1: { price: c1Price, title: c1Title },
-                    c2: { price: c2Price, title: c2Title },
-                    c3: { price: c3Price, title: c3Title }
-                };
-
-                saveProductsToMemory();
-                renderProducts();
-                closeModal();
-                if (typeof window.renderRestockListGlobal === 'function') {
-                    window.renderRestockListGlobal();
-                }
-            } else {
-                alert("Could not find flexible product to merge into. Please use 'Create Flexible Product'.");
-            }
-        });
-    }
 
     // ========================================
     // Submit Custom Product
@@ -2517,7 +2339,9 @@ function initAdminProductLogic() {
 
             const totalPurchaseCost = customCost * customQty;
 
+            const newProductId = 'ndp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
             adminProducts.unshift({
+                id: newProductId,
                 name: name,
                 price: finalPrice,
                 unit: unitVal,
@@ -2548,62 +2372,6 @@ function initAdminProductLogic() {
         });
     }
 
-    const customAddEngBtn = document.getElementById('adminCustomAddExistingBtn');
-    if (customAddEngBtn) {
-        customAddEngBtn.addEventListener('click', () => {
-            const nameInput = document.getElementById('adminCustomProductName');
-            const name = nameInput ? nameInput.value.trim() : '';
-            if (!name) return;
-
-            const existingIdx = adminProducts.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && p.isCustom);
-            if (existingIdx !== -1) {
-                const old = adminProducts[existingIdx];
-                const cCostInp = document.getElementById('adminCustomProductPurchaseCost');
-                const customCost = parseFloat(cCostInp ? cCostInp.value : 0) || 0;
-                const cQtyInp = document.getElementById('adminCustomProductQuantity');
-                const customQty = cQtyInp ? (parseInt(cQtyInp.value) || 1) : 1;
-                const newTotalCost = customCost * customQty;
-
-                old.bulkCost = customCost;
-                old.cost = customCost;
-                old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
-                old.boughtQuantity = (parseFloat(old.boughtQuantity) || 0) + customQty;
-                
-                const piecesInput = document.getElementById('adminCustomProductPieces');
-                old.pieces = piecesInput ? (parseInt(piecesInput.value) || 1) : 1;
-
-                const customPriceInput = document.getElementById('adminCustomProductPrice');
-                old.price = customPriceInput && customPriceInput.value ? parseFloat(customPriceInput.value) : old.price;
-
-                const oldStockToggle = document.getElementById('adminCustomOldStockSwitch');
-                old.isOldStock = oldStockToggle ? oldStockToggle.checked : false;
-
-                const payoutRateInput = document.getElementById('adminCustomPayoutRate');
-                const payoutTypeSelect = document.getElementById('adminCustomPayoutType');
-                old.payoutSetting = {
-                    rate: payoutRateInput ? (parseFloat(payoutRateInput.value) || 0) : 0,
-                    type: payoutTypeSelect ? payoutTypeSelect.value : '%'
-                };
-                
-                const bulkSelect = document.getElementById('adminCustomBulkUnitSelect');
-                if (bulkSelect) old.bulkUnit = bulkSelect.value;
-                const unitHidden = document.getElementById('adminCustomNewProductUnit');
-                if (unitHidden) old.unit = unitHidden.value;
-                
-                const newImgData = document.getElementById('adminProductImageData') ? document.getElementById('adminProductImageData').value : '';
-                if(newImgData) old.imageData = newImgData;
-
-                saveProductsToMemory();
-                renderProducts();
-                closeModal();
-                if (typeof window.renderRestockListGlobal === 'function') {
-                    window.renderRestockListGlobal();
-                }
-            } else {
-                alert("Could not find custom product to merge into. Please use 'Create Custom Product'.");
-            }
-        });
-    }
 
     // Populate payout fields immediately from live global settings
     updateFinalPriceAndPayout();

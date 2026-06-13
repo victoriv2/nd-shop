@@ -424,11 +424,7 @@ function openAddRestockModal() {
 
     const flexImportText = document.querySelector('#rsFlexImportDropdownTrigger .trigger-text');
     if (flexImportText) flexImportText.textContent = 'Select flexible product to copy...';
-    
-    if(document.getElementById('rsAddExistingBtn')) document.getElementById('rsAddExistingBtn').style.display = 'none';
-    if(document.getElementById('rsSpecAddExistingBtn')) document.getElementById('rsSpecAddExistingBtn').style.display = 'none';
-    if(document.getElementById('rsCustomAddExistingBtn')) document.getElementById('rsCustomAddExistingBtn').style.display = 'none';
-    if(document.getElementById('rsFlexAddExistingBtn')) document.getElementById('rsFlexAddExistingBtn').style.display = 'none';
+
 }
 
 function closeAddRestockModal() {
@@ -597,10 +593,6 @@ function closeAddRestockModal() {
         const flexImportText = document.querySelector('#rsFlexImportDropdownTrigger .trigger-text');
         if (flexImportText) flexImportText.textContent = 'Select flexible product to copy...';
 
-        if(document.getElementById('rsAddExistingBtn')) document.getElementById('rsAddExistingBtn').style.display = 'none';
-        if(document.getElementById('rsSpecAddExistingBtn')) document.getElementById('rsSpecAddExistingBtn').style.display = 'none';
-        if(document.getElementById('rsCustomAddExistingBtn')) document.getElementById('rsCustomAddExistingBtn').style.display = 'none';
-        if(document.getElementById('rsFlexAddExistingBtn')) document.getElementById('rsFlexAddExistingBtn').style.display = 'none';
     }
 }
 
@@ -625,10 +617,8 @@ function _initRestockProductForm() {
     const customUnitRow = document.getElementById('rsCustomUnitRow');
     const customUnitInput = document.getElementById('rsCustomUnitInput');
     const customUnitConfirmBtn = document.getElementById('rsCustomUnitConfirmBtn');
-    const submitBtn = document.getElementById('rsProductSubmitBtn');
     const nameInput = document.getElementById('rsNewProductName');
-    const defaultAddEngBtn = document.getElementById('rsAddExistingBtn');
-
+    const submitBtn = document.getElementById('rsProductSubmitBtn');
     // Avoid double-init
     const modal = document.getElementById('addRestockModal');
     if (modal && modal._rsFormInited) return;
@@ -1218,11 +1208,12 @@ function _initRestockProductForm() {
             const rsImgDataHidden = document.getElementById('rsNewImageData');
             const imageData = rsImgDataHidden ? rsImgDataHidden.value : '';
             
-            products.unshift({ name, price, unit, cost, purchaseCost, pieces, boughtQuantity: quantity, bulkUnit, profit, wholesaleProfit, wholesaleProfitPercent, wholesalePrice, dateAdded: creationDate, isSpecial: false, isNewStock, imageData, topUpHistory: [{ cost: purchaseCost * quantity, qty: quantity, date: creationDate, isNewStock: isNewStock }] });
+            const newProductId = 'ndp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+            products.unshift({ id: newProductId, name, price, unit, cost, purchaseCost, pieces, boughtQuantity: quantity, bulkUnit, profit, wholesaleProfit, wholesaleProfitPercent, wholesalePrice, dateAdded: creationDate, isSpecial: false, isNewStock, imageData, topUpHistory: [{ cost: purchaseCost * quantity, qty: quantity, date: creationDate, isNewStock: isNewStock }] });
             localStorage.setItem('nd_products_data', JSON.stringify(products));
             // Sync to in-memory adminProducts if loaded
             if (typeof adminProducts !== 'undefined') {
-                adminProducts.unshift({ name, price, unit, cost, purchaseCost, pieces, boughtQuantity: quantity, bulkUnit, profit, wholesaleProfit, wholesaleProfitPercent, wholesalePrice, dateAdded: creationDate, isSpecial: false, isNewStock, imageData, topUpHistory: [{ cost: purchaseCost * quantity, qty: quantity, date: creationDate, isNewStock: isNewStock }] });
+                adminProducts.unshift({ id: newProductId, name, price, unit, cost, purchaseCost, pieces, boughtQuantity: quantity, bulkUnit, profit, wholesaleProfit, wholesaleProfitPercent, wholesalePrice, dateAdded: creationDate, isSpecial: false, isNewStock, imageData, topUpHistory: [{ cost: purchaseCost * quantity, qty: quantity, date: creationDate, isNewStock: isNewStock }] });
             }
 
             closeAddRestockModal();
@@ -1233,80 +1224,6 @@ function _initRestockProductForm() {
         });
     }
 
-    if (defaultAddEngBtn) {
-        defaultAddEngBtn.addEventListener('click', () => {
-            const name = nameInput ? nameInput.value.trim() : '';
-            if (!name) return;
-            
-            const purchaseCostVal = purchaseCostInput ? (parseFloat(purchaseCostInput.value) || 0) : 0;
-            const quantity = typeof quantityInput !== 'undefined' && quantityInput ? (parseInt(quantityInput.value) || 1) : 1;
-            const newTotalCost = purchaseCostVal * quantity;
-
-            let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-            const existingIdx = products.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && !p.isSpecial);
-            if (existingIdx !== -1) {
-                const old = products[existingIdx];
-                old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
-                
-                const pieces = piecesInput ? (parseInt(piecesInput.value) || 1) : 1;
-                old.cost = purchaseCostVal / pieces;
-                old.boughtQuantity = (parseFloat(old.boughtQuantity) || 0) + quantity;
-                old.pieces = pieces;
-                old.isNewStock = isNewStock;
-                old.topUpHistory = old.topUpHistory || [];
-                old.topUpHistory.push({ cost: newTotalCost, qty: quantity, date: new Date().toISOString(), isNewStock: isNewStock });
-                
-                old.price = priceInput ? (parseFloat(priceInput.value) || 0) : old.price;
-                old.profit = profitInput ? (parseFloat(profitInput.value) || 0) : old.profit;
-                old.profitPercent = profitPercentInput ? (parseFloat(profitPercentInput.value) || 0) : old.profitPercent;
-                
-                old.wholesaleProfit = wProfitInput && wProfitInput.value !== '' ? parseFloat(wProfitInput.value) : old.wholesaleProfit;
-                old.wholesaleProfitPercent = wProfitPercentInput && wProfitPercentInput.value !== '' ? parseFloat(wProfitPercentInput.value) : old.wholesaleProfitPercent;
-                old.wholesalePrice = wPriceInput && wPriceInput.value !== '' ? parseFloat(wPriceInput.value) : old.wholesalePrice;
-                
-                old.unit = unitHidden ? unitHidden.value : old.unit;
-                const bulkSel = document.getElementById('rsBulkUnitSelect');
-                old.bulkUnit = bulkSel ? bulkSel.value : old.bulkUnit;
-                
-                const rsImgDataHidden = document.getElementById('rsNewImageData');
-                if (rsImgDataHidden && rsImgDataHidden.value) {
-                    old.imageData = rsImgDataHidden.value;
-                }
-
-                // Add to Expenses Notebook directly
-                if (newTotalCost > 0) {
-                    let exps = JSON.parse(localStorage.getItem('nd_expenses_notebook') || '[]');
-                    const now = new Date();
-                    const day = now.getDate();
-                    const mths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    let hrs = now.getHours(); const am = hrs >= 12 ? 'pm' : 'am'; hrs = hrs % 12 || 12;
-                    const mins = String(now.getMinutes()).padStart(2, '0');
-                    exps.push({
-                        id: 'exp_' + Date.now() + Math.floor(Math.random()*1000),
-                        title: `Restock Merged: ${name}`,
-                        amount: newTotalCost,
-                        dateStr: `${day} ${mths[now.getMonth()]}, ${now.getFullYear()} · ${hrs}:${mins} ${am}`,
-                        timestamp: now.toISOString(),
-                        year: now.getFullYear(),
-                        monthIdx: now.getMonth()
-                    });
-                    localStorage.setItem('nd_expenses_notebook', JSON.stringify(exps));
-                }
-                
-                localStorage.setItem('nd_products_data', JSON.stringify(products));
-                if (typeof adminProducts !== 'undefined') {
-                    const admIdx = adminProducts.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && !p.isSpecial);
-                    if (admIdx !== -1) adminProducts[admIdx] = products[existingIdx];
-                }
-
-                closeAddRestockModal();
-                renderRestockList();
-                if (typeof window.renderProductsGlobal === 'function') window.renderProductsGlobal();
-            } else {
-                alert("Could not find basic product to merge into. Please use 'Create Product'.");
-            }
-        });
-    }
 
     // --- Special Product Calculations ---
     const specName = document.getElementById('rsSpecProductName');
@@ -1508,7 +1425,9 @@ function _initRestockProductForm() {
             const imageData = rsImgDataHidden ? rsImgDataHidden.value : '';
 
             let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+            const specNewProductId = 'ndp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
             products.unshift({
+                id: specNewProductId,
                 name,
                 price: bagPrice,
                 unit: 'per ' + bagTitle.toLowerCase(),
@@ -1542,6 +1461,7 @@ function _initRestockProductForm() {
 
             if (typeof adminProducts !== 'undefined') {
                 adminProducts.unshift({
+                    id: specNewProductId,
                     name,
                     price: bagPrice,
                     unit: 'per ' + bagTitle.toLowerCase(),
@@ -1579,94 +1499,6 @@ function _initRestockProductForm() {
         });
     }
 
-    const specAddEngBtn = document.getElementById('rsSpecAddExistingBtn');
-    if (specAddEngBtn) {
-        specAddEngBtn.addEventListener('click', () => {
-            const name = specName ? specName.value.trim() : '';
-            if (!name) return;
-            const bagCost = parseFloat(specBagCost.value) || 0;
-            const bagQty = parseFloat(specBagQuantity ? specBagQuantity.value : 1) || 1;
-            const newTotalCost = bagCost * bagQty;
-
-            let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-            const existingIdx = products.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && p.isSpecial);
-            if (existingIdx !== -1) {
-                const old = products[existingIdx];
-                old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
-                old.cost = bagCost;
-                old.boughtQuantity = (parseFloat(old.boughtQuantity) || 0) + bagQty;
-                const isNewStock = document.getElementById('rsSpecNewStockSwitch') ? document.getElementById('rsSpecNewStockSwitch').checked : false;
-                old.isNewStock = isNewStock;
-                old.topUpHistory = old.topUpHistory || [];
-                old.topUpHistory.push({ cost: newTotalCost, qty: bagQty, date: new Date().toISOString(), isNewStock: isNewStock });
-                
-                // Update new profit margins
-                const bagPrice = parseFloat(specBagPrice.value) || bagCost;
-                old.price = bagPrice;
-                old.profit = parseFloat(specBagProfit.value) || 0;
-                
-                const bagTitle = document.getElementById('rsSpecBagTitle')?.value.trim() || 'Container 1';
-                const custTitle = document.getElementById('rsSpecCustardTitle')?.value.trim() || 'Container 2';
-                const cupTitle = document.getElementById('rsSpecCupTitle')?.value.trim() || 'Container 3';
-
-                old.unit = 'per ' + bagTitle.toLowerCase();
-                old.bulkUnit = bagTitle;
-                
-                const rsImgDataHidden = document.getElementById('rsNewImageData');
-                if (rsImgDataHidden && rsImgDataHidden.value) {
-                    old.imageData = rsImgDataHidden.value;
-                }
-                
-                old.structure = {
-                    custardsPerBag: parseInt(specCustardsPerBag.value) || 0,
-                    cupsPerCustard: parseInt(specCupsPerCustard.value) || 0,
-                    bagProfit: parseFloat(specBagProfit.value) || 0,
-                    bagProfitPercent: parseFloat(specBagProfitPercent.value) || 0,
-                    custardProfit: parseFloat(specCustardProfit.value) || 0,
-                    custardProfitPercent: parseFloat(specCustardProfitPercent.value) || 0,
-                    cupProfit: parseFloat(specCupProfit.value) || 0,
-                    cupProfitPercent: parseFloat(specCupProfitPercent.value) || 0
-                };
-                old.packTypes = {
-                    bag: { price: bagPrice, title: bagTitle },
-                    custard: { price: parseFloat(specCustardPrice.value) || 0, title: custTitle },
-                    cup: { price: parseFloat(specCupPrice.value) || 0, title: cupTitle }
-                };
-
-                // Add to Expenses Notebook directly
-                if (newTotalCost > 0) {
-                    let exps = JSON.parse(localStorage.getItem('nd_expenses_notebook') || '[]');
-                    const now = new Date();
-                    const day = now.getDate();
-                    const mths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    let hrs = now.getHours(); const am = hrs >= 12 ? 'pm' : 'am'; hrs = hrs % 12 || 12;
-                    const mins = String(now.getMinutes()).padStart(2, '0');
-                    exps.push({
-                        id: 'exp_' + Date.now() + Math.floor(Math.random()*1000),
-                        title: `Restock Merged: ${name}`,
-                        amount: newTotalCost,
-                        dateStr: `${day} ${mths[now.getMonth()]}, ${now.getFullYear()} · ${hrs}:${mins} ${am}`,
-                        timestamp: now.toISOString(),
-                        year: now.getFullYear(),
-                        monthIdx: now.getMonth()
-                    });
-                    localStorage.setItem('nd_expenses_notebook', JSON.stringify(exps));
-                }
-                
-                localStorage.setItem('nd_products_data', JSON.stringify(products));
-                if (typeof adminProducts !== 'undefined') {
-                    const admIdx = adminProducts.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && p.isSpecial);
-                    if (admIdx !== -1) adminProducts[admIdx] = products[existingIdx];
-                }
-
-                closeAddRestockModal();
-                renderRestockList();
-                if (typeof window.renderProductsGlobal === 'function') window.renderProductsGlobal();
-            } else {
-                alert("Could not find analytical product to merge into. Please use 'Create Product'.");
-            }
-        });
-    }
 
     // Populate payout fields immediately from live global settings
     updateFinalPriceAndPayout();
@@ -1876,13 +1708,11 @@ function setupRestockImportDropdown(type) {
                 trigger.querySelector('.trigger-text').textContent = 'Copied: ' + p.name;
                 wrapper.classList.remove('open');
                 
-                let addBtnId = 'rsAddExistingBtn';
                 let subBtnId = 'rsProductSubmitBtn';
-                if(type === 'special') { addBtnId = 'rsSpecAddExistingBtn'; subBtnId = 'rsSpecProductSubmitBtn'; }
-                else if(type === 'custom') { addBtnId = 'rsCustomAddExistingBtn'; subBtnId = 'rsCustomProductSubmitBtn'; }
-                else if(type === 'flexible') { addBtnId = 'rsFlexAddExistingBtn'; subBtnId = 'rsFlexProductSubmitBtn'; }
+                if(type === 'special') { subBtnId = 'rsSpecProductSubmitBtn'; }
+                else if(type === 'custom') { subBtnId = 'rsCustomProductSubmitBtn'; }
+                else if(type === 'flexible') { subBtnId = 'rsFlexProductSubmitBtn'; }
                 
-                if(document.getElementById(addBtnId)) document.getElementById(addBtnId).style.display = 'flex';
                 if(document.getElementById(subBtnId)) document.getElementById(subBtnId).style.display = 'flex';
             });
             optionsContainer.appendChild(opt);
@@ -2225,7 +2055,7 @@ function _bindRsActionButtons(p) {
             if (detailModal) { detailModal.classList.remove('show'); detailModal.style.display = 'none'; }
             _restockDetailProductName = null;
             window._rsCurrentAction = null;
-            setTimeout(() => window.openTopUpModal(p.name), 50);
+            setTimeout(() => window.openTopUpModal(p.id || p.name), 50);
         } else if (window._rsCurrentAction === 'undo_top_up') {
             _rsExecuteUndoTopUp();
         }
@@ -2241,7 +2071,7 @@ function _bindRsActionButtons(p) {
     document.getElementById('rsSaveEditBtn')?.addEventListener('click', () => {
         let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
         const pp = window._rsCurrentProduct;
-        const index = products.findIndex(item => item.name === pp.name && item.dateAdded === pp.dateAdded);
+        const index = pp.id ? products.findIndex(item => item.id === pp.id) : products.findIndex(item => item.name === pp.name && item.dateAdded === pp.dateAdded);
         if(index === -1) return alert('Product reference not found!');
         
         if(pp.packTypes || pp.isSpecial) {
@@ -2399,7 +2229,7 @@ function _bindRsActionButtons(p) {
     document.getElementById('rsSaveEditPriceBtn')?.addEventListener('click', () => {
         let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
         const pp = window._rsCurrentProduct;
-        const index = products.findIndex(item => item.name === pp.name && item.dateAdded === pp.dateAdded);
+        const index = pp.id ? products.findIndex(item => item.id === pp.id) : products.findIndex(item => item.name === pp.name && item.dateAdded === pp.dateAdded);
         if(index === -1) return alert('Product reference not found!');
         
         if(pp.packTypes || pp.isSpecial) {
@@ -2753,7 +2583,7 @@ function _rsExecuteClear() {
     let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     const p = window._rsCurrentProduct;
     if (!p) return;
-    const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
+    const index = p.id ? products.findIndex(item => item.id === p.id) : products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     
     if(index === -1) {
         if(typeof customAlert === 'function') customAlert("Product not found");
@@ -2777,7 +2607,7 @@ function _rsExecuteDelete() {
     let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     const p = window._rsCurrentProduct;
     if (!p) return;
-    const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
+    const index = p.id ? products.findIndex(item => item.id === p.id) : products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     
     if(index === -1) {
         if(typeof customAlert === 'function') customAlert("Product not found");
@@ -2801,7 +2631,7 @@ function _rsExecuteUndoTopUp() {
     let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     const p = window._rsCurrentProduct;
     if (!p) return;
-    const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
+    const index = p.id ? products.findIndex(item => item.id === p.id) : products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     
     if(index === -1) {
         if(typeof customAlert === 'function') customAlert("Product not found");
@@ -3158,6 +2988,16 @@ function _rsCalculateRestockStock(p) {
     try { sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]'); } catch(e){}
     try { allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]'); } catch(e){}
 
+    const activeMatches = allProducts.filter(item => item && !item.isDeleted && !item.cleared && item.name === p.name);
+    let oldestDateAdded = null;
+    activeMatches.forEach(item => {
+        if (item.dateAdded) {
+            const t = new Date(item.dateAdded).getTime();
+            if (!oldestDateAdded || t < oldestDateAdded) oldestDateAdded = t;
+        }
+    });
+    const filteredSales = oldestDateAdded ? sales.filter(sale => window.parseSaleDate(sale.date || sale.timestamp) >= oldestDateAdded) : sales;
+
     let html = '';
 
     if (p.isSpecial || p.packTypes) {
@@ -3173,7 +3013,7 @@ function _rsCalculateRestockStock(p) {
         allProducts.forEach(item => { if (!item.isDeleted && item.name === p.name && (item.isSpecial || item.packTypes)) totalBags += (parseFloat(item.boughtQuantity) || 1); });
 
         let sBags = 0, sCus = 0, sCups = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item === p.name + ' (' + bagT + ')') sBags += parseFloat(sale.qty) || 0;
             else if (sale.item === p.name + ' (' + cusT + ')') sCus += parseFloat(sale.qty) || 0;
             else if (sale.item === p.name + ' (' + cupT + ')') sCups += parseFloat(sale.qty) || 0;
@@ -3204,7 +3044,7 @@ function _rsCalculateRestockStock(p) {
         let bought = 0;
         allProducts.forEach(item => { if (!item.isDeleted && item.name === p.name && !item.isSpecial) bought += (parseFloat(item.boughtQuantity)||1) * (parseInt(item.pieces)||1); });
         let sold = 0;
-        sales.forEach(sale => { if (sale.item === p.name) sold += parseFloat(sale.qty)||0; });
+        filteredSales.forEach(sale => { if (sale.item === p.name) sold += parseFloat(sale.qty)||0; });
 
         const rem    = bought - sold;
         const isOut  = rem <= 0;
@@ -4348,7 +4188,7 @@ function _rsSaveTopUp() {
     let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     const p = window._rsCurrentProduct;
     if (!p) return;
-    const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
+    const index = p.id ? products.findIndex(item => item.id === p.id) : products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     if (index === -1) { alert('Product reference not found!'); return; }
 
     const stockStatus = document.getElementById('rsTopUpStockStatus')?.value || 'none';
@@ -4666,7 +4506,9 @@ window._initRsCustomForm = function() {
             const rsImgDataHidden = document.getElementById('rsNewImageData');
             const imageData = rsImgDataHidden ? rsImgDataHidden.value : '';
 
+            const customNewProductId = 'ndp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
             const productData = {
+                id: customNewProductId,
                 name,
                 unit,
                 cost: purchaseCostVal,
@@ -4698,79 +4540,7 @@ window._initRsCustomForm = function() {
         });
     }
     
-    // Add Existing (Top Up) Custom Product
-    const customAddEngBtn = document.getElementById('rsCustomAddExistingBtn');
-    if (customAddEngBtn) {
-        customAddEngBtn.addEventListener('click', () => {
-            const name = nameInput ? nameInput.value.trim() : '';
-            if (!name) return;
-            
-            const purchaseCostVal = costInput ? (parseFloat(costInput.value) || 0) : 0;
-            const quantity = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
-            const newTotalCost = purchaseCostVal * quantity;
 
-            let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-            const existingIdx = products.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && p.isCustom);
-            if (existingIdx !== -1) {
-                const old = products[existingIdx];
-                old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
-                old.cost = purchaseCostVal;
-                old.boughtQuantity = (parseFloat(old.boughtQuantity) || 0) + quantity;
-                
-                const pieces = piecesInput ? (parseInt(piecesInput.value) || 1) : 1;
-                old.pieces = pieces;
-                
-                const isNewStock = document.getElementById('rsCustomNewStockSwitch') ? document.getElementById('rsCustomNewStockSwitch').checked : false;
-                old.isNewStock = isNewStock;
-                old.topUpHistory = old.topUpHistory || [];
-                old.topUpHistory.push({ cost: newTotalCost, qty: quantity, date: new Date().toISOString(), isNewStock: isNewStock });
-                
-                const customPriceInput = document.getElementById('rsCustomProductPrice');
-                old.price = customPriceInput && customPriceInput.value ? parseFloat(customPriceInput.value) : old.price;
-                
-                old.unit = unitHidden ? unitHidden.value : old.unit;
-                const bulkSel = document.getElementById('rsCustomBulkUnitSelect');
-                old.bulkUnit = bulkSel ? bulkSel.value : old.bulkUnit;
-                
-                const rsImgDataHidden = document.getElementById('rsNewImageData');
-                if (rsImgDataHidden && rsImgDataHidden.value) {
-                    old.imageData = rsImgDataHidden.value;
-                }
-
-                // Add to Expenses Notebook directly
-                if (newTotalCost > 0) {
-                    let exps = JSON.parse(localStorage.getItem('nd_expenses_notebook') || '[]');
-                    const now = new Date();
-                    const day = now.getDate();
-                    const mths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    let hrs = now.getHours(); const am = hrs >= 12 ? 'pm' : 'am'; hrs = hrs % 12 || 12;
-                    const mins = String(now.getMinutes()).padStart(2, '0');
-                    exps.push({
-                        id: 'exp_' + Date.now() + Math.floor(Math.random()*1000),
-                        title: `Restock Merged (Custom): ${name}`,
-                        amount: newTotalCost,
-                        dateStr: `${day} ${mths[now.getMonth()]}, ${now.getFullYear()} · ${hrs}:${mins} ${am}`,
-                        timestamp: now.toISOString(),
-                        year: now.getFullYear(),
-                        monthIdx: now.getMonth()
-                    });
-                    localStorage.setItem('nd_expenses_notebook', JSON.stringify(exps));
-                }
-
-                localStorage.setItem('nd_products_data', JSON.stringify(products));
-                if (typeof adminProducts !== 'undefined') {
-                    const admIdx = adminProducts.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && p.isCustom);
-                    if (admIdx !== -1) adminProducts[admIdx] = products[existingIdx];
-                }
-
-                if (typeof window.closeAddRestockModal === 'function') window.closeAddRestockModal();
-                if (typeof window.renderRestockList === 'function') window.renderRestockList();
-                if (typeof window.renderProductsGlobal === 'function') window.renderProductsGlobal();
-            } else {
-                alert("Could not find custom product to merge into. Please use 'Create Custom Product'.");
-            }
-        });
-    }
 };
 
 window._initRsFlexForm = function() {
@@ -4895,7 +4665,9 @@ window._initRsFlexForm = function() {
             const rsImgDataHidden = document.getElementById('rsNewImageData');
             const imageData = rsImgDataHidden ? rsImgDataHidden.value : '';
 
+            const flexNewProductId = 'ndp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
             const productData = {
+                id: flexNewProductId,
                 name,
                 unit: 'per ' + c1Title.toLowerCase(),
                 cost: c1Cost,
@@ -4940,102 +4712,7 @@ window._initRsFlexForm = function() {
         });
     }
     
-    // Add Existing (Top Up) Flexible Product
-    const flexAddEngBtn = document.getElementById('rsFlexAddExistingBtn');
-    if (flexAddEngBtn) {
-        flexAddEngBtn.addEventListener('click', () => {
-            const nameInput = document.getElementById('rsFlexProductName');
-            const name = nameInput ? nameInput.value.trim() : '';
-            if (!name) return;
-            
-            const c1Cost = parseFloat(fC1CostInp ? fC1CostInp.value : 0) || 0;
-            const boughtQuantity = parseInt(fC1QtyInp ? fC1QtyInp.value : 1) || 1;
-            const newTotalCost = c1Cost * boughtQuantity;
 
-            let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-            const existingIdx = products.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && p.isFlexible);
-            if (existingIdx !== -1) {
-                const old = products[existingIdx];
-                old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
-                old.cost = c1Cost;
-                old.boughtQuantity = (parseFloat(old.boughtQuantity) || 0) + boughtQuantity;
-                
-                const isNewStock = document.getElementById('rsFlexNewStockSwitch') ? document.getElementById('rsFlexNewStockSwitch').checked : false;
-                old.isNewStock = isNewStock;
-                old.topUpHistory = old.topUpHistory || [];
-                old.topUpHistory.push({ cost: newTotalCost, qty: boughtQuantity, date: new Date().toISOString(), isNewStock: isNewStock });
-                
-                const c1Title = fC1TitleInp && fC1TitleInp.value.trim() ? fC1TitleInp.value.trim() : 'Container 1';
-                const c2Title = fC2TitleInp && fC2TitleInp.value.trim() ? fC2TitleInp.value.trim() : 'Container 2';
-                const c3Title = fC3TitleInp && fC3TitleInp.value.trim() ? fC3TitleInp.value.trim() : 'Container 3';
-
-                const c1Price = parseFloat(fC1PriceInp ? fC1PriceInp.value : 0) || c1Cost;
-                old.price = c1Price;
-                old.unit = 'per ' + c1Title.toLowerCase();
-                old.bulkUnit = c1Title;
-                
-                const c2sPerC1 = parseInt(fC2QtyInp ? fC2QtyInp.value : 1) || 1;
-                const c3sPerC2 = parseInt(fC3QtyInp ? fC3QtyInp.value : 1) || 1;
-
-                const c2Cost = c2sPerC1 > 0 ? c1Cost / c2sPerC1 : 0;
-                const c2Price = parseFloat(fC2PriceInp ? fC2PriceInp.value : 0) || c2Cost;
-
-                old.profit = parseFloat(fC1ProfitInp ? fC1ProfitInp.value : 0) || 0;
-                old.profitPercent = parseFloat(fC1ProfitPctInp ? fC1ProfitPctInp.value : 0) || 0;
-
-                old.structure = {
-                    c2sPerC1: c2sPerC1,
-                    c3sPerC2: c3sPerC2,
-                    c1Profit: parseFloat(fC1ProfitInp ? fC1ProfitInp.value : 0) || 0,
-                    c1ProfitPercent: parseFloat(fC1ProfitPctInp ? fC1ProfitPctInp.value : 0) || 0,
-                    c2Profit: parseFloat(fC2ProfitInp ? fC2ProfitInp.value : 0) || 0,
-                    c2ProfitPercent: parseFloat(fC2ProfitPctInp ? fC2ProfitPctInp.value : 0) || 0
-                };
-                old.packTypes = {
-                    c1: { price: c1Price, title: c1Title },
-                    c2: { price: c2Price, title: c2Title },
-                    c3: { price: "Flexible", title: c3Title }
-                };
-
-                const rsImgDataHidden = document.getElementById('rsNewImageData');
-                if (rsImgDataHidden && rsImgDataHidden.value) {
-                    old.imageData = rsImgDataHidden.value;
-                }
-
-                // Add to Expenses Notebook directly
-                if (newTotalCost > 0) {
-                    let exps = JSON.parse(localStorage.getItem('nd_expenses_notebook') || '[]');
-                    const now = new Date();
-                    const day = now.getDate();
-                    const mths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    let hrs = now.getHours(); const am = hrs >= 12 ? 'pm' : 'am'; hrs = hrs % 12 || 12;
-                    const mins = String(now.getMinutes()).padStart(2, '0');
-                    exps.push({
-                        id: 'exp_' + Date.now() + Math.floor(Math.random()*1000),
-                        title: `Restock Merged (Flexible): ${name}`,
-                        amount: newTotalCost,
-                        dateStr: `${day} ${mths[now.getMonth()]}, ${now.getFullYear()} · ${hrs}:${mins} ${am}`,
-                        timestamp: now.toISOString(),
-                        year: now.getFullYear(),
-                        monthIdx: now.getMonth()
-                    });
-                    localStorage.setItem('nd_expenses_notebook', JSON.stringify(exps));
-                }
-
-                localStorage.setItem('nd_products_data', JSON.stringify(products));
-                if (typeof adminProducts !== 'undefined') {
-                    const admIdx = adminProducts.findIndex(p => p.name.toLowerCase() === name.toLowerCase() && p.isFlexible);
-                    if (admIdx !== -1) adminProducts[admIdx] = products[existingIdx];
-                }
-
-                if (typeof window.closeAddRestockModal === 'function') window.closeAddRestockModal();
-                if (typeof window.renderRestockList === 'function') window.renderRestockList();
-                if (typeof window.renderProductsGlobal === 'function') window.renderProductsGlobal();
-            } else {
-                alert("Could not find flexible product to merge into. Please use 'Create Flexible Product'.");
-            }
-        });
-    }
 };
 
 // Added dropdown logic
@@ -5164,9 +4841,7 @@ function _initRestockImportDropdown() {
                     // Pre-fill dropdown text
                     trigger.querySelector('.trigger-text').textContent = 'Copied: ' + p.name;
                     wrapper.classList.remove('open');
-                    
-                    if(document.getElementById('rsAddExistingBtn')) document.getElementById('rsAddExistingBtn').style.display = 'flex';
-                    if(document.getElementById('rsSubmitBtn')) document.getElementById('rsSubmitBtn').style.display = 'flex';
+                    if(document.getElementById('rsProductSubmitBtn')) document.getElementById('rsProductSubmitBtn').style.display = 'flex';
                 });
                 optionsContainer.appendChild(opt);
             });
@@ -5280,7 +4955,6 @@ function _initRestockImportDropdown() {
                     trigger.querySelector('.trigger-text').textContent = 'Copied: ' + p.name;
                     wrapper.classList.remove('open');
                     
-                    if(document.getElementById('rsSpecAddExistingBtn')) document.getElementById('rsSpecAddExistingBtn').style.display = 'flex';
                     if(document.getElementById('rsSpecProductSubmitBtn')) document.getElementById('rsSpecProductSubmitBtn').style.display = 'flex';
                 });
                 optionsContainer.appendChild(opt);
@@ -5409,7 +5083,6 @@ function _initRestockImportDropdown() {
                     trigger.querySelector('.trigger-text').textContent = 'Copied: ' + p.name;
                     wrapper.classList.remove('open');
                     
-                    if(document.getElementById('rsCustomAddExistingBtn')) document.getElementById('rsCustomAddExistingBtn').style.display = 'flex';
                     if(document.getElementById('rsCustomProductSubmitBtn')) document.getElementById('rsCustomProductSubmitBtn').style.display = 'flex';
                 });
                 optionsContainer.appendChild(opt);

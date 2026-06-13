@@ -126,12 +126,16 @@ function initProductDetailsModal() {
 // ============================================================
 // Open
 // ============================================================
-function openProductDetailsModal(productName, dateAdded) {
+function openProductDetailsModal(productName, dateAdded, productId) {
     const products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     let p;
-    if (dateAdded) {
+    if (productId) {
+        p = products.find(x => x.id === productId);
+    }
+    if (!p && dateAdded) {
         p = products.find(x => x.name === productName && x.dateAdded === dateAdded);
-    } else {
+    }
+    if (!p) {
         p = products.find(x => x.name === productName && !x.isDeleted && !x.isHidden && !x.cleared);
     }
     if (!p) return;
@@ -507,7 +511,7 @@ function _pdBindButtons(p) {
             _pdExecuteDelete();
         } else if (window._pdCurrentAction === 'top_up') {
             closeProductDetailsModal();
-            setTimeout(() => window.openTopUpModal(p.name), 50);
+            setTimeout(() => window.openTopUpModal(p.id || p.name), 50);
         } else if (window._pdCurrentAction === 'undo_top_up') {
             _pdExecuteUndoTopUp();
         }
@@ -596,6 +600,16 @@ function _pdCalculateStock(p) {
     try { sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]'); } catch (e) { }
     try { allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]'); } catch (e) { }
 
+    const activeMatches = allProducts.filter(item => item && !item.isDeleted && !item.cleared && item.name === p.name);
+    let oldestDateAdded = null;
+    activeMatches.forEach(item => {
+        if (item.dateAdded) {
+            const t = new Date(item.dateAdded).getTime();
+            if (!oldestDateAdded || t < oldestDateAdded) oldestDateAdded = t;
+        }
+    });
+    const filteredSales = oldestDateAdded ? sales.filter(sale => window.parseSaleDate(sale.date || sale.timestamp) >= oldestDateAdded) : sales;
+
     let html = '';
 
     if (p.isSpecial || p.packTypes) {
@@ -611,7 +625,7 @@ function _pdCalculateStock(p) {
         allProducts.forEach(item => { if (!item.isDeleted && item.name === p.name && (item.isSpecial || item.packTypes)) totalBags += (parseFloat(item.boughtQuantity) || 1); });
 
         let sBags = 0, sCus = 0, sCups = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item === p.name + ' (' + bagT + ')') sBags += parseFloat(sale.qty) || 0;
             else if (sale.item === p.name + ' (' + cusT + ')') sCus += parseFloat(sale.qty) || 0;
             else if (sale.item === p.name + ' (' + cupT + ')') sCups += parseFloat(sale.qty) || 0;
@@ -653,7 +667,7 @@ function _pdCalculateStock(p) {
         let soldRetailPieces = 0;
         let soldWholesaleBulk = 0;
         
-        sales.forEach(sale => { 
+        filteredSales.forEach(sale => { 
             if (sale.item === p.name) {
                 soldRetailPieces += parseFloat(sale.qty) || 0;
             } else if (sale.item === `${p.name} (${bulk})`) {
@@ -1246,7 +1260,7 @@ function _pdOpenEditPriceForm() {
 function _pdSaveEditPrice() {
     let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     const p = window._pdCurrentProduct;
-    const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
+    const index = p.id ? products.findIndex(item => item.id === p.id) : products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     if (index === -1) { alert('Product reference not found!'); return; }
 
     const badgeVal = document.getElementById('pdEditPriceStockStatus')?.value || 'none';
@@ -1368,7 +1382,7 @@ function _pdExecuteClear() {
     let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     const p = window._pdCurrentProduct;
     if (!p) return;
-    const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
+    const index = p.id ? products.findIndex(item => item.id === p.id) : products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     if (index === -1) return;
     products[index].cleared = true;
     localStorage.setItem('nd_products_data', JSON.stringify(products));
@@ -1381,7 +1395,7 @@ function _pdExecuteDelete() {
     let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     const p = window._pdCurrentProduct;
     if (!p) return;
-    const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
+    const index = p.id ? products.findIndex(item => item.id === p.id) : products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     if (index === -1) return;
     products[index].isDeleted = true;
     localStorage.setItem('nd_products_data', JSON.stringify(products));
@@ -1395,7 +1409,7 @@ function _pdExecuteUndoTopUp() {
     let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     const p = window._pdCurrentProduct;
     if (!p) return;
-    const index = products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
+    const index = p.id ? products.findIndex(item => item.id === p.id) : products.findIndex(item => item.name === p.name && item.dateAdded === p.dateAdded);
     
     if (index === -1) {
         if(typeof customAlert === 'function') customAlert("Product not found");

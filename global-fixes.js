@@ -668,6 +668,27 @@
 
 })();
 
+window.parseSaleDate = function(dateStr) {
+    if (!dateStr) return 0;
+    try {
+        if (dateStr.includes('·')) {
+            const parts = dateStr.split('·');
+            const d = new Date(parts[0].trim());
+            const timeParts = parts[1].trim().match(/(\d+):(\d+)\s*(am|pm)/i);
+            if (timeParts) {
+                let h = parseInt(timeParts[1]);
+                if (timeParts[3].toLowerCase() === 'pm' && h < 12) h += 12;
+                if (timeParts[3].toLowerCase() === 'am' && h === 12) h = 0;
+                d.setHours(h, parseInt(timeParts[2]), 0, 0);
+            }
+            return d.getTime();
+        }
+        return new Date(dateStr).getTime();
+    } catch(e) {
+        return 0;
+    }
+};
+
 /**
  * Shared Inventory Management Logic
  * Used by both Admin and User sides to track stock levels accurately
@@ -678,6 +699,18 @@ window.checkProductOutOfStock = function(productName) {
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     const p = products.find(item => item.name === productName);
     if (!p) return false;
+
+    const activeMatches = products.filter(item => item.name === productName);
+    let oldestDateAdded = null;
+    activeMatches.forEach(item => {
+        if (item.dateAdded) {
+            const t = new Date(item.dateAdded).getTime();
+            if (!oldestDateAdded || t < oldestDateAdded) {
+                oldestDateAdded = t;
+            }
+        }
+    });
+    const filteredSales = oldestDateAdded ? sales.filter(sale => window.parseSaleDate(sale.date || sale.timestamp) >= oldestDateAdded) : sales;
 
     if (p.isSpecial || p.packTypes) {
         const s = p.structure || {};
@@ -697,7 +730,7 @@ window.checkProductOutOfStock = function(productName) {
         const cpTitle = p.packTypes.cup?.title || p.packTypes.c3?.title || 'Container 3';
 
         let soldCups = 0, soldCustards = 0, soldBags = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item && sale.item.includes(productName)) {
                 const q = parseFloat(sale.qty) || 0;
                 if (sale.item.includes(`(${cpTitle})`)) soldCups += q;
@@ -730,7 +763,7 @@ window.checkProductOutOfStock = function(productName) {
         const totalC3 = totalC1Bought * c2sPerC1 * c3sPerC2;
 
         let soldC1 = 0, soldC2 = 0, soldC3 = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item && sale.item.includes(productName)) {
                 const q = parseFloat(sale.qty) || 0;
                 if (sale.item.includes(`(${c3Title})`)) soldC3 += q;
@@ -752,7 +785,7 @@ window.checkProductOutOfStock = function(productName) {
         });
 
         let totalSold = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item === productName) {
                 totalSold += parseFloat(sale.qty) || 0;
             }
@@ -770,7 +803,7 @@ window.checkProductOutOfStock = function(productName) {
         });
         
         let totalSoldPieces = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item === productName) {
                 totalSoldPieces += parseFloat(sale.qty) || 0;
             } else if (sale.item === `${productName} (${p.bulkUnit || 'Carton'})`) {
@@ -788,6 +821,18 @@ window.checkProductRunningLow = function(productName) {
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     const p = products.find(item => item.name === productName);
     if (!p) return false;
+
+    const activeMatches = products.filter(item => item.name === productName);
+    let oldestDateAdded = null;
+    activeMatches.forEach(item => {
+        if (item.dateAdded) {
+            const t = new Date(item.dateAdded).getTime();
+            if (!oldestDateAdded || t < oldestDateAdded) {
+                oldestDateAdded = t;
+            }
+        }
+    });
+    const filteredSales = oldestDateAdded ? sales.filter(sale => window.parseSaleDate(sale.date || sale.timestamp) >= oldestDateAdded) : sales;
 
     if (p.isSpecial || p.packTypes) {
         const s = p.structure || {};
@@ -807,7 +852,7 @@ window.checkProductRunningLow = function(productName) {
         const cpTitle = p.packTypes.cup?.title || p.packTypes.c3?.title || 'Container 3';
 
         let soldCups = 0, soldCustards = 0, soldBags = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item && sale.item.includes(productName)) {
                 const q = parseFloat(sale.qty) || 0;
                 if (sale.item.includes(`(${cpTitle})`)) soldCups += q;
@@ -841,7 +886,7 @@ window.checkProductRunningLow = function(productName) {
         const totalC3 = totalC1Bought * c2sPerC1 * c3sPerC2;
 
         let soldC1 = 0, soldC2 = 0, soldC3 = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item && sale.item.includes(productName)) {
                 const q = parseFloat(sale.qty) || 0;
                 if (sale.item.includes(`(${c3Title})`)) soldC3 += q;
@@ -864,7 +909,7 @@ window.checkProductRunningLow = function(productName) {
         });
 
         let totalSold = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item === productName) {
                 totalSold += parseFloat(sale.qty) || 0;
             }
@@ -883,7 +928,7 @@ window.checkProductRunningLow = function(productName) {
         });
         
         let totalSoldPieces = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item === productName) {
                 totalSoldPieces += parseFloat(sale.qty) || 0;
             } else if (sale.item === `${productName} (${p.bulkUnit || 'Carton'})`) {
@@ -908,10 +953,10 @@ window.getRemainingProductStock = function(productName, variantType = null, excl
         if (req.status === 'Pending' && req.id !== excludeRequestId) {
             if (req.isGroupedOrder && req.items) {
                 req.items.forEach(item => {
-                    sales.push({ item: item.name, qty: item.qty });
+                    sales.push({ item: item.name, qty: item.qty, date: req.timestamp || req.date });
                 });
             } else if (req.product) {
-                sales.push({ item: req.product.name, qty: req.product.qty });
+                sales.push({ item: req.product.name, qty: req.product.qty, date: req.timestamp || req.date });
             }
         }
     });
@@ -931,6 +976,19 @@ window.getRemainingProductStock = function(productName, variantType = null, excl
     
     if (!p) return 0;
 
+    const activeMatches = products.filter(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
+    let oldestDateAdded = null;
+    activeMatches.forEach(item => {
+        if (item.dateAdded) {
+            const t = new Date(item.dateAdded).getTime();
+            if (!oldestDateAdded || t < oldestDateAdded) {
+                oldestDateAdded = t;
+            }
+        }
+    });
+
+    const filteredSales = oldestDateAdded ? sales.filter(sale => window.parseSaleDate(sale.date || sale.timestamp) >= oldestDateAdded) : sales;
+
     if (p.isSpecial || p.packTypes) {
         const s = p.structure || {};
         const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
@@ -949,7 +1007,7 @@ window.getRemainingProductStock = function(productName, variantType = null, excl
         const cpTitle = p.packTypes?.cup?.title || p.packTypes?.c3?.title || 'Container 3';
 
         let soldCups = 0, soldCustards = 0, soldBags = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item) {
                 let saleBaseName = sale.item.trim();
                 let saleVariant = '';
@@ -1006,7 +1064,7 @@ window.getRemainingProductStock = function(productName, variantType = null, excl
         const totalC3 = totalC1Bought * c2sPerC1 * c3sPerC2;
 
         let soldC1 = 0, soldC2 = 0, soldC3 = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item) {
                 let saleBaseName = sale.item.trim();
                 let saleVariant = '';
@@ -1049,7 +1107,7 @@ window.getRemainingProductStock = function(productName, variantType = null, excl
         });
 
         let totalSold = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item) {
                 let saleBaseName = sale.item.trim();
                 const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
@@ -1074,7 +1132,7 @@ window.getRemainingProductStock = function(productName, variantType = null, excl
         });
         
         let totalSoldPieces = 0;
-        sales.forEach(sale => {
+        filteredSales.forEach(sale => {
             if (sale.item) {
                 let saleBaseName = sale.item.trim();
                 let saleVariant = '';
