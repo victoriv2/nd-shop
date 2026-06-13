@@ -425,10 +425,29 @@ function initDynamicPayoutLogic() {
             let labelDisplay = "Remaining";
             let plusSpan = '';
 
+            let deltaVal = parseFloat(sale.payoutEarned !== undefined ? sale.payoutEarned : sale.payout) || 0;
+            let deltaDisplay = '';
+            let deltaStyle = '';
+            if (deltaVal > 0) {
+                deltaDisplay = `+₦${Math.round(deltaVal).toLocaleString()}`;
+                deltaStyle = 'color: #10b981; background: rgba(16, 185, 129, 0.15);';
+            } else if (deltaVal < 0) {
+                deltaDisplay = `-₦${Math.round(Math.abs(deltaVal)).toLocaleString()}`;
+                deltaStyle = 'color: #ef4444; background: rgba(239, 68, 68, 0.15);';
+            } else {
+                deltaDisplay = `₦0`;
+                deltaStyle = 'color: #6b7280; background: rgba(107, 114, 128, 0.15);';
+            }
+
             return `
-                <div class="regular-card" style="opacity: 1;">
-                    <div class="card-main-amount">
-                        ${plusSpan}${amountDisplay} <span class="card-payout-text">${labelDisplay}</span>
+                <div class="regular-card" style="opacity: 1;" data-delta="${deltaVal}" data-remaining="${sale.computedRunningBalance || 0}">
+                    <div class="card-main-amount-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5.5px;">
+                        <div class="card-main-amount" style="margin-bottom: 0;">
+                            ${plusSpan}${amountDisplay} <span class="card-payout-text">${labelDisplay}</span>
+                        </div>
+                        <div class="card-delta-badge" style="font-weight: 700; font-size: 1.05rem; padding: 4px 10px; border-radius: 8px; font-family: 'Outfit', sans-serif; ${deltaStyle}">
+                            ${deltaDisplay}
+                        </div>
                     </div>
                     <div class="card-details-row">
                         <span class="card-buying-text">${descriptionText}</span>

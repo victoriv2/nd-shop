@@ -37,32 +37,40 @@ function initCardModalLogic() {
                 return;
             }
 
-            // Find what text specifically needs to be copied out of the card
-            const amountElem = regularCard.querySelector('.card-main-amount');
+            // Read values directly from data attributes on the card
+            const delta = parseFloat(regularCard.getAttribute('data-delta')) || 0;
+            const remaining = parseFloat(regularCard.getAttribute('data-remaining')) || 0;
+
             const textElems = regularCard.querySelectorAll('.card-buying-text');
             const descElem = textElems.length > 1 ? textElems[1] : textElems[0];
             const timeElem = regularCard.querySelector('.card-time-text');
-
-            // Getting the amount string alone WITHOUT getting the span text (the '+' sign or 'Payout' word)
-            let amountVal = '0.00';
-            if (amountElem) {
-                // Cloning it so we can safely edit it
-                const clone = amountElem.cloneNode(true);
-                const plusSpan = clone.querySelector('.green-plus');
-                const cbText = clone.querySelector('.card-payout-text');
-
-                if (plusSpan) clone.removeChild(plusSpan);
-                if (cbText) clone.removeChild(cbText);
-
-                amountVal = clone.textContent.trim();
-            }
 
             // Getting the destination fields in the Modal to populate them
             const destAmount = document.getElementById('tmAmountValue');
             const destDesc = document.getElementById('tmDescription');
             const destDate = document.getElementById('tmDate');
+            const destRemaining = document.getElementById('tmRemainingBalance');
+            const destType = document.getElementById('tmTypeValue');
+            const plusSignElem = transactionModal.querySelector('.tm-plus');
+            const statusElem = transactionModal.querySelector('.tm-status');
 
-            if (destAmount) destAmount.textContent = amountVal;
+            if (destAmount) {
+                destAmount.textContent = Math.round(Math.abs(delta)).toLocaleString() + '.00';
+            }
+            if (destRemaining) {
+                destRemaining.textContent = '₦' + Math.round(remaining).toLocaleString();
+            }
+            if (destType) {
+                destType.textContent = delta >= 0 ? 'Reward Earned' : 'Reward Spent';
+            }
+            if (plusSignElem) {
+                plusSignElem.textContent = delta >= 0 ? '+' : '-';
+                plusSignElem.style.color = delta >= 0 ? '#10b981' : '#ef4444';
+            }
+            if (statusElem) {
+                statusElem.textContent = delta >= 0 ? 'Reward' : 'Reward Spent';
+                statusElem.style.color = delta >= 0 ? '#10b981' : '#ef4444';
+            }
             if (destDesc && descElem) destDesc.textContent = descElem.textContent;
             if (destDate && timeElem) destDate.textContent = timeElem.textContent;
 
@@ -157,6 +165,12 @@ function initCardModalLogic() {
                 const titleVal = document.querySelector('.tm-status') ? document.querySelector('.tm-status').textContent : 'Reward Paid';
                 const shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
 
+                const plusSign = document.querySelector('.tm-plus') ? document.querySelector('.tm-plus').textContent : '+';
+                const signColor = plusSign === '+' ? '#10b981' : '#ef4444';
+                const titleBg = plusSign === '+' ? '#e0f2fe' : '#fee2e2';
+                const titleColor = plusSign === '+' ? '#0369a1' : '#b91c1c';
+                const remainingVal = document.getElementById('tmRemainingBalance') ? document.getElementById('tmRemainingBalance').textContent : '₦0.00';
+
                 const printArea = document.createElement('div');
                 printArea.innerHTML = `
                     <div style="width: 210mm; min-height: 297mm; display: flex; align-items: center; justify-content: center; background-color: #ffffff; padding: 20px; box-sizing: border-box; overflow: hidden;">
@@ -167,11 +181,11 @@ function initCardModalLogic() {
                             </div>
                             
                             <div style="background: #f8fafc; border-radius: 20px; padding: 40px 20px; text-align: center; margin-bottom: 40px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.02);">
-                                <div style="display: inline-block; background-color: #e0f2fe; color: #8b5cf6; padding: 8px 18px; border-radius: 30px; font-size: 14px; font-weight: 800; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <div style="display: inline-block; background-color: ${titleBg}; color: ${titleColor}; padding: 8px 18px; border-radius: 30px; font-size: 14px; font-weight: 800; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 0.5px;">
                                     ${titleVal}
                                 </div>
                                 <div style="font-size: 50px; font-weight: 800; color: #0f172a; letter-spacing: -1.5px; margin-bottom: 5px;">
-                                    <span style="color: #8b5cf6; font-weight: 900; font-size: 44px; vertical-align: middle; margin-right: 4px;">+</span>₦${amountVal}
+                                    <span style="color: ${signColor}; font-weight: 900; font-size: 44px; vertical-align: middle; margin-right: 4px;">${plusSign}</span>₦${amountVal}
                                 </div>
                             </div>
 
@@ -183,6 +197,10 @@ function initCardModalLogic() {
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 24px; align-items: flex-start;">
                                     <span style="color: #64748b; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Transaction Date</span>
                                     <span style="color: #1e293b; font-weight: 800; font-size: 16px; text-align: right; max-width: 60%;">${dateVal}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 24px; align-items: flex-start;">
+                                    <span style="color: #64748b; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Remaining Balance</span>
+                                    <span style="color: #1e293b; font-weight: 800; font-size: 16px; text-align: right; max-width: 60%;">${remainingVal}</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 24px; align-items: flex-start;">
                                     <span style="color: #64748b; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Transaction ID</span>
