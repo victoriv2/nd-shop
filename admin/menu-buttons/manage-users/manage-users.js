@@ -369,13 +369,13 @@ function toggleUserHistory(userId) {
                 const qty = parseInt(s.qty || 1);
                 const itemTotal = parseFloat(s.price || (qty * unitPrice)) || 0;
 
-                // Payout is specifically 2% of the item total, or using explicit s.payout
-                const payoutAmount = parseFloat(s.payout) || (itemTotal * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100)) || 0;
+                // Payout is specifically s.payoutEarned, falling back to s.payout only if payoutEarned is missing.
+                const payoutAmount = s.payoutEarned !== undefined ? parseFloat(s.payoutEarned) : (s.payout !== undefined && s.payout !== null && s.payout !== '' ? parseFloat(s.payout) : (itemTotal * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100)) || 0);
 
                 const itemName = s.item || s.productName || 'Item';
 
                 const descText = `${itemName} - ₦${unitPrice.toLocaleString()} per unit - x${qty} - Total: ₦${itemTotal.toLocaleString()}`;
-                combined.push({ id: 's' + idx, refUserId: userId, original: s, type: 'Sale', text: descText, price: payoutAmount, date: s.date, status: 'Approved' });
+                combined.push({ id: 's' + idx, refUserId: userId, original: s, type: 'Sale', text: descText, price: payoutAmount, remaining: parseFloat(s.payout) || 0, date: s.date, status: 'Approved' });
             });
             userRequestsOuter.forEach((r, idx) => {
                 let itemPrice = 0;
@@ -395,7 +395,7 @@ function toggleUserHistory(userId) {
                     payoutAmount = parseFloat(r.product.payout) || (itemPrice * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100)) || 0;
                 }
 
-                combined.push({ id: 'r' + idx, refUserId: userId, original: r, type: 'Request', text: descText, price: (r.status === 'Pending' ? itemPrice : payoutAmount), date: r.date || r.timestamp, status: r.status });
+                combined.push({ id: 'r' + idx, refUserId: userId, original: r, type: 'Request', text: descText, price: (r.status === 'Pending' ? itemPrice : payoutAmount), remaining: 0, date: r.date || r.timestamp, status: r.status });
             });
 
             window._currentUserHistory = combined;
@@ -442,9 +442,28 @@ function renderHistoryItems(items) {
     return items.map(item => {
         const isApprovedPayout = item.status === 'Approved' && item.type === 'Sale';
         const isPending = item.status === 'Pending';
-        const formattedPrice = item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const statusText = isApprovedPayout ? 'Payout' : item.status;
-        const statusColor = isApprovedPayout ? '' : (isPending ? 'color:#8b5cf6;' : (item.status === 'Declined' ? 'color:#ef4444;' : ''));
+        
+        let priceVal = parseFloat(item.price) || 0;
+        let formattedPrice = Math.abs(priceVal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        let signSpan = '';
+        let statusColor = '';
+        
+        if (isApprovedPayout) {
+            if (priceVal > 0) {
+                signSpan = '<span class="green-plus" style="color:#10b981; font-weight:700; margin-right:2px;">+</span>';
+                statusColor = 'color:#10b981;';
+            } else if (priceVal < 0) {
+                signSpan = '<span class="red-minus" style="color:#ef4444; font-weight:700; margin-right:2px;">-</span>';
+                statusColor = 'color:#ef4444;';
+            } else {
+                signSpan = '';
+                statusColor = 'color:#6b7280;';
+            }
+        } else {
+            statusColor = isPending ? 'color:#8b5cf6;' : (item.status === 'Declined' ? 'color:#ef4444;' : '');
+        }
+        
+        const statusText = isApprovedPayout ? (priceVal < 0 ? 'Reward Spent' : 'Payout') : item.status;
 
         // Build inline action buttons for pending requests
         let inlineActions = '';
@@ -463,7 +482,7 @@ function renderHistoryItems(items) {
         return `
             <div class="regular-card" style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed #cbd5e1; cursor:pointer; ${isPending ? 'border-left: 3px solid #8b5cf6; padding-left: 12px;' : ''}" onclick="openActivityDetails('${item.id}')">
                 <div class="card-main-amount">
-                    ${isApprovedPayout ? '<span class="green-plus">+</span>' : ''}${formattedPrice} <span class="card-payout-text" style="${statusColor}">${pendingDot}${statusText}</span>
+                    ${signSpan}${formattedPrice} <span class="card-payout-text" style="${statusColor}">${pendingDot}${statusText}</span>
                 </div>
                 <div class="card-details-row">
                     <span class="card-buying-text">${item.text}</span>
@@ -573,10 +592,39 @@ function openActivityDetails(itemId) {
     const txnId = `TXN-${txnUserId}${yyyy}${mm}${dd}${strHours}${minutes}${ampm}`;
     const refId = item.refUserId || '00000ND';
 
-    const statusBg = item.status === 'Approved' ? '#edf1f7' : (item.status === 'Pending' ? '#f0f4f8' : '#fee2e2');
-    const statusColor = item.status === 'Approved' ? '#8b5cf6' : (item.status === 'Pending' ? '#2c3e50' : '#dc2626');
-    const statusText = isApprovedPayout ? 'Payout' : item.status;
+    let priceVal = parseFloat(item.price) || 0;
+    let formattedPrice = Math.abs(priceVal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    
+    let plusSign = '';
+    let statusBg = '';
+    let statusColor = '';
+    let statusText = item.status;
     const titleText = item.type === 'Sale' ? 'Payout Details' : 'Request Details';
+
+    if (isApprovedPayout) {
+        if (priceVal > 0) {
+            plusSign = '<span class="mu-payout-plus tm-plus" style="color:#10b981; font-size:2.5rem; font-weight:700; margin-right:2px;">+</span>';
+            statusBg = '#d1fae5';
+            statusColor = '#10b981';
+            statusText = 'Payout';
+        } else if (priceVal < 0) {
+            plusSign = '<span class="mu-payout-plus tm-plus" style="color:#ef4444; font-size:2.5rem; font-weight:700; margin-right:2px;">-</span>';
+            statusBg = '#fee2e2';
+            statusColor = '#ef4444';
+            statusText = 'Reward Spent';
+        } else {
+            plusSign = '';
+            statusBg = '#edf1f7';
+            statusColor = '#6b7280';
+            statusText = 'Payout';
+        }
+    } else if (item.status === 'Pending') {
+        statusBg = '#f0f4f8';
+        statusColor = '#2c3e50';
+    } else {
+        statusBg = '#fee2e2';
+        statusColor = '#dc2626';
+    }
 
     // Build action buttons for pending requests
     let actionButtonsHtml = '';
@@ -585,6 +633,16 @@ function openActivityDetails(itemId) {
             <div style="display:flex; gap:12px; padding:20px 24px; border-top:1px solid #eee;">
                 <button onclick="processRequestFromUserModal('${item.original.id}', 'Declined')" style="flex:1; padding:14px; border:none; border-radius:12px; font-weight:700; font-size:0.95rem; background:#fee2e2; color:#ef4444; cursor:pointer;">Decline</button>
                 <button onclick="processRequestFromUserModal('${item.original.id}', 'Approved')" style="flex:1; padding:14px; border:none; border-radius:12px; font-weight:700; font-size:0.95rem; background:#edf1f7; color:#8b5cf6; cursor:pointer;">Approve</button>
+            </div>
+        `;
+    }
+
+    let remainingRowHtml = '';
+    if (item.type === 'Sale' && item.remaining !== undefined) {
+        remainingRowHtml = `
+            <div class="mu-payout-detail-item tm-detail-item" style="border-bottom:1px dashed #e0e0e0; padding:10px 0;">
+                <span class="mu-payout-label tm-label" style="display:block; color:#888; font-size:0.9rem;">Remaining Balance</span>
+                <span class="mu-payout-value tm-value" style="display:block; font-weight:600; color:#333;">₦${Math.round(item.remaining).toLocaleString()}</span>
             </div>
         `;
     }
@@ -598,9 +656,9 @@ function openActivityDetails(itemId) {
                 </div>
                 <div class="mu-payout-body tm-body" style="padding:24px; overflow-y:auto;">
                     <div class="mu-payout-amount-section tm-amount-section" style="text-align:center; margin-bottom:30px; display:flex; flex-direction:column; align-items:center;">
-                        <div class="mu-payout-amount-wrapper tm-amount-wrapper">
-                            ${isApprovedPayout ? '<span class="mu-payout-plus tm-plus" style="color:#8b5cf6; font-size:2.5rem;">+</span>' : ''}
-                            <span class="mu-payout-amount tm-amount" id="tmAmountValue" style="color:#333; font-size:2.5rem; font-weight:700;">${item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <div class="mu-payout-amount-wrapper tm-amount-wrapper" style="display:flex; align-items:center; justify-content:center;">
+                            ${plusSign}
+                            <span class="mu-payout-amount tm-amount" id="tmAmountValue" style="color:#333; font-size:2.5rem; font-weight:700;">${formattedPrice}</span>
                         </div>
                         <div class="mu-payout-status tm-status" style="display:inline-block; padding:6px 14px; border-radius:20px; font-size:0.9rem; font-weight:600; background:${statusBg}; color:${statusColor};">
                             ${statusText}
@@ -610,8 +668,9 @@ function openActivityDetails(itemId) {
                     <div class="mu-payout-details-list tm-details-list" style="background:#f9f9f9; padding:16px; border-radius:16px;">
                         <div class="mu-payout-detail-item tm-detail-item" style="border-bottom:1px dashed #e0e0e0; padding:10px 0;">
                             <span class="mu-payout-label tm-label" style="display:block; color:#888; font-size:0.9rem;">Type</span>
-                            <span class="mu-payout-value tm-value" style="display:block; font-weight:600; color:#333;">${isApprovedPayout ? 'Payout' : item.type}</span>
+                            <span class="mu-payout-value tm-value" style="display:block; font-weight:600; color:#333;">${isApprovedPayout ? (priceVal < 0 ? 'Reward Spent' : 'Payout') : item.type}</span>
                         </div>
+                        ${remainingRowHtml}
                         <div class="mu-payout-detail-item tm-detail-item" style="border-bottom:1px dashed #e0e0e0; padding:10px 0;">
                             <span class="mu-payout-label tm-label" style="display:block; color:#888; font-size:0.9rem;">Description</span>
                             <span class="mu-payout-value tm-value" id="tmDescription" style="display:block; font-weight:600; color:#333;">${item.text}</span>
