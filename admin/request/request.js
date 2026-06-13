@@ -720,7 +720,7 @@ function checkOrderStockIssues(request) {
     if (request.isGroupedOrder && request.items) {
         request.items.forEach(item => {
             const remaining = (typeof window.getRemainingProductStock === 'function')
-                ? window.getRemainingProductStock(item.name)
+                ? window.getRemainingProductStock(item.name, null, request.id)
                 : null;
             if (remaining !== null && remaining < parseFloat(item.qty)) {
                 issues.push({ name: item.name, ordered: item.qty, remaining: remaining, unit: item.unit || '' });
@@ -728,7 +728,7 @@ function checkOrderStockIssues(request) {
         });
     } else if (request.product) {
         const remaining = (typeof window.getRemainingProductStock === 'function')
-            ? window.getRemainingProductStock(request.product.name)
+            ? window.getRemainingProductStock(request.product.name, null, request.id)
             : null;
         if (remaining !== null && remaining < parseFloat(request.product.qty)) {
             issues.push({ name: request.product.name, ordered: request.product.qty, remaining: remaining, unit: request.product.unit || '' });

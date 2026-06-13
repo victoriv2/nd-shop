@@ -896,7 +896,7 @@ window.checkProductRunningLow = function(productName) {
     }
 };
 
-window.getRemainingProductStock = function(productName, variantType = null) {
+window.getRemainingProductStock = function(productName, variantType = null, excludeRequestId = null) {
     const allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     // Filter out deleted and cleared products so we only look at active inventory
     const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared);
@@ -905,7 +905,7 @@ window.getRemainingProductStock = function(productName, variantType = null) {
     // Also deduct stock from pending requests to prevent overselling
     const requests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
     requests.forEach(req => {
-        if (req.status === 'Pending') {
+        if (req.status === 'Pending' && req.id !== excludeRequestId) {
             if (req.isGroupedOrder && req.items) {
                 req.items.forEach(item => {
                     sales.push({ item: item.name, qty: item.qty });
