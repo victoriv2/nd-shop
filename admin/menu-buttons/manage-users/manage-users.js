@@ -352,7 +352,6 @@ function toggleUserHistory(userId) {
                 <button id="muPendingTabBtn" onclick="filterHistory('Pending', this)">Pending${pendingBadge}</button>
                 <button onclick="filterHistory('Approved', this)">Approved</button>
                 <button onclick="filterHistory('Declined', this)">Declined</button>
-                <button onclick="filterHistory('AI', this)">AI</button>
             </div>
             <div id="muHistoryListWrapper">
         `;
@@ -502,11 +501,7 @@ function filterHistoryAndSort() {
 
     // 1. Filter by Status
     if (window._currentHistoryFilterStatus !== 'All') {
-        if (window._currentHistoryFilterStatus === 'AI') {
-            filtered = filtered.filter(i => i.original && i.original.source === 'AI');
-        } else {
-            filtered = filtered.filter(i => i.status === window._currentHistoryFilterStatus);
-        }
+        filtered = filtered.filter(i => i.status === window._currentHistoryFilterStatus);
     }
 
     // 2. Filter by Search Text
