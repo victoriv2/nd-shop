@@ -322,6 +322,7 @@ window.openAppContactSettings = function() {
     if (modal) {
         document.getElementById('appShopNameInput').value = localStorage.getItem('nd_shop_name') || 'nd shop';
         document.getElementById('appContactPhoneInput').value = localStorage.getItem('nd_shop_owner_phone') || '08109316532';
+        document.getElementById('appAboutTextInput').value = localStorage.getItem('nd_about_text') || '';
         modal.style.display = 'flex';
         setTimeout(() => modal.classList.add('show'), 10);
     }
@@ -338,6 +339,7 @@ window.closeAppContactSettings = function() {
 window.saveAppContactSettings = function() {
     const shopName = document.getElementById('appShopNameInput').value.trim();
     const phone = document.getElementById('appContactPhoneInput').value.trim();
+    const aboutText = document.getElementById('appAboutTextInput').value.trim();
     
     if (!shopName || !phone) {
         const msg = !shopName ? "Please enter a shop name." : "Please enter a valid phone number.";
@@ -355,7 +357,7 @@ window.saveAppContactSettings = function() {
                 customAlert("Incorrect PIN. Changes not saved.");
                 return;
             }
-            _finishSavingAppContact(shopName, phone);
+            _finishSavingAppContact(shopName, phone, aboutText);
         });
     } else {
         const pin = prompt("Please enter the Admin Authorization PIN to save these changes:");
@@ -365,19 +367,21 @@ window.saveAppContactSettings = function() {
             alert("Incorrect PIN. Changes not saved.");
             return;
         }
-        _finishSavingAppContact(shopName, phone);
+        _finishSavingAppContact(shopName, phone, aboutText);
     }
 }
 
-window._finishSavingAppContact = function(shopName, phone) {
+window._finishSavingAppContact = function(shopName, phone, aboutText) {
     localStorage.setItem('nd_shop_name', shopName);
     localStorage.setItem('nd_shop_owner_phone', phone);
+    localStorage.setItem('nd_about_text', aboutText);
 
     if (typeof window.updateShopBranding === 'function') window.updateShopBranding();
     if (typeof window.updateShopContactPhone === 'function') window.updateShopContactPhone();
     if (window.realtimeSync) {
         window.realtimeSync.syncNow('nd_shop_name');
         window.realtimeSync.syncNow('nd_shop_owner_phone');
+        window.realtimeSync.syncNow('nd_about_text');
     }
     
     if(typeof customAlert === 'function') customAlert("Branding & Contact settings updated successfully!");
