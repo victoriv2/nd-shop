@@ -271,6 +271,11 @@ function initEditProfileLogic() {
                         }
                     } catch (err) {
                         console.error('Profile update error:', err);
+                        if (typeof customAlert === 'function') {
+                            customAlert(err.message || 'Error updating profile.');
+                        } else {
+                            alert(err.message || 'Error updating profile.');
+                        }
                         saveBtn.textContent = 'Error updating';
                         saveBtn.style.backgroundColor = '#dc3545';
                         setTimeout(() => {

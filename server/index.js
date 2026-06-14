@@ -26,7 +26,7 @@ const BREVO_SENDER_NAME = process.env.BREVO_SENDER_NAME;
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
 
 const supabaseUrl = process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || 'placeholder';
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder';
 
 const WebSocket = require('ws');
 const supabase = createClient(supabaseUrl, supabaseKey, {
@@ -242,10 +242,14 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
             .update({ first_name: firstName, last_name: lastName, address, state, lga, name })
             .eq('id', id);
 
-        if (error) return res.status(500).json({ success: false, error: 'Failed to update user profile.' });
+        if (error) {
+            console.error('Supabase profile update error:', error);
+            return res.status(500).json({ success: false, error: error.message || 'Failed to update user profile.' });
+        }
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ success: false, error: 'Internal server error.' });
+        console.error('Fatal profile update endpoint error:', err);
+        res.status(500).json({ success: false, error: err.message || 'Internal server error.' });
     }
 });
 
@@ -619,7 +623,7 @@ app.post('/api/admin/update-credentials', authenticateToken, async (req, res) =>
 
             if (userError) {
                 console.error('Failed to update admin user in DB:', userError.message);
-                return res.status(500).json({ success: false, error: 'Failed to update admin profile details.' });
+                return res.status(500).json({ success: false, error: userError.message || 'Failed to update admin profile details.' });
             }
         }
 
@@ -631,7 +635,7 @@ app.post('/api/admin/update-credentials', authenticateToken, async (req, res) =>
 
             if (pinError) {
                 console.error('Failed to update PIN in DB:', pinError.message);
-                return res.status(500).json({ success: false, error: 'Failed to update Master PIN.' });
+                return res.status(500).json({ success: false, error: pinError.message || 'Failed to update Master PIN.' });
             }
         }
 
