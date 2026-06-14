@@ -1321,6 +1321,8 @@ function initSalesTable() {
                 const variantKey = checkedVariant.value; // bag, custard, cup
                 const requiredQty = parseFloat(qty);
                 
+                const selectedProduct = specialInventory.find(p => p.name === itemName);
+                
                 const variantKeyCapitalized = variantKey.charAt(0).toUpperCase() + variantKey.slice(1);
                 const variantId = 'specVariant' + variantKeyCapitalized + 'Price';
                 const labelTxtId = 'specVariant' + variantKeyCapitalized + 'LabelTxt';
@@ -1333,7 +1335,6 @@ function initSalesTable() {
                 }
                 
                 // Read from database to check allowed status
-                const selectedProduct = specialInventory.find(p => p.name === itemName);
                 let variantAllowsFlex = false;
                 if (selectedProduct && selectedProduct.allowUserFlexiblePricing) {
                     const flexVars = selectedProduct.flexibleVariants || [];
