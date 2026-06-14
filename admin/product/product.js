@@ -505,8 +505,8 @@ function initAdminProductLogic() {
                         <div class="admin-product-card-badge" style="background:#f1f5f9;color:#94a3b8;">Disabled</div>
                     </div>`;
                     
-            const isOutOfStock = window.checkProductOutOfStock && window.checkProductOutOfStock(p.name);
-            const isRunningLow = !isOutOfStock && window.checkProductRunningLow && window.checkProductRunningLow(p.name);
+            const isOutOfStock = window.checkProductOutOfStock && window.checkProductOutOfStock(p.id);
+            const isRunningLow = !isOutOfStock && window.checkProductRunningLow && window.checkProductRunningLow(p.id);
             
             let cardBgStyle = '';
             if (isOutOfStock) {

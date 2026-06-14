@@ -240,6 +240,9 @@
             'Content-Type': 'application/json'
         };
         
+        let progressMade = false;
+        let networkErrorOccurred = false;
+        
         for (const [table, items] of Object.entries(groups)) {
             const operations = items.map(item => item.operation);
             try {
@@ -267,21 +270,25 @@
                     });
                     localStorage.setItem('nd_sync_retry_queue', JSON.stringify(currentQueue));
                     console.log(`[sync-queue] Successfully synced ${operations.length} pending ops for ${table}`);
+                    progressMade = true;
                 } else {
                     console.warn(`[sync-queue] Sync failed for ${table}:`, data.error);
                 }
             } catch (err) {
                 console.error(`[sync-queue] Network error syncing ${table} (offline/poor network):`, err);
+                networkErrorOccurred = true;
                 break; 
             }
         }
         
         isSyncingQueue = false;
 
-        let freshQueue = [];
-        try { freshQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]'); } catch(e){}
-        if (freshQueue.length > 0) {
-            processSyncQueue();
+        if (progressMade && !networkErrorOccurred) {
+            let freshQueue = [];
+            try { freshQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]'); } catch(e){}
+            if (freshQueue.length > 0) {
+                processSyncQueue();
+            }
         }
     }
 

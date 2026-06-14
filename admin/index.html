@@ -441,12 +441,12 @@
             if (productTab) {
                 const products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
                 
-                // Track unique product names that are out of stock
+                // Track unique product IDs that are out of stock
                 const uniqueOut = new Set();
                 products.forEach(p => {
                     if (!p.isDeleted && !(p.isHidden || p.cleared)) {
-                        if (window.checkProductOutOfStock(p.name)) {
-                            uniqueOut.add(p.name);
+                        if (window.checkProductOutOfStock(p.id)) {
+                            uniqueOut.add(p.id);
                         }
                     }
                 });

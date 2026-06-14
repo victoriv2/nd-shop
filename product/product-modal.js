@@ -63,7 +63,7 @@ function initProductModalLogic() {
                         variantType = v.variantType;
                     }
                 }
-                maxStock = window.getRemainingProductStock(currentProduct.name, variantType);
+                maxStock = window.getRemainingProductStock(currentProduct.id || currentProduct.name, variantType);
             }
             
             if (currentQuantity < maxStock) {
@@ -180,7 +180,7 @@ function initProductModalLogic() {
                     variants.push({ title: 'Default', price: Number(product.price) || 0, flex: false, unit: product.unit || 'per unit', cost: baseCost, variantType: null });
                     if (product.wholesalePrice && Number(product.wholesalePrice) > 0) {
                         const bulkUnitStr = product.bulkUnit || 'Carton';
-                        const wholesaleRemaining = window.getRemainingProductStock ? window.getRemainingProductStock(product.name, 'wholesale') : Infinity;
+                        const wholesaleRemaining = window.getRemainingProductStock ? window.getRemainingProductStock(product.id || product.name, 'wholesale') : Infinity;
                         if (wholesaleRemaining > 0) {
                             variants.push({ title: bulkUnitStr, price: Number(product.wholesalePrice), flex: false, unit: 'per ' + bulkUnitStr.toLowerCase(), cost: baseCost * (product.pieces || 1), variantType: 'wholesale' });
                         }
@@ -319,7 +319,7 @@ function initProductModalLogic() {
                     let allZero = true;
 
                     for (const altV of currentVariants) {
-                        const maxStock = window.getRemainingProductStock(currentProduct.name, altV.variantType);
+                        const maxStock = window.getRemainingProductStock(currentProduct.id || currentProduct.name, altV.variantType);
                         
                         if (maxStock === Infinity) {
                             hasInfinity = true;
@@ -349,7 +349,7 @@ function initProductModalLogic() {
             function renderVariantsList(selectedIdx = 0) {
                 if (pmVariantsContainer) {
                     pmVariantsContainer.innerHTML = currentVariants.map((v, i) => {
-                        const stock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.name, v.variantType) : Infinity;
+                        const stock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.id || currentProduct.name, v.variantType) : Infinity;
                         const isDisabled = stock <= 0;
                         const labelStyle = isDisabled 
                             ? 'display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; background:#f1f5f9; transition:all 0.2s; opacity:0.5; pointer-events:none;'
@@ -370,7 +370,7 @@ function initProductModalLogic() {
                     const labels = pmVariantsContainer.querySelectorAll('.pm-variant-label');
                     labels.forEach((label, i) => {
                         label.addEventListener('click', function() {
-                            const stock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.name, currentVariants[i].variantType) : Infinity;
+                            const stock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.id || currentProduct.name, currentVariants[i].variantType) : Infinity;
                             if (stock <= 0) return; // locked out
                             
                             const radio = this.querySelector('input[type="radio"]');
@@ -408,7 +408,7 @@ function initProductModalLogic() {
                     
                     if (labels.length > 0) {
                         labels.forEach((l, idx) => {
-                            const lStock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.name, currentVariants[idx].variantType) : Infinity;
+                            const lStock = typeof window.getRemainingProductStock === 'function' ? window.getRemainingProductStock(currentProduct.id || currentProduct.name, currentVariants[idx].variantType) : Infinity;
                             if (lStock <= 0) {
                                 l.style.borderColor = '#e2e8f0';
                                 l.style.borderWidth = '1px';
@@ -436,7 +436,7 @@ function initProductModalLogic() {
             let defaultIdx = 0;
             if (typeof window.getRemainingProductStock === 'function') {
                 for (let i = 0; i < variants.length; i++) {
-                    const s = window.getRemainingProductStock(product.name, variants[i].variantType);
+                    const s = window.getRemainingProductStock(product.id || product.name, variants[i].variantType);
                     if (s > 0) {
                         defaultIdx = i;
                         break;
@@ -574,12 +574,12 @@ function initProductModalLogic() {
 
         // --- NEW PRE-CHECK LOGIC ---
         if (typeof window.getRemainingProductStock === 'function' && !isCustomMode && currentProduct && activeVariant) {
-            const maxStock = window.getRemainingProductStock(currentProduct.name, activeVariant.variantType);
+            const maxStock = window.getRemainingProductStock(currentProduct.id || currentProduct.name, activeVariant.variantType);
             
             const cart = JSON.parse(localStorage.getItem('nd_cart') || '[]');
             let currentQtyInCart = 0;
             cart.forEach(item => {
-                if (item.name === name) {
+                if (item.productId === currentProduct.id || item.name === name) {
                     currentQtyInCart += parseFloat(item.qty) || 0;
                 }
             });
@@ -589,7 +589,7 @@ function initProductModalLogic() {
                 let alternatives = [];
                 currentVariants.forEach(v => {
                     if (v !== activeVariant) {
-                        const s = window.getRemainingProductStock(currentProduct.name, v.variantType);
+                        const s = window.getRemainingProductStock(currentProduct.id || currentProduct.name, v.variantType);
                         if (s > 0 && s !== Infinity) {
                             alternatives.push(`• <strong>${v.title}</strong> (${s} available)`);
                         } else if (s === Infinity) {
@@ -669,7 +669,7 @@ function initProductModalLogic() {
 
         // Add to Cart instead of direct Request
         if (typeof window.addToCart === 'function') {
-            const success = window.addToCart(name, currentQuantity, unit, effectiveUnitPrice, isCustomMode, undefined, undefined, currentImageData, isFlex, baseCostValue);
+            const success = window.addToCart(name, currentQuantity, unit, effectiveUnitPrice, isCustomMode, undefined, undefined, currentImageData, isFlex, baseCostValue, currentProduct?.id || '');
             if (success === false) {
                 btn.textContent = originalText;
                 btn.classList.remove('pending');
@@ -750,7 +750,7 @@ function initProductModalLogic() {
                             newVariants.push({ title: 'Default', price: Number(latest.price) || 0, flex: false, unit: latest.unit || 'per unit', cost: baseCost, variantType: null });
                             if (latest.wholesalePrice && Number(latest.wholesalePrice) > 0) {
                                 const bulkUnitStr = latest.bulkUnit || 'Carton';
-                                const wholesaleRemaining = window.getRemainingProductStock ? window.getRemainingProductStock(latest.name, 'wholesale') : Infinity;
+                                const wholesaleRemaining = window.getRemainingProductStock ? window.getRemainingProductStock(latest.id || latest.name, 'wholesale') : Infinity;
                                 if (wholesaleRemaining > 0) {
                                     newVariants.push({ title: bulkUnitStr, price: Number(latest.wholesalePrice), flex: false, unit: 'per ' + bulkUnitStr.toLowerCase(), cost: baseCost * (latest.pieces || 1), variantType: 'wholesale' });
                                 }

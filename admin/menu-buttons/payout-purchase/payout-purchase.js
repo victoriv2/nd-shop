@@ -279,7 +279,10 @@ function _initPayoutPurchaseLogic(modal) {
                     optionsContainer.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('active'));
                     option.classList.add('active');
                     if (ppItemDropdownTrigger) ppItemDropdownTrigger.querySelector('.trigger-text').textContent = item.name;
-                    if (ppHiddenItemInput) ppHiddenItemInput.value = item.name;
+                    if (ppHiddenItemInput) {
+                        ppHiddenItemInput.value = item.name;
+                        ppHiddenItemInput.dataset.id = item.id;
+                    }
 
                     const ppDefaultVariantContainer = modal.querySelector('#ppDefaultVariantContainer');
                     const hasWholesale = item.wholesalePrice && Number(item.wholesalePrice) > 0;
@@ -318,7 +321,7 @@ function _initPayoutPurchaseLogic(modal) {
                             const radio = modal.querySelector(`input[name="ppDefaultVariant"][value="${v.val}"]`);
                             const label = radio ? radio.closest('label') : null;
                             if (radio && label) {
-                                const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                                const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.id, v.val) : Infinity;
                                 if (stock <= 0) {
                                     radio.disabled = true;
                                     label.style.opacity = '0.5';
@@ -430,7 +433,10 @@ function _initPayoutPurchaseLogic(modal) {
                     optionsContainer.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('active'));
                     option.classList.add('active');
                     if (ppSpecDropdownTrigger) ppSpecDropdownTrigger.querySelector('.trigger-text').textContent = item.name;
-                    if (ppSpecItemSelect) ppSpecItemSelect.value = item.name;
+                    if (ppSpecItemSelect) {
+                        ppSpecItemSelect.value = item.name;
+                        ppSpecItemSelect.dataset.id = item.id;
+                    }
 
                     // Show variant selector and fill prices and custom titles
                     if (ppSpecVariantContainer) ppSpecVariantContainer.style.display = 'block';
@@ -461,7 +467,7 @@ function _initPayoutPurchaseLogic(modal) {
                         const radio = modal.querySelector(`input[name="ppSpecVariant"][value="${v.val}"]`);
                         const label = radio ? radio.closest('label') : null;
                         if (radio && label) {
-                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.id, v.val) : Infinity;
                             if (stock <= 0) {
                                 radio.disabled = true;
                                 label.style.opacity = '0.5';
@@ -543,7 +549,10 @@ function _initPayoutPurchaseLogic(modal) {
                     optionsContainer.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('active'));
                     option.classList.add('active');
                     if (ppCustomDropdownTrigger) ppCustomDropdownTrigger.querySelector('.trigger-text').textContent = item.name;
-                    if (ppCustomItemSelect) ppCustomItemSelect.value = item.name;
+                    if (ppCustomItemSelect) {
+                        ppCustomItemSelect.value = item.name;
+                        ppCustomItemSelect.dataset.id = item.id;
+                    }
                     
                     // Auto-fill price from the product's retail price
                     const unitStr = item.unit ? item.unit : '';
@@ -617,7 +626,10 @@ function _initPayoutPurchaseLogic(modal) {
                     optionsContainer.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('active'));
                     option.classList.add('active');
                     if (ppFlexDropdownTrigger) ppFlexDropdownTrigger.querySelector('.trigger-text').textContent = item.name;
-                    if (ppFlexItemSelect) ppFlexItemSelect.value = item.name;
+                    if (ppFlexItemSelect) {
+                        ppFlexItemSelect.value = item.name;
+                        ppFlexItemSelect.dataset.id = item.id;
+                    }
                     
                     if (ppFlexVariantContainer) ppFlexVariantContainer.style.display = 'block';
                     const pt = item.packTypes || {};
@@ -647,7 +659,7 @@ function _initPayoutPurchaseLogic(modal) {
                         const radio = modal.querySelector(`input[name="ppFlexVariant"][value="${v.val}"]`);
                         const label = radio ? radio.closest('label') : null;
                         if (radio && label) {
-                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.id, v.val) : Infinity;
                             if (stock <= 0) {
                                 radio.disabled = true;
                                 label.style.opacity = '0.5';
@@ -762,10 +774,11 @@ function _initPayoutPurchaseLogic(modal) {
     if (ppExistingItemForm) ppExistingItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = ppHiddenItemInput.value;
+        const productId = ppHiddenItemInput.dataset.id || '';
         let price = ppExistingPrice.dataset.price;
         const qty = modal.querySelector('#ppExistingItemQty').value;
         
-        const prod = defaultInventory.find(p => p.name === itemName);
+        const prod = productId ? defaultInventory.find(p => p.id === productId) : defaultInventory.find(p => p.name === itemName);
         const unit = prod ? prod.unit : '';
 
         if (itemName && price && qty) {
@@ -793,7 +806,7 @@ function _initPayoutPurchaseLogic(modal) {
                 }
             }
 
-            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName, variantParam) : Infinity;
+            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName, variantParam) : Infinity;
             if (requiredQty > remaining) {
                 const unitLabel = isWholesale ? (prod.bulkUnit || 'Carton') : (unit ? unit.replace(/^per\s+/i, '') : 'items');
                 if (typeof customAlert === 'function') {
@@ -803,7 +816,7 @@ function _initPayoutPurchaseLogic(modal) {
                 }
                 return;
             }
-            const prodLookup = defaultInventory.find(p => p.name === itemName);
+            const prodLookup = productId ? defaultInventory.find(p => p.id === productId) : defaultInventory.find(p => p.name === itemName);
             let isFlexPrice = false;
             const existingToggle = modal.querySelector('#ppExistingFlexToggle');
 
@@ -832,7 +845,7 @@ function _initPayoutPurchaseLogic(modal) {
                 isFlexPrice = true;
             }
 
-            _addToPPBasket(finalName, qty, price, finalUnit, isFlexPrice);
+            _addToPPBasket(finalName, qty, price, finalUnit, isFlexPrice, productId || prod?.id || '');
 
             // Reset Form
             ppHiddenItemInput.value = '';
@@ -856,6 +869,7 @@ function _initPayoutPurchaseLogic(modal) {
     if (ppSpecialItemForm) ppSpecialItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = ppSpecItemSelect.value;
+        const productId = ppSpecItemSelect.dataset.id || '';
         const qty = modal.querySelector('#ppSpecItemQty').value;
         
         const specToggle = modal.querySelector('#ppSpecFlexToggle');
@@ -881,7 +895,7 @@ function _initPayoutPurchaseLogic(modal) {
             const labelTxtId = 'ppSpecVariant' + variantKeyCapitalized + 'LabelTxt';
             const titleStr = modal.querySelector('#' + labelTxtId) ? modal.querySelector('#' + labelTxtId).textContent.trim() : variantKeyCapitalized;
             
-            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName, variantKey) : Infinity;
+            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName, variantKey) : Infinity;
             if (requiredQty > remaining) {
                 if (typeof customAlert === 'function') {
                     customAlert(`Cannot add to basket. Only ${remaining} ${titleStr}(s) remaining in stock.`);
@@ -894,7 +908,7 @@ function _initPayoutPurchaseLogic(modal) {
             let price = modal.querySelector('#' + variantId).dataset.price;
             const finalName = `${itemName} (${titleStr})`;
             let isFlexPrice = false;
-            const prodLookup = specialInventory.find(p => p.name === itemName);
+            const prodLookup = productId ? specialInventory.find(p => p.id === productId) : specialInventory.find(p => p.name === itemName);
             const specToggle = modal.querySelector('#ppSpecFlexToggle');
 
             let isVariantAllowed = false;
@@ -921,7 +935,7 @@ function _initPayoutPurchaseLogic(modal) {
                 isFlexPrice = true;
             }
 
-            _addToPPBasket(finalName, qty, price, titleStr, isFlexPrice);
+            _addToPPBasket(finalName, qty, price, titleStr, isFlexPrice, productId || prodLookup?.id || '');
 
             // Reset Form
             ppSpecItemSelect.value = '';
@@ -944,11 +958,12 @@ function _initPayoutPurchaseLogic(modal) {
     if (ppCustomItemForm) ppCustomItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = ppCustomItemSelect.value;
+        const productId = ppCustomItemSelect.dataset.id || '';
         const ppFlexToggle = modal.querySelector('#ppCustomFlexToggle');
         const ppCustomFlexInput = modal.querySelector('#ppCustomFlexPrice');
         let price;
         let isFlexPrice = false;
-        const prod = customInventory.find(p => p.name === itemName);
+        const prod = productId ? customInventory.find(p => p.id === productId) : customInventory.find(p => p.name === itemName);
         if (prod && prod.allowUserFlexiblePricing && ppFlexToggle && ppFlexToggle.checked && ppCustomFlexInput) {
             const fPrice = ppCustomFlexInput.value;
             if (!fPrice) {
@@ -964,7 +979,7 @@ function _initPayoutPurchaseLogic(modal) {
         if (itemName && price && qty) {
             const requiredQty = parseFloat(qty);
             const unit = prod ? prod.unit : '';
-            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName) : Infinity;
+            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName) : Infinity;
             
             if (requiredQty > remaining) {
                 if (typeof customAlert === 'function') {
@@ -975,7 +990,7 @@ function _initPayoutPurchaseLogic(modal) {
                 return;
             }
 
-            _addToPPBasket(`${itemName}`, requiredQty, Number(price), unit, isFlexPrice);
+            _addToPPBasket(`${itemName}`, requiredQty, Number(price), unit, isFlexPrice, productId || prod?.id || '');
 
             // Reset Form
             ppCustomItemSelect.value = '';
@@ -990,6 +1005,7 @@ function _initPayoutPurchaseLogic(modal) {
     if (ppFlexItemForm) ppFlexItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = ppFlexItemSelect.value;
+        const productId = ppFlexItemSelect.dataset.id || '';
         
         const flexToggle = modal.querySelector('#ppFlexFlexToggle');
         const isFlexiblePrice = flexToggle && flexToggle.checked;
@@ -1009,13 +1025,13 @@ function _initPayoutPurchaseLogic(modal) {
         if (itemName && qty && checkedVariant) {
             const variantKey = checkedVariant.value; // c1, c2, c3
             const requiredQty = parseFloat(qty);
-            const prod = flexInventory.find(p => p.name === itemName);
+            const prod = productId ? flexInventory.find(p => p.id === productId) : flexInventory.find(p => p.name === itemName);
             const pt = prod ? (prod.packTypes || {}) : {};
             
             const variantKeyCapitalized = variantKey.toUpperCase(); // C1, C2, C3
             const titleStr = (pt[variantKey] || {}).title || `Container ${variantKey.charAt(1)}`;
             
-            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName, variantKey) : Infinity;
+            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName, variantKey) : Infinity;
             
             if (requiredQty > remaining) {
                 if (typeof customAlert === 'function') {
@@ -1053,7 +1069,7 @@ function _initPayoutPurchaseLogic(modal) {
                 alert("Please enter a retail unit price.");
                 return;
             }
-            _addToPPBasket(`${itemName} (${titleStr})`, requiredQty, Number(price), titleStr, true);
+            _addToPPBasket(`${itemName} (${titleStr})`, requiredQty, Number(price), titleStr, true, productId || prod?.id || '');
 
             // Reset Form
             ppFlexItemSelect.value = '';
@@ -1128,13 +1144,14 @@ function _verifyPPUser(searchTerm) {
     }
 }
 
-function _addToPPBasket(name, qty, price, unit = '', isFlexible = false) {
+function _addToPPBasket(name, qty, price, unit = '', isFlexible = false, productId = '') {
     ppBasketItems.push({
         name: name,
         qty: Number(qty),
         price: Number(price),
         unit: unit,
-        isFlexible: isFlexible
+        isFlexible: isFlexible,
+        productId: productId
     });
     _updatePPBasketUI();
 }
@@ -1265,7 +1282,8 @@ function _submitPayoutPurchase() {
             isRewardPurchase: true,
             type: 'Payout Purchase',
             unit: item.unit || '',
-            isFlexible: item.isFlexible || false
+            isFlexible: item.isFlexible || false,
+            productId: item.productId || ''
         };
 
         sales.unshift(newSale);

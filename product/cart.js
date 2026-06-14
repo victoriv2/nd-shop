@@ -193,7 +193,7 @@ function updateCartItemQty(index, delta) {
                 else if (unitStr.toLowerCase().includes('container 1') || unitStr.toLowerCase().includes('c1')) variantType = 'c1';
                 else if (unitStr.toLowerCase().includes('container 2') || unitStr.toLowerCase().includes('c2') || unitStr.toLowerCase().includes('custard')) variantType = 'c2';
                 else if (unitStr.toLowerCase().includes('container 3') || unitStr.toLowerCase().includes('c3') || unitStr.toLowerCase().includes('cup')) variantType = 'c3';
-                maxStock = window.getRemainingProductStock(cart[index].name, variantType);
+                maxStock = window.getRemainingProductStock(cart[index].productId || cart[index].name, variantType);
             }
             if (cart[index].qty + delta > maxStock) {
                 if (typeof window.showCustomAlert === 'function') {
@@ -248,7 +248,7 @@ function removeCartItem(index) {
 }
 
 // Global hook for product-modal to call when adding to cart
-window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specificPayoutRate, specificPayoutType, imageData, isFlexible, unitCost) {
+window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specificPayoutRate, specificPayoutType, imageData, isFlexible, unitCost, productId) {
     // --- NEW STRICT SECURITY VALIDATION FOR FLEXIBLE PRICING ---
     if (isFlexible) {
         try {
@@ -284,7 +284,7 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             else if (unit.toLowerCase().includes('container 2') || unit.toLowerCase().includes('c2') || unit.toLowerCase().includes('custard')) variantType = 'c2';
             else if (unit.toLowerCase().includes('container 3') || unit.toLowerCase().includes('c3') || unit.toLowerCase().includes('cup')) variantType = 'c3';
         }
-        maxStock = window.getRemainingProductStock(productName, variantType);
+        maxStock = window.getRemainingProductStock(productId || productName, variantType);
     }
 
     let currentQtyInCart = 0;
@@ -362,7 +362,8 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             customPayoutRate: specificPayoutRate,
             customPayoutType: specificPayoutType,
             imageData: undefined,
-            unitCost: unitCost || 0
+            unitCost: unitCost || 0,
+            productId: productId || ''
         });
     }
     

@@ -537,7 +537,7 @@ function initSalesTable() {
                             const radio = document.querySelector(`input[name="defaultVariant"][value="${v.val}"]`);
                             const label = radio ? radio.closest('label') : null;
                             if (radio && label) {
-                                const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                                const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.id || item.name, v.val) : Infinity;
                                 if (stock <= 0) {
                                     radio.disabled = true;
                                     label.style.opacity = '0.5';
@@ -676,7 +676,7 @@ function initSalesTable() {
                         const radio = document.querySelector(`input[name="specVariant"][value="${v.val}"]`);
                         const label = radio ? radio.closest('label') : null;
                         if (radio && label) {
-                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.id || item.name, v.val) : Infinity;
                             if (stock <= 0) {
                                 radio.disabled = true;
                                 label.style.opacity = '0.5';
@@ -880,7 +880,7 @@ function initSalesTable() {
                         const radio = document.querySelector(`input[name="flexVariant"][value="${v.val}"]`);
                         const label = radio ? radio.closest('label') : null;
                         if (radio && label) {
-                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.id || item.name, v.val) : Infinity;
                             if (stock <= 0) {
                                 radio.disabled = true;
                                 label.style.opacity = '0.5';
@@ -1155,13 +1155,14 @@ function initSalesTable() {
             basketSubtotal.textContent = '₦' + formatCurrency(total);
         }
 
-        function addToBasket(name, qty, price, unit = '', isFlexible = false) {
+        function addToBasket(name, qty, price, unit = '', isFlexible = false, productId = '') {
             basketItems.push({
                 name: name,
                 qty: Number(qty),
                 price: Number(price),
                 unit: unit,
-                isFlexible: isFlexible
+                isFlexible: isFlexible,
+                productId: productId
             });
             updateBasketUI();
 
@@ -1288,13 +1289,13 @@ function initSalesTable() {
                     }
                 }
                 
-                const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName, variantParam) : Infinity;
+                const remaining = window.getRemainingProductStock ? window.getRemainingProductStock((prod ? prod.id : '') || itemName, variantParam) : Infinity;
                 if (requiredQty > remaining) {
                     const unitLabel = isWholesale ? (prod.bulkUnit || 'Carton') : (unit ? unit.replace(/^per\s+/i, '') : 'items');
                     customAlert(`Cannot add to basket. Only ${remaining} ${unitLabel}(s) remaining in stock.`);
                     return;
                 }
-                addToBasket(finalName, qty, price, finalUnit);
+                addToBasket(finalName, qty, price, finalUnit, false, prod ? prod.id : '');
             }
         });
         
@@ -1325,7 +1326,7 @@ function initSalesTable() {
                 const labelTxtId = 'specVariant' + variantKeyCapitalized + 'LabelTxt';
                 const titleStr = document.getElementById(labelTxtId) ? document.getElementById(labelTxtId).textContent.trim() : variantKeyCapitalized;
                 
-                const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName, variantKey) : Infinity;
+                const remaining = window.getRemainingProductStock ? window.getRemainingProductStock((selectedProduct ? selectedProduct.id : '') || itemName, variantKey) : Infinity;
                 if (requiredQty > remaining) {
                     customAlert(`Cannot add to basket. Only ${remaining} ${titleStr}(s) remaining in stock.`);
                     return;
@@ -1361,7 +1362,7 @@ function initSalesTable() {
                 
                 const finalName = `${itemName} (${titleStr})`;
                 // Pass isFlexiblePrice to treat the custom price correctly in calculations
-                addToBasket(finalName, qty, price, titleStr, isFlexiblePrice);
+                addToBasket(finalName, qty, price, titleStr, isFlexiblePrice, selectedProduct ? selectedProduct.id : '');
             } else if (!checkedVariant) {
                 alert("Please select a variant type.");
             }
@@ -1385,14 +1386,14 @@ function initSalesTable() {
                 const requiredQty = parseFloat(qty);
                 const prod = customInventory.find(p => p.name === itemName);
                 const unit = prod ? prod.unit : '';
-                const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName) : Infinity;
+                const remaining = window.getRemainingProductStock ? window.getRemainingProductStock((prod ? prod.id : '') || itemName) : Infinity;
                 
                 if (requiredQty > remaining) {
                     customAlert(`Cannot add to basket. Only ${remaining} ${unit ? unit.replace(/^per\s+/i, '') : 'items'} remaining in stock.`);
                     return;
                 }
 
-                addToBasket(`${itemName}`, requiredQty, Number(price), unit);
+                addToBasket(`${itemName}`, requiredQty, Number(price), unit, false, prod ? prod.id : '');
             }
         });
 
@@ -1411,7 +1412,7 @@ function initSalesTable() {
                 const variantKeyCapitalized = variantKey.toUpperCase(); // C1, C2, C3
                 const titleStr = (pt[variantKey] || {}).title || `Container ${variantKey.charAt(1)}`;
                 
-                const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName, variantKey) : Infinity;
+                const remaining = window.getRemainingProductStock ? window.getRemainingProductStock((prod ? prod.id : '') || itemName, variantKey) : Infinity;
                 
                 if (requiredQty > remaining) {
                     customAlert(`Cannot add to basket. Only ${remaining} items remaining in stock.`);
@@ -1423,7 +1424,7 @@ function initSalesTable() {
                     alert("Please enter a retail unit price.");
                     return;
                 }
-                addToBasket(`${itemName} (${titleStr})`, requiredQty, Number(price), titleStr, true);
+                addToBasket(`${itemName} (${titleStr})`, requiredQty, Number(price), titleStr, true, prod ? prod.id : '');
             } else if (!checkedVariant) {
                 alert("Please select a variant type.");
             }
@@ -1445,7 +1446,8 @@ function initSalesTable() {
                     unitPrice: Number(item.price || 0),
                     price: (Number(item.qty || 1) * Number(item.price || 0)),
                     unit: item.unit,
-                    isFlexible: item.isFlexible || false
+                    isFlexible: item.isFlexible || false,
+                    productId: item.productId || ''
                 };
                 sampleData.unshift(newSale);
             });

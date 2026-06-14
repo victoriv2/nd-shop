@@ -1247,7 +1247,10 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                     optionsContainer.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('active'));
                     option.classList.add('active');
                     if (urpItemDropdownTrigger) urpItemDropdownTrigger.querySelector('.trigger-text').textContent = item.name;
-                    if (urpHiddenItemInput) urpHiddenItemInput.value = item.name;
+                    if (urpHiddenItemInput) {
+                        urpHiddenItemInput.value = item.name;
+                        urpHiddenItemInput.dataset.id = item.id;
+                    }
 
                     const urpDefaultVariantContainer = modal.querySelector('#urpDefaultVariantContainer');
                     const hasWholesale = item.wholesalePrice && Number(item.wholesalePrice) > 0;
@@ -1286,7 +1289,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                             const radio = modal.querySelector(`input[name="urpDefaultVariant"][value="${v.val}"]`);
                             const label = radio ? radio.closest('label') : null;
                             if (radio && label) {
-                                const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                                const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.id, v.val) : Infinity;
                                 if (stock <= 0) {
                                     radio.disabled = true;
                                     label.style.opacity = '0.5';
@@ -1377,7 +1380,10 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                     optionsContainer.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('active'));
                     option.classList.add('active');
                     if (urpSpecDropdownTrigger) urpSpecDropdownTrigger.querySelector('.trigger-text').textContent = item.name;
-                    if (urpSpecItemSelect) urpSpecItemSelect.value = item.name;
+                    if (urpSpecItemSelect) {
+                        urpSpecItemSelect.value = item.name;
+                        urpSpecItemSelect.dataset.id = item.id;
+                    }
 
                     if (urpSpecVariantContainer) urpSpecVariantContainer.style.display = 'block';
                     const pt = item.packTypes || {};
@@ -1405,7 +1411,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                         const radio = modal.querySelector(`input[name="urpSpecVariant"][value="${v.val}"]`);
                         const label = radio ? radio.closest('label') : null;
                         if (radio && label) {
-                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.id, v.val) : Infinity;
                             if (stock <= 0) {
                                 radio.disabled = true;
                                 label.style.opacity = '0.5';
@@ -1483,7 +1489,10 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                     optionsContainer.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('active'));
                     option.classList.add('active');
                     if (urpCustomDropdownTrigger) urpCustomDropdownTrigger.querySelector('.trigger-text').textContent = item.name;
-                    if (urpCustomItemSelect) urpCustomItemSelect.value = item.name;
+                    if (urpCustomItemSelect) {
+                        urpCustomItemSelect.value = item.name;
+                        urpCustomItemSelect.dataset.id = item.id;
+                    }
                     
                     const unitStr = item.unit ? item.unit : '';
                     if (urpCustomItemPrice) {
@@ -1544,7 +1553,10 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                     optionsContainer.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('active'));
                     option.classList.add('active');
                     if (urpFlexDropdownTrigger) urpFlexDropdownTrigger.querySelector('.trigger-text').textContent = item.name;
-                    if (urpFlexItemSelect) urpFlexItemSelect.value = item.name;
+                    if (urpFlexItemSelect) {
+                        urpFlexItemSelect.value = item.name;
+                        urpFlexItemSelect.dataset.id = item.id;
+                    }
                     
                     if (urpFlexVariantContainer) urpFlexVariantContainer.style.display = 'block';
                     const pt = item.packTypes || {};
@@ -1572,7 +1584,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                         const radio = modal.querySelector(`input[name="urpFlexVariant"][value="${v.val}"]`);
                         const label = radio ? radio.closest('label') : null;
                         if (radio && label) {
-                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.name, v.val) : Infinity;
+                            const stock = window.getRemainingProductStock ? window.getRemainingProductStock(item.id, v.val) : Infinity;
                             if (stock <= 0) {
                                 radio.disabled = true;
                                 label.style.opacity = '0.5';
@@ -1680,13 +1692,14 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
         });
     }
 
-    function _addToURPBasket(name, qty, price, unit = '', isFlexible = false) {
+    function _addToURPBasket(name, qty, price, unit = '', isFlexible = false, productId = '') {
         urpBasketItems.push({
             name: name,
             qty: Number(qty),
             price: Number(price),
             unit: unit,
-            isFlexible: isFlexible
+            isFlexible: isFlexible,
+            productId: productId
         });
         _updateURPBasketUI(spendableRewardBalance);
     }
@@ -1695,9 +1708,10 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
     if (urpExistingItemForm) urpExistingItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = urpHiddenItemInput.value;
+        const productId = urpHiddenItemInput.dataset.id || '';
         let price = urpExistingPrice.dataset.price;
         const existingToggle = modal.querySelector('#urpExistingFlexToggle');
-        const prodLookup = defaultInventory.find(p => p.name === itemName);
+        const prodLookup = productId ? defaultInventory.find(p => p.id === productId) : defaultInventory.find(p => p.name === itemName);
         let isFlexPrice = false;
 
         let isVariantAllowed = false;
@@ -1723,7 +1737,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
         }
         const qty = modal.querySelector('#urpExistingItemQty').value;
         
-        const prod = defaultInventory.find(p => p.name === itemName);
+        const prod = productId ? defaultInventory.find(p => p.id === productId) : defaultInventory.find(p => p.name === itemName);
         const unit = prod ? prod.unit : '';
 
         if (itemName && price && qty) {
@@ -1751,7 +1765,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 }
             }
 
-            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName, variantParam) : Infinity;
+            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName, variantParam) : Infinity;
             if (requiredQty > remaining) {
                 const unitLabel = isWholesale ? (prod.bulkUnit || 'Carton') : (unit ? unit.replace(/^per\s+/i, '') : 'items');
                 if (typeof customAlert === 'function') {
@@ -1761,7 +1775,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 }
                 return;
             }
-            _addToURPBasket(finalName, qty, price, finalUnit, isFlexPrice);
+            _addToURPBasket(finalName, qty, price, finalUnit, isFlexPrice, productId || prod?.id || '');
 
             // Reset
             urpHiddenItemInput.value = '';
@@ -1785,6 +1799,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
     if (urpSpecialItemForm) urpSpecialItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = urpSpecItemSelect.value;
+        const productId = urpSpecItemSelect.dataset.id || '';
         const qty = modal.querySelector('#urpSpecItemQty').value;
         
         const specToggle = modal.querySelector('#urpSpecFlexToggle');
@@ -1809,7 +1824,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
             const labelTxtId = 'urpSpecVariant' + variantKeyCapitalized + 'LabelTxt';
             const titleStr = modal.querySelector('#' + labelTxtId) ? modal.querySelector('#' + labelTxtId).textContent.trim() : variantKeyCapitalized;
             
-            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName, variantKey) : Infinity;
+            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName, variantKey) : Infinity;
             if (requiredQty > remaining) {
                 if (typeof customAlert === 'function') {
                     customAlert(`Cannot add to list. Only ${remaining} ${titleStr}(s) remaining in stock.`);
@@ -1823,7 +1838,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
             const finalName = `${itemName} (${titleStr})`;
             let isFlexPrice = false;
             
-            const prodLookup = specialInventory.find(p => p.name === itemName);
+            const prodLookup = productId ? specialInventory.find(p => p.id === productId) : specialInventory.find(p => p.name === itemName);
             const specToggle = modal.querySelector('#urpSpecFlexToggle');
 
             let isVariantAllowed = false;
@@ -1850,7 +1865,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 isFlexPrice = true;
             }
             
-            _addToURPBasket(finalName, qty, price, titleStr, isFlexPrice);
+            _addToURPBasket(finalName, qty, price, titleStr, isFlexPrice, productId || prodLookup?.id || '');
 
             // Reset
             urpSpecItemSelect.value = '';
@@ -1877,13 +1892,14 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
     if (urpCustomItemForm) urpCustomItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = urpCustomItemSelect.value;
+        const productId = urpCustomItemSelect.dataset.id || '';
         let price = urpCustomItemPrice ? urpCustomItemPrice.dataset.price : '';
         const qty = modal.querySelector('#urpCustomItemQty').value;
         if (itemName && price && qty) {
             const requiredQty = parseFloat(qty);
-            const prod = customInventory.find(p => p.name === itemName);
+            const prod = productId ? customInventory.find(p => p.id === productId) : customInventory.find(p => p.name === itemName);
             const unit = prod ? prod.unit : '';
-            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName) : Infinity;
+            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName) : Infinity;
             
             if (requiredQty > remaining) {
                 if (typeof customAlert === 'function') {
@@ -1906,7 +1922,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 isFlexPrice = true;
             }
 
-            _addToURPBasket(itemName, requiredQty, Number(price), unit, isFlexPrice);
+            _addToURPBasket(itemName, requiredQty, Number(price), unit, isFlexPrice, productId || prod?.id || '');
 
             // Reset
             urpCustomItemSelect.value = '';
@@ -1925,6 +1941,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
     if (urpFlexibleItemForm) urpFlexibleItemForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const itemName = urpFlexItemSelect.value;
+        const productId = urpFlexItemSelect.dataset.id || '';
         
         const flexToggle = modal.querySelector('#urpFlexFlexToggle');
         const isFlexiblePrice = flexToggle && flexToggle.checked;
@@ -1944,11 +1961,11 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
         if (itemName && qty && checkedVariant) {
             const variantKey = checkedVariant.value;
             const requiredQty = parseFloat(qty);
-            const prod = flexInventory.find(p => p.name === itemName);
+            const prod = productId ? flexInventory.find(p => p.id === productId) : flexInventory.find(p => p.name === itemName);
             const pt = prod ? (prod.packTypes || {}) : {};
             const titleStr = (pt[variantKey] || {}).title || `Container ${variantKey.charAt(1)}`;
             
-            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(itemName, variantKey) : Infinity;
+            const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName, variantKey) : Infinity;
             if (requiredQty > remaining) {
                 if (typeof customAlert === 'function') {
                     customAlert(`Cannot add to list. Only ${remaining} items remaining in stock.`);
@@ -1985,7 +2002,7 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
                 alert("Please enter a retail unit price.");
                 return;
             }
-            _addToURPBasket(`${itemName} (${titleStr})`, requiredQty, Number(price), titleStr, true);
+            _addToURPBasket(`${itemName} (${titleStr})`, requiredQty, Number(price), titleStr, true, productId || prod?.id || '');
 
             // Reset
             urpFlexItemSelect.value = '';
@@ -2124,7 +2141,8 @@ function _submitURPRequest(spendableRewardBalance, user) {
             unit: item.unit || '',
             unitPrice: item.price,
             total: item.qty * item.price,
-            isFlexible: item.isFlexible || false
+            isFlexible: item.isFlexible || false,
+            productId: item.productId || ''
         }))
     };
 

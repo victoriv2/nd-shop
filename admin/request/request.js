@@ -719,16 +719,22 @@ function checkOrderStockIssues(request) {
 
     if (request.isGroupedOrder && request.items) {
         request.items.forEach(item => {
+            const variantType = (typeof window.getVariantTypeFromUnit === 'function')
+                ? window.getVariantTypeFromUnit(item.unit)
+                : null;
             const remaining = (typeof window.getRemainingProductStock === 'function')
-                ? window.getRemainingProductStock(item.name, null, request.id)
+                ? window.getRemainingProductStock(item.productId || item.name, variantType, request.id)
                 : null;
             if (remaining !== null && remaining < parseFloat(item.qty)) {
                 issues.push({ name: item.name, ordered: item.qty, remaining: remaining, unit: item.unit || '' });
             }
         });
     } else if (request.product) {
+        const variantType = (typeof window.getVariantTypeFromUnit === 'function')
+            ? window.getVariantTypeFromUnit(request.product.unit)
+            : null;
         const remaining = (typeof window.getRemainingProductStock === 'function')
-            ? window.getRemainingProductStock(request.product.name, null, request.id)
+            ? window.getRemainingProductStock(request.product.productId || request.product.name, variantType, request.id)
             : null;
         if (remaining !== null && remaining < parseFloat(request.product.qty)) {
             issues.push({ name: request.product.name, ordered: request.product.qty, remaining: remaining, unit: request.product.unit || '' });
@@ -833,7 +839,7 @@ function recordSaleFromRequest(req) {
     let hours = now.getHours();
     const ampm = hours >= 12 ? 'pm' : 'am';
     hours = hours % 12 || 12;
-    const timeStr = `${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()} · ${hours}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`;
+    const timeStr = `${now.getDate()} ${months[now.getMonth()]} , ${now.getFullYear()} · ${hours}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`;
 
     let currentSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     let userBal = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(req.user.id) : 0;
@@ -857,7 +863,8 @@ function recordSaleFromRequest(req) {
                     isFlexible: item.isFlexible || false,
                     customerID: req.user.id,
                     customerName: req.user.name,
-                    type: 'Request'
+                    type: 'Request',
+                    productId: item.productId || ''
                 });
             });
         }
@@ -875,7 +882,8 @@ function recordSaleFromRequest(req) {
             isRewardPurchase: req.isRewardPurchase || false,
             customerID: req.user.id,
             customerName: req.user.name,
-            type: 'Request'
+            type: 'Request',
+            productId: req.product.productId || ''
         });
     }
 

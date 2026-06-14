@@ -600,14 +600,7 @@ function _pdCalculateStock(p) {
     try { sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]'); } catch (e) { }
     try { allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]'); } catch (e) { }
 
-    const activeMatches = allProducts.filter(item => item && !item.isDeleted && !item.cleared && item.name === p.name);
-    let oldestDateAdded = null;
-    activeMatches.forEach(item => {
-        if (item.dateAdded) {
-            const t = new Date(item.dateAdded).getTime();
-            if (!oldestDateAdded || t < oldestDateAdded) oldestDateAdded = t;
-        }
-    });
+    let oldestDateAdded = p.dateAdded ? new Date(p.dateAdded).getTime() : null;
     const filteredSales = oldestDateAdded ? sales.filter(sale => window.parseSaleDate(sale.date || sale.timestamp) >= oldestDateAdded) : sales;
 
     let html = '';
@@ -622,20 +615,26 @@ function _pdCalculateStock(p) {
         const cupT = (p.isFlexible && p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) ? p.packTypes.c3.title : ((p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || (p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) || 'Container 3');
 
         let totalBags = 0;
-        allProducts.forEach(item => { if (!item.isDeleted && item.name === p.name && (item.isSpecial || item.packTypes)) totalBags += (parseFloat(item.boughtQuantity) || 1); });
+        allProducts.forEach(item => { if (!item.isDeleted && item.id === p.id && (item.isSpecial || item.packTypes)) totalBags += (parseFloat(item.boughtQuantity) || 1); });
 
         let sBags = 0, sCus = 0, sCups = 0;
         filteredSales.forEach(sale => {
-            if (sale.item === p.name + ' (' + bagT + ')') sBags += parseFloat(sale.qty) || 0;
-            else if (sale.item === p.name + ' (' + cusT + ')') sCus += parseFloat(sale.qty) || 0;
-            else if (sale.item === p.name + ' (' + cupT + ')') sCups += parseFloat(sale.qty) || 0;
+            if (sale.item) {
+                const saleBaseName = sale.item.split(' (')[0].trim();
+                const isMatch = sale.productId ? sale.productId === p.id : (saleBaseName.toLowerCase() === p.name.toLowerCase());
+                if (isMatch) {
+                    if (sale.item === p.name + ' (' + bagT + ')') sBags += parseFloat(sale.qty) || 0;
+                    else if (sale.item === p.name + ' (' + cusT + ')') sCus += parseFloat(sale.qty) || 0;
+                    else if (sale.item === p.name + ' (' + cupT + ')') sCups += parseFloat(sale.qty) || 0;
+                }
+            }
         });
 
         const bought = totalBags * maxCPB;
         const sold = (sBags * maxCPB) + (sCus * cpc) + sCups;
         const rem = bought - sold;
         const isOut = rem <= 0;
-        const isLow = !isOut && window.checkProductRunningLow && window.checkProductRunningLow(p.name);
+        const isLow = !isOut && window.checkProductRunningLow && window.checkProductRunningLow(p.id);
         const rB = Math.floor(rem / maxCPB);
         const rC = Math.floor((rem % maxCPB) / cpc);
         const rU = rem % cpc;
@@ -659,7 +658,7 @@ function _pdCalculateStock(p) {
         const unit = (p.unit || 'piece').replace('per ', '');
 
         allProducts.forEach(item => { 
-            if (!item.isDeleted && item.name === p.name && !item.isSpecial) {
+            if (!item.isDeleted && item.id === p.id && !item.isSpecial) {
                 boughtPieces += (parseFloat(item.boughtQuantity) || 1) * ppb;
             }
         });
@@ -668,17 +667,22 @@ function _pdCalculateStock(p) {
         let soldWholesaleBulk = 0;
         
         filteredSales.forEach(sale => { 
-            if (sale.item === p.name) {
-                soldRetailPieces += parseFloat(sale.qty) || 0;
-            } else if (sale.item === `${p.name} (${bulk})`) {
-                soldWholesaleBulk += parseFloat(sale.qty) || 0;
+            if (sale.item) {
+                const isMatch = sale.productId ? sale.productId === p.id : (sale.item.trim().toLowerCase() === p.name.trim().toLowerCase() || sale.item.trim().toLowerCase() === `${p.name} (${bulk})`.toLowerCase());
+                if (isMatch) {
+                    if (sale.item === p.name) {
+                        soldRetailPieces += parseFloat(sale.qty) || 0;
+                    } else if (sale.item === `${p.name} (${bulk})`) {
+                        soldWholesaleBulk += parseFloat(sale.qty) || 0;
+                    }
+                }
             }
         });
 
         const totalSoldPieces = soldRetailPieces + (soldWholesaleBulk * ppb);
         const rem = boughtPieces - totalSoldPieces;
         const isOut = rem <= 0;
-        const isLow = !isOut && window.checkProductRunningLow && window.checkProductRunningLow(p.name);
+        const isLow = !isOut && window.checkProductRunningLow && window.checkProductRunningLow(p.id);
         
         const rB = Math.floor(rem / ppb);
         const rP = rem % ppb;

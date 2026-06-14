@@ -61,7 +61,7 @@ window.loadProductTab = function() {
                     let renderedHTML = '';
 
                     if (activeTab === 'all' || activeTab === 'custom') {
-                        const filtered = products.filter(p => p.isCustom && !p.cleared && !p.isDeleted && !p.isHidden && !window.checkProductOutOfStock(p.name) && p.name.toLowerCase().includes(filterText.toLowerCase()));
+                        const filtered = products.filter(p => p.isCustom && !p.cleared && !p.isDeleted && !p.isHidden && !window.checkProductOutOfStock(p.id) && p.name.toLowerCase().includes(filterText.toLowerCase()));
                         displayList.push(...filtered.map(p => ({
                             rawProduct: p,
                             name: p.name,
@@ -75,7 +75,7 @@ window.loadProductTab = function() {
                         })));
                     }
                     if (activeTab === 'all' || activeTab === 'default') {
-                        const filtered = products.filter(p => !p.isSpecial && !p.isCustom && !p.isFlexible && !p.cleared && !p.isDeleted && !p.isHidden && !window.checkProductOutOfStock(p.name) && p.name.toLowerCase().includes(filterText.toLowerCase()));
+                        const filtered = products.filter(p => !p.isSpecial && !p.isCustom && !p.isFlexible && !p.cleared && !p.isDeleted && !p.isHidden && !window.checkProductOutOfStock(p.id) && p.name.toLowerCase().includes(filterText.toLowerCase()));
                         filtered.forEach(p => {
                             displayList.push({
                                 rawProduct: p,
@@ -91,7 +91,7 @@ window.loadProductTab = function() {
                         });
                     }
                     if (activeTab === 'all' || activeTab === 'flexible') {
-                        const filtered = products.filter(p => p.isFlexible && !p.isSpecial && !p.cleared && !p.isDeleted && !p.isHidden && !window.checkProductOutOfStock(p.name) && p.name.toLowerCase().includes(filterText.toLowerCase()));
+                        const filtered = products.filter(p => p.isFlexible && !p.isSpecial && !p.cleared && !p.isDeleted && !p.isHidden && !window.checkProductOutOfStock(p.id) && p.name.toLowerCase().includes(filterText.toLowerCase()));
                         filtered.forEach(p => {
                             displayList.push({ 
                                 rawProduct: p,
@@ -107,7 +107,7 @@ window.loadProductTab = function() {
                         });
                     }
                     if (activeTab === 'all' || activeTab === 'special') {
-                        const filtered = products.filter(p => p.isSpecial && !p.cleared && !p.isDeleted && !p.isHidden && !window.checkProductOutOfStock(p.name) && p.name.toLowerCase().includes(filterText.toLowerCase()));
+                        const filtered = products.filter(p => p.isSpecial && !p.cleared && !p.isDeleted && !p.isHidden && !window.checkProductOutOfStock(p.id) && p.name.toLowerCase().includes(filterText.toLowerCase()));
                         filtered.forEach(p => {
                             displayList.push({ 
                                 rawProduct: p,
