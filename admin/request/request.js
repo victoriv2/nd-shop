@@ -23,7 +23,6 @@ function loadRequest() {
                     <button class="request-filter-btn" id="pendingFilterBtn" onclick="handleRequestFilter('Pending', this)">Pending</button>
                     <button class="request-filter-btn" id="approvedFilterBtn" onclick="handleRequestFilter('Approved', this)">Approved</button>
                     <button class="request-filter-btn" id="declinedFilterBtn" onclick="handleRequestFilter('Declined', this)">Declined</button>
-                    <button class="request-filter-btn" id="aiFilterBtn" onclick="handleRequestFilter('AI', this)">AI</button>
                 </div>
             </div>
 
@@ -66,17 +65,7 @@ function renderAdminRequests() {
             : `Pending`;
     }
 
-    const aiPendingCount = allRequests.filter(r => r.status === 'Pending' && r.source === 'AI').length;
-    const aiBtn = document.getElementById('aiFilterBtn');
-    if (aiBtn) {
-        aiBtn.innerHTML = aiPendingCount > 0 
-            ? `AI<span class="pending-badge-creative">${aiPendingCount > 9 ? '9+' : aiPendingCount}</span>`
-            : `AI`;
-    }
-
-    if (currentRequestFilter === 'AI') {
-        requests = requests.filter(req => req.source === 'AI');
-    } else if (currentRequestFilter !== 'All') {
+    if (currentRequestFilter !== 'All') {
         requests = requests.filter(req => req.status === currentRequestFilter);
     }
 
