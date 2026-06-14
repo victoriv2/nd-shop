@@ -106,7 +106,7 @@ window.loadRegister = function () {
                     // Filter for selected date
                     const filteredSales = allSales.filter(row => {
                         if (!row.date) return false;
-                        const parts = row.date.split(' ');
+                        const parts = row.date.replace(/\s*,\s*/g, ', ').split(' ');
                         if (parts.length < 3) return false;
                         const saleDay = parts[0].padStart(2, '0');
                         const saleMonth = parts[1].replace(',', '');

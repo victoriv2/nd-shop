@@ -298,7 +298,7 @@ function renderRgSaleList() {
 
     // Filter sales by active date
     let dayFiltered = rgAllSales.filter(sale => {
-        const parts = sale.date.split(' ');
+        const parts = sale.date.replace(/\s*,\s*/g, ', ').split(' ');
         if(parts.length < 3) return false;
         
         const rowDay = parseInt(parts[0], 10);

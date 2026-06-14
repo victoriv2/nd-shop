@@ -845,7 +845,7 @@ function initAiChatLogic() {
 
             // Compute current month revenue for Profit Allocation Framework.
             const curMonthSales = dbSales.filter(s => {
-                const parts = s.date.split(' ');
+                const parts = s.date.replace(/\s*,\s*/g, ', ').split(' ');
                 if (parts.length < 3) return false;
                 const sMonth = parts[1].replace(',', '');
                 const sYear = parts[2];
@@ -862,7 +862,7 @@ function initAiChatLogic() {
             }));
 
             const todaySales = dbSales.filter(s => {
-                const parts = s.date.split(' ');
+                const parts = s.date.replace(/\s*,\s*/g, ', ').split(' ');
                 if (parts.length < 3) return false;
                 const sDay = parts[0].padStart(2, '0');
                 const sMonth = parts[1].replace(',', '');

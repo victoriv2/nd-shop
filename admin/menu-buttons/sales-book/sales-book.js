@@ -287,8 +287,8 @@ window.renderSalesBook = function renderSalesBook() {
 
     // Filter Logic
     let filtered = sbSalesData.filter(row => {
-        // row.date format: "26 Feb, 2026 · 3:45 pm"
-        const parts = row.date.split(' ');
+        // row.date format: "26 Feb, 2026 · 3:45 pm" (normalize any stray spaces around commas)
+        const parts = row.date.replace(/\s*,\s*/g, ', ').split(' ');
         if(parts.length < 3) return false;
         
         const rowDay = parseInt(parts[0], 10);
@@ -331,7 +331,7 @@ window.renderSalesBook = function renderSalesBook() {
     let monthTotalSales = 0;
     let monthTotalPayout = 0;
     sbSalesData.forEach(row => {
-        const parts = row.date.split(' ');
+        const parts = row.date.replace(/\s*,\s*/g, ', ').split(' ');
         if(parts.length < 3) return;
         const rm = parts[1].replace(',', '');
         const ry = parseInt(parts[2], 10);

@@ -142,7 +142,7 @@ function initProgressLogic() {
                 allSales.forEach(sale => {
                     // Date format: "26 Feb, 2026 · 3:45 pm"
                     // Parts: ["26", "Feb,", "2026", "·", "3:45", "pm"]
-                    const dParts = sale.date.split(' ');
+                    const dParts = sale.date.replace(/\s*,\s*/g, ', ').split(' ');
                     if (dParts.length >= 3) {
                         const sDay = parseInt(dParts[0], 10);
                         const sMonth = dParts[1].replace(',', '');

@@ -172,7 +172,7 @@ window.renderYearlyOverview = function() {
     try {
         const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
         sales.forEach(s => {
-            const dParts = s.date.split(' ');
+            const dParts = s.date.replace(/\s*,\s*/g, ', ').split(' ');
             if (dParts.length >= 3 && parseInt(dParts[2].replace(',', '')) === targetYear) {
                 const mIdx = SHORT_MONTHS.indexOf(dParts[1].replace(',',''));
                 if (mIdx !== -1) {

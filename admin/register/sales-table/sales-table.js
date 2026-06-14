@@ -174,7 +174,7 @@ function initSalesTable() {
         // 1. Filter based on Search AND Date
         let data = sampleData.filter(row => {
             // Parse sale date: "26 Feb, 2026 · 3:45 pm" -> parts: ["26", "Feb,", "2026", ...]
-            const saleParts = row.date.split(' ');
+            const saleParts = row.date.replace(/\s*,\s*/g, ', ').split(' ');
             if (saleParts.length < 3) return false;
 
             // Normalize day to 2 digits for comparison with the '06' format in UI

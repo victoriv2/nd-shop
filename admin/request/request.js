@@ -839,7 +839,7 @@ function recordSaleFromRequest(req) {
     let hours = now.getHours();
     const ampm = hours >= 12 ? 'pm' : 'am';
     hours = hours % 12 || 12;
-    const timeStr = `${now.getDate()} ${months[now.getMonth()]} , ${now.getFullYear()} · ${hours}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`;
+    const timeStr = `${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()} · ${hours}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`;
 
     let currentSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     let userBal = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(req.user.id) : 0;
