@@ -507,6 +507,7 @@ function initProductModalLogic() {
         const qtyDisplay = document.getElementById('pmQtyValue');
         const totalDisplay = document.getElementById('pmTotalPriceDetail');
         const payoutDisplay = document.getElementById('pmPayoutDetail');
+        const isFlex = (document.getElementById('pmFlexPriceInputWrapper') && document.getElementById('pmFlexPriceInputWrapper').style.display !== 'none');
 
         if (qtyDisplay) qtyDisplay.textContent = currentQuantity;
 
@@ -518,7 +519,6 @@ function initProductModalLogic() {
         let isFlat = false;
 
         const payoutContainer = document.getElementById('pmPayoutDetailContainer');
-        const isFlex = (document.getElementById('pmFlexPriceInputWrapper') && document.getElementById('pmFlexPriceInputWrapper').style.display !== 'none');
         
         if (payoutEnabled && !isFlex && !isCustomMode) {
             if (payoutContainer) {

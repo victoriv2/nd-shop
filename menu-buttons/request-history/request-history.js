@@ -145,7 +145,9 @@ window.renderRequestHistory = function() {
             `;
         } else if (r.product) {
             totalCost = r.product.total || 0;
-            const unitPrice = (totalCost / (r.product.qty || 1)).toLocaleString();
+            const isFlexible = r.product.isFlexible || false;
+            const unitPrice = isFlexible ? totalCost : (totalCost / (r.product.qty || 1));
+            const eachText = isFlexible ? 'Flexible Price' : `₦${unitPrice.toLocaleString()} each`;
             mainTitle = `
                 <div style="display:flex; align-items:center; gap:8px;">
                     ${r.product.imageData ? `<img src="${r.product.imageData}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;cursor:zoom-in;" onclick="event.stopPropagation(); if(typeof window.openImageViewer === 'function') window.openImageViewer('${r.product.imageData}')">` : ``}
@@ -154,7 +156,7 @@ window.renderRequestHistory = function() {
             `;
             detailsHtml = `
                 <div class="rh-details">
-                    <span>${r.product.qty} ${r.product.unit} (₦${unitPrice} each)</span>
+                    <span>${r.product.qty} ${r.product.unit} (${eachText})</span>
                     <span class="rh-total">Total: ₦${totalCost.toLocaleString()}</span>
                 </div>
             `;
