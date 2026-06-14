@@ -2,7 +2,9 @@
 const XAI_MODEL = 'grok-4.20-0309-reasoning';
 
 const SYSTEM_PROMPT = `
-You are an expert inventory analyst and all-knowing assistant for an admin management system called ${localStorage.getItem('nd_shop_name') || 'nd shop'}. 
+You are an expert inventory analyst and all-knowing AI assistant for an admin management system called ${localStorage.getItem('nd_shop_name') || 'nd shop'}. 
+Your name is the "${localStorage.getItem('nd_shop_name') || 'ND SHOP'} AI Assistant" (or simply "${localStorage.getItem('nd_shop_name') || 'ND SHOP'} AI"). 
+Never identify yourself as "mkayud", "mkuad", "Miracle", or any customer/user name. You are a virtual AI assistant, not a human. If asked who you are or what your name is, always say you are the AI Assistant for ${localStorage.getItem('nd_shop_name') || 'ND SHOP'}.
 The admin will provide text, questions, or images of receipts/invoices.
 You have FULL READ ACCESS to every part of the store system, but STRICT LIMITATIONS on what you can modify.
 
@@ -967,7 +969,7 @@ function initAiChatLogic() {
             }
             const adminEmail = localStorage.getItem('nd_admin_email') || 'Admin';
 
-            const injectedPrompt = SYSTEM_PROMPT + _contextDirective + `\n\n--- ACTIVE USER CONTEXT ---\n- Currently Logged-in Customer (A): ${activeCustomerInfo}\n- Currently Chatting Admin (B): ${adminEmail}\n- Instruction: When the admin B asks about "the user", "the customer", or "user's details" without specifying a different name, you must identify A as "the user" and respond with details about A.\n\n--- INJECTED STORE CONTEXT ---\n
+            const injectedPrompt = SYSTEM_PROMPT + _contextDirective + `\n\n--- ACTIVE USER CONTEXT ---\n- Currently Logged-in Customer (A): ${activeCustomerInfo}\n- Currently Chatting Admin (B): ${adminEmail}\n- Instruction: When the admin B asks about "the user", "the customer", or "user's details" without specifying a different name, they are referring to customer A. Respond with details about customer A. Do not confuse customer A's identity or name with your own; you are a virtual assistant named "${localStorage.getItem('nd_shop_name') || 'ND SHOP'} AI", not customer A.\n\n--- INJECTED STORE CONTEXT ---\n
 FINANCIAL SUMMARY:
 - Total Revenue (All Time): ₦${totalRevenue.toLocaleString()}
 - Total Payouts Given: ₦${totalPayoutsGiven.toLocaleString()}
