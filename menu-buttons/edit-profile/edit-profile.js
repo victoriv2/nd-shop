@@ -228,6 +228,12 @@ function initEditProfileLogic() {
 
                         const data = await response.json();
 
+                        if (response.status === 401 || response.status === 403) {
+                            // Token is invalid or expired — clear it and show helpful message
+                            localStorage.removeItem('nd_token');
+                            throw new Error('Session expired. Please log out and log back in to make changes.');
+                        }
+
                         if (data.success) {
                             window.loggedInUser.firstName = newFirst;
                             window.loggedInUser.lastName = newLast;

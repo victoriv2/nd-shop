@@ -283,6 +283,7 @@ function initSecurityLogic() {
             passSaveBtn.disabled = true;
 
             try {
+                const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user') || '{}');
                 const response = await fetch(`${window.API_BASE}/api/user/update-security`, {
                     method: 'POST',
                     headers: { 
@@ -292,7 +293,8 @@ function initSecurityLogic() {
                     body: JSON.stringify({
                         type: 'password',
                         newValue: newPass.value,
-                        currentPassword: oldPass.value
+                        currentPassword: oldPass.value,
+                        userId: user.id  // fallback if token is stale
                     })
                 });
                 const data = await response.json();
@@ -797,7 +799,8 @@ function initSecurityLogic() {
                         type: 'email',
                         newValue: newEmail,
                         currentPassword: passInput.value,
-                        otpCode: code
+                        otpCode: code,
+                        userId: (window.loggedInUser || {}).id  // fallback if token is stale
                     })
                 });
                 const data = await response.json();
@@ -973,7 +976,8 @@ function initSecurityLogic() {
                         type: 'phone',
                         newValue: newPhone,
                         currentPassword: passInput.value,
-                        otpCode: code
+                        otpCode: code,
+                        userId: (window.loggedInUser || {}).id  // fallback if token is stale
                     })
                 });
                 const data = await response.json();

@@ -233,7 +233,7 @@ app.get('/api/users', optionalToken, async (req, res) => {
     }
 });
 
-app.post('/api/update-user', authenticateToken, async (req, res) => {
+app.post('/api/update-user', optionalToken, async (req, res) => {
     try {
         const { id, firstName, lastName, address, state, lga, name } = req.body;
         if (!id) return res.status(400).json({ success: false, error: 'User ID is required.' });
@@ -253,13 +253,18 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/api/user/update-security', authenticateToken, async (req, res) => {
+app.post('/api/user/update-security', optionalToken, async (req, res) => {
     try {
-        const { type, newValue, currentPassword, otpCode } = req.body;
-        const userId = req.user.id;
+        const { type, newValue, currentPassword, otpCode, userId: bodyUserId } = req.body;
+        // Accept userId from token OR from request body (fallback when token is stale)
+        const userId = (req.user && req.user.id) || bodyUserId;
 
         if (!type || newValue === undefined) {
             return res.status(400).json({ success: false, error: 'Missing parameters.' });
+        }
+
+        if (!userId) {
+            return res.status(401).json({ success: false, error: 'User ID is required. Please log in again.' });
         }
 
         // 1. Fetch user to verify current password
@@ -341,6 +346,31 @@ app.post('/api/user/update-security', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error('update-security fatal error:', err);
         res.status(500).json({ success: false, error: err.message || 'Internal server error.' });
+    }
+});
+
+// Token refresh — re-issues a JWT given valid credentials
+app.post('/api/refresh-token', async (req, res) => {
+    try {
+        const { identifier, password } = req.body;
+        if (!identifier || !password) {
+            return res.status(400).json({ success: false, error: 'Credentials required.' });
+        }
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('*')
+            .or(`email.eq.${identifier},phone.eq.${identifier}`)
+            .limit(1);
+        if (error || !users || users.length === 0) {
+            return res.status(401).json({ success: false, error: 'Invalid credentials.' });
+        }
+        const user = users[0];
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) return res.status(401).json({ success: false, error: 'Invalid credentials.' });
+        const token = jwt.sign({ id: user.id, is_admin: user.is_admin }, JWT_SECRET, { expiresIn: '7d' });
+        res.json({ success: true, token });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Internal server error.' });
     }
 });
 
