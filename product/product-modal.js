@@ -510,7 +510,7 @@ function initProductModalLogic() {
 
         if (qtyDisplay) qtyDisplay.textContent = currentQuantity;
 
-        let totalCost = basePriceValue * currentQuantity;
+        let totalCost = isFlex ? basePriceValue : basePriceValue * currentQuantity;
         if (totalDisplay) totalDisplay.textContent = `₦${Math.round(totalCost).toLocaleString()}`;
 
         const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
@@ -653,7 +653,7 @@ function initProductModalLogic() {
         // --- END PRE-CHECK LOGIC ---
 
         const effectiveUnitPrice = basePriceValue;
-        const totalCost = basePriceValue * currentQuantity;
+        const totalCost = isFlex ? basePriceValue : basePriceValue * currentQuantity;
         const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
         let payout = 0;
         if (payoutEnabled && !isFlex && !isCustomMode) {

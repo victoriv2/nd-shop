@@ -79,7 +79,7 @@ function initSalesTable() {
 
         data.forEach((row, index) => {
             const isRequest = row.type === 'Request';
-            const baseTotal = row.qty * row.unitPrice;
+            const baseTotal = row.isFlexible ? row.unitPrice : row.qty * row.unitPrice;
             // Payout calculation for new rows, but for existing rows it's already in the object
             let delta = row.payoutEarned !== undefined ? row.payoutEarned : (isRequest ? (row.payout != null ? row.payout : (baseTotal * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100))) : 0);
             
@@ -195,9 +195,13 @@ function initSalesTable() {
         // 2. Sort the filtered data
         data.sort((a, b) => {
             if (currentSortType === 'high-to-low') {
-                return (b.qty * b.unitPrice) - (a.qty * a.unitPrice);
+                const totalA = (a.price !== undefined && a.price !== null) ? Number(a.price) : (a.isFlexible ? a.unitPrice : a.qty * a.unitPrice);
+                const totalB = (b.price !== undefined && b.price !== null) ? Number(b.price) : (b.isFlexible ? b.unitPrice : b.qty * b.unitPrice);
+                return totalB - totalA;
             } else if (currentSortType === 'low-to-high') {
-                return (a.qty * a.unitPrice) - (b.qty * b.unitPrice);
+                const totalA = (a.price !== undefined && a.price !== null) ? Number(a.price) : (a.isFlexible ? a.unitPrice : a.qty * a.unitPrice);
+                const totalB = (b.price !== undefined && b.price !== null) ? Number(b.price) : (b.isFlexible ? b.unitPrice : b.qty * b.unitPrice);
+                return totalA - totalB;
             } else if (currentSortType === 'newest') {
                 return new Date(parseDate(b.date)) - new Date(parseDate(a.date));
             } else if (currentSortType === 'oldest') {
@@ -1125,16 +1129,17 @@ function initSalesTable() {
             let total = 0;
 
             basketItems.forEach((item, index) => {
-                const itemTotal = item.qty * item.price;
+                const itemTotal = item.isFlexible ? item.price : item.qty * item.price;
                 total += itemTotal;
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'basket-item';
                 const flexLabel = item.isFlexible ? ' <span style="color:#c026d3;font-size:0.7rem;">(Flex)</span>' : '';
+                const metaText = item.isFlexible ? `Qty: ${item.qty} (Total: ₦${formatCurrency(item.price)})${flexLabel}` : `${item.qty} × ₦${formatCurrency(item.price)}${flexLabel}`;
                 itemDiv.innerHTML = `
                     <div class="basket-item-info">
                         <span class="basket-item-name">${item.name}</span>
-                        <span class="basket-item-meta">${item.qty} × ₦${formatCurrency(item.price)}${flexLabel}</span>
+                        <span class="basket-item-meta">${metaText}</span>
                     </div>
                     <span class="basket-item-total">₦${formatCurrency(itemTotal)}</span>
                     <button class="remove-basket-item" data-index="${index}">
@@ -1445,7 +1450,7 @@ function initSalesTable() {
                     qty: item.qty,
                     // For flexible items, price is the total entered — store as unitPrice for consistency
                     unitPrice: Number(item.price || 0),
-                    price: (Number(item.qty || 1) * Number(item.price || 0)),
+                    price: item.isFlexible ? Number(item.price || 0) : (Number(item.qty || 1) * Number(item.price || 0)),
                     unit: item.unit,
                     isFlexible: item.isFlexible || false,
                     productId: item.productId || ''

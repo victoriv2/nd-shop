@@ -392,7 +392,7 @@ function ciOpenUserInfo(userId) {
             let totalItemsPurchased = 0;
 
             userSales.forEach(s => {
-                calculatedSpending += parseFloat(s.price || (s.qty * s.unitPrice)) || 0;
+                calculatedSpending += parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0;
                 totalItemsPurchased += parseInt(s.qty) || 1;
             });
 

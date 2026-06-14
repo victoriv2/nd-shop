@@ -762,12 +762,12 @@ function initAiChatLogic() {
                 let totalSpending = 0, totalPayout = 0, itemsBought = 0;
                 let payoutPurchaseCount = 0, payoutPurchaseTotal = 0;
                 userSales.forEach(s => {
-                    totalSpending += parseFloat(s.price || (s.qty * s.unitPrice)) || 0;
+                    totalSpending += parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0;
                     totalPayout += parseFloat(s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
                     itemsBought += parseInt(s.qty) || 1;
                     if (s.type === 'Payout Purchase') {
                         payoutPurchaseCount++;
-                        payoutPurchaseTotal += parseFloat(s.price || (s.qty * s.unitPrice)) || 0;
+                        payoutPurchaseTotal += parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0;
                     }
                 });
                 const userRequests = dbRequests.filter(r => r.userId === u.id || (r.user && r.user.id === u.id));
@@ -817,7 +817,7 @@ function initAiChatLogic() {
             });
 
             // Compute financial summary
-            const totalRevenue = dbSales.reduce((sum, s) => sum + (parseFloat(s.price || (s.qty * s.unitPrice)) || 0), 0);
+            const totalRevenue = dbSales.reduce((sum, s) => sum + (parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0), 0);
             const totalPayoutsGiven = dbSales.reduce((sum, s) => sum + (parseFloat(s.payout) || 0), 0);
             const totalRestockExpenses = dbProducts.filter(p => !p.cleared && !p.isDeleted).reduce((sum, p) => sum + (parseFloat(p.purchaseCost) || 0), 0);
             const totalNotebookExpenses = dbExpensesNotebook.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
@@ -851,7 +851,7 @@ function initAiChatLogic() {
                 const sYear = parts[2];
                 return sMonth === shortMonths[curMonth] && sYear === String(curYear);
             });
-            const curMonthRevenue = curMonthSales.reduce((sum, s) => sum + (parseFloat(s.price || (s.qty * s.unitPrice)) || 0), 0);
+            const curMonthRevenue = curMonthSales.reduce((sum, s) => sum + (parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0), 0);
             const curMonthNetProfit = curMonthRevenue - curMonthRestockTotal;
 
             // Profit Allocation Framework. Allocations — use ACTUAL saved allocations
@@ -871,7 +871,7 @@ function initAiChatLogic() {
             });
             const todaySN = todaySales.length;
             const todayQty = todaySales.reduce((sum, s) => sum + (parseInt(s.qty) || 1), 0);
-            const todayRevenue = todaySales.reduce((sum, s) => sum + (parseFloat(s.price || (s.qty * s.unitPrice)) || 0), 0);
+            const todayRevenue = todaySales.reduce((sum, s) => sum + (parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0), 0);
 
             // Build context prefix based on where AI was opened from
             const _pageCtx = window._aiOpenedFromContext || 'general';
@@ -970,7 +970,7 @@ FINANCIAL SUMMARY:
 - Total Notebook Expenses (All Time): ₦${totalNotebookExpenses.toLocaleString()}
 - Expense Entries Count: ${dbExpensesNotebook.length}
 - Total Payout Purchases: ${dbSales.filter(s => s.type === 'Payout Purchase').length} transactions
-- Total Payout Purchase Value: ₦${dbSales.filter(s => s.type === 'Payout Purchase').reduce((sum, s) => sum + (parseFloat(s.price || (s.qty * s.unitPrice)) || 0), 0).toLocaleString()}
+- Total Payout Purchase Value: ₦${dbSales.filter(s => s.type === 'Payout Purchase').reduce((sum, s) => sum + (parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0), 0).toLocaleString()}
 - Maintenance Mode: ${dbMaintenanceMode ? 'ON (store is in maintenance)' : 'OFF (store is live)'}
 - Last System Backup: ${dbLastBackupDate}
 - Community Messages: ${dbCommMessages.length}

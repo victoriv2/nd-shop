@@ -335,7 +335,7 @@ window.renderIncomeStructure = function() {
                         const sYear = dParts[2];
                         if (sMonth === targetShortMonth && sYear === targetYearStr) {
                             const qty = (sale.qty || 1);
-                            const price = (sale.price || (qty * (sale.unitPrice || 0)));
+                            const price = (sale.price || (sale.isFlexible ? (sale.unitPrice || 0) : (qty * (sale.unitPrice || 0))));
                             totalRevenue += price;
                         }
                     }

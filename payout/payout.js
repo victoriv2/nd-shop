@@ -2056,15 +2056,16 @@ function _updateURPBasketUI(spendableRewardBalance) {
     }
 
     urpBasketItems.forEach((item, index) => {
-        const itemTotal = item.qty * item.price;
+        const itemTotal = item.isFlexible ? item.price : item.qty * item.price;
         total += itemTotal;
 
         const itemDiv = document.createElement('div');
         itemDiv.className = 'basket-item';
+        const metaText = item.isFlexible ? `Qty: ${item.qty} (Total: ₦${formatCurrency(item.price)})` : `${item.qty} × ₦${formatCurrency(item.price)}`;
         itemDiv.innerHTML = `
             <div class="basket-item-info">
                 <span class="basket-item-name">${item.name}</span>
-                <span class="basket-item-meta">${item.isFlexible ? 'Flexible: ' : ''}${item.qty} × ₦${formatCurrency(item.price)}</span>
+                <span class="basket-item-meta">${metaText}</span>
             </div>
             <span class="basket-item-total">₦${formatCurrency(itemTotal)}</span>
             <button class="remove-basket-item" data-index="${index}">
@@ -2107,7 +2108,7 @@ function _submitURPRequest(spendableRewardBalance, user) {
 
     let total = 0;
     urpBasketItems.forEach(item => {
-        total += item.qty * item.price;
+        total += item.isFlexible ? item.price : item.qty * item.price;
     });
 
     if (total <= 0) {
@@ -2140,7 +2141,7 @@ function _submitURPRequest(spendableRewardBalance, user) {
             qty: item.qty,
             unit: item.unit || '',
             unitPrice: item.price,
-            total: item.qty * item.price,
+            total: item.isFlexible ? item.price : item.qty * item.price,
             isFlexible: item.isFlexible || false,
             productId: item.productId || ''
         }))

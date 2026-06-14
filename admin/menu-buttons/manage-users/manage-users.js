@@ -96,7 +96,7 @@ function renderManageUsersList(search = '') {
     allSales.forEach(s => {
         if (s.customerID) {
             if (!userSpendingMap[s.customerID]) userSpendingMap[s.customerID] = 0;
-            userSpendingMap[s.customerID] += parseFloat(s.price || (s.qty * s.unitPrice)) || 0;
+            userSpendingMap[s.customerID] += parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0;
         }
     });
 
@@ -236,7 +236,7 @@ function openUserInfoModal(id) {
             let totalItemsPurchased = 0;
 
             userSales.forEach(s => {
-                calculatedSpending += parseFloat(s.price || (s.qty * s.unitPrice)) || 0;
+                calculatedSpending += parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0;
                 totalItemsPurchased += parseInt(s.qty) || 1;
             });
 
@@ -367,7 +367,7 @@ function toggleUserHistory(userId) {
                 // Ensure item total and unit price are safely parsed
                 const unitPrice = parseFloat(s.unitPrice || s.price || 0);
                 const qty = parseInt(s.qty || 1);
-                const itemTotal = parseFloat(s.price || (qty * unitPrice)) || 0;
+                const itemTotal = parseFloat(s.price || (s.isFlexible ? unitPrice : qty * unitPrice)) || 0;
 
                 // Payout is specifically s.payoutEarned, falling back to s.payout only if payoutEarned is missing.
                 const payoutAmount = s.payoutEarned !== undefined ? parseFloat(s.payoutEarned) : (s.payout !== undefined && s.payout !== null && s.payout !== '' ? parseFloat(s.payout) : (itemTotal * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100)) || 0);

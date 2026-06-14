@@ -1179,16 +1179,17 @@ function _updatePPBasketUI() {
     let total = 0;
 
     ppBasketItems.forEach((item, index) => {
-        const itemTotal = item.qty * item.price;
+        const itemTotal = item.isFlexible ? item.price : item.qty * item.price;
         total += itemTotal;
 
         const itemDiv = document.createElement('div');
         itemDiv.className = 'basket-item';
         const flexLabel = item.isFlexible ? ' <span style="color:#c026d3;font-size:0.7rem;">(Flex)</span>' : '';
+        const metaText = item.isFlexible ? `Qty: ${item.qty} (Total: ₦${_formatPPCurrency(item.price)})${flexLabel}` : `${item.qty} × ₦${_formatPPCurrency(item.price)}${flexLabel}`;
         itemDiv.innerHTML = `
             <div class="basket-item-info">
                 <span class="basket-item-name">${item.name}</span>
-                <span class="basket-item-meta">${item.qty} × ₦${_formatPPCurrency(item.price)}${flexLabel}</span>
+                <span class="basket-item-meta">${metaText}</span>
             </div>
             <span class="basket-item-total">₦${_formatPPCurrency(itemTotal)}</span>
             <button class="remove-basket-item" data-index="${index}">
@@ -1232,7 +1233,7 @@ function _submitPayoutPurchase() {
     // Calculate total
     let total = 0;
     ppBasketItems.forEach(item => {
-        total += item.qty * item.price;
+        total += item.isFlexible ? item.price : item.qty * item.price;
     });
 
     if (total <= 0) {
