@@ -161,7 +161,7 @@ async function processAdminLogin() {
             
             document.getElementById('adminLoginScreen').remove();
             if (typeof customAlert !== 'undefined') {
-                customAlert("Welcome back, " + data.admin.name + "!");
+                customAlert("Welcome back, " + (localStorage.getItem('nd_shop_name') || data.admin.name) + "!");
             } else {
                 alert("Welcome back!");
             }

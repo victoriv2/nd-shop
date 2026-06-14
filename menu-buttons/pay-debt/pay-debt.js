@@ -8,9 +8,9 @@ window.refreshPayDebtBankDisplay = function () {
     const bankNumEl = wrapper.querySelector('.bank-account-num');
     const bankNameEl = wrapper.querySelector('.bank-account-name');
     const bankPlEl = wrapper.querySelector('.bank-name');
-    if (bankNumEl) bankNumEl.textContent = localStorage.getItem('nd_bank_account_num') || '5470972344';
-    if (bankNameEl) bankNameEl.textContent = localStorage.getItem('nd_bank_account_name') || 'Udeh Patience';
-    if (bankPlEl) bankPlEl.textContent = localStorage.getItem('nd_bank_name') || 'MONIEPOINT';
+    if (bankNumEl) bankNumEl.textContent = localStorage.getItem('nd_bank_account_num') || '';
+    if (bankNameEl) bankNameEl.textContent = localStorage.getItem('nd_bank_account_name') || '';
+    if (bankPlEl) bankPlEl.textContent = localStorage.getItem('nd_bank_name') || '';
 };
 
 function openPayDebtModal() {
@@ -39,9 +39,9 @@ function openPayDebtModal() {
             const bankNumEl = wrapper.querySelector('.bank-account-num');
             const bankNameEl = wrapper.querySelector('.bank-account-name');
             const bankPlEl = wrapper.querySelector('.bank-name');
-            if (bankNumEl) bankNumEl.textContent = localStorage.getItem('nd_bank_account_num') || '5470972344';
-            if (bankNameEl) bankNameEl.textContent = localStorage.getItem('nd_bank_account_name') || 'Udeh Patience';
-            if (bankPlEl) bankPlEl.textContent = localStorage.getItem('nd_bank_name') || 'MONIEPOINT';
+            if (bankNumEl) bankNumEl.textContent = localStorage.getItem('nd_bank_account_num') || '';
+            if (bankNameEl) bankNameEl.textContent = localStorage.getItem('nd_bank_account_name') || '';
+            if (bankPlEl) bankPlEl.textContent = localStorage.getItem('nd_bank_name') || '';
 
             setTimeout(() => {
                 modal.classList.add('show');

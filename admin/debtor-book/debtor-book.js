@@ -524,9 +524,9 @@ function openDbAccountSettings() {
     closeAllDbMenus();
     const modal = document.getElementById('dbAccountSettingsModal');
     if (modal) {
-        document.getElementById('dbAccNumInput').value = localStorage.getItem('nd_bank_account_num') || '5470972344';
-        document.getElementById('dbAccNameInput').value = localStorage.getItem('nd_bank_account_name') || 'Udeh Patience';
-        document.getElementById('dbBankNameInput').value = localStorage.getItem('nd_bank_name') || 'Moniepoint Microfinance Bank';
+        document.getElementById('dbAccNumInput').value = localStorage.getItem('nd_bank_account_num') || '';
+        document.getElementById('dbAccNameInput').value = localStorage.getItem('nd_bank_account_name') || '';
+        document.getElementById('dbBankNameInput').value = localStorage.getItem('nd_bank_name') || '';
         
         modal.style.display = 'flex';
         setTimeout(() => modal.classList.add('show'), 10);
