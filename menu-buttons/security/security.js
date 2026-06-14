@@ -249,7 +249,7 @@ function initSecurityLogic() {
     // ========================================
     const passSaveBtn = document.getElementById('secPassSave');
     if (passSaveBtn) {
-        passSaveBtn.addEventListener('click', () => {
+        passSaveBtn.addEventListener('click', async () => {
             const oldPass = document.getElementById('secOldPass');
             const newPass = document.getElementById('secNewPass');
             const confirmPass = document.getElementById('secConfirmPass');
@@ -278,35 +278,37 @@ function initSecurityLogic() {
                 return;
             }
 
-            // Verify old password
-            const user = window.loggedInUser || {};
-            if (user.password && user.password !== oldPass.value) {
-                passSaveBtn.textContent = 'Incorrect Current Password';
-                passSaveBtn.style.backgroundColor = '#dc3545';
-                passSaveBtn.style.boxShadow = '0 4px 15px rgba(220,38,38,0.3)';
-                setTimeout(() => {
-                    passSaveBtn.textContent = 'Update Password';
-                    passSaveBtn.style.backgroundColor = '';
-                    passSaveBtn.style.boxShadow = '';
-                }, 1500);
-                return;
-            }
-
             passSaveBtn.classList.add('saving');
             passSaveBtn.textContent = 'Updating...';
+            passSaveBtn.disabled = true;
 
-            setTimeout(() => {
-                // Actually Update Local Storage
-                if (window.loggedInUser) {
-                    window.loggedInUser.password = newPass.value;
-                    localStorage.setItem('nd_logged_in_user', JSON.stringify(window.loggedInUser));
+            try {
+                const response = await fetch(`${window.API_BASE}/api/user/update-security`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({
+                        type: 'password',
+                        newValue: newPass.value,
+                        currentPassword: oldPass.value
+                    })
+                });
+                const data = await response.json();
 
-                    const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
-                    const idx = users.findIndex(u => u.id === window.loggedInUser.id);
-                    if (idx !== -1) {
-                        users[idx].password = newPass.value;
-                        localStorage.setItem('nd_users', JSON.stringify(users));
-                    }
+                if (!data.success) {
+                    passSaveBtn.classList.remove('saving');
+                    passSaveBtn.style.backgroundColor = '#dc3545';
+                    passSaveBtn.style.boxShadow = '0 4px 15px rgba(220,38,38,0.3)';
+                    passSaveBtn.textContent = data.error || 'Failed to update password';
+                    setTimeout(() => {
+                        passSaveBtn.style.backgroundColor = '';
+                        passSaveBtn.style.boxShadow = '';
+                        passSaveBtn.textContent = 'Update Password';
+                    }, 2500);
+                    passSaveBtn.disabled = false;
+                    return;
                 }
 
                 passSaveBtn.classList.remove('saving');
@@ -321,7 +323,13 @@ function initSecurityLogic() {
                     confirmPass.value = '';
                     closeModal();
                 }, 1200);
-            }, 1000);
+            } catch (err) {
+                if (typeof customAlert === 'function') customAlert(err.message || 'Network error. Is the server running?');
+                passSaveBtn.classList.remove('saving');
+                passSaveBtn.textContent = 'Update Password';
+            } finally {
+                passSaveBtn.disabled = false;
+            }
         });
     }
     
@@ -594,7 +602,7 @@ function initSecurityLogic() {
     }
 
     if (btnFinalReset) {
-        btnFinalReset.addEventListener('click', () => {
+        btnFinalReset.addEventListener('click', async () => {
             const newPassInput = document.getElementById('resetNewPass');
             const confirmPassInput = document.getElementById('resetConfirmPass');
             const newPass = newPassInput ? newPassInput.value : '';
@@ -612,20 +620,32 @@ function initSecurityLogic() {
 
             btnFinalReset.classList.add('saving');
             btnFinalReset.textContent = 'Updating...';
+            btnFinalReset.disabled = true;
 
-            setTimeout(() => {
-                // Update Local Storage
-                const user = window.loggedInUser || JSON.parse(localStorage.getItem('nd_logged_in_user'));
-                if (user) {
-                    user.password = newPass;
-                    localStorage.setItem('nd_logged_in_user', JSON.stringify(user));
+            const otpCode = Array.from(passOtpInputs).map(i => i.value).join('');
 
-                    const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
-                    const idx = users.findIndex(u => u.id === user.id);
-                    if (idx !== -1) {
-                        users[idx].password = newPass;
-                        localStorage.setItem('nd_users', JSON.stringify(users));
-                    }
+            try {
+                const response = await fetch(`${window.API_BASE}/api/reset-user-credentials`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contact: window._secPassOtpContact,
+                        code: otpCode,
+                        newValue: newPass
+                    })
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    btnFinalReset.classList.remove('saving');
+                    btnFinalReset.style.backgroundColor = '#dc3545';
+                    btnFinalReset.textContent = data.error || 'Failed to update password';
+                    setTimeout(() => {
+                        btnFinalReset.style.backgroundColor = '';
+                        btnFinalReset.textContent = 'Update Password';
+                    }, 2500);
+                    btnFinalReset.disabled = false;
+                    return;
                 }
 
                 btnFinalReset.classList.remove('saving');
@@ -645,7 +665,13 @@ function initSecurityLogic() {
                     
                     closePassVerifyModal();
                 }, 1500);
-            }, 1000);
+            } catch (err) {
+                if (typeof customAlert === 'function') customAlert(err.message || 'Network error. Is the server running?');
+                btnFinalReset.classList.remove('saving');
+                btnFinalReset.textContent = 'Update Password';
+            } finally {
+                btnFinalReset.disabled = false;
+            }
         });
     }
 
@@ -753,11 +779,26 @@ function initSecurityLogic() {
             verifyEmailBtn.disabled = true;
 
             try {
-                const contact = window._secEmailOtpContact;
-                const response = await fetch(`${window.API_BASE}/api/verify-otp`, {
+                const emailInput = document.getElementById('secNewEmail');
+                const passInput = document.getElementById('secEmailPass');
+                const newEmail = emailInput ? emailInput.value.trim() : '';
+
+                if (!newEmail || !passInput || !passInput.value) {
+                    throw new Error('Required fields are missing.');
+                }
+
+                const response = await fetch(`${window.API_BASE}/api/user/update-security`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contact, code })
+                    headers: { 
+                        'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({
+                        type: 'email',
+                        newValue: newEmail,
+                        currentPassword: passInput.value,
+                        otpCode: code
+                    })
                 });
                 const data = await response.json();
 
@@ -765,7 +806,7 @@ function initSecurityLogic() {
                     verifyEmailBtn.classList.remove('saving');
                     verifyEmailBtn.style.backgroundColor = '#dc3545';
                     verifyEmailBtn.style.boxShadow = '0 4px 15px rgba(220,38,38,0.3)';
-                    verifyEmailBtn.textContent = data.error || 'Invalid OTP';
+                    verifyEmailBtn.textContent = data.error || 'Failed to update email';
                     setTimeout(() => {
                         verifyEmailBtn.style.backgroundColor = '';
                         verifyEmailBtn.style.boxShadow = '';
@@ -775,36 +816,22 @@ function initSecurityLogic() {
                     return;
                 }
 
-                // OTP verified — now update email
-                const emailInput = document.getElementById('secNewEmail');
-                const passInput = document.getElementById('secEmailPass');
-                const allUsers = JSON.parse(localStorage.getItem('nd_users') || '[]');
-                const newEmail = emailInput ? emailInput.value.trim() : '';
-                const emailTaken = allUsers.find(u => u.id !== (window.loggedInUser || {}).id && u.email && u.email.toLowerCase() === newEmail.toLowerCase());
-                if (emailTaken) {
-                    verifyEmailBtn.classList.remove('saving');
-                    verifyEmailBtn.style.backgroundColor = '#dc3545';
-                    verifyEmailBtn.style.boxShadow = '0 4px 15px rgba(220,38,38,0.3)';
-                    verifyEmailBtn.textContent = 'Email already in use!';
-                    setTimeout(() => {
-                        verifyEmailBtn.style.backgroundColor = '';
-                        verifyEmailBtn.style.boxShadow = '';
-                        verifyEmailBtn.textContent = 'Verify & Update';
-                    }, 2500);
-                    verifyEmailBtn.disabled = false;
-                    return;
-                }
-
-                if (window.loggedInUser && emailInput && newEmail) {
+                // Update local session
+                if (window.loggedInUser) {
                     window.loggedInUser.email = newEmail;
                     localStorage.setItem('nd_logged_in_user', JSON.stringify(window.loggedInUser));
+                    
+                    const allUsers = JSON.parse(localStorage.getItem('nd_users') || '[]');
                     const idx = allUsers.findIndex(u => u.id === window.loggedInUser.id);
-                    if (idx !== -1) { allUsers[idx].email = newEmail; localStorage.setItem('nd_users', JSON.stringify(allUsers)); }
+                    if (idx !== -1) { 
+                        allUsers[idx].email = newEmail; 
+                        localStorage.setItem('nd_users', JSON.stringify(allUsers)); 
+                    }
                 }
 
                 verifyEmailBtn.classList.remove('saving');
                 verifyEmailBtn.classList.add('success');
-                verifyEmailBtn.textContent = 'Email Verified!';
+                verifyEmailBtn.textContent = 'Email Updated!';
 
                 setTimeout(() => {
                     verifyEmailBtn.classList.remove('success');
@@ -815,7 +842,7 @@ function initSecurityLogic() {
                     closeEmailVerifyModal();
                 }, 1200);
             } catch (err) {
-                if (typeof customAlert === 'function') customAlert('Network error. Is the server running?');
+                if (typeof customAlert === 'function') customAlert(err.message || 'Network error. Is the server running?');
                 verifyEmailBtn.classList.remove('saving');
                 verifyEmailBtn.textContent = 'Verify & Update';
             } finally {
@@ -928,11 +955,26 @@ function initSecurityLogic() {
             verifyPhoneBtn.disabled = true;
 
             try {
-                const contact = window._secPhoneOtpContact;
-                const response = await fetch(`${window.API_BASE}/api/verify-otp`, {
+                const phoneInput = document.getElementById('secNewPhone');
+                const passInput = document.getElementById('secPhonePass');
+                const newPhone = phoneInput ? phoneInput.value.trim() : '';
+
+                if (!newPhone || !passInput || !passInput.value) {
+                    throw new Error('Required fields are missing.');
+                }
+
+                const response = await fetch(`${window.API_BASE}/api/user/update-security`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contact, code })
+                    headers: { 
+                        'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({
+                        type: 'phone',
+                        newValue: newPhone,
+                        currentPassword: passInput.value,
+                        otpCode: code
+                    })
                 });
                 const data = await response.json();
 
@@ -940,7 +982,7 @@ function initSecurityLogic() {
                     verifyPhoneBtn.classList.remove('saving');
                     verifyPhoneBtn.style.backgroundColor = '#dc3545';
                     verifyPhoneBtn.style.boxShadow = '0 4px 15px rgba(220,38,38,0.3)';
-                    verifyPhoneBtn.textContent = data.error || 'Invalid OTP';
+                    verifyPhoneBtn.textContent = data.error || 'Failed to update phone';
                     setTimeout(() => {
                         verifyPhoneBtn.style.backgroundColor = '';
                         verifyPhoneBtn.style.boxShadow = '';
@@ -950,36 +992,22 @@ function initSecurityLogic() {
                     return;
                 }
 
-                // OTP verified — now update phone
-                const phoneInput = document.getElementById('secNewPhone');
-                const passInput = document.getElementById('secPhonePass');
-                const allUsersPhone = JSON.parse(localStorage.getItem('nd_users') || '[]');
-                const newPhone = phoneInput ? phoneInput.value.trim() : '';
-                const phoneTaken = allUsersPhone.find(u => u.id !== (window.loggedInUser || {}).id && u.phone && u.phone.replace(/[\s\-\(\)]/g, '') === newPhone.replace(/[\s\-\(\)]/g, ''));
-                if (phoneTaken) {
-                    verifyPhoneBtn.classList.remove('saving');
-                    verifyPhoneBtn.style.backgroundColor = '#dc3545';
-                    verifyPhoneBtn.style.boxShadow = '0 4px 15px rgba(220,38,38,0.3)';
-                    verifyPhoneBtn.textContent = 'Phone already in use!';
-                    setTimeout(() => {
-                        verifyPhoneBtn.style.backgroundColor = '';
-                        verifyPhoneBtn.style.boxShadow = '';
-                        verifyPhoneBtn.textContent = 'Verify & Update';
-                    }, 2500);
-                    verifyPhoneBtn.disabled = false;
-                    return;
-                }
-
-                if (window.loggedInUser && phoneInput && newPhone) {
+                // Update local session
+                if (window.loggedInUser) {
                     window.loggedInUser.phone = newPhone;
                     localStorage.setItem('nd_logged_in_user', JSON.stringify(window.loggedInUser));
+                    
+                    const allUsersPhone = JSON.parse(localStorage.getItem('nd_users') || '[]');
                     const idx = allUsersPhone.findIndex(u => u.id === window.loggedInUser.id);
-                    if (idx !== -1) { allUsersPhone[idx].phone = newPhone; localStorage.setItem('nd_users', JSON.stringify(allUsersPhone)); }
+                    if (idx !== -1) { 
+                        allUsersPhone[idx].phone = newPhone; 
+                        localStorage.setItem('nd_users', JSON.stringify(allUsersPhone)); 
+                    }
                 }
 
                 verifyPhoneBtn.classList.remove('saving');
                 verifyPhoneBtn.classList.add('success');
-                verifyPhoneBtn.textContent = 'Phone Verified!';
+                verifyPhoneBtn.textContent = 'Phone Updated!';
 
                 setTimeout(() => {
                     verifyPhoneBtn.classList.remove('success');
@@ -990,7 +1018,7 @@ function initSecurityLogic() {
                     closePhoneVerifyModal();
                 }, 1200);
             } catch (err) {
-                if (typeof customAlert === 'function') customAlert('Network error. Is the server running?');
+                if (typeof customAlert === 'function') customAlert(err.message || 'Network error. Is the server running?');
                 verifyPhoneBtn.classList.remove('saving');
                 verifyPhoneBtn.textContent = 'Verify & Update';
             } finally {

@@ -253,6 +253,97 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
     }
 });
 
+app.post('/api/user/update-security', authenticateToken, async (req, res) => {
+    try {
+        const { type, newValue, currentPassword, otpCode } = req.body;
+        const userId = req.user.id;
+
+        if (!type || newValue === undefined) {
+            return res.status(400).json({ success: false, error: 'Missing parameters.' });
+        }
+
+        // 1. Fetch user to verify current password
+        const { data: users, error: findError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', userId)
+            .limit(1);
+
+        if (findError || !users || users.length === 0) {
+            return res.status(404).json({ success: false, error: 'User account not found.' });
+        }
+
+        const dbUser = users[0];
+
+        // 2. Validate current password
+        if (!currentPassword) {
+            return res.status(400).json({ success: false, error: 'Current password is required.' });
+        }
+        const isMatch = await bcrypt.compare(currentPassword, dbUser.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, error: 'Incorrect current password.' });
+        }
+
+        // 3. Process fields to update
+        const updates = {};
+
+        if (type === 'email' || type === 'phone') {
+            if (!otpCode) {
+                return res.status(400).json({ success: false, error: 'Verification code is required.' });
+            }
+
+            // Verify OTP code
+            const cleanContact = newValue.trim().toLowerCase();
+            const record = otpStore[cleanContact] || otpStore[newValue.trim()];
+            if (!record) {
+                return res.status(400).json({ success: false, error: 'No verification code found. Please request a new one.' });
+            }
+            if (Date.now() > record.expiresAt) {
+                delete otpStore[cleanContact];
+                delete otpStore[newValue.trim()];
+                return res.status(400).json({ success: false, error: 'Verification code expired.' });
+            }
+            if (record.code !== otpCode) {
+                return res.status(400).json({ success: false, error: 'Invalid verification code.' });
+            }
+
+            // Clean up OTP code
+            delete otpStore[cleanContact];
+            delete otpStore[newValue.trim()];
+
+            if (type === 'email') {
+                updates.email = newValue.trim().toLowerCase();
+            } else {
+                let normalizedPhone = newValue.trim().replace(/[\s\-\(\)]/g, '');
+                if (normalizedPhone.length === 11 && normalizedPhone.startsWith('0')) {
+                    normalizedPhone = '+234' + normalizedPhone.substring(1);
+                }
+                updates.phone = normalizedPhone;
+            }
+        } else if (type === 'password') {
+            updates.password = await bcrypt.hash(newValue, 10);
+        } else {
+            return res.status(400).json({ success: false, error: 'Invalid update type.' });
+        }
+
+        // 4. Update in Supabase
+        const { error: updateError } = await supabase
+            .from('users')
+            .update(updates)
+            .eq('id', userId);
+
+        if (updateError) {
+            console.error(`Failed to update user security (${type}):`, updateError.message);
+            return res.status(500).json({ success: false, error: updateError.message || `Failed to update ${type}.` });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('update-security fatal error:', err);
+        res.status(500).json({ success: false, error: err.message || 'Internal server error.' });
+    }
+});
+
 // ==========================================
 // 4. OTP ROUTES
 // ==========================================
