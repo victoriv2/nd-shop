@@ -954,7 +954,20 @@ function initAiChatLogic() {
                 read: m.read
             }));
 
-            const injectedPrompt = SYSTEM_PROMPT + _contextDirective + `\n\n--- INJECTED STORE CONTEXT ---\n
+            const loggedInUserRaw = localStorage.getItem('nd_logged_in_user');
+            let activeCustomerInfo = "None (No customer logged in on the user/customer side)";
+            if (loggedInUserRaw) {
+                try {
+                    const u = JSON.parse(loggedInUserRaw);
+                    const name = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.name || '';
+                    if (name) {
+                        activeCustomerInfo = `${name} (ID: ${u.id || 'Unknown'}, Email: ${u.email || 'Unknown'}, Phone: ${u.phone || 'Unknown'})`;
+                    }
+                } catch(e){}
+            }
+            const adminEmail = localStorage.getItem('nd_admin_email') || 'Admin';
+
+            const injectedPrompt = SYSTEM_PROMPT + _contextDirective + `\n\n--- ACTIVE USER CONTEXT ---\n- Currently Logged-in Customer (A): ${activeCustomerInfo}\n- Currently Chatting Admin (B): ${adminEmail}\n- Instruction: When the admin B asks about "the user", "the customer", or "user's details" without specifying a different name, you must identify A as "the user" and respond with details about A.\n\n--- INJECTED STORE CONTEXT ---\n
 FINANCIAL SUMMARY:
 - Total Revenue (All Time): ₦${totalRevenue.toLocaleString()}
 - Total Payouts Given: ₦${totalPayoutsGiven.toLocaleString()}
