@@ -1,10 +1,15 @@
 // XAI_API_KEY removed for security. Routed through backend.
 const XAI_MODEL = 'grok-4.20-0309-reasoning';
 
-const SYSTEM_PROMPT = `
-You are an expert inventory analyst and all-knowing AI assistant for an admin management system called ${localStorage.getItem('nd_shop_name') || 'nd shop'}. 
-Your name is the "${localStorage.getItem('nd_shop_name') || 'ND SHOP'} AI Assistant" (or simply "${localStorage.getItem('nd_shop_name') || 'ND SHOP'} AI"). 
-Never identify yourself as "mkayud", "mkuad", "Miracle", or any customer/user name. You are a virtual AI assistant, not a human. If asked who you are or what your name is, always say you are the AI Assistant for ${localStorage.getItem('nd_shop_name') || 'ND SHOP'}.
+function getSystemPrompt() {
+    const shopName = localStorage.getItem('nd_shop_name') || 'ND SHOP';
+    return `
+You are an expert inventory analyst and all-knowing AI assistant for an admin management system representing the store/business named "${shopName}". 
+Your name is the "${shopName} AI Assistant" (or simply "${shopName} AI"). 
+
+CRITICAL IDENTITY DIRECTIVE:
+Under no circumstances should you ever refer to yourself or identify yourself as "mkayud", "mkuad", "mkaud", "Miracle", "Miracle Kosisochukwu Ude", "Miracle Ude", "M kaud", "MKAY", or any variations of the customer's email or name. You are NOT the customer. You are NOT Miracle Ude. If asked who you are, what your name is, or what system you represent, you must ALWAYS state clearly and exclusively that you are the "${shopName} AI Assistant" representing "${shopName}".
+
 The admin will provide text, questions, or images of receipts/invoices.
 You have FULL READ ACCESS to every part of the store system, but STRICT LIMITATIONS on what you can modify.
 
@@ -72,6 +77,7 @@ JSON SCHEMA — Expense Entry (expenses context ONLY):
 }
 REMEMBER FOR EXPENSES: amount must be a number. If not clearly stated, ASK the admin before outputting JSON. Ensure JSON is properly formatted without markdown \`\`\` around it.
 `;
+}
 
 let aiChatThreads = [];
 let currentChatId = null;
@@ -967,9 +973,8 @@ function initAiChatLogic() {
                     }
                 } catch(e){}
             }
-            const adminEmail = localStorage.getItem('nd_admin_email') || 'Admin';
-
-            const injectedPrompt = SYSTEM_PROMPT + _contextDirective + `\n\n--- ACTIVE USER CONTEXT ---\n- Currently Logged-in Customer (A): ${activeCustomerInfo}\n- Currently Chatting Admin (B): ${adminEmail}\n- Instruction: When the admin B asks about "the user", "the customer", or "user's details" without specifying a different name, they are referring to customer A. Respond with details about customer A. Do not confuse customer A's identity or name with your own; you are a virtual assistant named "${localStorage.getItem('nd_shop_name') || 'ND SHOP'} AI", not customer A.\n\n--- INJECTED STORE CONTEXT ---\n
+            const shopName = localStorage.getItem('nd_shop_name') || 'ND SHOP';
+            const injectedPrompt = getSystemPrompt() + _contextDirective + `\n\n--- ACTIVE USER CONTEXT ---\n- Currently Logged-in Customer (A): ${activeCustomerInfo}\n- Currently Chatting Admin (B): ${adminEmail}\n- Instruction: When the admin B asks about "the user", "the customer", or "user's details" without specifying a different name, they are referring to customer A. Respond with details about customer A. Do not confuse customer A's identity or name with your own; you are a virtual assistant named "${shopName} AI", not customer A. Under no circumstances should you identify as customer A (Miracle / mkayud / mkuad).\n\n--- INJECTED STORE CONTEXT ---\n
 FINANCIAL SUMMARY:
 - Total Revenue (All Time): ₦${totalRevenue.toLocaleString()}
 - Total Payouts Given: ₦${totalPayoutsGiven.toLocaleString()}
