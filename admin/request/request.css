@@ -164,21 +164,25 @@
     padding: 4px 12px;
     border-radius: 20px;
     text-transform: uppercase;
+    border: 1px solid transparent;
 }
 
 .status-pending {
-    background: #f0f4f8;
-    color: #8b5cf6;
+    background: #fff7ed;
+    color: #ea580c;
+    border-color: #fed7aa;
 }
 
 .status-approved {
-    background: #edf1f7;
-    color: #8b5cf6;
+    background: #f0fdf4;
+    color: #16a34a;
+    border-color: #bbf7d0;
 }
 
 .status-declined {
-    background: #ffebee;
+    background: #fef2f2;
     color: #dc3545;
+    border-color: #fecaca;
 }
 
 .user-profile-row {
