@@ -514,6 +514,62 @@
     white-space: nowrap;
 }
 
+/* Audio scrubber / progress slider */
+.msg-audio-scrubber {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.msg-audio-scrubber-track {
+    position: relative;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.msg-other .msg-audio-scrubber-track {
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.msg-audio-scrubber-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: currentColor;
+    border-radius: 4px;
+    width: 0%;
+    pointer-events: none;
+    transition: width 0.1s linear;
+}
+
+.msg-audio-scrubber input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    position: absolute;
+    top: -6px;
+    left: 0;
+    width: 100%;
+    height: 16px;
+    background: transparent;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+}
+
+.msg-audio-scrubber-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.66rem;
+    opacity: 0.75;
+}
+
 /* ---- Meta info (timestamp, status) ---- */
 .msg-meta {
     font-size: 0.62rem;
@@ -1418,7 +1474,7 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(3px);
-    z-index: 100050;
+    z-index: 100200;
     display: flex;
     align-items: center;
     justify-content: center;

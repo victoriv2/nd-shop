@@ -535,15 +535,23 @@ function renderMessages(searchQuery) {
             </div>`;
         } else if (msg.type === 'audio') {
             if (msg.content === 'Voice Note') {
-                const bars = Array.from({length: 20}, () => Math.floor(Math.random() * 20) + 6)
-                    .map(h => `<div class="msg-audio-bar" style="height:${h}px;"></div>`).join('');
                 contentHtml = `
                     <div class="msg-audio-player" data-src="${msg.mediaUrl}">
                         <button class="msg-audio-play" onclick="event.stopPropagation(); _toggleAudioPlay(this)">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                         </button>
-                        <div class="msg-audio-waveform">${bars}</div>
-                        <span class="msg-audio-duration">${msg.duration || '0:00'}</span>
+                        <div class="msg-audio-scrubber">
+                            <div class="msg-audio-scrubber-track">
+                                <div class="msg-audio-scrubber-fill"></div>
+                                <input type="range" min="0" max="100" value="0" step="0.1"
+                                    oninput="event.stopPropagation(); _seekAudio(this)"
+                                    onclick="event.stopPropagation()">
+                            </div>
+                            <div class="msg-audio-scrubber-meta">
+                                <span class="msg-audio-current">0:00</span>
+                                <span class="msg-audio-duration">${msg.duration || '0:00'}</span>
+                            </div>
+                        </div>
                     </div>`;
             } else {
                 contentHtml = `
@@ -892,6 +900,24 @@ function _stopRecordingAndSend() {
 }
 
 // --- Audio Playback ---
+function _formatAudioTime(sec) {
+    if (!isFinite(sec)) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+window._seekAudio = function(rangeInput) {
+    const player = rangeInput.closest('.msg-audio-player');
+    if (!player) return;
+    const audio = player.querySelector('audio');
+    if (!audio || !isFinite(audio.duration)) return;
+    const pct = parseFloat(rangeInput.value);
+    audio.currentTime = (pct / 100) * audio.duration;
+    const fill = player.querySelector('.msg-audio-scrubber-fill');
+    if (fill) fill.style.width = pct + '%';
+};
+
 window._toggleAudioPlay = function(btn) {
     const player = btn.closest('.msg-audio-player');
     if (!player) return;
@@ -901,6 +927,28 @@ window._toggleAudioPlay = function(btn) {
         audio = document.createElement('audio');
         audio.src = player.getAttribute('data-src');
         player.appendChild(audio);
+
+        // Drive the scrubber on timeupdate
+        audio.addEventListener('timeupdate', () => {
+            if (!audio.duration) return;
+            const pct = (audio.currentTime / audio.duration) * 100;
+            const fill = player.querySelector('.msg-audio-scrubber-fill');
+            const rangeInput = player.querySelector('input[type="range"]');
+            const currentEl = player.querySelector('.msg-audio-current');
+            if (fill) fill.style.width = pct + '%';
+            if (rangeInput) rangeInput.value = pct;
+            if (currentEl) currentEl.textContent = _formatAudioTime(audio.currentTime);
+        });
+
+        audio.addEventListener('ended', () => {
+            btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+            const fill = player.querySelector('.msg-audio-scrubber-fill');
+            const rangeInput = player.querySelector('input[type="range"]');
+            const currentEl = player.querySelector('.msg-audio-current');
+            if (fill) fill.style.width = '0%';
+            if (rangeInput) rangeInput.value = 0;
+            if (currentEl) currentEl.textContent = '0:00';
+        });
     }
 
     if (audio.paused) {
@@ -914,10 +962,6 @@ window._toggleAudioPlay = function(btn) {
         
         audio.play();
         btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
-        
-        audio.onended = () => {
-            btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-        };
     } else {
         audio.pause();
         btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';

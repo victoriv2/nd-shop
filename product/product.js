@@ -277,6 +277,21 @@ window.loadProductTab = function() {
                     renderDynamicProducts(searchInput ? searchInput.value : '');
                 };
 
+                // Real-time update: when admin changes products via SSE or another tab,
+                // immediately re-render without needing a page refresh
+                if (window.realtimeSync) {
+                    window.realtimeSync.on('nd_products_data', () => {
+                        window.refreshProducts();
+                    });
+                }
+                // Also refresh when nd_sync_complete fires (SSE push from server)
+                window.addEventListener('nd_sync_complete', () => {
+                    const cont = document.getElementById('product-container');
+                    if (cont && cont.style.display !== 'none') {
+                        window.refreshProducts();
+                    }
+                });
+
                 // Search Listeners
                 if (searchInput && searchWrapper && filterBtn) {
                     searchInput.addEventListener('focus', () => {
