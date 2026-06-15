@@ -175,8 +175,17 @@
                         }
                     } else {
                         // User not found in database (e.g. deleted or after a factory reset), auto log out
-                        localStorage.removeItem('nd_logged_in_user');
-                        localStorage.removeItem('nd_token');
+                        // Wipe all user-specific nd_ keys so stale data (cart, requests, sales) doesn't persist
+                        const USER_DATA_KEYS = [
+                            'nd_logged_in_user', 'nd_token',
+                            'nd_user_cart_data', 'nd_requests_data',
+                            'nd_sales_history', 'nd_messages',
+                            'nd_ai_chat_history', 'nd_ai_chat_threads',
+                            'nd_user_ai_chat_threads', 'nd_debt_requests',
+                            'nd_pinned_chats', 'nd_comm_messages',
+                            'nd_blocked_messaging_users'
+                        ];
+                        USER_DATA_KEYS.forEach(k => localStorage.removeItem(k));
                         window.location.reload();
                     }
                 }

@@ -44,7 +44,7 @@ function initAboutLogic() {
             if (aboutText && aboutText.trim() !== '') {
                 descEl.innerHTML = aboutText.replace(/\n/g, '<br>');
             } else {
-                descEl.innerHTML = `Welcome to ${shopName}. We are committed to providing you with the best products and services. Thank you for your patronage!`;
+                descEl.innerHTML = '';
             }
         }
     }
