@@ -73,21 +73,4 @@ function initAboutLogic() {
     };
 
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
-
-    const wipeBtn = document.getElementById('aboutWipeCacheBtn');
-    if (wipeBtn) {
-        wipeBtn.addEventListener('click', () => {
-            if (typeof customConfirm === 'function') {
-                customConfirm('Purge Local Cache?\n\nThis will clear all local browser data and reload the page to fetch fresh data from Supabase.', true).then(confirmed => {
-                    if (confirmed) {
-                        window.wipeLocalCacheAndReload();
-                    }
-                });
-            } else {
-                if (confirm('This will clear all local data and reload the page. Proceed?')) {
-                    window.wipeLocalCacheAndReload();
-                }
-            }
-        });
-    }
 }
