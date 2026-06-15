@@ -745,9 +745,9 @@ function initAiChatLogic() {
             const defaultAllocations = [
                 { name: "Personal income", percent: 20 },
                 { name: "Expenses", percent: 15 },
-                { name: "Savings", percent: 15 },
-                { name: "Emergency funds", percent: 10 },
-                { name: "Reinvestment fund", percent: 30 },
+                { name: "Salaries", percent: 15 },
+                { name: "Reinvestment", percent: 35 },
+                { name: "Tax", percent: 5 },
                 { name: "Net profit", percent: 10 }
             ];
             let dbIncomeAllocations = defaultAllocations;

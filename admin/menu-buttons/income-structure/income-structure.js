@@ -480,19 +480,25 @@ window.loadIsAllocations = function() {
     const defaultVals = [
         { name: "Personal income", percent: 20 },
         { name: "Expenses", percent: 15 },
-        { name: "Savings", percent: 15 },
-        { name: "Emergency funds", percent: 10 },
-        { name: "Reinvestment fund", percent: 30 },
-        { name: "Net profit", percent: 10 },
-        { name: "Tax", percent: 0 }
+        { name: "Salaries", percent: 15 },
+        { name: "Reinvestment", percent: 35 },
+        { name: "Tax", percent: 5 },
+        { name: "Net profit", percent: 10 }
     ];
     try {
         let saved = localStorage.getItem('nd_income_allocations');
         if (saved) {
             let parsed = JSON.parse(saved);
+            // Auto-migrate if the stored allocations are from the old defaults (contain 'savings' or 'emergency funds')
+            const hasSavings = parsed.some(a => a.name.toLowerCase() === 'savings');
+            const hasEmergency = parsed.some(a => a.name.toLowerCase() === 'emergency funds');
+            if (hasSavings || hasEmergency) {
+                localStorage.setItem('nd_income_allocations', JSON.stringify(defaultVals));
+                return defaultVals;
+            }
             // Auto inject Tax if this is old data
             if (!parsed.some(a => a.name.toLowerCase() === 'tax')) {
-                parsed.push({ name: "Tax", percent: 0 });
+                parsed.push({ name: "Tax", percent: 5 });
             }
             return parsed;
         }

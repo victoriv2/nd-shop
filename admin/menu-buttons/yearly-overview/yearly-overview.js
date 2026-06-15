@@ -224,6 +224,16 @@ window.renderYearlyOverview = function() {
     // Auto Tax Calculation (if applicable based on income structure)
     try {
         let allocs = JSON.parse(localStorage.getItem('nd_income_allocations') || '[]');
+        if (allocs.length === 0) {
+            allocs = [
+                { name: "Personal income", percent: 20 },
+                { name: "Expenses", percent: 15 },
+                { name: "Salaries", percent: 15 },
+                { name: "Reinvestment", percent: 35 },
+                { name: "Tax", percent: 5 },
+                { name: "Net profit", percent: 10 }
+            ];
+        }
         let taxAlloc = allocs.find(a => a.name.toLowerCase() === 'tax');
         if (taxAlloc && parseFloat(taxAlloc.percent) > 0) {
             const taxPercent = parseFloat(taxAlloc.percent);
@@ -239,6 +249,16 @@ window.renderYearlyOverview = function() {
     // Auto Net Profit Calculation (if applicable based on income structure)
     try {
         let allocs = JSON.parse(localStorage.getItem('nd_income_allocations') || '[]');
+        if (allocs.length === 0) {
+            allocs = [
+                { name: "Personal income", percent: 20 },
+                { name: "Expenses", percent: 15 },
+                { name: "Salaries", percent: 15 },
+                { name: "Reinvestment", percent: 35 },
+                { name: "Tax", percent: 5 },
+                { name: "Net profit", percent: 10 }
+            ];
+        }
         let npAlloc = allocs.find(a => a.name.toLowerCase() === 'net profit');
         if (npAlloc && parseFloat(npAlloc.percent) > 0) {
             const npPercent = parseFloat(npAlloc.percent);
