@@ -135,6 +135,7 @@ function initEditProfileLogic() {
     function populateEditProfileData() {
         const user = window.loggedInUser || {};
         const epFirstName = document.getElementById('epFirstName');
+        const epMiddleName = document.getElementById('epMiddleName');
         const epLastName = document.getElementById('epLastName');
         const epAddress = document.getElementById('epAddress');
 
@@ -142,10 +143,12 @@ function initEditProfileLogic() {
         const epAvatar = modal.querySelector('.edit-profile-avatar');
 
         if (epFirstName) epFirstName.value = user.firstName || '';
+        if (epMiddleName) epMiddleName.value = user.middleName || '';
         if (epLastName) epLastName.value = user.lastName || '';
         if (epAddress) epAddress.value = user.address || '';
 
-        if (epTitle) epTitle.textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+        const nameDisplay = `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.replace(/\s+/g, ' ').trim();
+        if (epTitle) epTitle.textContent = nameDisplay;
         if (epAvatar) epAvatar.textContent = user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U';
     }
 
@@ -176,6 +179,7 @@ function initEditProfileLogic() {
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
             const epFirstName = document.getElementById('epFirstName');
+            const epMiddleName = document.getElementById('epMiddleName');
             const epLastName = document.getElementById('epLastName');
             const epAddress = document.getElementById('epAddress');
 
@@ -187,6 +191,7 @@ function initEditProfileLogic() {
             };
 
             const newFirst = epFirstName ? formatName(epFirstName.value.trim()) : '';
+            const newMiddle = epMiddleName ? formatName(epMiddleName.value.trim()) : '';
             const newLast = epLastName ? formatName(epLastName.value.trim()) : '';
             const newAddress = epAddress ? epAddress.value.trim() : '';
             const newState = document.getElementById('stateText') ? document.getElementById('stateText').textContent.trim() : '';
@@ -212,11 +217,12 @@ function initEditProfileLogic() {
                         const payload = {
                             id: window.loggedInUser.id,
                             firstName: newFirst,
+                            middleName: newMiddle,
                             lastName: newLast,
                             address: newAddress,
                             state: newState,
                             lga: newLGA,
-                            name: `${newFirst} ${newLast}`.trim()
+                            name: `${newFirst} ${newMiddle} ${newLast}`.replace(/\s+/g, ' ').trim()
                         };
 
                         const response = await fetch(`${window.API_BASE}/api/update-user`, {
@@ -236,6 +242,7 @@ function initEditProfileLogic() {
 
                         if (data.success) {
                             window.loggedInUser.firstName = newFirst;
+                            window.loggedInUser.middleName = newMiddle;
                             window.loggedInUser.lastName = newLast;
                             window.loggedInUser.address = newAddress;
                             window.loggedInUser.state = newState;

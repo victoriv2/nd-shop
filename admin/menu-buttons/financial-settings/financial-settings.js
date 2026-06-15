@@ -76,6 +76,16 @@ async function openFinancialSettings() {
                                 window.dispatchEvent(event);
                             }
 
+                            const refToggle = document.getElementById('referralEarningsEnableSwitch');
+                            if (refToggle) {
+                                const newState = refToggle.checked ? 'true' : 'false';
+                                localStorage.setItem('nd_referral_earnings_enabled', newState);
+                                
+                                // Dispatch local storage update event to notify user menu immediately
+                                const event = new CustomEvent('local-storage-update', { detail: { key: 'nd_referral_earnings_enabled', value: newState } });
+                                window.dispatchEvent(event);
+                            }
+
                             customAlert('Financial Settings saved successfully!');
 
                             // Re-render both admin and user product lists so change applies immediately
@@ -131,6 +141,19 @@ async function openFinancialSettings() {
                 slider.style.backgroundColor = urpEnabled ? '#8b5cf6' : '#cbd5e1';
                 const knob = slider.querySelector('.knob');
                 if (knob) knob.style.transform = urpEnabled ? 'translateX(22px)' : 'translateX(0)';
+            }
+        }
+
+        const refToggle = modal.querySelector('#referralEarningsEnableSwitch');
+        if (refToggle) {
+            const refEnabled = localStorage.getItem('nd_referral_earnings_enabled') !== 'false';
+            refToggle.checked = refEnabled;
+            // Sync visual state
+            const slider = refToggle.nextElementSibling;
+            if (slider) {
+                slider.style.backgroundColor = refEnabled ? '#8b5cf6' : '#cbd5e1';
+                const knob = slider.querySelector('.knob');
+                if (knob) knob.style.transform = refEnabled ? 'translateX(22px)' : 'translateX(0)';
             }
         }
 

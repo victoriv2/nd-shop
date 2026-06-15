@@ -892,6 +892,7 @@ function initAiChatLogic() {
             const cleanEnrichedUsers = enrichedUsers.map(u => ({
                 id: u.id,
                 firstName: u.firstName,
+                middleName: u.middleName,
                 lastName: u.lastName,
                 phone: u.phone,
                 email: u.email,

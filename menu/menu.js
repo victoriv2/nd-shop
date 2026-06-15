@@ -37,7 +37,8 @@ function initMenuLogic() {
     const profileId = document.querySelector('.profile-id');
     const profileAvatar = document.querySelector('.profile-avatar');
 
-    if (profileName) profileName.textContent = `${user.firstName} ${user.lastName || ''}`;
+    const fullName = `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.replace(/\s+/g, ' ').trim();
+    if (profileName) profileName.textContent = fullName || 'User';
     if (profileId) profileId.textContent = `ID: ${user.id}`;
     if (profileAvatar) profileAvatar.textContent = user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U';
 
@@ -90,6 +91,9 @@ function initMenuLogic() {
 
     const referralEarningsBtn = document.getElementById('referralEarningsBtn');
     if (referralEarningsBtn) {
+        const isRefEnabled = localStorage.getItem('nd_referral_earnings_enabled') !== 'false';
+        referralEarningsBtn.style.display = isRefEnabled ? 'flex' : 'none';
+        
         referralEarningsBtn.addEventListener('click', () => {
             window.open('https://ec5.empoweredconsumerism.com/index.html#', '_blank');
         });
@@ -104,7 +108,27 @@ function initMenuLogic() {
                     btn.style.display = e.detail.value === 'false' ? 'none' : 'flex';
                 }
             }
+            if (e.detail && e.detail.key === 'nd_referral_earnings_enabled') {
+                const btn = document.getElementById('referralEarningsBtn');
+                if (btn) {
+                    btn.style.display = e.detail.value === 'false' ? 'none' : 'flex';
+                }
+            }
         });
+
+        window.addEventListener('nd_sync_complete', () => {
+            const isRefEnabled = localStorage.getItem('nd_referral_earnings_enabled') !== 'false';
+            const refBtn = document.getElementById('referralEarningsBtn');
+            if (refBtn) {
+                refBtn.style.display = isRefEnabled ? 'flex' : 'none';
+            }
+            const isUrpEnabled = localStorage.getItem('nd_reward_purchase_enabled') === 'true';
+            const urpBtn = document.getElementById('menuPurchaseWithRewardBtn');
+            if (urpBtn) {
+                urpBtn.style.display = isUrpEnabled ? 'flex' : 'none';
+            }
+        });
+
         window.hasRewardPurchaseToggleListener = true;
     }
 

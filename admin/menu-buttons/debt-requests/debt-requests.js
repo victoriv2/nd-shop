@@ -202,7 +202,7 @@ window.renderDebtRequests = function() {
         const formattedDate = dateObj.toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
         
         const firstName = r.user && r.user.firstName ? r.user.firstName : '?';
-        const fullName = r.user ? (firstName + ' ' + (r.user.lastName || '')).trim() : 'Unknown User';
+        const fullName = r.user ? (r.user.name || `${firstName} ${r.user.middleName || ''} ${r.user.lastName || ''}`.replace(/\s+/g, ' ').trim()) : 'Unknown User';
         const avatarLetter = firstName.charAt(0).toUpperCase();
         const userId = r.userId || (r.user && r.user.id) || '';
 

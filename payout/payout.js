@@ -624,7 +624,7 @@ function openUserRewardPurchaseModal() {
                 
                 <!-- Account Info -->
                 <div style="padding: 14px 18px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #6366f1; margin-bottom: 16px;">
-                    <div style="font-weight: 700; color: #1e293b; font-size: 1rem; margin-bottom: 6px;">${user.firstName} ${user.lastName || ''}</div>
+                    <div style="font-weight: 700; color: #1e293b; font-size: 1rem; margin-bottom: 6px;">${user.name || `${user.firstName} ${user.middleName || ''} ${user.lastName || ''}`.replace(/\s+/g, ' ').trim()}</div>
                     <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
                         <span style="color: #64748b; font-weight: 600;">Available Reward Balance:</span>
                         <strong style="color: #16a34a; font-size: 1rem;">₦${Math.round(spendableRewardBalance).toLocaleString()}</strong>
@@ -2132,7 +2132,7 @@ function _submitURPRequest(spendableRewardBalance, user) {
         isRewardPurchase: true,
         user: {
             id: user.id,
-            name: (user.firstName + ' ' + (user.lastName || '')).trim(),
+            name: user.name || (user.firstName + ' ' + (user.middleName ? user.middleName + ' ' : '') + (user.lastName || '')).replace(/\s+/g, ' ').trim(),
             avatar: user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U'
         },
         orderTotal: total,

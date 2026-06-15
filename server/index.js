@@ -235,11 +235,11 @@ app.get('/api/users', optionalToken, async (req, res) => {
 
 app.post('/api/update-user', optionalToken, async (req, res) => {
     try {
-        const { id, firstName, lastName, address, state, lga, name } = req.body;
+        const { id, firstName, middleName, lastName, address, state, lga, name } = req.body;
         if (!id) return res.status(400).json({ success: false, error: 'User ID is required.' });
 
         const { error } = await supabase.from('users')
-            .update({ first_name: firstName, last_name: lastName, address, state, lga, name })
+            .update({ first_name: firstName, middle_name: middleName, last_name: lastName, address, state, lga, name })
             .eq('id', id);
 
         if (error) {
@@ -1062,6 +1062,7 @@ app.post('/api/factory-reset', optionalToken, async (req, res) => {
             { id: 'nd_payout_rate', value: '0', updated_at: new Date().toISOString() },
             { id: 'nd_payout_enabled', value: 'false', updated_at: new Date().toISOString() },
             { id: 'nd_reward_purchase_enabled', value: 'false', updated_at: new Date().toISOString() },
+            { id: 'nd_referral_earnings_enabled', value: 'false', updated_at: new Date().toISOString() },
             { id: 'nd_admin_locks', value: '{}', updated_at: new Date().toISOString() },
             { id: 'nd_delete_pin', value: '1234', updated_at: new Date().toISOString() },
             { id: 'nd_maintenance_mode', value: 'false', updated_at: new Date().toISOString() }

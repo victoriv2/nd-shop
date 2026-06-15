@@ -29,6 +29,16 @@
                         </span>
                     </label>
                 </div>
+
+                <div class="financial-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid #e2e8f0;">
+                    <label class="financial-label" style="margin-bottom: 0;">Enable Support Referral Earnings</label>
+                    <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 28px;">
+                        <input type="checkbox" id="referralEarningsEnableSwitch" checked style="opacity: 0; width: 0; height: 0;" onchange="var s=this.nextElementSibling;s.style.backgroundColor=this.checked?'#8b5cf6':'#cbd5e1';s.querySelector('.knob').style.transform=this.checked?'translateX(22px)':'translateX(0)'">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: .4s; border-radius: 34px;">
+                            <span class="knob" style="position: absolute; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+                        </span>
+                    </label>
+                </div>
                 
                 <div class="financial-group">
                     <label class="financial-label">Default Reward Rate (Payout %)</label>
