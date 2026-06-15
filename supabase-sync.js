@@ -122,6 +122,8 @@
                 const freshQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
                 const hasPendingSettings = freshQueue.some(q => q.table === 'admin_settings');
                 if (!hasPendingSettings) {
+                    const receivedKeys = new Set(data.data.map(s => s.id));
+                    
                     for (const setting of data.data) {
                         // Check if a local write occurred while the fetch was in progress
                         if (lastLocalWrite[setting.id] && lastLocalWrite[setting.id] >= fetchStartTime) {
@@ -133,6 +135,18 @@
                             : String(setting.value ?? '');
                         nativeSetItem.call(localStorage, setting.id, val);
                         stateCache[setting.id] = val;
+                    }
+
+                    // For keys in SETTINGS_KEYS that were NOT returned by the server,
+                    // remove them from localStorage and stateCache so the local state reflects backend deletions
+                    for (const key of SETTINGS_KEYS) {
+                        if (!receivedKeys.has(key)) {
+                            if (lastLocalWrite[key] && lastLocalWrite[key] >= fetchStartTime) {
+                                continue;
+                            }
+                            localStorage.removeItem(key);
+                            delete stateCache[key];
+                        }
                     }
                 }
             }
@@ -390,7 +404,7 @@
         let changed = false;
         operations.forEach(op => {
             if (op.type === 'INSERT' || op.type === 'UPDATE') {
-                const idx = currentList.findIndex(item => item.id === op.data.id);
+                const idx = currentList.findIndex(item => String(item.id) === String(op.data.id));
                 if (idx !== -1) {
                     currentList[idx] = op.data;
                 } else {
@@ -399,7 +413,7 @@
                 changed = true;
             } else if (op.type === 'DELETE') {
                 const oldLen = currentList.length;
-                currentList = currentList.filter(item => item.id !== op.id);
+                currentList = currentList.filter(item => String(item.id) !== String(op.id));
                 if (currentList.length !== oldLen) changed = true;
             }
         });

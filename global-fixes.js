@@ -126,13 +126,27 @@
      * Global App Fixes
      */
 
+    window.wipeLocalCacheAndReload = function() {
+        const USER_DATA_KEYS = [
+            'nd_logged_in_user', 'nd_token',
+            'nd_user_cart_data', 'nd_requests_data',
+            'nd_sales_history', 'nd_messages',
+            'nd_ai_chat_history', 'nd_ai_chat_threads',
+            'nd_user_ai_chat_threads', 'nd_debt_requests',
+            'nd_pinned_chats', 'nd_comm_messages',
+            'nd_blocked_messaging_users'
+        ];
+        USER_DATA_KEYS.forEach(k => localStorage.removeItem(k));
+        window.location.reload();
+    };
+
     /**
      * Sync users with Supabase backend
      */
     async function syncUsersFromBackend() {
         try {
             const token = localStorage.getItem('nd_token') || '';
-            const response = await fetch(window.API_BASE + '/api/users', {
+            const response = await fetch(`${window.API_BASE}/api/users?_t=${Date.now()}`, {
                 headers: token ? { 'Authorization': 'Bearer ' + token } : {}
             });
             const data = await response.json();
@@ -1910,4 +1924,11 @@ window.calculateTrueSpendableBalance = function(userId) {
     // nd_sales_history natively records Reward Purchases as negative payoutEarned
     // So simply summing it up gives the exact spendable balance.
     return Math.max(0, spendable);
+};
+
+// Global cache rescue utility to purge all local storage/session storage and reload
+window.wipeLocalCacheAndReload = function() {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.reload();
 };

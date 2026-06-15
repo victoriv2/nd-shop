@@ -92,15 +92,16 @@ function factoryReset() {
                 const requiredPin = localStorage.getItem('nd_delete_pin') || '1234';
                 
                 if (pin === requiredPin) {
-                    localStorage.clear();
+                    const token = localStorage.getItem('nd_token') || '';
                     fetch(`${window.API_BASE}/api/factory-reset`, {
                         method: 'POST',
                         headers: {
-                            'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 
+                            'Authorization': 'Bearer ' + token, 
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({ wipeMessages: true, wipeUsers: true })
                     }).finally(() => {
+                        localStorage.clear();
                         customAlert('System wiped from cloud and local. Reloading application...').then(() => {
                             window.location.reload();
                         });
@@ -214,23 +215,25 @@ function executeMaintReset() {
         'nd_ai_chat_history', 'nd_ai_chat_threads', 'nd_user_ai_chat_threads'
     ];
 
-    // Wipe all nd_ keys except preserved (and optionally messages)
-    Object.keys(localStorage).forEach(key => {
-        if (!key.startsWith('nd_')) return;
-        if (PRESERVE.includes(key)) return;
-        if (!doWipeMsgs && MESSAGE_KEYS.includes(key)) return;
-        localStorage.removeItem(key);
-    });
+    const token = localStorage.getItem('nd_token') || '';
 
     // Call the server to wipe Supabase database
     fetch(`${window.API_BASE}/api/factory-reset`, {
         method: 'POST',
         headers: {
-            'Authorization': 'Bearer ' + (localStorage.getItem('nd_token') || ''), 
+            'Authorization': 'Bearer ' + token, 
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({ wipeMessages: doWipeMsgs })
     }).then(() => {
+        // Wipe all nd_ keys except preserved (and optionally messages)
+        Object.keys(localStorage).forEach(key => {
+            if (!key.startsWith('nd_')) return;
+            if (PRESERVE.includes(key)) return;
+            if (!doWipeMsgs && MESSAGE_KEYS.includes(key)) return;
+            localStorage.removeItem(key);
+        });
+
         closeMaintResetModal();
         const msg = doWipeMsgs
             ? 'Reset complete. All data (including messages) wiped from Cloud and Local. User accounts preserved.'
