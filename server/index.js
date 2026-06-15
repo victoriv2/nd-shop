@@ -1054,6 +1054,9 @@ app.post('/api/factory-reset', optionalToken, async (req, res) => {
             await supabase.from('users').delete().eq('is_admin', false);
         }
 
+        // Delete shop branding and contact settings in admin_settings table
+        await supabase.from('admin_settings').delete().in('id', ['nd_shop_name', 'nd_shop_owner_phone', 'nd_about_text']);
+
         return res.json({ success: true });
     } catch (err) {
         console.error('Factory reset error:', err);

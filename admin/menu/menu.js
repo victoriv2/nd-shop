@@ -320,8 +320,8 @@ function updateDebtRequestsBadge() {
 window.openAppContactSettings = function() {
     const modal = document.getElementById('appContactSettingsModal');
     if (modal) {
-        document.getElementById('appShopNameInput').value = localStorage.getItem('nd_shop_name') || 'nd shop';
-        document.getElementById('appContactPhoneInput').value = localStorage.getItem('nd_shop_owner_phone') || '08109316532';
+        document.getElementById('appShopNameInput').value = localStorage.getItem('nd_shop_name') || '';
+        document.getElementById('appContactPhoneInput').value = localStorage.getItem('nd_shop_owner_phone') || '';
         document.getElementById('appAboutTextInput').value = localStorage.getItem('nd_about_text') || '';
         modal.style.display = 'flex';
         setTimeout(() => modal.classList.add('show'), 10);
