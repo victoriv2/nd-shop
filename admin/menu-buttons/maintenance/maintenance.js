@@ -207,7 +207,7 @@ function executeMaintReset() {
 
     const PRESERVE = [
         'nd_users', 'nd_admin_id', 'nd_admin_name',
-        'nd_admin_pwd', 'nd_delete_pin', 'nd_admin_locks', 'nd_xai_api_key'
+        'nd_admin_pwd', 'nd_xai_api_key'
     ];
     const MESSAGE_KEYS = [
         'nd_messages', 'nd_comm_messages', 'nd_comm_settings',

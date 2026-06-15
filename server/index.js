@@ -1054,8 +1054,22 @@ app.post('/api/factory-reset', optionalToken, async (req, res) => {
             await supabase.from('users').delete().eq('is_admin', false);
         }
 
-        // Delete shop branding and contact settings in admin_settings table
-        await supabase.from('admin_settings').delete().in('id', ['nd_shop_name', 'nd_shop_owner_phone', 'nd_about_text']);
+        // Delete all rows in admin_settings
+        await supabase.from('admin_settings').delete().not('id', 'is', null);
+
+        // Insert default values for settings that must go back to default values
+        const defaultSettings = [
+            { id: 'nd_payout_rate', value: '0', updated_at: new Date().toISOString() },
+            { id: 'nd_payout_enabled', value: 'false', updated_at: new Date().toISOString() },
+            { id: 'nd_reward_purchase_enabled', value: 'false', updated_at: new Date().toISOString() },
+            { id: 'nd_admin_locks', value: '{}', updated_at: new Date().toISOString() },
+            { id: 'nd_delete_pin', value: '1234', updated_at: new Date().toISOString() },
+            { id: 'nd_maintenance_mode', value: 'false', updated_at: new Date().toISOString() }
+        ];
+        await supabase.from('admin_settings').insert(defaultSettings);
+
+        // Broadcast a general sync trigger so all active clients fetch the new settings and log out if needed
+        broadcastSyncTrigger();
 
         return res.json({ success: true });
     } catch (err) {
