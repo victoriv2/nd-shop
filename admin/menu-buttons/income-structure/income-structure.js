@@ -489,15 +489,23 @@ window.loadIsAllocations = function() {
         let saved = localStorage.getItem('nd_income_allocations');
         if (saved) {
             let parsed = JSON.parse(saved);
+            
+            // If parsed is empty or not an array or has only 1 item (e.g. only Tax due to a partial pull/reset), write defaults and return
+            if (!Array.isArray(parsed) || parsed.length <= 1) {
+                localStorage.setItem('nd_income_allocations', JSON.stringify(defaultVals));
+                return defaultVals;
+            }
+
             // Auto-migrate if the stored allocations are from the old defaults (contain 'savings' or 'emergency funds')
-            const hasSavings = parsed.some(a => a.name.toLowerCase() === 'savings');
-            const hasEmergency = parsed.some(a => a.name.toLowerCase() === 'emergency funds');
+            const hasSavings = parsed.some(a => a.name && a.name.toLowerCase() === 'savings');
+            const hasEmergency = parsed.some(a => a.name && a.name.toLowerCase() === 'emergency funds');
             if (hasSavings || hasEmergency) {
                 localStorage.setItem('nd_income_allocations', JSON.stringify(defaultVals));
                 return defaultVals;
             }
+
             // Auto inject Tax if this is old data
-            if (!parsed.some(a => a.name.toLowerCase() === 'tax')) {
+            if (!parsed.some(a => a.name && a.name.toLowerCase() === 'tax')) {
                 parsed.push({ name: "Tax", percent: 5 });
             }
             return parsed;

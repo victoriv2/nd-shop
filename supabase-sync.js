@@ -169,6 +169,9 @@
         } else if (SETTINGS_KEYS.includes(key)) {
             lastLocalWrite[key] = Date.now();
             handleSettingsMutation(key, value);
+            // Dispatch custom event to notify local listeners
+            const event = new CustomEvent('local-storage-update', { detail: { key: key, value: value } });
+            window.dispatchEvent(event);
         }
     };
 
@@ -470,6 +473,9 @@
         } else if (e.key && SETTINGS_KEYS.includes(e.key)) {
             lastLocalWrite[e.key] = Date.now();
             stateCache[e.key] = e.newValue;
+            // Dispatch custom event so UI components in this tab update immediately
+            const event = new CustomEvent('local-storage-update', { detail: { key: e.key, value: e.newValue } });
+            window.dispatchEvent(event);
         }
     });
 
