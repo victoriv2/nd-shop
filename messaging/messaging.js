@@ -536,22 +536,17 @@ function renderMessages(searchQuery) {
         } else if (msg.type === 'audio') {
             if (msg.content === 'Voice Note') {
                 contentHtml = `
-                    <div class="msg-audio-player" data-src="${msg.mediaUrl}">
+                    <div class="msg-audio-player" data-src="${msg.mediaUrl}" data-duration="${msg.duration || '0:00'}">
                         <button class="msg-audio-play" onclick="event.stopPropagation(); _toggleAudioPlay(this)">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                         </button>
-                        <div class="msg-audio-scrubber">
-                            <div class="msg-audio-scrubber-track">
-                                <div class="msg-audio-scrubber-fill"></div>
-                                <input type="range" min="0" max="100" value="0" step="0.1"
-                                    oninput="event.stopPropagation(); _seekAudio(this)"
-                                    onclick="event.stopPropagation()">
-                            </div>
-                            <div class="msg-audio-scrubber-meta">
-                                <span class="msg-audio-current">0:00</span>
-                                <span class="msg-audio-duration">${msg.duration || '0:00'}</span>
+                        <div class="msg-audio-waveform-wrap" ontouchstart="event.stopPropagation()" onclick="event.stopPropagation(); _seekAudioByWaveform(event, this)">
+                            <div class="msg-audio-waveform">
+                                ${Array.from({length: 20}, () => Math.floor(Math.random() * 20) + 6)
+                                    .map(h => `<div class="msg-audio-bar" style="height:${h}px;"></div>`).join('')}
                             </div>
                         </div>
+                        <span class="msg-audio-duration">${msg.duration || '0:00'}</span>
                     </div>`;
             } else {
                 contentHtml = `
@@ -907,16 +902,41 @@ function _formatAudioTime(sec) {
     return m + ':' + (s < 10 ? '0' : '') + s;
 }
 
-window._seekAudio = function(rangeInput) {
-    const player = rangeInput.closest('.msg-audio-player');
+// Seek by tapping/dragging on the waveform (WhatsApp style)
+window._seekAudioByWaveform = function(e, waveformWrap) {
+    const player = waveformWrap.closest('.msg-audio-player');
     if (!player) return;
     const audio = player.querySelector('audio');
     if (!audio || !isFinite(audio.duration)) return;
-    const pct = parseFloat(rangeInput.value);
-    audio.currentTime = (pct / 100) * audio.duration;
-    const fill = player.querySelector('.msg-audio-scrubber-fill');
-    if (fill) fill.style.width = pct + '%';
+
+    const rect = waveformWrap.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    audio.currentTime = pct * audio.duration;
+    _updateWaveformProgress(player, pct);
 };
+
+// Highlight bars up to the current progress position
+function _updateWaveformProgress(player, pct) {
+    const bars = player.querySelectorAll('.msg-audio-bar');
+    const durationEl = player.querySelector('.msg-audio-duration');
+    const audio = player.querySelector('audio');
+    const totalBars = bars.length;
+    const activeBars = Math.floor(pct * totalBars);
+
+    bars.forEach((bar, i) => {
+        if (i < activeBars) {
+            bar.style.opacity = '1';
+        } else {
+            bar.style.opacity = '0.4';
+        }
+    });
+
+    // Update duration display to show elapsed time
+    if (durationEl && audio && isFinite(audio.currentTime)) {
+        durationEl.textContent = _formatAudioTime(audio.currentTime);
+    }
+}
 
 window._toggleAudioPlay = function(btn) {
     const player = btn.closest('.msg-audio-player');
@@ -928,27 +948,30 @@ window._toggleAudioPlay = function(btn) {
         audio.src = player.getAttribute('data-src');
         player.appendChild(audio);
 
-        // Drive the scrubber on timeupdate
+        // Drive waveform bar highlight on timeupdate
         audio.addEventListener('timeupdate', () => {
             if (!audio.duration) return;
-            const pct = (audio.currentTime / audio.duration) * 100;
-            const fill = player.querySelector('.msg-audio-scrubber-fill');
-            const rangeInput = player.querySelector('input[type="range"]');
-            const currentEl = player.querySelector('.msg-audio-current');
-            if (fill) fill.style.width = pct + '%';
-            if (rangeInput) rangeInput.value = pct;
-            if (currentEl) currentEl.textContent = _formatAudioTime(audio.currentTime);
+            const pct = audio.currentTime / audio.duration;
+            _updateWaveformProgress(player, pct);
         });
 
         audio.addEventListener('ended', () => {
             btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-            const fill = player.querySelector('.msg-audio-scrubber-fill');
-            const rangeInput = player.querySelector('input[type="range"]');
-            const currentEl = player.querySelector('.msg-audio-current');
-            if (fill) fill.style.width = '0%';
-            if (rangeInput) rangeInput.value = 0;
-            if (currentEl) currentEl.textContent = '0:00';
+            // Reset all bars to normal opacity and restore original duration text
+            const bars = player.querySelectorAll('.msg-audio-bar');
+            bars.forEach(bar => bar.style.opacity = '0.4');
+            const durationEl = player.querySelector('.msg-audio-duration');
+            if (durationEl) durationEl.textContent = btn.closest('.msg-audio-player').getAttribute('data-duration') || '0:00';
         });
+
+        // Allow dragging on the waveform while playing (touchmove seek)
+        const waveWrap = player.querySelector('.msg-audio-waveform-wrap');
+        if (waveWrap) {
+            waveWrap.addEventListener('touchmove', (e) => {
+                e.stopPropagation();
+                window._seekAudioByWaveform(e, waveWrap);
+            }, { passive: true });
+        }
     }
 
     if (audio.paused) {
