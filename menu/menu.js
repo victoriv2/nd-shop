@@ -91,7 +91,7 @@ function initMenuLogic() {
 
     const referralEarningsBtn = document.getElementById('referralEarningsBtn');
     if (referralEarningsBtn) {
-        const isRefEnabled = localStorage.getItem('nd_referral_earnings_enabled') !== 'false';
+        const isRefEnabled = localStorage.getItem('nd_referral_earnings_enabled') === 'true';
         referralEarningsBtn.style.display = isRefEnabled ? 'flex' : 'none';
         
         referralEarningsBtn.addEventListener('click', () => {
@@ -117,7 +117,7 @@ function initMenuLogic() {
         });
 
         window.addEventListener('nd_sync_complete', () => {
-            const isRefEnabled = localStorage.getItem('nd_referral_earnings_enabled') !== 'false';
+            const isRefEnabled = localStorage.getItem('nd_referral_earnings_enabled') === 'true';
             const refBtn = document.getElementById('referralEarningsBtn');
             if (refBtn) {
                 refBtn.style.display = isRefEnabled ? 'flex' : 'none';

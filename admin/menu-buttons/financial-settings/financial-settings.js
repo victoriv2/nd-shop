@@ -146,7 +146,7 @@ async function openFinancialSettings() {
 
         const refToggle = modal.querySelector('#referralEarningsEnableSwitch');
         if (refToggle) {
-            const refEnabled = localStorage.getItem('nd_referral_earnings_enabled') !== 'false';
+            const refEnabled = localStorage.getItem('nd_referral_earnings_enabled') === 'true';
             refToggle.checked = refEnabled;
             // Sync visual state
             const slider = refToggle.nextElementSibling;
