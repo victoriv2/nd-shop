@@ -173,6 +173,11 @@
                         if (typeof window.refreshMenu === 'function') {
                             window.refreshMenu();
                         }
+                    } else {
+                        // User not found in database (e.g. deleted or after a factory reset), auto log out
+                        localStorage.removeItem('nd_logged_in_user');
+                        localStorage.removeItem('nd_token');
+                        window.location.reload();
                     }
                 }
             }
@@ -1357,7 +1362,7 @@ window.updateShopBranding = function() {
     if (isPageAdmin) {
         shopName = 'F T L';
     } else {
-        shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
+        shopName = localStorage.getItem('nd_shop_name') || '';
     }
     
     // Update logo text
@@ -1420,7 +1425,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.updateShopContactPhone = function() {
-    const phone = localStorage.getItem('nd_shop_owner_phone') || '08109316532';
+    const phone = localStorage.getItem('nd_shop_owner_phone') || '';
     const phoneEls = document.querySelectorAll('#shopPhoneNumber, .shop-phone-number');
     phoneEls.forEach(el => {
         el.textContent = phone;

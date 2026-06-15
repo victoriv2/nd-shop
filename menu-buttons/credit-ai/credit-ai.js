@@ -1,7 +1,7 @@
 const CAI_MODEL = 'grok-4.20-0309-reasoning';
 
 const CAI_CAI_SYSTEM_PROMPT = `
-You are a friendly, helpful, and intelligent AI Shopping Assistant for a store named ${localStorage.getItem('nd_shop_name') || 'nd shop'}.
+You are a friendly, helpful, and intelligent AI Shopping Assistant for a store named ${localStorage.getItem('nd_shop_name') || 'our shop'}.
 Your goal is to assist the user by answering questions about products, finding items in the store, providing info about their account (such as their payout rate), and helping to extract items from images they upload.
 
 <CONTEXT>
@@ -525,7 +525,7 @@ function initCreditAiChatLogic() {
                 status: r.status
             }));
 
-            const injectedPrompt = (localStorage.getItem('nd_shop_name') || 'nd shop') + ' ' + (CAI_CAI_SYSTEM_PROMPT || '') + `\n\n--- INJECTED STORE CONTEXT ---\n
+            const injectedPrompt = (localStorage.getItem('nd_shop_name') || 'our shop') + ' ' + (CAI_CAI_SYSTEM_PROMPT || '') + `\n\n--- INJECTED STORE CONTEXT ---\n
 USER PROFILE:
 - Name: ${userName}
 - User ID: ${currentUser.id || 'Unknown'}

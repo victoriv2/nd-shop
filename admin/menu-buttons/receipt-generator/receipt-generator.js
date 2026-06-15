@@ -29,13 +29,13 @@ window.openReceiptGeneratorAdmin = function() {
 
             // Phone
             const phoneLabel = document.getElementById('rgPreviewStorePhone');
-            const storedPhone = localStorage.getItem('nd_shop_owner_phone') || '08109316532';
-            if (phoneLabel) phoneLabel.textContent = 'Tel: ' + storedPhone;
+            const storedPhone = localStorage.getItem('nd_shop_owner_phone') || '';
+            if (phoneLabel) phoneLabel.textContent = storedPhone ? 'Tel: ' + storedPhone : '';
 
             // Shop Name
-            const shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
+            const shopName = localStorage.getItem('nd_shop_name') || '';
             const rgPreviewShopName = document.getElementById('rgPreviewShopName');
-            if (rgPreviewShopName) rgPreviewShopName.textContent = shopName.toUpperCase() + ' STORE';
+            if (rgPreviewShopName) rgPreviewShopName.textContent = shopName ? shopName.toUpperCase() + ' STORE' : '';
 
             updateRgPreview();
 

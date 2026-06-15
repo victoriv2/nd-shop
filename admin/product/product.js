@@ -2385,7 +2385,7 @@ window.generateProductPDF = function (btn) {
     if (!btn) btn = document.getElementById('headerPrintBtn');
     if (!btn) return;
 
-    const shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
+    const shopName = localStorage.getItem('nd_shop_name') || '';
     let cardsHtml = '';
 
     // Build beautiful catalog cards

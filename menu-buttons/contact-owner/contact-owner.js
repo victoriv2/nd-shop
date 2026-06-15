@@ -26,7 +26,7 @@ function initContactOwnerLogic() {
         trigger.addEventListener('click', (e) => {
             e.preventDefault();
             const phoneText = document.getElementById('shopPhoneNumber');
-            if (phoneText) phoneText.textContent = localStorage.getItem('nd_shop_owner_phone') || '08109316532';
+            if (phoneText) phoneText.textContent = localStorage.getItem('nd_shop_owner_phone') || '';
             modal.classList.add('show');
             document.body.classList.add('modal-open');
         });
@@ -101,14 +101,14 @@ function initContactOwnerLogic() {
             e.preventDefault();
             btnCall.style.transform = "scale(0.96)";
             setTimeout(() => btnCall.style.transform = "", 150);
-            const dynamicPhone = localStorage.getItem('nd_shop_owner_phone') || '08109316532';
+            const dynamicPhone = localStorage.getItem('nd_shop_owner_phone') || '';
             showToast("Opening Phone Dialer...", "tel:" + dynamicPhone);
         });
     }
 
     if (window.realtimeSync) {
         window.realtimeSync.on('nd_shop_owner_phone', () => {
-            const latest = localStorage.getItem('nd_shop_owner_phone') || '08109316532';
+            const latest = localStorage.getItem('nd_shop_owner_phone') || '';
             if (phoneText) phoneText.textContent = latest;
         });
     }

@@ -88,7 +88,7 @@ window.loadRegister = function () {
                 window.generateRegisterPDF = function () {
                     const btn = document.getElementById('headerPrintBtn');
                     if (!btn) return;
-                    const shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
+                    const shopName = localStorage.getItem('nd_shop_name') || '';
                     const dayEl = document.getElementById('dayDisplay');
                     const monthFullEl = document.querySelector('.month-full');
                     const monthShortEl = document.querySelector('.month-short');

@@ -33,7 +33,7 @@ function initAboutLogic() {
     const descEl = modal.querySelector('.about-desc');
 
     function refreshAboutBranding() {
-        const shopName = localStorage.getItem('nd_shop_name') || 'nd shop';
+        const shopName = localStorage.getItem('nd_shop_name') || '';
         const aboutText = localStorage.getItem('nd_about_text');
 
         if (headerTitle) headerTitle.textContent = 'About ' + shopName;
