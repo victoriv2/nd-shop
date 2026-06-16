@@ -728,8 +728,30 @@ function _startRecording() {
     if (micBtn) micBtn.classList.add('recording');
 
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-            msgMediaRecorder = new MediaRecorder(stream);
+        navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                channelCount: 1,
+                sampleRate: 44100
+            }
+        }).then(stream => {
+            let options = { audioBitsPerSecond: 128000 };
+            const types = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/ogg;codecs=opus',
+                'audio/mp4',
+                'audio/aac'
+            ];
+            for (const type of types) {
+                if (MediaRecorder.isTypeSupported(type)) {
+                    options.mimeType = type;
+                    break;
+                }
+            }
+            msgMediaRecorder = new MediaRecorder(stream, options);
             msgAudioChunks = [];
             msgRecordingSeconds = 0;
 
@@ -856,7 +878,8 @@ function _stopRecordingAndSend() {
             _resetRecordingUI();
             return;
         }
-        const audioBlob = new Blob(msgAudioChunks, { type: 'audio/webm' });
+        const mimeType = msgMediaRecorder.mimeType || 'audio/webm';
+        const audioBlob = new Blob(msgAudioChunks, { type: mimeType });
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
         reader.onloadend = () => {
@@ -945,6 +968,8 @@ window._toggleAudioPlay = function(btn) {
     let audio = player.querySelector('audio');
     if (!audio) {
         audio = document.createElement('audio');
+        audio.preload = 'auto';
+        audio.playsInline = true;
         audio.src = player.getAttribute('data-src');
         player.appendChild(audio);
 

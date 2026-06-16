@@ -594,8 +594,30 @@ function _startCommRecording() {
     if (overlay) overlay.style.display = 'flex';
     
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-            commMediaRecorder = new MediaRecorder(stream);
+        navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                channelCount: 1,
+                sampleRate: 44100
+            }
+        }).then(stream => {
+            let options = { audioBitsPerSecond: 128000 };
+            const types = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/ogg;codecs=opus',
+                'audio/mp4',
+                'audio/aac'
+            ];
+            for (const type of types) {
+                if (MediaRecorder.isTypeSupported(type)) {
+                    options.mimeType = type;
+                    break;
+                }
+            }
+            commMediaRecorder = new MediaRecorder(stream, options);
             commAudioChunks = [];
             commRecordingSeconds = 0;
 
@@ -696,7 +718,8 @@ function _stopCommRecordingAndSend() {
     
     commMediaRecorder.onstop = () => {
         if (commAudioChunks.length > 0) {
-            const audioBlob = new Blob(commAudioChunks, { type: 'audio/webm' });
+            const mimeType = commMediaRecorder.mimeType || 'audio/webm';
+            const audioBlob = new Blob(commAudioChunks, { type: mimeType });
             const reader = new FileReader();
             reader.readAsDataURL(audioBlob);
             reader.onloadend = () => {
@@ -737,6 +760,47 @@ function _resetCommRecordingUI() {
     clearInterval(commRecordingTimer);
 }
 
+// --- Audio Playback helper functions for Community ---
+function _formatCommAudioTime(sec) {
+    if (!isFinite(sec)) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function _updateCommWaveformProgress(player, pct) {
+    const bars = player.querySelectorAll('.comm-audio-bar');
+    const durationEl = player.querySelector('.comm-audio-duration');
+    const audio = player.querySelector('audio');
+    const totalBars = bars.length;
+    const activeBars = Math.floor(pct * totalBars);
+
+    bars.forEach((bar, i) => {
+        if (i < activeBars) {
+            bar.style.opacity = '1';
+        } else {
+            bar.style.opacity = '0.4';
+        }
+    });
+
+    if (durationEl && audio && isFinite(audio.currentTime)) {
+        durationEl.textContent = _formatCommAudioTime(audio.currentTime);
+    }
+}
+
+window._seekCommAudioByWaveform = function(e, waveformWrap) {
+    const player = waveformWrap.closest('.comm-audio-player');
+    if (!player) return;
+    const audio = player.querySelector('audio');
+    if (!audio || !isFinite(audio.duration)) return;
+
+    const rect = waveformWrap.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    audio.currentTime = pct * audio.duration;
+    _updateCommWaveformProgress(player, pct);
+};
+
 // --- Audio Playback for Community ---
 window._commToggleAudioPlay = function(btn) {
     const player = btn.closest('.comm-audio-player');
@@ -745,8 +809,35 @@ window._commToggleAudioPlay = function(btn) {
     let audio = player.querySelector('audio');
     if (!audio) {
         audio = document.createElement('audio');
+        audio.preload = 'auto';
+        audio.playsInline = true;
         audio.src = player.getAttribute('data-src');
         player.appendChild(audio);
+
+        // Drive waveform progress highlight on timeupdate
+        audio.addEventListener('timeupdate', () => {
+            if (!audio.duration) return;
+            const pct = audio.currentTime / audio.duration;
+            _updateCommWaveformProgress(player, pct);
+        });
+
+        audio.addEventListener('ended', () => {
+            btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+            // Reset all bars to normal opacity and restore original duration text
+            const bars = player.querySelectorAll('.comm-audio-bar');
+            bars.forEach(bar => bar.style.opacity = '0.4');
+            const durationEl = player.querySelector('.comm-audio-duration');
+            if (durationEl) durationEl.textContent = player.getAttribute('data-duration') || '0:00';
+        });
+
+        // Allow dragging on the waveform while playing (touchmove seek)
+        const waveWrap = player.querySelector('.comm-audio-waveform');
+        if (waveWrap) {
+            waveWrap.addEventListener('touchmove', (e) => {
+                e.stopPropagation();
+                window._seekCommAudioByWaveform(e, waveWrap);
+            }, { passive: true });
+        }
     }
 
     if (audio.paused) {
@@ -760,10 +851,6 @@ window._commToggleAudioPlay = function(btn) {
         
         audio.play();
         btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
-        
-        audio.onended = () => {
-            btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-        };
     } else {
         audio.pause();
         btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
@@ -908,11 +995,11 @@ function renderCommMessages(searchQuery = '') {
                     const bars = Array.from({length: 22}, () => Math.floor(Math.random() * 20) + 6)
                         .map(h => `<div class="comm-audio-bar" style="height:${h}px;"></div>`).join('');
                     contentHtml = `
-                        <div class="comm-audio-player" data-src="${msg.mediaUrl}">
+                        <div class="comm-audio-player" data-src="${msg.mediaUrl}" data-duration="${msg.extraData?.duration || '0:00'}">
                             <button class="comm-audio-play" onclick="event.stopPropagation(); window._commToggleAudioPlay(this)">
                                 <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                             </button>
-                            <div class="comm-audio-waveform">${bars}</div>
+                            <div class="comm-audio-waveform" ontouchstart="event.stopPropagation()" onclick="event.stopPropagation(); window._seekCommAudioByWaveform(event, this)">${bars}</div>
                             <span class="comm-audio-duration">${msg.extraData?.duration || '0:00'}</span>
                         </div>`;
                 } else {
