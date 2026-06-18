@@ -6,17 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
     <script>
         // Redirect to login immediately if not authenticated to prevent page flash
-        if (!localStorage.getItem('nd_logged_in_user')) {
+        if (!sessionStorage.getItem('nd_logged_in_user') && !localStorage.getItem('nd_logged_in_user')) {
             window.location.href = 'auth/login.html';
         }
         
         // Maintenance Mode Guard
         const isMaint = localStorage.getItem('nd_maintenance_mode') === 'true';
         if (isMaint) {
-            const user = JSON.parse(localStorage.getItem('nd_logged_in_user') || '{}');
+            const user = JSON.parse(sessionStorage.getItem('nd_logged_in_user') || localStorage.getItem('nd_logged_in_user') || '{}');
             // If they are not an admin, redirect them to a simple maintenance page (or show an alert/body replace)
             if (user.id !== '00000ND' && user.id !== 'ADMIN') { // assuming 00000ND or ADMIN is admin
-                document.documentElement.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; text-align:center; padding:20px;"><div><h1 style="color:#6366f1;">Shop under maintenance</h1><p>We are currently updating our shop. Please check back later.</p><button onclick="localStorage.removeItem(\'nd_logged_in_user\'); window.location.reload();" style="margin-top:20px; padding:10px 20px; border:none; background:#6366f1; color:white; border-radius:8px; cursor:pointer;">Log Out</button></div></div>';
+                document.documentElement.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; text-align:center; padding:20px;"><div><h1 style="color:#6366f1;">Shop under maintenance</h1><p>We are currently updating our shop. Please check back later.</p><button onclick="sessionStorage.removeItem(\'nd_logged_in_user\'); localStorage.removeItem(\'nd_logged_in_user\'); window.location.reload();" style="margin-top:20px; padding:10px 20px; border:none; background:#6366f1; color:white; border-radius:8px; cursor:pointer;">Log Out</button></div></div>';
                 // Stop further execution
                 throw new Error("Maintenance mode active");
             }

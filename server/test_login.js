@@ -2,7 +2,7 @@ const axios = require('axios');
 
 async function test() {
     try {
-        const res = await axios.post('https://nd-shop-production.up.railway.app/api/login', {
+        const res = await axios.post('https://nd-shop-production-2ba4.up.railway.app/api/login', {
             identifier: 'test@nd.shop',
             password: 'password123'
         });

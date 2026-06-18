@@ -81,7 +81,7 @@ function openDebtHistory() {
     const list = document.getElementById('pdHistoryList');
     if (!overlay || !list) return;
 
-    const currentUser = JSON.parse(localStorage.getItem('nd_logged_in_user') || '{}');
+    const currentUser = window.loggedInUser || JSON.parse(sessionStorage.getItem('nd_logged_in_user') || localStorage.getItem('nd_logged_in_user') || '{}');
     if (!currentUser.id) {
         if (typeof showCustomAlert === 'function') showCustomAlert("You must be logged in to view history.");
         return;
@@ -494,7 +494,7 @@ async function handlePayDebtSubmit() {
     btnText.style.display = 'none';
     loader.style.display = 'inline-block';
 
-    const currentUser = JSON.parse(localStorage.getItem('nd_logged_in_user') || '{}');
+    const currentUser = window.loggedInUser || JSON.parse(sessionStorage.getItem('nd_logged_in_user') || localStorage.getItem('nd_logged_in_user') || '{}');
     if (!currentUser || !currentUser.id) {
         if (typeof showCustomAlert === 'function') showCustomAlert("You must be logged in.");
         closePayDebtModal();

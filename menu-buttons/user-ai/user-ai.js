@@ -655,7 +655,7 @@ function initAiChatLogic() {
             // === Gather STORE DATA for the User AI ===
             const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
             const dbPayoutRate = localStorage.getItem('nd_payout_rate') || '2';
-            const currentUser = JSON.parse(localStorage.getItem('nd_logged_in_user') || '{}');
+            const currentUser = window.loggedInUser || JSON.parse(sessionStorage.getItem('nd_logged_in_user') || localStorage.getItem('nd_logged_in_user') || '{}');
             const userName = ((currentUser.firstName || '') + ' ' + (currentUser.lastName || '')).trim() || currentUser.name || 'Guest';
             const allRequests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
             const userRequests = allRequests.filter(r => r.userId === currentUser.id || (r.user && r.user.id === currentUser.id));
