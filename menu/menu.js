@@ -1,7 +1,7 @@
 window.loadMenuTab = function() {
     const container = document.getElementById('menu-container');
     if (container) {
-        fetch('menu/menu.html')
+        fetch('menu/menu.html?v=1.2')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');

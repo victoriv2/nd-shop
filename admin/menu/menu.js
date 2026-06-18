@@ -5,7 +5,7 @@ function loadMenu() {
     if (!container) return Promise.resolve();
 
     // Fetch the menu HTML content
-    return fetch('menu/menu.html')
+    return fetch('menu/menu.html?v=1.2')
         .then(response => response.text())
         .then(html => {
             if (window.adminExpectedTabId && window.adminExpectedTabId !== 'tab-menu') return;
