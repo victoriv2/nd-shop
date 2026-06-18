@@ -1,25 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Handle password visibility toggling across auth pages
-    const toggleButtons = document.querySelectorAll('.password-toggle');
-
-    toggleButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetId = btn.getAttribute('data-target');
-            const passwordInput = document.getElementById(targetId);
-            const eyeOpen = btn.querySelector('.eye-open');
-            const eyeClosed = btn.querySelector('.eye-closed');
-
-            if (passwordInput && passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                eyeOpen.classList.add('hidden');
-                eyeClosed.classList.remove('hidden');
-            } else if (passwordInput) {
-                passwordInput.type = 'password';
-                eyeClosed.classList.add('hidden');
-                eyeOpen.classList.remove('hidden');
-            }
-        });
-    });
+    // Handle password visibility toggling is now managed globally in global-fixes.js
 
     // Registration & Login Handlers
     const loginForm = document.getElementById('loginForm');
