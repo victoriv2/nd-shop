@@ -603,7 +603,7 @@ function renderMessages(searchQuery) {
         if (msg.isLendingRequest) {
             lendBadgeHtml = `
                 <div class="msg-lending-badge" style="display: inline-flex; align-items: center; gap: 4px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; font-size: 0.72rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; margin-bottom: 6px; border: 1px solid rgba(139, 92, 246, 0.3); align-self: flex-start; max-width: fit-content; text-transform: uppercase;">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0;"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0;"><path d="M6 4v16M6 4l12 16M18 4v16M4 10h16M4 14h16" /></svg>
                     Money Lending Request
                 </div>
             `;

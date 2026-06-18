@@ -50,6 +50,9 @@ function openCustomersLend() {
                 modal.style.display = 'flex';
                 modal.offsetHeight;
                 modal.classList.add('show');
+                if (typeof updateLendServiceBadge === 'function') {
+                    updateLendServiceBadge();
+                }
             }, 10);
         })
         .catch(err => console.error(err));

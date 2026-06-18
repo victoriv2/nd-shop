@@ -120,10 +120,12 @@ function initAdminMenu() {
     updateMessagesBadge();
     updateCommunityBadge();
     updateDebtRequestsBadge();
+    updateLendServiceBadge();
     setInterval(updateManageUsersBadge, 2000);
     setInterval(updateMessagesBadge, 2000);
     setInterval(updateCommunityBadge, 2000);
     setInterval(updateDebtRequestsBadge, 2000);
+    setInterval(updateLendServiceBadge, 2000);
 
     document.getElementById('btnFinancialSettings')?.addEventListener('click', () => {
         executeMenuAction('btnFinancialSettings', () => { if (typeof openFinancialSettings === 'function') openFinancialSettings(); }, 'financialSettings');
@@ -317,6 +319,48 @@ function updateDebtRequestsBadge() {
         badge.style.cssText = 'position:absolute; top:10px; right:10px; background:#ff4d4d; color:white; font-size:10px; font-weight:800; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 0 8px rgba(255,77,77,0.4);';
         card.style.position = 'relative';
         card.appendChild(badge);
+    }
+}
+
+function updateLendServiceBadge() {
+    const card = document.getElementById('btnLendService');
+    if (!card) return;
+
+    const existingBadge = card.querySelector('.lend-live-badge');
+    if (existingBadge) existingBadge.remove();
+
+    // Get unread lending requests count
+    const messages = JSON.parse(localStorage.getItem('nd_messages') || '[]');
+    const pendingLendCount = messages.filter(m => {
+        if (!m.isLendingRequest) return false;
+        if (m.receiverId !== 'ADMIN') return false;
+        if ((m.readBy || []).includes('ADMIN')) return false;
+        if ((m.deletedFor || []).includes('ADMIN')) return false;
+        return true;
+    }).length;
+
+    if (pendingLendCount > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'lend-live-badge';
+        badge.textContent = pendingLendCount > 9 ? '9+' : pendingLendCount;
+        badge.style.cssText = 'position:absolute; top:10px; right:10px; background:#ff4d4d; color:white; font-size:10px; font-weight:800; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 0 8px rgba(255,77,77,0.4);';
+        card.style.position = 'relative';
+        card.appendChild(badge);
+    }
+
+    // Also update the badge inside the modal's Open Chat button if it's currently open
+    const modalChatBtn = document.querySelector('.lend-admin-chat-btn');
+    if (modalChatBtn) {
+        const existingBtnBadge = modalChatBtn.querySelector('.lend-chat-badge');
+        if (existingBtnBadge) existingBtnBadge.remove();
+
+        if (pendingLendCount > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'lend-chat-badge';
+            badge.textContent = pendingLendCount > 9 ? '9+' : pendingLendCount;
+            badge.style.cssText = 'background:#ff4d4d; color:white; font-size:10px; font-weight:800; min-width:18px; height:18px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; padding:0 4px; box-sizing:border-box; margin-left:6px;';
+            modalChatBtn.appendChild(badge);
+        }
     }
 }
 
