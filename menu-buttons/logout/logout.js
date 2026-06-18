@@ -48,7 +48,11 @@ function initLogoutLogic() {
             saveBtn.textContent = 'Logging out...';
             saveBtn.style.opacity = '0.7';
             
+            // Clear session from both storages (session may be in either depending on when user last logged in)
+            sessionStorage.removeItem('nd_logged_in_user');
+            sessionStorage.removeItem('nd_token');
             localStorage.removeItem('nd_logged_in_user');
+            localStorage.removeItem('nd_token');
 
             // Redirect to the login page after a short visual delay
             setTimeout(() => {

@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Check Authentication
-    const loggedInUserStr = localStorage.getItem('nd_logged_in_user');
+    // Check Authentication — prefer sessionStorage (tab-isolated) over localStorage (shared)
+    const loggedInUserStr = sessionStorage.getItem('nd_logged_in_user') || localStorage.getItem('nd_logged_in_user');
     if (!loggedInUserStr) {
         window.location.href = 'auth/login.html';
         return; // Stop execution if not logged in

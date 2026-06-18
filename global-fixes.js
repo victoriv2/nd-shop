@@ -137,6 +137,7 @@
             'nd_blocked_messaging_users'
         ];
         USER_DATA_KEYS.forEach(k => localStorage.removeItem(k));
+        USER_DATA_KEYS.forEach(k => sessionStorage.removeItem(k));
         window.location.reload();
     };
 
@@ -145,7 +146,8 @@
      */
     async function syncUsersFromBackend() {
         try {
-            const token = localStorage.getItem('nd_token') || '';
+            // Prefer sessionStorage (tab-isolated) to avoid cross-tab session bleed
+            const token = sessionStorage.getItem('nd_token') || localStorage.getItem('nd_token') || '';
             const response = await fetch(`${window.API_BASE}/api/users?_t=${Date.now()}`, {
                 headers: token ? { 'Authorization': 'Bearer ' + token } : {}
             });
@@ -168,20 +170,26 @@
                 
                 // Keep nd_users locally updated so that admin tools and security modules keep working
                 localStorage.setItem('nd_users', JSON.stringify(localUsers));
+
                 // If a user is logged in, update their local data silently
-                const loggedInRaw = localStorage.getItem('nd_logged_in_user');
-                if (loggedInRaw) {
+                // SECURITY: Read from sessionStorage first to prevent cross-tab bleed.
+                // Only fall back to localStorage for users still on old sessions.
+                const sessionRaw = sessionStorage.getItem('nd_logged_in_user');
+                const localRaw = localStorage.getItem('nd_logged_in_user');
+                const loggedInRaw = sessionRaw || localRaw;
+                const sessionStoreKey = sessionRaw ? 'session' : (localRaw ? 'local' : null);
+
+                if (loggedInRaw && sessionStoreKey) {
                     const loggedIn = JSON.parse(loggedInRaw);
-                    // Match by ID first, then fall back to email or phone in case the ID changed (e.g. after a bulk rename)
-                    let freshUser = data.users.find(u => u.id === loggedIn.id);
-                    if (!freshUser && loggedIn.email) {
-                        freshUser = data.users.find(u => u.email && u.email.toLowerCase() === loggedIn.email.toLowerCase());
-                    }
-                    if (!freshUser && loggedIn.phone) {
-                        freshUser = data.users.find(u => u.phone && u.phone === loggedIn.phone);
-                    }
+                    // Match strictly by ID only to avoid accidentally loading another user's record
+                    const freshUser = data.users.find(u => u.id === loggedIn.id);
                     if (freshUser) {
-                        localStorage.setItem('nd_logged_in_user', JSON.stringify(freshUser));
+                        // Write back to whichever storage holds THIS tab's session
+                        if (sessionStoreKey === 'session') {
+                            sessionStorage.setItem('nd_logged_in_user', JSON.stringify(freshUser));
+                        } else {
+                            localStorage.setItem('nd_logged_in_user', JSON.stringify(freshUser));
+                        }
                         window.loggedInUser = freshUser;
                         // Refresh the menu so the new ID shows immediately
                         if (typeof window.refreshMenu === 'function') {
@@ -200,6 +208,7 @@
                             'nd_blocked_messaging_users'
                         ];
                         USER_DATA_KEYS.forEach(k => localStorage.removeItem(k));
+                        USER_DATA_KEYS.forEach(k => sessionStorage.removeItem(k));
                         window.location.reload();
                     }
                 }

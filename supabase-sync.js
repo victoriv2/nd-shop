@@ -49,11 +49,12 @@
 
         // Determine the current user context
         let userId = '';
-        const token = localStorage.getItem('nd_token') || '';
+        // Prefer sessionStorage (tab-isolated) to avoid cross-tab session bleed
+        const token = sessionStorage.getItem('nd_token') || localStorage.getItem('nd_token') || '';
         if (sessionStorage.getItem('nd_admin_logged_in') === 'true') {
             userId = localStorage.getItem('nd_admin_id') || '';
         } else {
-            const userStr = localStorage.getItem('nd_logged_in_user');
+            const userStr = sessionStorage.getItem('nd_logged_in_user') || localStorage.getItem('nd_logged_in_user');
             if (userStr) {
                 try {
                     const u = JSON.parse(userStr);
@@ -253,7 +254,8 @@
             groups[item.table].push(item);
         });
         
-        const token = localStorage.getItem('nd_token') || '';
+        // Prefer sessionStorage (tab-isolated) for auth token
+        const token = sessionStorage.getItem('nd_token') || localStorage.getItem('nd_token') || '';
         const headers = {
             'Authorization': 'Bearer ' + token,
             'Content-Type': 'application/json'

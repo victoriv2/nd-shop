@@ -91,9 +91,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = await response.json();
 
                     if (data.success) {
-                        localStorage.setItem('nd_logged_in_user', JSON.stringify(data.user));
+                        // Store session in sessionStorage (tab-isolated) to prevent cross-tab session bleed
+                        sessionStorage.setItem('nd_logged_in_user', JSON.stringify(data.user));
+                        // Clear any stale localStorage session from an old login on this browser
+                        localStorage.removeItem('nd_logged_in_user');
                         if (data.token) {
-                            localStorage.setItem('nd_token', data.token);
+                            sessionStorage.setItem('nd_token', data.token);
+                            localStorage.removeItem('nd_token');
                         }
                         // Record last seen for Customer Insights
                         const lsData = JSON.parse(localStorage.getItem('nd_user_last_seen') || '{}');
@@ -705,9 +709,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             // Auto-login
                             const { password: _, ...safeUser } = newUser;
                             safeUser.joinDate = new Date().toISOString();
-                            localStorage.setItem('nd_logged_in_user', JSON.stringify(safeUser));
+                            // Store session in sessionStorage (tab-isolated) to prevent cross-tab session bleed
+                            sessionStorage.setItem('nd_logged_in_user', JSON.stringify(safeUser));
+                            localStorage.removeItem('nd_logged_in_user');
                             if (regData.token) {
-                                localStorage.setItem('nd_token', regData.token);
+                                sessionStorage.setItem('nd_token', regData.token);
+                                localStorage.removeItem('nd_token');
                             }
                             
                             const lsData = JSON.parse(localStorage.getItem('nd_user_last_seen') || '{}');

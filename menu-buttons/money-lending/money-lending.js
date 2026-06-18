@@ -17,6 +17,11 @@ window.openMoneyLendingModal = function() {
         })
         .then(html => {
             const container = document.getElementById('modal-container');
+            if (!container) {
+                console.error('[MoneyLending] #modal-container not found in DOM');
+                isOpeningMoneyLending = false;
+                return;
+            }
             const wrapper = document.createElement('div');
             wrapper.id = 'moneyLendingWrapper';
             wrapper.innerHTML = html;
