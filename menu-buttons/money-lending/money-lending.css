@@ -4,8 +4,11 @@
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
-    height: 100vh;
+    height: 100%;
+    height: 100dvh;
     background: var(--bg-primary);
     z-index: 100000;
     flex-direction: column;
@@ -328,9 +331,11 @@
 /* Footer & Submit Button */
 .money-lending-footer {
     padding: 16px 20px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--border-color);
     background: var(--bg-secondary);
     flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .lend-submit-btn {
