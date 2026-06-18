@@ -526,6 +526,13 @@ function renderMessages(searchQuery) {
             contentHtml = `<div class="msg-text">${text}</div>`;
         } else if (msg.type === 'image') {
             contentHtml = `<img src="${msg.mediaUrl}" class="msg-image" alt="Image" onclick="event.stopPropagation(); _openImagePreview('${msg.mediaUrl.replace(/'/g, "\\'")}')" />`;
+            if (msg.content && msg.content !== 'image.jpg' && msg.content !== 'receipt.jpg' && !msg.content.match(/^image\-\d+/) && !msg.content.match(/^msg\-\d+/)) {
+                let captionText = escapeHtml(msg.content);
+                if (searchQuery) {
+                    captionText = _highlightSearch(captionText, searchQuery);
+                }
+                contentHtml += `<div class="msg-text" style="margin-top: 8px;">${captionText}</div>`;
+            }
         } else if (msg.type === 'video') {
             contentHtml = `<div class="msg-video-container" data-src="${msg.mediaUrl}" onclick="event.stopPropagation(); _openVideoPlayer('${msg.mediaUrl.replace(/'/g, "\\'")}')">
                 <video src="${msg.mediaUrl}" class="msg-video" preload="metadata"></video>
@@ -592,9 +599,20 @@ function renderMessages(searchQuery) {
             }
         }
 
+        let lendBadgeHtml = '';
+        if (msg.isLendingRequest) {
+            lendBadgeHtml = `
+                <div class="msg-lending-badge" style="display: inline-flex; align-items: center; gap: 4px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; font-size: 0.72rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; margin-bottom: 6px; border: 1px solid rgba(139, 92, 246, 0.3); align-self: flex-start; max-width: fit-content; text-transform: uppercase;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0;"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    Money Lending Request
+                </div>
+            `;
+        }
+
         html += `
             <div class="msg-row ${isMe ? 'msg-me' : 'msg-other'}" data-id="${msg.id}" data-type="${msg.type}">
-                <div class="msg-bubble">
+                <div class="msg-bubble" style="${msg.isLendingRequest ? 'border: 1px solid rgba(139, 92, 246, 0.4); display: flex; flex-direction: column;' : ''}">
+                    ${lendBadgeHtml}
                     ${pinHtml}
                     ${replyHtml}
                     ${contentHtml}
@@ -2046,7 +2064,8 @@ function _renderInboxList() {
                 } else {
                     // It matched the user's name but no specific message matched
                     let preview = lastMsg.content || '';
-                    if (lastMsg.type !== 'text') preview = `[${lastMsg.type}]`;
+                    if (lastMsg.isLendingRequest) preview = 'Money Lending Request';
+                    else if (lastMsg.type !== 'text') preview = `[${lastMsg.type}]`;
                     if (lastMsg.senderId === 'ADMIN') preview = 'You: ' + preview;
 
                     conversations.push({
@@ -2064,7 +2083,8 @@ function _renderInboxList() {
             }
         } else {
             let preview = lastMsg.content || '';
-            if (lastMsg.type !== 'text') preview = `[${lastMsg.type}]`;
+            if (lastMsg.isLendingRequest) preview = 'Money Lending Request';
+            else if (lastMsg.type !== 'text') preview = `[${lastMsg.type}]`;
             if (lastMsg.senderId === 'ADMIN') preview = 'You: ' + preview;
 
             conversations.push({

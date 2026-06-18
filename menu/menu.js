@@ -64,6 +64,16 @@ function initMenuLogic() {
         });
     }
 
+    const lendServiceBtn = document.getElementById('lendServiceBtn');
+    if (lendServiceBtn) {
+        const isLendEnabled = localStorage.getItem('nd_lend_service_enabled') === 'true';
+        lendServiceBtn.style.display = isLendEnabled ? 'flex' : 'none';
+        
+        lendServiceBtn.addEventListener('click', () => {
+            if (typeof openMoneyLendingModal === 'function') openMoneyLendingModal();
+        });
+    }
+
     if (contactOwnerBtn) {
         contactOwnerBtn.addEventListener('click', () => {
             const modal = document.getElementById('contactOwnerModal');
@@ -114,6 +124,12 @@ function initMenuLogic() {
                     btn.style.display = e.detail.value === 'false' ? 'none' : 'flex';
                 }
             }
+            if (e.detail && e.detail.key === 'nd_lend_service_enabled') {
+                const btn = document.getElementById('lendServiceBtn');
+                if (btn) {
+                    btn.style.display = e.detail.value === 'false' ? 'none' : 'flex';
+                }
+            }
         });
 
         window.addEventListener('nd_sync_complete', () => {
@@ -126,6 +142,11 @@ function initMenuLogic() {
             const urpBtn = document.getElementById('menuPurchaseWithRewardBtn');
             if (urpBtn) {
                 urpBtn.style.display = isUrpEnabled ? 'flex' : 'none';
+            }
+            const isLendEnabled = localStorage.getItem('nd_lend_service_enabled') === 'true';
+            const lendBtn = document.getElementById('lendServiceBtn');
+            if (lendBtn) {
+                lendBtn.style.display = isLendEnabled ? 'flex' : 'none';
             }
         });
 

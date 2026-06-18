@@ -63,6 +63,10 @@ function initAdminMenu() {
         executeMenuAction('btnDebtPayments', () => { if (typeof openDebtRequests === 'function') openDebtRequests(); }, 'debtPayments');
     });
 
+    document.getElementById('btnLendService')?.addEventListener('click', () => {
+        executeMenuAction('btnLendService', () => { if (typeof openCustomersLend === 'function') openCustomersLend(); }, 'customersLend');
+    });
+
     document.getElementById('btnAdminCommunity')?.addEventListener('click', () => {
         executeMenuAction('btnAdminCommunity', () => { if (typeof openCommunityChat === 'function') openCommunityChat(); }, 'adminCommunity');
     });

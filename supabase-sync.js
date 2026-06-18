@@ -27,7 +27,9 @@
         'nd_maintenance_mode', 'nd_payout_rate', 'nd_payout_enabled',
         'nd_reward_purchase_enabled', 'nd_referral_earnings_enabled', 'nd_admin_locks', 'nd_bank_account_num',
         'nd_bank_account_name', 'nd_bank_name', 'nd_delete_pin',
-        'nd_shop_name', 'nd_shop_owner_phone', 'nd_about_text'
+        'nd_shop_name', 'nd_shop_owner_phone', 'nd_about_text',
+        'nd_lend_service_enabled', 'nd_lend_price', 'nd_lend_announcement',
+        'nd_lend_bank_num', 'nd_lend_bank_name', 'nd_lend_bank_acc_name', 'nd_lend_phone'
     ];
     
     // We keep an in-memory cache of the "last known good state" to compute diffs against

@@ -1,0 +1,131 @@
+<!-- Money Lending Modal (Full Page Overlay) -->
+<div id="moneyLendingModal" class="money-lending-overlay" style="display: none;">
+    <!-- Top Bar (Hero Section) -->
+    <div class="money-lending-header">
+        <button id="closeMoneyLendingBtn" class="lend-back-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </button>
+        <h3 class="lend-header-title">Money lending service</h3>
+        <button id="lendOpenChatBtn" class="lend-chat-btn">Open Chat</button>
+    </div>
+
+    <!-- Scrollable content area -->
+    <div class="money-lending-body">
+        <!-- Announcement/Note Section -->
+        <div class="lend-announcement-card">
+            <div class="lend-card-title">Announcement</div>
+            <div id="lendAnnouncementText" class="lend-scrollable-announcement">
+                <!-- Announcement text from admin here -->
+            </div>
+        </div>
+
+        <!-- Set Price Section -->
+        <div class="lend-price-section">
+            <div class="lend-price-label">Set Price</div>
+            <div id="lendPriceDisplay" class="lend-price-val">₦0</div>
+        </div>
+
+        <!-- Account details with Copy Buttons -->
+        <div class="lend-account-details">
+            <div class="lend-section-title">Payment Account Details</div>
+            
+            <!-- Account Number -->
+            <div class="lend-detail-row">
+                <div class="lend-detail-content">
+                    <span class="lend-detail-label">Account Number</span>
+                    <strong id="lendAccNum" class="lend-detail-val"></strong>
+                </div>
+                <button class="lend-copy-btn" onclick="copyLendDetail('lendAccNum', this)">Copy</button>
+            </div>
+
+            <!-- Bank Name -->
+            <div class="lend-detail-row">
+                <div class="lend-detail-content">
+                    <span class="lend-detail-label">Bank Name</span>
+                    <strong id="lendBankName" class="lend-detail-val"></strong>
+                </div>
+                <button class="lend-copy-btn" onclick="copyLendDetail('lendBankName', this)">Copy</button>
+            </div>
+
+            <!-- Account Name -->
+            <div class="lend-detail-row">
+                <div class="lend-detail-content">
+                    <span class="lend-detail-label">Account Name</span>
+                    <strong id="lendAccName" class="lend-detail-val"></strong>
+                </div>
+                <button class="lend-copy-btn" onclick="copyLendDetail('lendAccName', this)">Copy</button>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="lend-detail-row">
+                <div class="lend-detail-content">
+                    <span class="lend-detail-label">Phone Number</span>
+                    <strong id="lendPhone" class="lend-detail-val"></strong>
+                </div>
+                <button class="lend-copy-btn" onclick="copyLendDetail('lendPhone', this)">Copy</button>
+            </div>
+        </div>
+
+        <!-- Receipt upload & optional text section -->
+        <div class="lend-upload-section">
+            <div class="lend-section-title">Upload Payment Receipt</div>
+            
+            <div id="lendUploadArea" class="lend-upload-area">
+                <svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="upload-area-icon">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <div class="upload-area-text">Select receipt image to crop and upload</div>
+                
+                <div class="upload-area-actions">
+                    <button type="button" class="action-camera-btn" onclick="document.getElementById('lendCameraInput').click()">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Camera
+                    </button>
+                    <button type="button" class="action-gallery-btn" onclick="document.getElementById('lendGalleryInput').click()">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Gallery
+                    </button>
+                </div>
+
+                <div id="lendImagePreviewContainer" class="preview-container" style="display: none;">
+                    <img id="lendImagePreview" src="" alt="Receipt Preview">
+                    <button id="lendRemoveImgBtn" class="remove-btn">&times;</button>
+                </div>
+                
+                <input type="file" id="lendCameraInput" accept="image/*" capture="environment" style="display: none;">
+                <input type="file" id="lendGalleryInput" accept="image/*" style="display: none;">
+            </div>
+            
+            <div class="lend-support-text-wrapper">
+                <label for="lendSupportText" class="support-text-label">Supporting Text (Optional)</label>
+                <textarea id="lendSupportText" class="support-textarea" placeholder="Add any details or requests here..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Section -->
+    <div class="money-lending-footer">
+        <button id="submitLendRequestBtn" class="lend-submit-btn">
+            <span class="btn-text">Submit Lending Request</span>
+            <span class="loader" style="display: none;"></span>
+        </button>
+    </div>
+</div>
+
+<!-- Money Lending Image Cropper Overlay -->
+<div class="lend-cropper-overlay" id="lendCropperOverlay" style="display: none;">
+    <div class="lend-cropper-container">
+        <div class="lend-cropper-image-wrapper">
+            <img id="lendCropperImage" src="" alt="Edit receipt">
+        </div>
+        <div class="lend-cropper-actions">
+            <button class="crop-action-btn cancel" id="lendCropCancelBtn" title="Cancel">Cancel</button>
+            <button class="crop-action-btn" id="lendCropRotateLeftBtn" title="Rotate Left">Rotate L</button>
+            <button class="crop-action-btn" id="lendCropRotateRightBtn" title="Rotate Right">Rotate R</button>
+            <button class="crop-action-btn confirm" id="lendCropConfirmBtn" title="Confirm">Done</button>
+        </div>
+    </div>
+</div>

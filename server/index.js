@@ -1065,7 +1065,14 @@ app.post('/api/factory-reset', optionalToken, async (req, res) => {
             { id: 'nd_referral_earnings_enabled', value: 'false', updated_at: new Date().toISOString() },
             { id: 'nd_admin_locks', value: '{}', updated_at: new Date().toISOString() },
             { id: 'nd_delete_pin', value: '1234', updated_at: new Date().toISOString() },
-            { id: 'nd_maintenance_mode', value: 'false', updated_at: new Date().toISOString() }
+            { id: 'nd_maintenance_mode', value: 'false', updated_at: new Date().toISOString() },
+            { id: 'nd_lend_service_enabled', value: 'false', updated_at: new Date().toISOString() },
+            { id: 'nd_lend_price', value: '', updated_at: new Date().toISOString() },
+            { id: 'nd_lend_announcement', value: '', updated_at: new Date().toISOString() },
+            { id: 'nd_lend_bank_num', value: '', updated_at: new Date().toISOString() },
+            { id: 'nd_lend_bank_name', value: '', updated_at: new Date().toISOString() },
+            { id: 'nd_lend_bank_acc_name', value: '', updated_at: new Date().toISOString() },
+            { id: 'nd_lend_phone', value: '', updated_at: new Date().toISOString() }
         ];
         await supabase.from('admin_settings').insert(defaultSettings);
 

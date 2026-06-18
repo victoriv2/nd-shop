@@ -1,0 +1,449 @@
+/* Money Lending Full Page Modal Styles */
+.money-lending-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: var(--bg-primary);
+    z-index: 100000;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.money-lending-overlay.show {
+    display: flex;
+}
+
+.money-lending-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    flex-shrink: 0;
+}
+
+.lend-back-btn {
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.lend-back-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.lend-header-title {
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    font-weight: 700;
+    flex: 1;
+    text-align: center;
+}
+
+.lend-chat-btn {
+    background: none;
+    border: 1px solid #8b5cf6;
+    border-radius: 20px;
+    color: #8b5cf6;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.lend-chat-btn:hover {
+    background: rgba(139, 92, 246, 0.08);
+}
+
+/* Scrollable Body */
+.money-lending-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: var(--bg-primary);
+}
+
+/* Announcement Card */
+.lend-announcement-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    max-height: 180px;
+}
+
+.lend-card-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #8b5cf6;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.lend-scrollable-announcement {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    padding-right: 4px;
+    word-break: break-word;
+}
+
+/* Price Section */
+.lend-price-section {
+    text-align: center;
+    padding: 10px 0;
+}
+
+.lend-price-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.lend-price-val {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #8b5cf6;
+}
+
+/* Detail Rows */
+.lend-account-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.lend-section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.lend-detail-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 12px 16px;
+    border-radius: 12px;
+    transition: transform 0.2s;
+}
+
+.lend-detail-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.lend-detail-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.lend-detail-val {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+#lendAccNum.lend-detail-val {
+    letter-spacing: 0.5px;
+    font-family: monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.lend-copy-btn {
+    background: none;
+    border: 1px solid #8b5cf6;
+    border-radius: 8px;
+    color: #8b5cf6;
+    font-size: 0.75rem;
+    font-weight: 650;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.lend-copy-btn:hover {
+    background: rgba(139, 92, 246, 0.08);
+}
+
+.lend-copy-btn.copied {
+    background: #8b5cf6;
+    color: white;
+    border-color: #8b5cf6;
+}
+
+/* Upload Area */
+.lend-upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 14px;
+    padding: 30px 20px;
+    text-align: center;
+    background: var(--bg-secondary);
+    position: relative;
+}
+
+.upload-area-icon {
+    margin-bottom: 12px;
+    color: #8b5cf6;
+}
+
+.upload-area-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.upload-area-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    position: relative;
+    z-index: 10;
+}
+
+.action-camera-btn {
+    padding: 10px 18px;
+    background: #8b5cf6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-gallery-btn {
+    padding: 10px 18px;
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+    border: 1px solid #8b5cf6;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Image Preview inside Upload Area */
+.preview-container {
+    margin-top: 15px;
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
+#lendImagePreview {
+    max-width: 100%;
+    max-height: 250px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.preview-container .remove-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Optional Note Wrapper */
+.lend-support-text-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.support-text-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.support-textarea {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.95rem;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+    min-height: 80px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.support-textarea:focus {
+    border-color: #8b5cf6;
+}
+
+/* Footer & Submit Button */
+.money-lending-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    flex-shrink: 0;
+}
+
+.lend-submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: #8b5cf6;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.lend-submit-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.lend-submit-btn .loader {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: lend-spin 1s linear infinite;
+}
+
+@keyframes lend-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Cropper Overlay Styles */
+.lend-cropper-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 100010;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lend-cropper-container {
+    background: var(--bg-primary);
+    width: 90%;
+    max-width: 500px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-height: 90vh;
+}
+
+.lend-cropper-image-wrapper {
+    flex: 1;
+    min-height: 250px;
+    max-height: 60vh;
+    background: #000;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lend-cropper-image-wrapper img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.lend-cropper-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.lend-cropper-actions .crop-action-btn {
+    padding: 10px 5px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.lend-cropper-actions .crop-action-btn:hover {
+    background: var(--border-color);
+}
+
+.lend-cropper-actions .crop-action-btn.cancel {
+    border-color: #fca5a5;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.lend-cropper-actions .crop-action-btn.confirm {
+    border: none;
+    background: #8b5cf6;
+    color: white;
+}
+
+.lend-cropper-actions .crop-action-btn.confirm:hover {
+    background: #7c3aed;
+}

@@ -57,7 +57,7 @@ function openAdminSecurity() {
                 'btnAdminCommunity', 'btnPayoutPurchase', 'btnCustomerInsights', 'btnSalesBook',
                 'btnReceiptGenerator', 'btnExpensesNotebook', 'btnTaxRecords', 'btnDeleteSales',
                 'btnRecycleBin', 'btnHiddenShopProducts', 'btnIncomeStructure', 'btnYearlyOverview',
-                'btnFinancialSettings', 'btnMaintenance', 'btnAppContactSettings', 'btnSystemBackup', 'btnAiMode', 'btnMyEarnings'
+                'btnFinancialSettings', 'btnMaintenance', 'btnAppContactSettings', 'btnSystemBackup', 'btnAiMode', 'btnMyEarnings', 'btnLendService'
             ];
             toggleKeys.forEach(k => {
                 const cb = document.getElementById('lock-' + k);
@@ -353,7 +353,7 @@ function _doSaveLocks() {
         'btnAdminCommunity', 'btnPayoutPurchase', 'btnCustomerInsights', 'btnSalesBook',
         'btnReceiptGenerator', 'btnExpensesNotebook', 'btnTaxRecords', 'btnDeleteSales',
         'btnRecycleBin', 'btnHiddenShopProducts', 'btnIncomeStructure', 'btnYearlyOverview',
-        'btnFinancialSettings', 'btnMaintenance', 'btnAppContactSettings', 'btnSystemBackup', 'btnAiMode', 'btnMyEarnings'
+        'btnFinancialSettings', 'btnMaintenance', 'btnAppContactSettings', 'btnSystemBackup', 'btnAiMode', 'btnMyEarnings', 'btnLendService'
     ];
     toggleKeys.forEach(k => {
         const cb = document.getElementById('lock-' + k);

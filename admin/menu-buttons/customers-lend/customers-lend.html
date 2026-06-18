@@ -1,0 +1,71 @@
+<div class="admin-modal-overlay" id="customersLendModal" style="display: none;">
+    <div class="admin-modal-content" style="max-width: 480px;">
+        <div class="admin-modal-header">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Customers lend service</h3>
+            <button class="admin-modal-close" onclick="closeCustomersLend()">✕</button>
+        </div>
+        <div class="admin-modal-body" style="display: flex; flex-direction: column; gap: 18px; padding-top: 10px;">
+            <!-- Service Enabled Switch -->
+            <div class="lend-admin-toggle-row">
+                <div class="toggle-text-wrap">
+                    <span class="toggle-title">Service Enabled</span>
+                    <span class="toggle-desc">Show or hide this service on the user side instantly</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="lendEnabledToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <!-- Price Input -->
+            <div class="form-group">
+                <label class="form-label">Set Price (₦)</label>
+                <input type="number" id="lendPriceInput" class="form-input" placeholder="e.g. 5000">
+            </div>
+
+            <!-- Announcement Input -->
+            <div class="form-group">
+                <label class="form-label">Announcement / Note</label>
+                <textarea id="lendAnnouncementInput" rows="3" class="form-textarea" placeholder="Manually input announcement message for users..."></textarea>
+            </div>
+
+            <!-- Bank Details -->
+            <div class="lend-admin-bank-box">
+                <div class="bank-box-title">Bank Account Details</div>
+                
+                <div class="form-group">
+                    <label class="form-sub-label">Account Number</label>
+                    <input type="text" id="lendAccNumInput" class="form-sub-input" placeholder="e.g. 1022345678">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-sub-label">Bank Name</label>
+                    <input type="text" id="lendBankNameInput" class="form-sub-input" placeholder="e.g. Zenith Bank">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-sub-label">Account Name</label>
+                    <input type="text" id="lendAccNameInput" class="form-sub-input" placeholder="e.g. John Doe">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-sub-label">Phone Number</label>
+                    <input type="text" id="lendPhoneInput" class="form-sub-input" placeholder="e.g. 08123456789">
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="lend-admin-actions">
+                <button class="lend-admin-chat-btn" onclick="lendAdminOpenChat()">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Open Chat
+                </button>
+                <button class="lend-admin-save-btn" onclick="saveCustomersLend()">
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
