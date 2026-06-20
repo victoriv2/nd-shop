@@ -458,7 +458,7 @@
             };
             eventSource.onerror = () => {
                 eventSource.close();
-                setTimeout(connectSSE, 5000); // Attempt to reconnect after 5s
+                setTimeout(connectSSE, 1500); // Attempt to reconnect after 1.5s
             };
         } catch (e) {
             console.warn('[sync] SSE connection failed:', e);

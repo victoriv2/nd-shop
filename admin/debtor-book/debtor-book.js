@@ -453,6 +453,19 @@ function handleDbNoteInput() {
         dbNoteHistory.push(text);
         dbNoteHistoryIndex++;
     }, 400); // 400ms debounce
+
+    // Auto-save typing pause in background
+    clearTimeout(window.dbAutoSaveTimeout);
+    window.dbAutoSaveTimeout = setTimeout(() => {
+        autoSaveCurrentNote();
+    }, 1500);
+}
+
+function handleDbNoteTitleInput() {
+    clearTimeout(window.dbAutoSaveTimeout);
+    window.dbAutoSaveTimeout = setTimeout(() => {
+        autoSaveCurrentNote();
+    }, 1500);
 }
 
 function undoDbNote() {

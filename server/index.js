@@ -113,6 +113,17 @@ const broadcastSyncTrigger = (payload = null) => {
     }
 };
 
+// Keep-alive heartbeat to prevent proxy/browser timeouts on inactive connections
+setInterval(() => {
+    for (const client of sseClients) {
+        try {
+            client.write('data: {"type":"ping"}\n\n');
+        } catch (e) {
+            sseClients.delete(client);
+        }
+    }
+}, 15000);
+
 // ==========================================
 // 3. AUTHENTICATION & USER ROUTES
 // ==========================================
