@@ -36,13 +36,18 @@ function openDebtRecordPage() {
 
             const modal = document.getElementById('debtRecordModal');
             if (modal) {
-                setTimeout(() => {
+                // Step 1: force into render tree with display:flex
+                modal.style.display = 'flex';
+                // Step 2: trigger reflow so browser registers the element
+                void modal.offsetHeight;
+                // Step 3: now add .show to trigger CSS opacity/transform transition
+                requestAnimationFrame(() => {
                     modal.classList.add('show');
                     document.body.classList.add('modal-open');
                     _debtRecordOpen = true;
                     renderUserDebtNotes();
                     isOpeningDebtRecord = false;
-                }, 10);
+                });
 
                 // Register real-time listener — debounced refresh whenever nd_debtor_notes changes
                 if (window.realtimeSync) {
@@ -66,6 +71,7 @@ function closeDebtRecordPage() {
     if (modal) {
         modal.classList.remove('show');
         setTimeout(() => {
+            modal.style.display = 'none';
             const wrapper = document.getElementById('debtRecordWrapper');
             if (wrapper) wrapper.remove();
             
@@ -169,9 +175,12 @@ function viewDbUserNoteDetail(noteId) {
         
         contentEl.innerHTML = note.content ? note.content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>") : '<em>No content...</em>';
 
-        setTimeout(() => {
+        // Force display before triggering transition
+        modal.style.display = 'flex';
+        void modal.offsetHeight;
+        requestAnimationFrame(() => {
             modal.classList.add('show');
-        }, 10);
+        });
     }
 }
 
@@ -179,6 +188,7 @@ function closeDbUserNoteDetail() {
     const modal = document.getElementById('dbUserNoteDetailModal');
     if (modal) {
         modal.classList.remove('show');
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
     }
 }
 
