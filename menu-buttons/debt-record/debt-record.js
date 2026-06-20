@@ -1,5 +1,14 @@
 let isOpeningDebtRecord = false;
 
+// Track whether the debt record modal is currently open
+let _debtRecordOpen = false;
+
+// Called by global-fixes.js and realtimeSync when nd_debtor_notes changes
+window.renderUserDebtNotes = function() {
+    if (!_debtRecordOpen) return;
+    renderUserDebtNotes();
+};
+
 function openDebtRecordPage() {
     if (isOpeningDebtRecord) return;
     isOpeningDebtRecord = true;
@@ -29,7 +38,15 @@ function openDebtRecordPage() {
                 void modal.offsetWidth;
                 modal.classList.add('show');
                 document.body.classList.add('modal-open');
+                _debtRecordOpen = true;
                 renderUserDebtNotes();
+
+                // Register real-time listener — debounced refresh whenever nd_debtor_notes changes
+                if (window.realtimeSync) {
+                    window.realtimeSync.on('nd_debtor_notes', () => {
+                        if (_debtRecordOpen) renderUserDebtNotes();
+                    });
+                }
             }
             isOpeningDebtRecord = false;
         })
@@ -40,6 +57,7 @@ function openDebtRecordPage() {
 }
 
 function closeDebtRecordPage() {
+    _debtRecordOpen = false;
     const modal = document.getElementById('debtRecordModal');
     if (modal) {
         modal.classList.remove('show');
@@ -159,3 +177,9 @@ function closeDbUserNoteDetail() {
         }, 300);
     }
 }
+
+// Also listen for nd_sync_complete (fires after full server pull) to refresh if modal is open
+window.addEventListener('nd_sync_complete', () => {
+    if (_debtRecordOpen) renderUserDebtNotes();
+});
+

@@ -261,7 +261,10 @@
                 const i = document.getElementById('productSearchInput');
                 window.renderDynamicProducts(i ? i.value : '');
             }
-            if (k === 'nd_debtor_notes' && typeof window.renderDebtorNotes === 'function') window.renderDebtorNotes();
+            if (k === 'nd_debtor_notes') {
+                if (typeof window.renderDebtorNotes === 'function') window.renderDebtorNotes();
+                if (typeof window.renderUserDebtNotes === 'function') window.renderUserDebtNotes();
+            }
             if ((k === 'nd_transactions' || k.includes('payout')) && typeof window.filterPayouts === 'function') window.filterPayouts('all');
             // Auto-refresh sales table when sales data changes
             if (k === 'nd_sales_history') {
@@ -270,6 +273,13 @@
                 if (typeof window.renderSalesBook === 'function') {
                     const sbPage = document.getElementById('salesBookPage');
                     if (sbPage && sbPage.style.display === 'flex') window.renderSalesBook();
+                }
+            }
+            if (k === 'nd_debt_requests') {
+                // Refresh the pay-debt history overlay if it's currently open
+                const historyOverlay = document.getElementById('pdHistoryOverlay');
+                if (historyOverlay && historyOverlay.style.display !== 'none' && typeof window.openDebtHistory === 'function') {
+                    window.openDebtHistory();
                 }
             }
         } catch(err) { console.warn(err); }
