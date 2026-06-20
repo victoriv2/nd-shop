@@ -311,6 +311,19 @@ function confirmDbRename() {
     const note = notes.find(n => n.id === noteToRenameId);
     if (note) {
         note.title = newTitle;
+        // Automatically check/update user association based on regex
+        const combinedText = (newTitle + " " + (note.content || ''));
+        const match = combinedText.match(/nd\d{5}/i);
+        let userId = '';
+        if (match) {
+            const extractedId = match[0].toLowerCase();
+            const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
+            const matchedUser = users.find(u => u.id.toLowerCase() === extractedId);
+            if (matchedUser) {
+                userId = matchedUser.id;
+            }
+        }
+        note.userId = userId;
         note.updatedAt = new Date().toISOString();
         localStorage.setItem('nd_debtor_notes', JSON.stringify(notes));
         renderDebtorNotes();
@@ -323,28 +336,8 @@ function openNoteEditor(noteId = null) {
     const editorPage = document.getElementById('dbEditorPage');
     const titleInput = document.getElementById('dbNoteTitle');
     const contentInput = document.getElementById('dbNoteContent');
-    const userSelect = document.getElementById('dbNoteUserSelect');
-
-    // Populate user selection dropdown
-    if (userSelect) {
-        userSelect.innerHTML = '<option value="">-- No User Associated --</option>';
-        try {
-            const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
-            const customers = users.filter(u => !u.is_admin);
-            customers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            customers.forEach(u => {
-                const opt = document.createElement('option');
-                opt.value = u.id;
-                opt.textContent = `${u.name || 'Unknown'} (${u.phone || 'No Phone'})`;
-                userSelect.appendChild(opt);
-            });
-        } catch (e) {
-            console.error("Error populating users list:", e);
-        }
-    }
 
     let notes = JSON.parse(localStorage.getItem('nd_debtor_notes') || '[]');
-    let selectedUserId = '';
 
     if (noteId) {
         // Edit existing
@@ -353,17 +346,12 @@ function openNoteEditor(noteId = null) {
         if (note) {
             titleInput.value = note.title || '';
             contentInput.value = note.content || '';
-            selectedUserId = note.userId || '';
         }
     } else {
         // Create new
         currentEditingNoteId = 'note-' + Date.now();
         titleInput.value = '';
         contentInput.value = '';
-    }
-
-    if (userSelect) {
-        userSelect.value = selectedUserId;
     }
 
     // Init history
@@ -381,12 +369,23 @@ function autoSaveCurrentNote() {
 
     const title = document.getElementById('dbNoteTitle').value;
     const content = document.getElementById('dbNoteContent').value;
-    const userSelect = document.getElementById('dbNoteUserSelect');
-    const userId = userSelect ? userSelect.value : '';
 
     // Don't save completely empty new notes
     if (!title.trim() && !content.trim()) {
         return;
+    }
+
+    // Automatically check/update user association based on regex
+    const combinedText = (title + " " + content);
+    const match = combinedText.match(/nd\d{5}/i);
+    let userId = '';
+    if (match) {
+        const extractedId = match[0].toLowerCase();
+        const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
+        const matchedUser = users.find(u => u.id.toLowerCase() === extractedId);
+        if (matchedUser) {
+            userId = matchedUser.id;
+        }
     }
 
     let notes = JSON.parse(localStorage.getItem('nd_debtor_notes') || '[]');
