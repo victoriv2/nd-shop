@@ -6,7 +6,7 @@ let _debtRecordOpen = false;
 // Called by global-fixes.js and realtimeSync when nd_debtor_notes changes
 window.renderUserDebtNotes = function() {
     if (!_debtRecordOpen) return;
-    renderUserDebtNotes();
+    actualRenderUserDebtNotes();
 };
 
 function openDebtRecordPage() {
@@ -45,14 +45,25 @@ function openDebtRecordPage() {
                     modal.classList.add('show');
                     document.body.classList.add('modal-open');
                     _debtRecordOpen = true;
-                    renderUserDebtNotes();
-                    isOpeningDebtRecord = false;
+                    try {
+                        actualRenderUserDebtNotes();
+                    } catch (e) {
+                        console.error("Error rendering user debt notes:", e);
+                    } finally {
+                        isOpeningDebtRecord = false;
+                    }
                 });
 
                 // Register real-time listener — debounced refresh whenever nd_debtor_notes changes
                 if (window.realtimeSync) {
                     window.realtimeSync.on('nd_debtor_notes', () => {
-                        if (_debtRecordOpen) renderUserDebtNotes();
+                        if (_debtRecordOpen) {
+                            try {
+                                actualRenderUserDebtNotes();
+                            } catch (e) {
+                                console.error("Error in real-time sync renderUserDebtNotes:", e);
+                            }
+                        }
                     });
                 }
             } else {
@@ -83,7 +94,7 @@ function closeDebtRecordPage() {
     }
 }
 
-function renderUserDebtNotes() {
+function actualRenderUserDebtNotes() {
     const list = document.getElementById('debtRecordList');
     if (!list) return;
 
@@ -105,8 +116,8 @@ function renderUserDebtNotes() {
         console.error("Error parsing debtor notes:", e);
     }
 
-    // Filter notes linked to the current user
-    const userNotes = notes.filter(n => n.userId === currentUser.id);
+    // Filter notes linked to the current user (case-insensitive comparison)
+    const userNotes = notes.filter(n => n.userId && currentUser.id && n.userId.toLowerCase() === currentUser.id.toLowerCase());
 
     // Sort: pinned first, then by updatedAt newest to oldest
     userNotes.sort((a, b) => {
@@ -194,6 +205,12 @@ function closeDbUserNoteDetail() {
 
 // Also listen for nd_sync_complete (fires after full server pull) to refresh if modal is open
 window.addEventListener('nd_sync_complete', () => {
-    if (_debtRecordOpen) renderUserDebtNotes();
+    if (_debtRecordOpen) {
+        try {
+            actualRenderUserDebtNotes();
+        } catch (e) {
+            console.error("Error on sync complete rendering user debt notes:", e);
+        }
+    }
 });
 
