@@ -118,6 +118,39 @@
         }
     })();
 
+    // Auto-associate user IDs for debtor notes missing userId
+    (function() {
+        try {
+            const debtorNotesRaw = localStorage.getItem('nd_debtor_notes');
+            if (debtorNotesRaw) {
+                const debtorNotes = JSON.parse(debtorNotesRaw);
+                const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
+                let changed = false;
+                
+                debtorNotes.forEach(n => {
+                    if (!n.userId) {
+                        const combinedText = (n.title || '') + ' ' + (n.content || '');
+                        const match = combinedText.match(/nd\d{5}/i);
+                        if (match) {
+                            const extractedId = match[0].toLowerCase();
+                            const matchedUser = users.find(u => u.id.toLowerCase() === extractedId);
+                            if (matchedUser) {
+                                n.userId = matchedUser.id;
+                                changed = true;
+                            }
+                        }
+                    }
+                });
+                
+                if (changed) {
+                    localStorage.setItem('nd_debtor_notes', JSON.stringify(debtorNotes));
+                }
+            }
+        } catch(e) {
+            console.error('Error auto-associating debtor notes:', e);
+        }
+    })();
+
     let isNavigatingBack = false;
     let overlayStack = []; // Keep track of open overlays in order
     let lastTab = null;

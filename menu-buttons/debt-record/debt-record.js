@@ -24,7 +24,10 @@ function openDebtRecordPage() {
         })
         .then(html => {
             const container = document.getElementById('modal-container');
-            if (!container) return;
+            if (!container) {
+                isOpeningDebtRecord = false;
+                return;
+            }
 
             const wrapper = document.createElement('div');
             wrapper.id = 'debtRecordWrapper';
@@ -33,13 +36,13 @@ function openDebtRecordPage() {
 
             const modal = document.getElementById('debtRecordModal');
             if (modal) {
-                modal.style.display = 'flex';
-                // Trigger reflow for transition
-                void modal.offsetWidth;
-                modal.classList.add('show');
-                document.body.classList.add('modal-open');
-                _debtRecordOpen = true;
-                renderUserDebtNotes();
+                setTimeout(() => {
+                    modal.classList.add('show');
+                    document.body.classList.add('modal-open');
+                    _debtRecordOpen = true;
+                    renderUserDebtNotes();
+                    isOpeningDebtRecord = false;
+                }, 10);
 
                 // Register real-time listener — debounced refresh whenever nd_debtor_notes changes
                 if (window.realtimeSync) {
@@ -47,8 +50,9 @@ function openDebtRecordPage() {
                         if (_debtRecordOpen) renderUserDebtNotes();
                     });
                 }
+            } else {
+                isOpeningDebtRecord = false;
             }
-            isOpeningDebtRecord = false;
         })
         .catch(err => {
             console.error("Error opening debt record page:", err);
@@ -62,11 +66,14 @@ function closeDebtRecordPage() {
     if (modal) {
         modal.classList.remove('show');
         setTimeout(() => {
-            modal.style.display = 'none';
             const wrapper = document.getElementById('debtRecordWrapper');
             if (wrapper) wrapper.remove();
-            document.body.classList.remove('modal-open');
-        }, 350);
+            
+            // Only remove modal-open if there are no other modals open
+            if (!document.querySelector('.modal-overlay.show') && !document.querySelector('.menu-modal-overlay.show')) {
+                document.body.classList.remove('modal-open');
+            }
+        }, 300);
     }
 }
 
@@ -162,9 +169,9 @@ function viewDbUserNoteDetail(noteId) {
         
         contentEl.innerHTML = note.content ? note.content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>") : '<em>No content...</em>';
 
-        modal.style.display = 'flex';
-        void modal.offsetWidth;
-        modal.classList.add('show');
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
     }
 }
 
@@ -172,9 +179,6 @@ function closeDbUserNoteDetail() {
     const modal = document.getElementById('dbUserNoteDetailModal');
     if (modal) {
         modal.classList.remove('show');
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 300);
     }
 }
 

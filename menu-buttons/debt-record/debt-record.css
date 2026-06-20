@@ -1,12 +1,4 @@
 /* Debt Record Modal Styles */
-#debtRecordModal {
-    display: none;
-    z-index: 100000;
-}
-
-#debtRecordModal.show {
-    display: flex;
-}
 
 .debt-record-list {
     display: flex;
@@ -84,11 +76,3 @@
 }
 
 /* Read-Only Details */
-#dbUserNoteDetailModal {
-    display: none;
-    align-items: center;
-}
-
-#dbUserNoteDetailModal.show {
-    display: flex;
-}
