@@ -1,0 +1,32 @@
+<!-- Debt Record Modal Overlay -->
+<div id="debtRecordModal" class="menu-modal-overlay">
+    <div class="menu-modal-content">
+        <div class="menu-modal-header">
+            <h3 style="flex:1;">Debt Record</h3>
+            <span class="m-close" onclick="closeDebtRecordPage()">✕</span>
+        </div>
+        
+        <div class="menu-modal-body">
+            <!-- Notes List -->
+            <div id="debtRecordList" class="debt-record-list">
+                <!-- Notes will be dynamically rendered here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Read-Only Note Detail Overlay -->
+<div id="dbUserNoteDetailModal" class="menu-modal-overlay" style="z-index: 100005;">
+    <div class="menu-modal-content" style="max-height: 80vh;">
+        <div class="menu-modal-header">
+            <h3 id="dbUserNoteDetailTitle" style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Note Title</h3>
+            <span class="m-close" onclick="closeDbUserNoteDetail()">✕</span>
+        </div>
+        <div class="menu-modal-body" style="display: flex; flex-direction: column; gap: 12px;">
+            <div id="dbUserNoteDetailDate" style="font-size: 0.8rem; color: #94a3b8;">Date</div>
+            <div id="dbUserNoteDetailContent" style="font-size: 0.95rem; color: #334155; line-height: 1.6; white-space: pre-wrap; word-break: break-word; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; overflow-y: auto; max-height: 50vh;">
+                Note Content
+            </div>
+        </div>
+    </div>
+</div>

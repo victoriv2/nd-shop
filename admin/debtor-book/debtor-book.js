@@ -76,6 +76,10 @@ function renderDebtorNotes() {
     if (!list) return;
 
     let notes = JSON.parse(localStorage.getItem('nd_debtor_notes') || '[]');
+    let users = [];
+    try {
+        users = JSON.parse(localStorage.getItem('nd_users') || '[]');
+    } catch (e) {}
     
     // Search
     const searchInput = document.getElementById('dbSearchInput');
@@ -119,6 +123,19 @@ function renderDebtorNotes() {
         const dateObj = new Date(note.updatedAt);
         const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+        let linkedUserBadge = '';
+        if (note.userId) {
+            const matchedUser = users.find(u => u.id === note.userId);
+            if (matchedUser) {
+                linkedUserBadge = `
+                    <div style="display: inline-flex; align-items: center; gap: 4px; background: #f1f5f9; color: #64748b; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 8px;">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.7;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        ${matchedUser.name || 'Unknown'}
+                    </div>
+                `;
+            }
+        }
+
         return `
             <div class="db-note-card ${note.isPinned ? 'pinned' : ''}" onclick="openNoteEditor('${note.id}')">
                 <div class="db-note-header">
@@ -137,6 +154,7 @@ function renderDebtorNotes() {
                 <div class="db-note-preview">${previewText}</div>
                 <div class="db-note-footer">
                     <div class="db-note-date">${dateStr}</div>
+                    ${linkedUserBadge}
                 </div>
                 
                 <div class="db-dots-menu" id="dbMenu-${note.id}" onclick="event.stopPropagation()">
@@ -305,8 +323,28 @@ function openNoteEditor(noteId = null) {
     const editorPage = document.getElementById('dbEditorPage');
     const titleInput = document.getElementById('dbNoteTitle');
     const contentInput = document.getElementById('dbNoteContent');
+    const userSelect = document.getElementById('dbNoteUserSelect');
+
+    // Populate user selection dropdown
+    if (userSelect) {
+        userSelect.innerHTML = '<option value="">-- No User Associated --</option>';
+        try {
+            const users = JSON.parse(localStorage.getItem('nd_users') || '[]');
+            const customers = users.filter(u => !u.is_admin);
+            customers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            customers.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.textContent = `${u.name || 'Unknown'} (${u.phone || 'No Phone'})`;
+                userSelect.appendChild(opt);
+            });
+        } catch (e) {
+            console.error("Error populating users list:", e);
+        }
+    }
 
     let notes = JSON.parse(localStorage.getItem('nd_debtor_notes') || '[]');
+    let selectedUserId = '';
 
     if (noteId) {
         // Edit existing
@@ -315,12 +353,17 @@ function openNoteEditor(noteId = null) {
         if (note) {
             titleInput.value = note.title || '';
             contentInput.value = note.content || '';
+            selectedUserId = note.userId || '';
         }
     } else {
         // Create new
         currentEditingNoteId = 'note-' + Date.now();
         titleInput.value = '';
         contentInput.value = '';
+    }
+
+    if (userSelect) {
+        userSelect.value = selectedUserId;
     }
 
     // Init history
@@ -338,6 +381,8 @@ function autoSaveCurrentNote() {
 
     const title = document.getElementById('dbNoteTitle').value;
     const content = document.getElementById('dbNoteContent').value;
+    const userSelect = document.getElementById('dbNoteUserSelect');
+    const userId = userSelect ? userSelect.value : '';
 
     // Don't save completely empty new notes
     if (!title.trim() && !content.trim()) {
@@ -350,12 +395,14 @@ function autoSaveCurrentNote() {
     if (existingIndex > -1) {
         notes[existingIndex].title = title;
         notes[existingIndex].content = content;
+        notes[existingIndex].userId = userId;
         notes[existingIndex].updatedAt = new Date().toISOString();
     } else {
         notes.push({
             id: currentEditingNoteId,
             title: title,
             content: content,
+            userId: userId,
             isPinned: false,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()

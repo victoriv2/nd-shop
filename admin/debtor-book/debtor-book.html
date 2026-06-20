@@ -55,6 +55,12 @@
         </div>
     </div>
     <div class="db-editor-body" style="display: flex; flex-direction: column; height: calc(100vh - 60px);">
+        <div style="padding: 10px 20px; background: #ffffff; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px;">
+            <label style="font-size: 0.85rem; font-weight: 700; color: #64748b;">Link to User:</label>
+            <select id="dbNoteUserSelect" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; font-size: 0.9rem; font-family: inherit;">
+                <option value="">-- No User Associated --</option>
+            </select>
+        </div>
         <textarea id="dbNoteContent" class="db-note-textarea" placeholder="Start typing your note here..." oninput="handleDbNoteInput()" style="flex: 1; resize: none;"></textarea>
         <div style="padding: 15px 20px; background: var(--bg-primary); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
             <button class="admin-modern-btn" onclick="generateTotalFromAI()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; display: flex; align-items: center; gap: 8px; border-radius: 12px; font-weight: 600; padding: 12px 20px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">

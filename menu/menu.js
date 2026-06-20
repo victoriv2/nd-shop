@@ -64,6 +64,13 @@ function initMenuLogic() {
         });
     }
 
+    const debtRecordBtn = document.getElementById('debtRecordBtn');
+    if (debtRecordBtn) {
+        debtRecordBtn.addEventListener('click', () => {
+            if (typeof openDebtRecordPage === 'function') openDebtRecordPage();
+        });
+    }
+
     const lendServiceBtn = document.getElementById('lendServiceBtn');
     if (lendServiceBtn) {
         const isLendEnabled = localStorage.getItem('nd_lend_service_enabled') === 'true';
