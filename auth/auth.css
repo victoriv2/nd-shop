@@ -309,13 +309,14 @@
    Login Page — Fit to Screen, No Scroll
    ======================================== */
 .login-page {
-    height: 100dvh;
-    overflow: hidden;
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto;
 }
 
 .login-page .auth-container {
     margin: auto;
-    max-height: calc(100dvh - 40px);
+    max-height: none;
     display: flex;
     flex-direction: column;
     justify-content: center;
