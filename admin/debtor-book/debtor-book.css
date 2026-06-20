@@ -161,6 +161,10 @@
     transform: scale(0.98);
 }
 
+.db-note-card.menu-active {
+    z-index: 10;
+}
+
 .db-note-card.pinned {
     border-left: 4px solid #8b5cf6;
     background: #fcfdfe;

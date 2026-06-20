@@ -139,7 +139,7 @@ function renderDebtorNotes() {
                     <div class="db-note-date">${dateStr}</div>
                 </div>
                 
-                <div class="db-dots-menu" id="dbMenu-${note.id}">
+                <div class="db-dots-menu" id="dbMenu-${note.id}" onclick="event.stopPropagation()">
                     <button class="db-dots-item" onclick="event.preventDefault(); event.stopPropagation(); openDbRenameModal('${note.id}', '${(note.title || '').replace(/'/g, "\\'")}')">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         Rename
@@ -162,15 +162,19 @@ function toggleDbMenu(e, id) {
     e.preventDefault();
     e.stopPropagation();
     const menu = document.getElementById('dbMenu-' + id);
+    if (!menu) return;
+    const card = menu.closest('.db-note-card');
     const isShowing = menu.classList.contains('show');
     closeAllDbMenus();
     if (!isShowing) {
         menu.classList.add('show');
+        if (card) card.classList.add('menu-active');
     }
 }
 
 function closeAllDbMenus() {
     document.querySelectorAll('.db-dots-menu').forEach(m => m.classList.remove('show'));
+    document.querySelectorAll('.db-note-card').forEach(c => c.classList.remove('menu-active'));
 }
 
 // 3-dot Menu Actions
