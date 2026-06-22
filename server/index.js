@@ -9,6 +9,8 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { createClient } = require('@supabase/supabase-js');
 const fetch = require('cross-fetch');
 const dns = require('dns');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 dns.setDefaultResultOrder('ipv4first');
 
@@ -823,32 +825,46 @@ app.get('/api/sync/down', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/api/upload', optionalToken, async (req, res) => {
+app.post('/api/upload', optionalToken, upload.single('file'), async (req, res) => {
     try {
-        const { fileData, fileName, mimeType } = req.body;
-        if (!fileData) return res.status(400).json({ success: false, error: 'No file data provided' });
+        let buffer, finalMimeType, uniqueFileName;
 
-        let base64String = fileData;
-        let finalMimeType = mimeType || 'application/octet-stream';
-        
-        if (fileData.includes('base64,')) {
-            const parts = fileData.split('base64,');
-            finalMimeType = parts[0].replace('data:', '').replace(';', '') || finalMimeType;
-            base64String = parts[1];
+        if (req.file) {
+            // FormData / multipart upload (from admin/product/product.js)
+            buffer = req.file.buffer;
+            finalMimeType = req.file.mimetype || 'image/jpeg';
+            const safeName = (req.file.originalname || 'upload.png').replace(/[^a-zA-Z0-9.\_\-]/g, '');
+            uniqueFileName = `${Date.now()}-${safeName}`;
+        } else if (req.body && req.body.fileData) {
+            // JSON base64 upload (legacy / restock path)
+            const { fileData, fileName, mimeType } = req.body;
+            let base64String = fileData;
+            finalMimeType = mimeType || 'application/octet-stream';
+
+            if (fileData.includes('base64,')) {
+                const parts = fileData.split('base64,');
+                finalMimeType = parts[0].replace('data:', '').replace(';', '') || finalMimeType;
+                base64String = parts[1];
+            }
+            buffer = Buffer.from(base64String, 'base64');
+            uniqueFileName = `${Date.now()}-${fileName || 'upload.png'}`.replace(/[^a-zA-Z0-9.\-]/g, '');
+        } else {
+            return res.status(400).json({ success: false, error: 'No file data provided' });
         }
 
-        const buffer = Buffer.from(base64String, 'base64');
-        const uniqueFileName = `${Date.now()}-${fileName || 'upload.png'}`.replace(/[^a-zA-Z0-9.\-]/g, '');
-        
         const { error } = await supabase.storage.from('nd-shop-media').upload(uniqueFileName, buffer, {
             contentType: finalMimeType, upsert: true
         });
 
-        if (error) return res.status(500).json({ success: false, error: 'Upload failed' });
-        
+        if (error) {
+            console.error('[upload] Supabase storage error:', error.message);
+            return res.status(500).json({ success: false, error: 'Upload failed: ' + error.message });
+        }
+
         const { data: publicUrlData } = supabase.storage.from('nd-shop-media').getPublicUrl(uniqueFileName);
         res.json({ success: true, url: publicUrlData.publicUrl });
     } catch (err) {
+        console.error('[upload] Error:', err.message);
         res.status(500).json({ success: false, error: 'Internal server error.' });
     }
 });
