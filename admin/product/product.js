@@ -1158,10 +1158,44 @@ function initAdminProductLogic() {
     const imgRemoveBtn = document.getElementById('adminProductImageRemoveBtn');
     const imgDataHidden = document.getElementById('adminProductImageData');
 
+    // Create a loading overlay that sits on top without destroying placeholder content
+    function _showImgLoading() {
+        let overlay = document.getElementById('_adminImgLoadingOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = '_adminImgLoadingOverlay';
+            overlay.style.cssText = 'position:absolute;inset:0;background:rgba(255,255,255,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;z-index:10;gap:10px;';
+            overlay.innerHTML = '<div style="width:28px;height:28px;border:3px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;animation:spin 0.8s linear infinite;"></div><div style="color:#64748b;font-size:0.85rem;font-weight:500;">Uploading...</div>';
+            if (imgUploadArea) {
+                imgUploadArea.style.position = 'relative';
+                imgUploadArea.appendChild(overlay);
+            }
+        }
+        overlay.style.display = 'flex';
+    }
+
+    function _hideImgLoading() {
+        const overlay = document.getElementById('_adminImgLoadingOverlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+
+    function _showImgPlaceholder() {
+        if (imgPlaceholder) imgPlaceholder.style.display = 'flex';
+        if (imgPreviewCont) imgPreviewCont.style.display = 'none';
+        _hideImgLoading();
+    }
+
+    function _showImgPreview(url) {
+        if (imgPreview) imgPreview.src = url;
+        if (imgPlaceholder) imgPlaceholder.style.display = 'none';
+        if (imgPreviewCont) imgPreviewCont.style.display = 'block';
+        _hideImgLoading();
+    }
+
     if (imgUploadArea && imgInput) {
         imgUploadArea.addEventListener('click', (e) => {
             if (e.target.closest('.admin-image-preview-actions')) return;
-            if (e.target.closest('#adminProductSnapBtn')) return; // snap button handles its own click
+            if (e.target.closest('#adminProductSnapBtn')) return;
             imgInput.click();
         });
 
@@ -1169,10 +1203,7 @@ function initAdminProductLogic() {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Show loading state
-            if (imgPlaceholder) {
-                imgPlaceholder.innerHTML = '<div class="spinner" style="width:24px;height:24px;border:3px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;animation:spin 1s linear infinite;"></div><div style="margin-top:10px;color:#64748b;font-size:0.85rem;">Uploading...</div>';
-            }
+            _showImgLoading();
 
             const formData = new FormData();
             formData.append('file', file);
@@ -1182,26 +1213,25 @@ function initAdminProductLogic() {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
-                    const dataUrl = data.url;
-                    if (imgPreview) imgPreview.src = dataUrl;
-                    if (imgPlaceholder) imgPlaceholder.style.display = 'none';
-                    if (imgPreviewCont) imgPreviewCont.style.display = 'block';
-                    if (imgDataHidden) imgDataHidden.value = dataUrl;
+                    if (imgDataHidden) imgDataHidden.value = data.url;
+                    _showImgPreview(data.url);
                 } else {
+                    _showImgPlaceholder();
                     if (typeof customAlert !== 'undefined') customAlert(data.error || 'Upload failed');
                     else alert('Upload failed');
-                    if (imgPlaceholder) imgPlaceholder.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><div class="admin-image-placeholder-text">Click to upload image</div><div class="admin-image-placeholder-sub">Max file size: 5MB</div>';
                 }
             } catch (err) {
                 console.error('Upload Error:', err);
+                _showImgPlaceholder();
                 if (typeof customAlert !== 'undefined') customAlert('Network error during upload');
                 else alert('Network error during upload');
-                if (imgPlaceholder) imgPlaceholder.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><div class="admin-image-placeholder-text">Click to upload image</div><div class="admin-image-placeholder-sub">Max file size: 5MB</div>';
             }
+
+            if (imgInput) imgInput.value = '';
         });
 
         if (imgReplaceBtn) {
@@ -1211,19 +1241,11 @@ function initAdminProductLogic() {
             });
         }
 
-        const _imgPlaceholderHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><div class="admin-image-placeholder-text">Click to upload image</div><div class="admin-image-placeholder-sub">Max file size: 5MB</div>';
-
         if (imgRemoveBtn) {
             imgRemoveBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (imgInput) imgInput.value = '';
                 if (imgDataHidden) imgDataHidden.value = '';
-                if (imgPreview) imgPreview.src = '';
-                if (imgPreviewCont) imgPreviewCont.style.display = 'none';
-                if (imgPlaceholder) {
-                    imgPlaceholder.innerHTML = _imgPlaceholderHTML;
-                    imgPlaceholder.style.display = 'flex';
-                }
+                _showImgPlaceholder();
             });
         }
     }
