@@ -507,6 +507,7 @@ function initSalesTable() {
                     const defaultVariantContainer = document.getElementById('defaultVariantContainer');
                     const hasWholesale = item.wholesalePrice && Number(item.wholesalePrice) > 0;
                     
+                    // Set static price display
                     if (hasWholesale) {
                         if (defaultVariantContainer) defaultVariantContainer.style.display = 'block';
                         
@@ -575,12 +576,37 @@ function initSalesTable() {
                     } else {
                         if (defaultVariantContainer) defaultVariantContainer.style.display = 'none';
                         const unitStr = item.unit ? item.unit : '';
+                        const priceDisp = '₦' + formatCurrency(Number(item.price)) + (unitStr ? ' ' + unitStr : '');
+                        // Update static display
+                        const staticDisp = document.getElementById('existingStaticPriceDisplay');
+                        if (staticDisp) staticDisp.textContent = priceDisp;
                         if (existingPrice) {
-                            existingPrice.value = '₦' + formatCurrency(Number(item.price)) + (unitStr ? ' ' + unitStr : '');
+                            existingPrice.value = priceDisp;
                             existingPrice.dataset.price = item.price;
                         }
                     }
                     
+                    const defaultFlexContainer = document.getElementById('defaultFlexibleContainer');
+                    const defaultFlexToggle = document.getElementById('defaultFlexiblePriceToggle');
+                    const existingStaticDisplay = document.getElementById('existingStaticPriceDisplay');
+                    const existingFlexWrapper = document.getElementById('existingFlexPriceInputWrapper');
+                    const existingFlexInput = document.getElementById('existingFlexPriceInput');
+
+                    // Reset flex toggle state
+                    if (defaultFlexToggle) {
+                        defaultFlexToggle.checked = false;
+                        const slider = defaultFlexToggle.nextElementSibling;
+                        if (slider) { slider.style.backgroundColor = '#cbd5e1'; const knob = slider.querySelector('.knob'); if (knob) knob.style.transform = 'translateX(0)'; }
+                    }
+                    if (existingFlexWrapper) existingFlexWrapper.style.display = 'none';
+                    if (existingFlexInput) existingFlexInput.value = '';
+
+                    if (item.allowUserFlexiblePricing) {
+                        if (defaultFlexContainer) defaultFlexContainer.style.display = 'block';
+                    } else {
+                        if (defaultFlexContainer) defaultFlexContainer.style.display = 'none';
+                    }
+
                     const priceLabel = document.getElementById('lblExistingPrice');
                     if (priceLabel) {
                         priceLabel.textContent = 'Unit Price (₦)';
@@ -1214,6 +1240,22 @@ function initSalesTable() {
                 l.style.borderWidth = '1px';
                 l.style.background = 'white';
             });
+            // Reset default flex toggle
+            const defaultFlexContainer = document.getElementById('defaultFlexibleContainer');
+            const defaultFlexTgl = document.getElementById('defaultFlexiblePriceToggle');
+            const existingFlexWrap = document.getElementById('existingFlexPriceInputWrapper');
+            const existingStatDisp = document.getElementById('existingStaticPriceDisplay');
+            const existingFlexInp = document.getElementById('existingFlexPriceInput');
+            if (defaultFlexContainer) defaultFlexContainer.style.display = 'none';
+            if (defaultFlexTgl) {
+                defaultFlexTgl.checked = false;
+                const sl = defaultFlexTgl.nextElementSibling;
+                if (sl) { sl.style.backgroundColor = '#cbd5e1'; const kn = sl.querySelector('.knob'); if (kn) kn.style.transform = 'translateX(0)'; }
+            }
+            if (existingFlexWrap) existingFlexWrap.style.display = 'none';
+            if (existingStatDisp) { existingStatDisp.textContent = '0.00'; existingStatDisp.style.display = 'flex'; }
+            if (existingFlexInp) existingFlexInp.value = '';
+
 
             document.querySelectorAll('.spec-variant-label').forEach(l => {
                 l.style.borderColor = '#bfdbfe';
@@ -1263,24 +1305,35 @@ function initSalesTable() {
         if (existingForm) existingForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const itemName = hiddenItemInput.value;
-            const price = existingPrice.dataset.price;
             const qty = document.getElementById('existingItemQty').value;
-            
+
             const prod = defaultInventory.find(p => p.name === itemName);
             const unit = prod ? prod.unit : '';
 
+            // Determine price: flexible toggle or fixed
+            const defaultFlexToggle = document.getElementById('defaultFlexiblePriceToggle');
+            const existingFlexInput = document.getElementById('existingFlexPriceInput');
+            let price;
+            let isFlexibleSale = false;
+            if (defaultFlexToggle && defaultFlexToggle.checked && existingFlexInput) {
+                price = parseFloat(existingFlexInput.value) || 0;
+                isFlexibleSale = true;
+            } else {
+                price = Number(existingPrice ? existingPrice.dataset.price : 0);
+            }
+
             if (itemName && price && qty) {
                 const requiredQty = parseFloat(qty);
-                
+
                 const defaultVariantContainer = document.getElementById('defaultVariantContainer');
                 const hasWholesale = prod && prod.wholesalePrice && Number(prod.wholesalePrice) > 0;
-                
+
                 let isWholesale = false;
                 let finalName = itemName;
                 let finalUnit = unit;
                 let variantParam = null;
-                
-                if (hasWholesale && defaultVariantContainer && defaultVariantContainer.style.display !== 'none') {
+
+                if (!isFlexibleSale && hasWholesale && defaultVariantContainer && defaultVariantContainer.style.display !== 'none') {
                     const checkedVariant = document.querySelector('input[name="defaultVariant"]:checked');
                     if (!checkedVariant) {
                         alert("Please select a variant type.");
@@ -1293,14 +1346,14 @@ function initSalesTable() {
                         variantParam = 'wholesale';
                     }
                 }
-                
+
                 const remaining = window.getRemainingProductStock ? window.getRemainingProductStock((prod ? prod.id : '') || itemName, variantParam) : Infinity;
                 if (requiredQty > remaining) {
                     const unitLabel = isWholesale ? (prod.bulkUnit || 'Carton') : (unit ? unit.replace(/^per\s+/i, '') : 'items');
                     customAlert(`Cannot add to basket. Only ${remaining} ${unitLabel}(s) remaining in stock.`);
                     return;
                 }
-                addToBasket(finalName, qty, price, finalUnit, false, prod ? prod.id : '');
+                addToBasket(finalName, qty, price, finalUnit, isFlexibleSale, prod ? prod.id : '');
             }
         });
         
