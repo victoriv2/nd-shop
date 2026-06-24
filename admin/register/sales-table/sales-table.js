@@ -572,11 +572,14 @@ function initSalesTable() {
                                 l.style.borderWidth = '1px';
                                 l.style.background = 'white';
                             });
-                        }
-                        
-                        if (existingPrice) {
-                            existingPrice.value = '';
-                            existingPrice.dataset.price = '';
+                            if (existingPrice) {
+                                existingPrice.value = '';
+                                existingPrice.dataset.price = '';
+                            }
+                            const staticDisp = document.getElementById('existingStaticPriceDisplay');
+                            if (staticDisp) {
+                                staticDisp.textContent = '0.00';
+                            }
                         }
                     } else {
                         if (defaultVariantContainer) defaultVariantContainer.style.display = 'none';
