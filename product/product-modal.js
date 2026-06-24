@@ -34,6 +34,41 @@ function initProductModalLogic() {
     let originalVariants = [];
     let currentProduct = null;
 
+    function isVariantFlexibleAllowed(v, product) {
+        if (!product) return false;
+        
+        // Inherently flexible variants (c3 for special/flexible products) are ALWAYS allowed to be flexible.
+        if ((product.isSpecial || product.isFlexible) && v.variantType === 'c3') {
+            return true;
+        }
+
+        if (!product.allowUserFlexiblePricing) return false;
+        const flexVars = product.flexibleVariants || [];
+        if (flexVars.length === 0) return true;
+        
+        const isDefaultProduct = !product.isSpecial && !product.isFlexible && !product.isCustom;
+        if (isDefaultProduct) {
+            if (v.variantType === null || v.variantType === undefined) {
+                return flexVars.includes('Default') || flexVars.some(fv => fv.startsWith('Default'));
+            } else if (v.variantType === 'wholesale') {
+                return flexVars.includes('Wholesale') || flexVars.some(fv => fv.startsWith('Wholesale'));
+            }
+        }
+        if (product.isCustom) {
+            return flexVars.includes('Default') || flexVars.some(fv => fv.startsWith('Default'));
+        }
+        return flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')));
+    }
+
+    function determineVariantFlexState(v, product, toggleChecked) {
+        const isAllowed = isVariantFlexibleAllowed(v, product);
+        if (!isAllowed) return false;
+        if (product.allowUserFlexiblePricing) {
+            return !!toggleChecked;
+        }
+        return (product.isFlexible || product.isSpecial) && v.variantType === 'c3';
+    }
+
     const pmStandardHero = document.getElementById('pmStandardHero');
 
 
@@ -218,20 +253,8 @@ function initProductModalLogic() {
                         if (checkedRadio) selectedIdx = parseInt(checkedRadio.value);
                     }
                     
-                    const flexVars = currentProduct.flexibleVariants || [];
-                    
                     currentVariants.forEach((v, i) => {
-                        if (i === selectedIdx) {
-                            let isAllowed = false;
-                            if (currentProduct.allowUserFlexiblePricing) {
-                                if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
-                                    isAllowed = true;
-                                }
-                            }
-                            v.flex = (isChecked && isAllowed);
-                        } else {
-                            v.flex = false;
-                        }
+                        v.flex = (i === selectedIdx) ? determineVariantFlexState(v, currentProduct, isChecked) : false;
                     });
                     
                     if (currentVariants.length > 1) {
@@ -244,26 +267,9 @@ function initProductModalLogic() {
 
             function updateModalForVariant(v) {
                 // === STEP 1: Determine if this variant is allowed to be flexible ===
-                const flexVars = currentProduct.flexibleVariants || [];
-                let variantIsFlexible = false;
-                if (currentProduct.allowUserFlexiblePricing) {
-                    if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
-                        variantIsFlexible = true;
-                    }
-                }
-
-                // If this variant is NOT flexible, force its flex state off
-                if (!variantIsFlexible) {
-                    v.flex = false;
-                } else {
-                    // If it IS flexible, sync its flex state with the current toggle state
-                    const flexToggleInput = document.getElementById('pmFlexPriceToggle');
-                    if (flexToggleInput && flexToggleInput.checked) {
-                        v.flex = true;
-                    } else {
-                        v.flex = false;
-                    }
-                }
+                const flexToggleInput = document.getElementById('pmFlexPriceToggle');
+                const isChecked = flexToggleInput ? flexToggleInput.checked : false;
+                v.flex = determineVariantFlexState(v, currentProduct, isChecked);
 
                 // === STEP 2: Capture isFlex AFTER enforcing the above ===
                 const isFlex = v.flex;  // true only if toggle ON + this variant is flexible
@@ -388,23 +394,8 @@ function initProductModalLogic() {
                                 
                                 // Recompute flex states based on new selection
                                 const isChecked = flexToggleInput ? flexToggleInput.checked : false;
-                                const flexVars = currentProduct.flexibleVariants || [];
-                                currentVariants.forEach((v, idx) => {
-                                    if (idx === newSelectedIdx) {
-                                        let isAllowed = false;
-                                        if (currentProduct.allowUserFlexiblePricing) {
-                                            if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) {
-                                                isAllowed = true;
-                                            }
-                                        }
-                                        if (isChecked && isAllowed) {
-                                            v.flex = true;
-                                        } else {
-                                            v.flex = false;
-                                        }
-                                    } else {
-                                        v.flex = false;
-                                    }
+                                                                 currentVariants.forEach((v, idx) => {
+                                    v.flex = (idx === newSelectedIdx) ? determineVariantFlexState(v, currentProduct, isChecked) : false;
                                 });
                                 
                                 // Re-render the list so the pricing and styling update correctly
@@ -458,16 +449,7 @@ function initProductModalLogic() {
                 // Align initial flex states with defaultIdx selection (initial toggle is OFF)
                 const flexVars = product.flexibleVariants || [];
                 variants.forEach((v, idx) => {
-                    if (idx === defaultIdx) {
-                        let isAllowed = false;
-                        if (product.allowUserFlexiblePricing) {
-                            if (flexVars.length === 0) isAllowed = true;
-                            else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-                        }
-                        v.flex = false; // Initially toggle is OFF, so flex is false
-                    } else {
-                        v.flex = false;
-                    }
+                    v.flex = (idx === defaultIdx) ? determineVariantFlexState(v, product, false) : false;
                 });
                 
                 renderVariantsList(defaultIdx);
@@ -795,12 +777,7 @@ function initProductModalLogic() {
                     let isChecked = flexToggleInput ? flexToggleInput.checked : false;
 
                     currentVariants.forEach((v, i) => {
-                        let isAllowed = false;
-                        if (latest.allowUserFlexiblePricing) {
-                            if (flexVars.length === 0) isAllowed = true;
-                            else if (flexVars.includes(v.title) || (v.title === 'Default' && flexVars.some(fv => fv.startsWith('Default (')))) isAllowed = true;
-                        }
-                        v.flex = (i === selectedIdx && isChecked && isAllowed);
+                        v.flex = (i === selectedIdx) ? determineVariantFlexState(v, latest, isChecked) : false;
                     });
 
                     if (newVariants.length > 1) {
