@@ -252,9 +252,14 @@ function initSalesTable() {
                 radio.checked = true;
                 const price = radio.parentNode.querySelector('[data-price]').dataset.price;
                 const unitText = radio.parentNode.querySelector('div:nth-child(2)').textContent;
+                const priceDisp = '₦' + formatCurrency(Number(price)) + ' per ' + unitText.toLowerCase();
                 if (existingPrice) {
-                    existingPrice.value = '₦' + formatCurrency(Number(price)) + ' per ' + unitText.toLowerCase();
+                    existingPrice.value = priceDisp;
                     existingPrice.dataset.price = price;
+                }
+                const staticDisp = document.getElementById('existingStaticPriceDisplay');
+                if (staticDisp) {
+                    staticDisp.textContent = priceDisp;
                 }
             }
         });
@@ -1307,6 +1312,11 @@ function initSalesTable() {
             const itemName = hiddenItemInput.value;
             const qty = document.getElementById('existingItemQty').value;
 
+            if (!itemName) {
+                alert("Please select a product.");
+                return;
+            }
+
             const prod = defaultInventory.find(p => p.name === itemName);
             const unit = prod ? prod.unit : '';
 
@@ -1318,8 +1328,16 @@ function initSalesTable() {
             if (defaultFlexToggle && defaultFlexToggle.checked && existingFlexInput) {
                 price = parseFloat(existingFlexInput.value) || 0;
                 isFlexibleSale = true;
+                if (!price || price <= 0) {
+                    alert("Please enter a valid selling price.");
+                    return;
+                }
             } else {
                 price = Number(existingPrice ? existingPrice.dataset.price : 0);
+                if (!price || price <= 0) {
+                    alert("Unable to determine item price. Please re-select the product or ensure a variant is selected.");
+                    return;
+                }
             }
 
             if (itemName && price && qty) {
@@ -1362,6 +1380,11 @@ function initSalesTable() {
             const itemName = specItemSelect.value;
             const qty = document.getElementById('specItemQty').value;
             
+            if (!itemName) {
+                alert("Please select a product.");
+                return;
+            }
+
             const isFlexibleToggleChecked = document.getElementById('specFlexiblePriceToggle')?.checked || false;
             let checkedVariant = document.querySelector('input[name="specVariant"]:checked');
             if (isFlexibleToggleChecked && !checkedVariant) {
@@ -1373,6 +1396,11 @@ function initSalesTable() {
                         checkedVariant = firstRadio;
                     }
                 }
+            }
+
+            if (!checkedVariant) {
+                alert("Please select a variant type.");
+                return;
             }
             
             if (itemName && qty && checkedVariant) {
@@ -1422,8 +1450,6 @@ function initSalesTable() {
                 const finalName = `${itemName} (${titleStr})`;
                 // Pass isFlexiblePrice to treat the custom price correctly in calculations
                 addToBasket(finalName, qty, price, titleStr, isFlexiblePrice, selectedProduct ? selectedProduct.id : '');
-            } else if (!checkedVariant) {
-                alert("Please select a variant type.");
             }
         });
 
