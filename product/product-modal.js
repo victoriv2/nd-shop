@@ -177,7 +177,10 @@ function initProductModalLogic() {
                     variants.push({ title: 'Default', price: Number(product.price) || 0, flex: false, unit: product.unit || 'per unit', cost: parseFloat(product.cost) || 0, variantType: null });
                 } else {
                     const baseCost = parseFloat(product.cost) || 0;
-                    variants.push({ title: 'Default', price: Number(product.price) || 0, flex: false, unit: product.unit || 'per unit', cost: baseCost, variantType: null });
+                    // Derive a human-readable title from the admin-set unit (e.g. 'per cup' → 'Cup')
+                    const rawUnit = product.unit || '';
+                    const unitTitle = rawUnit ? rawUnit.replace(/^per\s+/i, '').replace(/^\w/, c => c.toUpperCase()) : 'Default';
+                    variants.push({ title: unitTitle, price: Number(product.price) || 0, flex: false, unit: rawUnit || 'per unit', cost: baseCost, variantType: null });
                     if (product.wholesalePrice && Number(product.wholesalePrice) > 0) {
                         const bulkUnitStr = product.bulkUnit || 'Carton';
                         const wholesaleRemaining = window.getRemainingProductStock ? window.getRemainingProductStock(product.id || product.name, 'wholesale') : Infinity;
@@ -279,10 +282,15 @@ function initProductModalLogic() {
                 }
 
                 let displayName = currentProduct.name || (productCard.querySelector('.product-name') ? productCard.querySelector('.product-name').textContent : '');
-                if (v.title !== 'Default') {
-                    displayName += ` (${v.title})`;
+                // Only append a variant suffix when there are multiple variants (e.g. retail + wholesale)
+                // or when it's a named container type (special/flexible). Single-variant default products get no suffix.
+                if (currentVariants.length > 1 || (v.variantType !== null && v.variantType !== undefined)) {
+                    if (v.title && v.title !== 'Default') {
+                        displayName += ` (${v.title})`;
+                    }
                 }
                 if (destName) destName.textContent = displayName;
+
 
                 if (destPrice) {
                     if (isFlex) {
@@ -747,7 +755,9 @@ function initProductModalLogic() {
                             newVariants.push({ title: 'Default', price: Number(latest.price) || 0, flex: false, unit: latest.unit || 'per unit', cost: parseFloat(latest.cost) || 0, variantType: null });
                         } else {
                             const baseCost = parseFloat(latest.cost) || 0;
-                            newVariants.push({ title: 'Default', price: Number(latest.price) || 0, flex: false, unit: latest.unit || 'per unit', cost: baseCost, variantType: null });
+                            const rawUnit = latest.unit || '';
+                            const unitTitle = rawUnit ? rawUnit.replace(/^per\s+/i, '').replace(/^\w/, c => c.toUpperCase()) : 'Default';
+                            newVariants.push({ title: unitTitle, price: Number(latest.price) || 0, flex: false, unit: rawUnit || 'per unit', cost: baseCost, variantType: null });
                             if (latest.wholesalePrice && Number(latest.wholesalePrice) > 0) {
                                 const bulkUnitStr = latest.bulkUnit || 'Carton';
                                 const wholesaleRemaining = window.getRemainingProductStock ? window.getRemainingProductStock(latest.id || latest.name, 'wholesale') : Infinity;
