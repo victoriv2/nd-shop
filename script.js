@@ -8,6 +8,186 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.loggedInUser = JSON.parse(loggedInUserStr); // Expose globally for modules
 
+    // Payout Reset Warning Modal
+    initPayoutResetWarning(window.loggedInUser.id);
+
+    function initPayoutResetWarning(userId) {
+        const storageKey = 'nd_payout_reset_warning_dismissed_' + userId;
+        if (localStorage.getItem(storageKey) === 'true') {
+            return;
+        }
+
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .nd-payout-warning-overlay {
+                position: fixed;
+                top: 0; left: 0; width: 100vw; height: 100vh;
+                background: rgba(15, 23, 42, 0.4);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000000;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .nd-payout-warning-overlay.show {
+                opacity: 1;
+            }
+            .nd-payout-warning-card {
+                background: #ffffff;
+                width: 90%;
+                max-width: 400px;
+                border-radius: 28px;
+                padding: 32px 24px;
+                text-align: center;
+                box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15);
+                border: 1px solid rgba(99, 102, 241, 0.1);
+                transform: scale(0.9) translateY(20px);
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .nd-payout-warning-overlay.show .nd-payout-warning-card {
+                transform: scale(1) translateY(0);
+            }
+            .nd-payout-warning-icon-wrapper {
+                width: 72px;
+                height: 72px;
+                background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+                color: #6366f1;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 24px;
+                box-shadow: 0 8px 16px rgba(99, 102, 241, 0.15);
+                position: relative;
+            }
+            .nd-payout-warning-icon-badge {
+                position: absolute;
+                top: -2px;
+                right: -2px;
+                width: 20px;
+                height: 20px;
+                background: #ef4444;
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 11px;
+                font-weight: bold;
+                border: 2px solid white;
+                box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+            }
+            .nd-payout-warning-title {
+                font-size: 1.35rem;
+                font-weight: 800;
+                color: #1e293b;
+                margin-bottom: 12px;
+                font-family: 'Outfit', sans-serif;
+                letter-spacing: -0.3px;
+            }
+            .nd-payout-warning-text {
+                font-size: 0.95rem;
+                color: #64748b;
+                line-height: 1.6;
+                margin-bottom: 20px;
+                font-family: 'Outfit', sans-serif;
+            }
+            .nd-payout-warning-highlight {
+                background: #fef3c7;
+                color: #92400e;
+                padding: 12px 16px;
+                border-radius: 16px;
+                font-size: 0.88rem;
+                font-weight: 600;
+                line-height: 1.5;
+                margin-bottom: 28px;
+                border: 1px dashed #fcd34d;
+                font-family: 'Outfit', sans-serif;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                text-align: left;
+            }
+            .nd-payout-warning-highlight svg {
+                flex-shrink: 0;
+                color: #d97706;
+            }
+            .nd-payout-warning-btn {
+                width: 100%;
+                padding: 16px;
+                border: none;
+                border-radius: 18px;
+                font-size: 1.05rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                font-family: 'Outfit', sans-serif;
+                background: linear-gradient(135deg, #6366f1, #4f46e5);
+                color: #ffffff;
+                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            }
+            .nd-payout-warning-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+                background: linear-gradient(135deg, #4f46e5, #4338ca);
+            }
+            .nd-payout-warning-btn:active {
+                transform: translateY(0);
+                box-shadow: 0 3px 8px rgba(99, 102, 241, 0.2);
+            }
+        `;
+        document.head.appendChild(style);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'nd-payout-warning-overlay';
+        overlay.innerHTML = `
+            <div class="nd-payout-warning-card">
+                <div class="nd-payout-warning-icon-wrapper">
+                    <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <div class="nd-payout-warning-icon-badge">!</div>
+                </div>
+                <h3 class="nd-payout-warning-title">Annual Payout Reset</h3>
+                <p class="nd-payout-warning-text">
+                    Please be informed that at the end of each calendar year (December 31st at midnight), all accumulated reward payouts will be reset to <strong>₦0</strong> to start the next annual cycle.
+                </p>
+                <div class="nd-payout-warning-highlight">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span>Please ensure you claim or redeem your payouts before the December 31st deadline!</span>
+                </div>
+                <button class="nd-payout-warning-btn">Ok, I Understand</button>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        // Trigger animation in
+        setTimeout(() => {
+            overlay.classList.add('show');
+        }, 50);
+
+        const btn = overlay.querySelector('.nd-payout-warning-btn');
+        btn.addEventListener('click', () => {
+            localStorage.setItem(storageKey, 'true');
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                overlay.remove();
+                style.remove();
+            }, 300);
+        });
+    }
+
     // Core app initialization
 
     // --- MIGRATION v2: Switch payout to running balance and preserve delta in payoutEarned ---
