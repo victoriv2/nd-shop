@@ -102,3 +102,29 @@ if (remaining === 40) {
     console.error("FAILURE! Expected 40 pieces, got " + remaining);
     process.exit(1);
 }
+
+console.log("--- Testing Yearly Payout Reset ---");
+const testUser = "user_test_456";
+const currentYear = new Date().getFullYear();
+const lastYear = currentYear - 1;
+
+const salesHistory = [
+    // Earned in previous year (should be excluded)
+    { customerID: testUser, payoutEarned: 500, date: `${lastYear}-06-25T12:00:00.000Z` },
+    // Earned in current year (should be included)
+    { customerID: testUser, payoutEarned: 200, date: `${currentYear}-06-25T12:00:00.000Z` },
+    // Spent in current year (should be included)
+    { customerID: testUser, payoutEarned: -50, date: `${currentYear}-06-25T13:00:00.000Z` }
+];
+
+localStorage.setItem('nd_sales_history', JSON.stringify(salesHistory));
+const balance = window.calculateTrueSpendableBalance(testUser);
+console.log("Calculated payout balance for user:", balance); // Should be 200 - 50 = 150
+
+if (balance === 150) {
+    console.log("SUCCESS! Yearly payout reset logic works perfectly.");
+} else {
+    console.error("FAILURE! Expected payout balance 150, got " + balance);
+    process.exit(1);
+}
+

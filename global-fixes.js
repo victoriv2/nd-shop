@@ -1953,15 +1953,22 @@ window.calculateLifetimePayoutEarned = function(userId) {
     return totalPayoutEarned;
 };
 
-// Calculate the exact true spendable balance for a given user.
+// Calculate the exact true spendable balance for a given user (resets to zero at the end of each year).
 window.calculateTrueSpendableBalance = function(userId) {
     if (!userId) return 0;
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+    const currentYear = new Date().getFullYear();
     const allUserSales = sales.filter(s => s.customerID === userId);
     let spendable = 0;
     allUserSales.forEach(s => {
-        let amt = parseFloat(s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
-        spendable += amt;
+        const saleTime = window.parseSaleDate(s.date || s.timestamp);
+        if (saleTime) {
+            const saleYear = new Date(saleTime).getFullYear();
+            if (saleYear === currentYear) {
+                let amt = parseFloat(s.payoutEarned !== undefined ? s.payoutEarned : s.payout) || 0;
+                spendable += amt;
+            }
+        }
     });
 
     // nd_sales_history natively records Reward Purchases as negative payoutEarned
