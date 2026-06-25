@@ -994,7 +994,7 @@
 .payout-expiry-notice {
     margin: 8px 5% 14px 5%;
     font-size: 0.82rem;
-    color: #ef4444;
+    color: #1f2937;
     font-weight: 600;
     text-align: left;
     display: flex;
@@ -1002,12 +1002,12 @@
     justify-content: flex-start;
     gap: 5px;
     font-family: 'Outfit', sans-serif;
-    opacity: 0.9;
+    opacity: 0.95;
 }
 
 .payout-expiry-notice svg {
     flex-shrink: 0;
-    color: #ef4444;
+    color: #1f2937;
 }
 
 @media (min-width: 1024px) {
