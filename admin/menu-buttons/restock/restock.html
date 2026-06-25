@@ -207,13 +207,12 @@
             <!-- DEFAULT PRODUCT FORM -->
             <div id="rsDefaultProductForm" style="display: none;">
 
-
                 <div class="form-group">
                     <label>Item Name</label>
                     <input type="text" id="rsNewProductName" class="form-input" placeholder="e.g. Rice">
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <div id="rsDefaultUnitRow" style="display: flex; gap: 10px; margin-bottom: 16px;">
                     <div class="form-group" style="flex: 1; margin-bottom: 0;">
                         <label>Bulk Container Type</label>
                         <div class="custom-dropdown-wrapper" id="rsBulkDropdownWrapper">
@@ -304,7 +303,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <div id="rsDefaultWholesaleCostRow" style="display: flex; gap: 10px; margin-bottom: 12px;">
                     <div class="form-group" style="flex: 1; margin-bottom: 0;">
                         <label>Cost per <span class="rs-lbl-bulk-unit">Carton</span> (₦)</label>
                         <input type="number" id="rsNewProductPurchaseCost" class="form-input" placeholder="e.g. 5000"
@@ -317,16 +316,16 @@
                     </div>
                 </div>
 
-                <div
+                <div id="rsDefaultWholesaleTotalCostBlock"
                     style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
                     Total Cost: <span id="rsNewProductTotalCostVal" style="color: #16a34a;">₦0</span>
                 </div>
 
-                <div style="font-size: 0.95rem; color: #1e293b; margin: 16px 0 16px 0; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+                <div id="rsDefaultWholesalePricingHeader" style="font-size: 0.95rem; color: #1e293b; margin: 16px 0 16px 0; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
                     Wholesale Pricing <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">(Optional)</span>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <div id="rsDefaultWholesaleProfitRow" style="display: flex; gap: 10px; margin-bottom: 16px;">
                     <div class="form-group" style="flex: 1; margin-bottom: 0;">
                         <label>Wholesale Profit per <span class="rs-lbl-bulk-unit">Carton</span> (₦)</label>
                         <input type="number" id="rsNewProductWholesaleProfit" class="form-input" placeholder="e.g. 500" min="0" step="0.01">
@@ -337,7 +336,7 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 24px;">
+                <div id="rsDefaultWholesalePriceGroup" class="form-group" style="margin-bottom: 24px;">
                     <label>Final Wholesale Price per <span class="rs-lbl-bulk-unit">Carton</span> (₦)</label>
                     <input type="number" id="rsNewProductWholesalePrice" class="form-input" placeholder="0" readonly style="background: #f8fafc; font-weight: 700; color: #8b5cf6; cursor: not-allowed;">
                 </div>
@@ -346,7 +345,7 @@
                     Retail Pricing
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <div id="rsDefaultPiecesRow" style="display: flex; gap: 10px; margin-bottom: 12px;">
                     <div class="form-group" style="width: 100%; margin-bottom: 0;">
                         <label><span class="rs-lbl-retail-unit" style="text-transform: capitalize;">Pieces</span> inside
                             ONE <span class="rs-lbl-bulk-unit">Carton</span></label>

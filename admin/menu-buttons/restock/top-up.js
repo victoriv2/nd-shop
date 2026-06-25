@@ -618,6 +618,197 @@ function _populateDefaultTopUp(p) {
     if(document.getElementById('rsNewProductWholesaleProfitPercent')) document.getElementById('rsNewProductWholesaleProfitPercent').value = p.wholesaleProfitPercent || '';
     if(document.getElementById('rsNewProductWholesalePrice')) document.getElementById('rsNewProductWholesalePrice').value = p.wholesalePrice || '';
 
+    // 1. Inject Restock Type Selector (Wholesale vs Retail Only)
+    let tierSelector = document.getElementById('rsDefaultTopUpSelector');
+    if (!tierSelector) {
+        tierSelector = document.createElement('div');
+        tierSelector.id = 'rsDefaultTopUpSelector';
+        tierSelector.innerHTML = `
+            <div class="form-group" style="margin-bottom: 24px; padding: 16px; background: #f0fdfa; border: 1px solid #14b8a6; border-radius: 12px;">
+                <label style="color: #0f766e; font-weight: 800; margin-bottom: 12px;">Select Restock Type</label>
+                <div style="display: flex; gap: 10px;">
+                    <label style="flex: 1; text-align: center; background: white; padding: 10px; border-radius: 8px; border: 2px solid #8b5cf6; cursor: pointer; transition: all 0.2s;" id="lblDefTopUpWholesale">
+                        <input type="radio" name="defTopUpType" value="wholesale" checked style="display: none;">
+                        <span style="font-weight: 700; color: #1e293b;" class="lbl-text">Wholesale</span>
+                    </label>
+                    <label style="flex: 1; text-align: center; background: white; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; cursor: pointer; transition: all 0.2s;" id="lblDefTopUpRetail">
+                        <input type="radio" name="defTopUpType" value="retail" style="display: none;">
+                        <span style="font-weight: 700; color: #1e293b;" class="lbl-text">Retail Only</span>
+                    </label>
+                </div>
+            </div>
+        `;
+        const nameGroup = nameEl.closest('.form-group');
+        nameGroup.parentNode.insertBefore(tierSelector, nameGroup.nextSibling);
+    }
+
+    const cleanUnit = (p.unit || 'piece').replace(/^per\s+/i, '');
+    const bulkUnitName = p.bulkUnit || 'Carton';
+    
+    const wholesaleLbl = tierSelector.querySelector('#lblDefTopUpWholesale .lbl-text');
+    if (wholesaleLbl) wholesaleLbl.textContent = `Wholesale (${bulkUnitName})`;
+    const retailLbl = tierSelector.querySelector('#lblDefTopUpRetail .lbl-text');
+    if (retailLbl) retailLbl.textContent = `Retail Only (${cleanUnit})`;
+
+    // 2. Inject Dynamic Inputs for Retail-only Top Up
+    let retailInputs = document.getElementById('rsDefaultRetailTopUpInputs');
+    if (!retailInputs) {
+        retailInputs = document.createElement('div');
+        retailInputs.id = 'rsDefaultRetailTopUpInputs';
+        retailInputs.style.cssText = 'display:none; flex-direction: column; margin-bottom: 12px; background: #f0fdfa; padding: 12px; border-radius: 8px; border: 1px dashed #14b8a6;';
+        retailInputs.innerHTML = `
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label style="color: #0f766e;">Cost per <span class="lbl-unit-placeholder">piece</span> (₦)</label>
+                    <input type="number" id="rsDefaultRetailTopUpCost" class="form-input" placeholder="e.g. 150" min="0" step="0.01">
+                </div>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label style="color: #0f766e;">Quantity Bought (<span class="lbl-unit-plural-placeholder">pieces</span>)</label>
+                    <input type="number" id="rsDefaultRetailTopUpQty" class="form-input" placeholder="1" value="1" min="1" step="1">
+                </div>
+            </div>
+            <div style="font-size: 0.95rem; color: #1e293b; margin-top: 12px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0; align-self: flex-start;">
+                Total Cost: <span id="rsDefaultRetailTopUpTotalCostVal" style="color: #16a34a;">₦0</span>
+            </div>
+        `;
+        const wholesaleCostBlock = document.getElementById('rsDefaultWholesaleTotalCostBlock');
+        if (wholesaleCostBlock) {
+            wholesaleCostBlock.parentNode.insertBefore(retailInputs, wholesaleCostBlock.nextSibling);
+        } else {
+            const fallbackAnchor = document.getElementById('rsNewProductProfit')?.closest('.form-group');
+            if (fallbackAnchor) {
+                fallbackAnchor.parentNode.insertBefore(retailInputs, fallbackAnchor);
+            }
+        }
+    }
+
+    const unitLbl = retailInputs.querySelector('.lbl-unit-placeholder');
+    if (unitLbl) unitLbl.textContent = cleanUnit;
+    const unitPluralLbl = retailInputs.querySelector('.lbl-unit-plural-placeholder');
+    if (unitPluralLbl) unitPluralLbl.textContent = cleanUnit + 's';
+
+    // 3. Setup Listeners to Sync Retail Inputs to underlying structure & toggle display
+    const radios = tierSelector.querySelectorAll('input[name="defTopUpType"]');
+    const lblWholesale = document.getElementById('lblDefTopUpWholesale');
+    const lblRetail = document.getElementById('lblDefTopUpRetail');
+
+    const defaultUnitRow = document.getElementById('rsDefaultUnitRow') || document.getElementById('rsBulkDropdownWrapper')?.closest('div[style*="display: flex"]');
+    const defaultWholesaleCostRow = document.getElementById('rsDefaultWholesaleCostRow') || document.getElementById('rsNewProductPurchaseCost')?.closest('div[style*="display: flex"]');
+    const defaultWholesaleTotalCostBlock = document.getElementById('rsDefaultWholesaleTotalCostBlock') || document.getElementById('rsNewProductTotalCostVal')?.closest('div[style*="font-size"]') || document.getElementById('rsNewProductTotalCostVal')?.parentNode;
+    const defaultWholesalePricingHeader = document.getElementById('rsDefaultWholesalePricingHeader') || document.getElementById('rsNewProductWholesaleProfit')?.closest('div[style*="display: flex"]')?.previousElementSibling;
+    const defaultWholesaleProfitRow = document.getElementById('rsDefaultWholesaleProfitRow') || document.getElementById('rsNewProductWholesaleProfit')?.closest('div[style*="display: flex"]');
+    const defaultWholesalePriceGroup = document.getElementById('rsDefaultWholesalePriceGroup') || document.getElementById('rsNewProductWholesalePrice')?.closest('.form-group');
+    const defaultPiecesRow = document.getElementById('rsDefaultPiecesRow') || document.getElementById('rsNewProductPieces')?.closest('div[style*="display: flex"]');
+
+    const updateDefaultTopUpTypeUI = (type) => {
+        if (type === 'wholesale') {
+            if (lblWholesale) lblWholesale.style.borderColor = '#8b5cf6';
+            if (lblRetail) lblRetail.style.borderColor = '#cbd5e1';
+
+            if (defaultUnitRow) defaultUnitRow.style.display = 'flex';
+            if (defaultWholesaleCostRow) defaultWholesaleCostRow.style.display = 'flex';
+            if (defaultWholesaleTotalCostBlock) {
+                if (defaultWholesaleTotalCostBlock.tagName === 'DIV') {
+                    defaultWholesaleTotalCostBlock.style.display = 'inline-block';
+                } else {
+                    defaultWholesaleTotalCostBlock.style.display = '';
+                }
+            }
+            if (defaultWholesalePricingHeader) defaultWholesalePricingHeader.style.display = 'block';
+            if (defaultWholesaleProfitRow) defaultWholesaleProfitRow.style.display = 'flex';
+            if (defaultWholesalePriceGroup) defaultWholesalePriceGroup.style.display = 'block';
+            if (defaultPiecesRow) defaultPiecesRow.style.display = 'flex';
+            
+            if (retailInputs) retailInputs.style.display = 'none';
+
+            // Reset underlying cost/qty to wholesale defaults
+            if (document.getElementById('rsNewProductPurchaseCost')) {
+                document.getElementById('rsNewProductPurchaseCost').value = (p.cost * (p.pieces || 1)) || '';
+                document.getElementById('rsNewProductPurchaseCost').dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            if (document.getElementById('rsNewProductQuantity')) {
+                document.getElementById('rsNewProductQuantity').value = 1;
+                document.getElementById('rsNewProductQuantity').dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        } else {
+            if (lblWholesale) lblWholesale.style.borderColor = '#cbd5e1';
+            if (lblRetail) lblRetail.style.borderColor = '#8b5cf6';
+
+            if (defaultUnitRow) defaultUnitRow.style.display = 'none';
+            if (defaultWholesaleCostRow) defaultWholesaleCostRow.style.display = 'none';
+            if (defaultWholesaleTotalCostBlock) defaultWholesaleTotalCostBlock.style.display = 'none';
+            if (defaultWholesalePricingHeader) defaultWholesalePricingHeader.style.display = 'none';
+            if (defaultWholesaleProfitRow) defaultWholesaleProfitRow.style.display = 'none';
+            if (defaultWholesalePriceGroup) defaultWholesalePriceGroup.style.display = 'none';
+            if (defaultPiecesRow) defaultPiecesRow.style.display = 'none';
+            
+            if (retailInputs) retailInputs.style.display = 'flex';
+
+            // Initialize retail inputs
+            const retailCostInput = document.getElementById('rsDefaultRetailTopUpCost');
+            if (retailCostInput) {
+                retailCostInput.value = p.cost || '';
+                retailCostInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            const retailQtyInput = document.getElementById('rsDefaultRetailTopUpQty');
+            if (retailQtyInput) {
+                retailQtyInput.value = 1;
+                retailQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+    };
+
+    // Remove any old event listeners by cloning & replacing radio buttons
+    radios.forEach(r => {
+        const newRadio = r.cloneNode(true);
+        r.parentNode.replaceChild(newRadio, r);
+    });
+
+    const newRadios = tierSelector.querySelectorAll('input[name="defTopUpType"]');
+    newRadios.forEach(r => {
+        r.addEventListener('change', (e) => {
+            updateDefaultTopUpTypeUI(e.target.value);
+        });
+    });
+
+    const retailCostInput = document.getElementById('rsDefaultRetailTopUpCost');
+    const retailQtyInput = document.getElementById('rsDefaultRetailTopUpQty');
+    
+    const updateRetailTopUpTotal = () => {
+        const cost = parseFloat(retailCostInput.value) || 0;
+        const qty = parseInt(retailQtyInput.value) || 1;
+        const totalCostVal = document.getElementById('rsDefaultRetailTopUpTotalCostVal');
+        if (totalCostVal) {
+            totalCostVal.textContent = '₦' + (cost * qty).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+        }
+        
+        // Sync with underlying purchase cost to trigger final price/margins updates
+        const pcs = parseInt(document.getElementById('rsNewProductPieces').value) || p.pieces || 1;
+        const purchaseCostInput = document.getElementById('rsNewProductPurchaseCost');
+        if (purchaseCostInput) {
+            purchaseCostInput.value = (cost * pcs).toFixed(2);
+            purchaseCostInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    };
+
+    if (retailCostInput) {
+        const newCostInput = retailCostInput.cloneNode(true);
+        retailCostInput.parentNode.replaceChild(newCostInput, retailCostInput);
+        newCostInput.addEventListener('input', updateRetailTopUpTotal);
+    }
+    if (retailQtyInput) {
+        const newQtyInput = retailQtyInput.cloneNode(true);
+        retailQtyInput.parentNode.replaceChild(newQtyInput, retailQtyInput);
+        newQtyInput.addEventListener('input', updateRetailTopUpTotal);
+    }
+
+    // Set default selection to Wholesale
+    const wholesaleRadio = tierSelector.querySelector('input[value="wholesale"]');
+    if (wholesaleRadio) {
+        wholesaleRadio.checked = true;
+        updateDefaultTopUpTypeUI('wholesale');
+    }
+
     const triggers = ['rsNewProductPurchaseCost', 'rsNewProductPieces', 'rsNewProductQuantity', 'rsNewProductProfit', 'rsNewProductWholesaleProfit'];
     triggers.forEach(t => {
         const el = document.getElementById(t);
@@ -625,10 +816,29 @@ function _populateDefaultTopUp(p) {
     });
 
     _injectProcessTopUpBtn('rsDefaultProductForm', 'rsProductSubmitBtn', () => {
-        const pCost = parseFloat(document.getElementById('rsNewProductPurchaseCost').value) || 0;
-        const qty = parseInt(document.getElementById('rsNewProductQuantity').value) || 1;
-        const newTotalCost = pCost * qty;
+        const topUpType = document.querySelector('input[name="defTopUpType"]:checked')?.value || "wholesale";
+        
+        let pCost = 0;
+        let qty = 0;
+        let newTotalCost = 0;
+        let boughtQuantityToAdd = 0;
+        
         const pcs = parseInt(document.getElementById('rsNewProductPieces').value) || 1;
+
+        if (topUpType === 'wholesale') {
+            pCost = parseFloat(document.getElementById('rsNewProductPurchaseCost').value) || 0;
+            qty = parseInt(document.getElementById('rsNewProductQuantity').value) || 1;
+            newTotalCost = pCost * qty;
+            boughtQuantityToAdd = qty;
+        } else {
+            const retailCost = parseFloat(document.getElementById('rsDefaultRetailTopUpCost').value) || 0;
+            const retailQty = parseInt(document.getElementById('rsDefaultRetailTopUpQty').value) || 1;
+            newTotalCost = retailCost * retailQty;
+            boughtQuantityToAdd = retailQty / pcs;
+            pCost = retailCost * pcs; 
+            qty = retailQty;
+        }
+        
         const price = parseFloat(document.getElementById('rsNewProductPrice').value) || 0;
         const profit = parseFloat(document.getElementById('rsNewProductProfit').value) || 0;
         const profitPct = parseFloat(document.getElementById('rsNewProductProfitPercent').value) || 0;
@@ -643,20 +853,22 @@ function _populateDefaultTopUp(p) {
             old.purchaseCost = (parseFloat(old.purchaseCost) || 0) + newTotalCost;
             old.cost = pcs > 0 ? (pCost / pcs) : 0;
             old.pieces = pcs;
-            old.boughtQuantity = (parseFloat(old.boughtQuantity) || 0) + qty;
+            old.boughtQuantity = (parseFloat(old.boughtQuantity) || 0) + boughtQuantityToAdd;
             old.price = price;
             old.profit = profit;
             old.profitPercent = profitPct;
             
-            old.wholesaleProfit = document.getElementById('rsNewProductWholesaleProfit') && document.getElementById('rsNewProductWholesaleProfit').value !== '' ? parseFloat(document.getElementById('rsNewProductWholesaleProfit').value) : old.wholesaleProfit;
-            old.wholesaleProfitPercent = document.getElementById('rsNewProductWholesaleProfitPercent') && document.getElementById('rsNewProductWholesaleProfitPercent').value !== '' ? parseFloat(document.getElementById('rsNewProductWholesaleProfitPercent').value) : old.wholesaleProfitPercent;
-            old.wholesalePrice = document.getElementById('rsNewProductWholesalePrice') && document.getElementById('rsNewProductWholesalePrice').value !== '' ? parseFloat(document.getElementById('rsNewProductWholesalePrice').value) : old.wholesalePrice;
+            if (topUpType === 'wholesale') {
+                old.wholesaleProfit = document.getElementById('rsNewProductWholesaleProfit') && document.getElementById('rsNewProductWholesaleProfit').value !== '' ? parseFloat(document.getElementById('rsNewProductWholesaleProfit').value) : old.wholesaleProfit;
+                old.wholesaleProfitPercent = document.getElementById('rsNewProductWholesaleProfitPercent') && document.getElementById('rsNewProductWholesaleProfitPercent').value !== '' ? parseFloat(document.getElementById('rsNewProductWholesaleProfitPercent').value) : old.wholesaleProfitPercent;
+                old.wholesalePrice = document.getElementById('rsNewProductWholesalePrice') && document.getElementById('rsNewProductWholesalePrice').value !== '' ? parseFloat(document.getElementById('rsNewProductWholesalePrice').value) : old.wholesalePrice;
+            }
             
             old.bulkUnit = document.getElementById('rsBulkUnitSelect')?.value || old.bulkUnit;
             old.unit = document.getElementById('rsNewProductUnit')?.value || old.unit;
             
             old.topUpHistory = old.topUpHistory || [];
-            old.topUpHistory.push({ cost: newTotalCost, qty: qty, date: new Date().toISOString() });
+            old.topUpHistory.push({ cost: newTotalCost, qty: qty, type: topUpType, date: new Date().toISOString() });
 
             localStorage.setItem('nd_products_data', JSON.stringify(products));
 
