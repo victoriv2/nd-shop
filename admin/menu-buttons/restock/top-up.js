@@ -758,25 +758,21 @@ function _populateDefaultTopUp(p) {
         }
     };
 
-    // Remove any old event listeners by cloning & replacing radio buttons
+    // Bind change listener to radio buttons using onchange to overwrite any old listeners cleanly
     radios.forEach(r => {
-        const newRadio = r.cloneNode(true);
-        r.parentNode.replaceChild(newRadio, r);
-    });
-
-    const newRadios = tierSelector.querySelectorAll('input[name="defTopUpType"]');
-    newRadios.forEach(r => {
-        r.addEventListener('change', (e) => {
+        r.onchange = (e) => {
             updateDefaultTopUpTypeUI(e.target.value);
-        });
+        };
     });
 
     const retailCostInput = document.getElementById('rsDefaultRetailTopUpCost');
     const retailQtyInput = document.getElementById('rsDefaultRetailTopUpQty');
     
     const updateRetailTopUpTotal = () => {
-        const cost = parseFloat(retailCostInput.value) || 0;
-        const qty = parseInt(retailQtyInput.value) || 1;
+        const costEl = document.getElementById('rsDefaultRetailTopUpCost');
+        const qtyEl = document.getElementById('rsDefaultRetailTopUpQty');
+        const cost = parseFloat(costEl ? costEl.value : 0) || 0;
+        const qty = parseInt(qtyEl ? qtyEl.value : 1) || 1;
         const totalCostVal = document.getElementById('rsDefaultRetailTopUpTotalCostVal');
         if (totalCostVal) {
             totalCostVal.textContent = '₦' + (cost * qty).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
@@ -792,14 +788,10 @@ function _populateDefaultTopUp(p) {
     };
 
     if (retailCostInput) {
-        const newCostInput = retailCostInput.cloneNode(true);
-        retailCostInput.parentNode.replaceChild(newCostInput, retailCostInput);
-        newCostInput.addEventListener('input', updateRetailTopUpTotal);
+        retailCostInput.oninput = updateRetailTopUpTotal;
     }
     if (retailQtyInput) {
-        const newQtyInput = retailQtyInput.cloneNode(true);
-        retailQtyInput.parentNode.replaceChild(newQtyInput, retailQtyInput);
-        newQtyInput.addEventListener('input', updateRetailTopUpTotal);
+        retailQtyInput.oninput = updateRetailTopUpTotal;
     }
 
     // Set default selection to Wholesale
