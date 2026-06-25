@@ -585,6 +585,13 @@ function initAdminProductLogic() {
                 modal.classList.add('show');
                 document.body.classList.add('modal-open');
                 
+                // Reset Default Product Type selection to Wholesale
+                const wholesaleRadio = document.querySelector('input[name="adminDefTopUpType"][value="wholesale"]');
+                if (wholesaleRadio) {
+                    wholesaleRadio.checked = true;
+                    if (typeof updateAdminDefaultTypeUI === 'function') updateAdminDefaultTypeUI('wholesale');
+                }
+                
                 // Reset Image Uploader
                 const imgDataHidden = document.getElementById('adminProductImageData');
                 const imgPlaceholder = document.getElementById('adminProductImagePlaceholder');
@@ -1659,6 +1666,103 @@ function initAdminProductLogic() {
     if (piecesInput) piecesInput.addEventListener('input', onCostInput);
     if (profitInput) profitInput.addEventListener('input', onProfitAmountInput);
     if (profitPercentInput) profitPercentInput.addEventListener('input', onProfitPercentInput);
+
+    // ========================================
+    // Default Product Wholesale / Retail Only Toggle
+    // ========================================
+    function updateAdminDefaultTypeUI(type) {
+        const lblAdminDefWholesale = document.getElementById('lblAdminDefWholesale');
+        const lblAdminDefRetail = document.getElementById('lblAdminDefRetail');
+
+        const adminDefaultUnitRow = document.getElementById('adminDefaultUnitRow');
+        const adminDefaultWholesaleCostRow = document.getElementById('adminDefaultWholesaleCostRow');
+        const adminDefaultWholesaleTotalCostBlock = document.getElementById('adminDefaultWholesaleTotalCostBlock');
+        const adminDefaultWholesalePricingHeader = document.getElementById('adminDefaultWholesalePricingHeader');
+        const adminDefaultWholesaleProfitRow = document.getElementById('adminDefaultWholesaleProfitRow');
+        const adminDefaultWholesalePriceGroup = document.getElementById('adminDefaultWholesalePriceGroup');
+        const adminDefaultPiecesRow = document.getElementById('adminDefaultPiecesRow');
+        const adminDefaultRetailInputs = document.getElementById('adminDefaultRetailInputs');
+
+        if (type === 'wholesale') {
+            if (lblAdminDefWholesale) lblAdminDefWholesale.style.borderColor = '#8b5cf6';
+            if (lblAdminDefRetail) lblAdminDefRetail.style.borderColor = '#cbd5e1';
+
+            if (adminDefaultUnitRow) adminDefaultUnitRow.style.display = 'flex';
+            if (adminDefaultWholesaleCostRow) adminDefaultWholesaleCostRow.style.display = 'flex';
+            if (adminDefaultWholesaleTotalCostBlock) adminDefaultWholesaleTotalCostBlock.style.display = 'inline-block';
+            if (adminDefaultWholesalePricingHeader) adminDefaultWholesalePricingHeader.style.display = 'block';
+            if (adminDefaultWholesaleProfitRow) adminDefaultWholesaleProfitRow.style.display = 'flex';
+            if (adminDefaultWholesalePriceGroup) adminDefaultWholesalePriceGroup.style.display = 'block';
+            if (adminDefaultPiecesRow) adminDefaultPiecesRow.style.display = 'flex';
+            
+            if (adminDefaultRetailInputs) adminDefaultRetailInputs.style.display = 'none';
+
+            // Reset underlying cost/qty to wholesale defaults
+            if (document.getElementById('adminNewProductPurchaseCost')) {
+                document.getElementById('adminNewProductPurchaseCost').value = '';
+                document.getElementById('adminNewProductPurchaseCost').dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            if (document.getElementById('adminNewProductQuantity')) {
+                document.getElementById('adminNewProductQuantity').value = 1;
+                document.getElementById('adminNewProductQuantity').dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        } else {
+            if (lblAdminDefWholesale) lblAdminDefWholesale.style.borderColor = '#cbd5e1';
+            if (lblAdminDefRetail) lblAdminDefRetail.style.borderColor = '#8b5cf6';
+
+            if (adminDefaultUnitRow) adminDefaultUnitRow.style.display = 'none';
+            if (adminDefaultWholesaleCostRow) adminDefaultWholesaleCostRow.style.display = 'none';
+            if (adminDefaultWholesaleTotalCostBlock) adminDefaultWholesaleTotalCostBlock.style.display = 'none';
+            if (adminDefaultWholesalePricingHeader) adminDefaultWholesalePricingHeader.style.display = 'none';
+            if (adminDefaultWholesaleProfitRow) adminDefaultWholesaleProfitRow.style.display = 'none';
+            if (adminDefaultWholesalePriceGroup) adminDefaultWholesalePriceGroup.style.display = 'none';
+            if (adminDefaultPiecesRow) adminDefaultPiecesRow.style.display = 'none';
+            
+            if (adminDefaultRetailInputs) adminDefaultRetailInputs.style.display = 'flex';
+
+            // Initialize retail inputs
+            const adminDefaultRetailCost = document.getElementById('adminDefaultRetailCost');
+            if (adminDefaultRetailCost) {
+                adminDefaultRetailCost.value = '';
+                adminDefaultRetailCost.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            const adminDefaultRetailQty = document.getElementById('adminDefaultRetailQty');
+            if (adminDefaultRetailQty) {
+                adminDefaultRetailQty.value = 1;
+                adminDefaultRetailQty.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+    }
+
+    const defRadios = document.querySelectorAll('input[name="adminDefTopUpType"]');
+    defRadios.forEach(r => {
+        r.addEventListener('change', (e) => {
+            updateAdminDefaultTypeUI(e.target.value);
+        });
+    });
+
+    const adminDefaultRetailCost = document.getElementById('adminDefaultRetailCost');
+    const adminDefaultRetailQty = document.getElementById('adminDefaultRetailQty');
+    
+    function updateAdminRetailTotal() {
+        const cost = parseFloat(adminDefaultRetailCost ? adminDefaultRetailCost.value : 0) || 0;
+        const qty = parseInt(adminDefaultRetailQty ? adminDefaultRetailQty.value : 1) || 1;
+        const totalCostVal = document.getElementById('adminDefaultRetailTotalCostVal');
+        if (totalCostVal) {
+            totalCostVal.textContent = '₦' + Math.round(cost * qty).toLocaleString();
+        }
+        
+        // Sync with underlying purchase cost to trigger final price/margins updates
+        const pcs = parseInt(document.getElementById('adminNewProductPieces')?.value || 1) || 1;
+        const purchaseCostInput = document.getElementById('adminNewProductPurchaseCost');
+        if (purchaseCostInput) {
+            purchaseCostInput.value = (cost * pcs).toFixed(2);
+            purchaseCostInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+
+    if (adminDefaultRetailCost) adminDefaultRetailCost.addEventListener('input', updateAdminRetailTotal);
+    if (adminDefaultRetailQty) adminDefaultRetailQty.addEventListener('input', updateAdminRetailTotal);
     if (wholesaleProfitInput) wholesaleProfitInput.addEventListener('input', onWholesaleProfitAmountInput);
     if (wholesaleProfitPercentInput) wholesaleProfitPercentInput.addEventListener('input', onWholesaleProfitPercentInput);
 
@@ -2185,15 +2289,29 @@ function initAdminProductLogic() {
             }
 
             // Add to data and save to permanent memory
-            const purchaseCostVal = purchaseCostInput ? (parseFloat(purchaseCostInput.value) || 0) : 0;
-            const quantity = typeof quantityInput !== 'undefined' && quantityInput ? (parseInt(quantityInput.value) || 1) : 1;
+            const defTopUpType = document.querySelector('input[name="adminDefTopUpType"]:checked')?.value || 'wholesale';
+            
+            let purchaseCostVal = 0;
+            let quantity = 1;
+            let purchaseCost = 0;
+            let cost = 0;
             const pieces = piecesInput ? (parseInt(piecesInput.value) || 1) : 1;
             const bulkSel = document.getElementById('adminBulkUnitSelect');
             const bulkUnit = bulkSel ? bulkSel.value : 'Carton';
             
-            // Total expenditure = individual bulk carton price * how many cartons were bought
-            const purchaseCost = purchaseCostVal * quantity;
-            const cost = getRetailCost(); // This is correctly purchaseCostVal / pieces
+            if (defTopUpType === 'wholesale') {
+                purchaseCostVal = purchaseCostInput ? (parseFloat(purchaseCostInput.value) || 0) : 0;
+                quantity = typeof quantityInput !== 'undefined' && quantityInput ? (parseInt(quantityInput.value) || 1) : 1;
+                purchaseCost = purchaseCostVal * quantity;
+                cost = pieces > 0 ? (purchaseCostVal / pieces) : 0;
+            } else {
+                const retailCost = parseFloat(document.getElementById('adminDefaultRetailCost').value) || 0;
+                const retailQty = parseInt(document.getElementById('adminDefaultRetailQty').value) || 1;
+                purchaseCost = retailCost * retailQty;
+                cost = retailCost;
+                purchaseCostVal = retailCost * pieces;
+                quantity = retailQty / pieces;
+            }
             
             const profit = profitInput ? (parseFloat(profitInput.value) || 0) : 0;
             const profitPct = profitPercentInput ? (parseFloat(profitPercentInput.value) || 0) : 0;

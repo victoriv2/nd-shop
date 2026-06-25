@@ -105,7 +105,22 @@
                 <label>Item Name</label>
                 <input type="text" id="adminNewProductName" class="form-input" placeholder="e.g. Rice" autocomplete="new-password">
             </div>
-            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+
+            <!-- Restock Type Toggle Selector -->
+            <div class="form-group" style="margin-bottom: 24px; padding: 16px; background: #f0fdfa; border: 1px solid #14b8a6; border-radius: 12px;">
+                <label style="color: #0f766e; font-weight: 800; margin-bottom: 12px;">Select Restock Type</label>
+                <div style="display: flex; gap: 10px;">
+                    <label style="flex: 1; text-align: center; background: white; padding: 10px; border-radius: 8px; border: 2px solid #8b5cf6; cursor: pointer; transition: all 0.2s;" id="lblAdminDefWholesale">
+                        <input type="radio" name="adminDefTopUpType" value="wholesale" checked style="display: none;">
+                        <span style="font-weight: 700; color: #1e293b;" class="lbl-text">Wholesale</span>
+                    </label>
+                    <label style="flex: 1; text-align: center; background: white; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; cursor: pointer; transition: all 0.2s;" id="lblAdminDefRetail">
+                        <input type="radio" name="adminDefTopUpType" value="retail" style="display: none;">
+                        <span style="font-weight: 700; color: #1e293b;" class="lbl-text">Retail Only</span>
+                    </label>
+                </div>
+            </div>
+            <div id="adminDefaultUnitRow" style="display: flex; gap: 10px; margin-bottom: 16px;">
                 <div class="form-group" style="flex: 1; margin-bottom: 0;">
                     <label>Bulk Container Type</label>
                     <div class="custom-dropdown-wrapper" id="adminBulkDropdownWrapper">
@@ -162,7 +177,7 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <div id="adminDefaultWholesaleCostRow" style="display: flex; gap: 10px; margin-bottom: 12px;">
                 <div class="form-group" style="flex: 1; margin-bottom: 0;">
                     <label>Cost per <span class="lbl-bulk-unit">Carton</span> (₦)</label>
                     <input type="number" id="adminNewProductPurchaseCost" class="form-input" placeholder="e.g. 5000" min="0" step="0.01">
@@ -173,15 +188,32 @@
                 </div>
             </div>
 
-            <div style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
+            <div id="adminDefaultWholesaleTotalCostBlock" style="font-size: 0.95rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">
                 Total Cost: <span id="adminNewProductTotalCostVal" style="color: #16a34a;">₦0</span>
             </div>
 
-            <div style="font-size: 0.95rem; color: #1e293b; margin: 16px 0 16px 0; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+            <!-- Retail Only Inputs (hidden by default) -->
+            <div id="adminDefaultRetailInputs" style="display: none; flex-direction: column; margin-bottom: 12px; background: #f0fdfa; padding: 12px; border-radius: 8px; border: 1px dashed #14b8a6;">
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label style="color: #0f766e;">Cost per <span class="lbl-retail-unit">piece</span> (₦)</label>
+                        <input type="number" id="adminDefaultRetailCost" class="form-input" placeholder="e.g. 150" min="0" step="0.01">
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label style="color: #0f766e;">Quantity Bought (<span class="lbl-retail-unit">piece</span>s)</label>
+                        <input type="number" id="adminDefaultRetailQty" class="form-input" placeholder="1" value="1" min="1" step="1">
+                    </div>
+                </div>
+                <div style="font-size: 0.95rem; color: #1e293b; margin-top: 12px; font-weight: 700; background: #f0fdf4; padding: 6px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0; align-self: flex-start;">
+                    Total Cost: <span id="adminDefaultRetailTotalCostVal" style="color: #16a34a;">₦0</span>
+                </div>
+            </div>
+
+            <div id="adminDefaultWholesalePricingHeader" style="font-size: 0.95rem; color: #1e293b; margin: 16px 0 16px 0; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
                 Wholesale Pricing <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">(Optional)</span>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+            <div id="adminDefaultWholesaleProfitRow" style="display: flex; gap: 10px; margin-bottom: 16px;">
                 <div class="form-group" style="flex: 1; margin-bottom: 0;">
                     <label>Wholesale Profit per <span class="lbl-bulk-unit">Carton</span> (₦)</label>
                     <input type="number" id="adminNewProductWholesaleProfit" class="form-input" placeholder="e.g. 500" min="0" step="0.01">
@@ -192,7 +224,7 @@
                 </div>
             </div>
 
-            <div class="form-group" style="margin-bottom: 24px;">
+            <div id="adminDefaultWholesalePriceGroup" class="form-group" style="margin-bottom: 24px;">
                 <label>Final Wholesale Price per <span class="lbl-bulk-unit">Carton</span> (₦)</label>
                 <input type="number" id="adminNewProductWholesalePrice" class="form-input" placeholder="0" readonly style="background: #f8fafc; font-weight: 700; color: #8b5cf6; cursor: not-allowed;">
             </div>
@@ -201,7 +233,7 @@
                 Retail Pricing
             </div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <div id="adminDefaultPiecesRow" style="display: flex; gap: 10px; margin-bottom: 12px;">
                 <div class="form-group" style="width: 100%; margin-bottom: 0;">
                     <label><span class="lbl-retail-unit" style="text-transform: capitalize;">Pieces</span> inside ONE <span class="lbl-bulk-unit">Carton</span></label>
                     <input type="number" id="adminNewProductPieces" class="form-input" placeholder="e.g. 40" min="1" step="1">
