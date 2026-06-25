@@ -990,5 +990,33 @@
     box-shadow: 0 2px 8px rgba(27, 38, 59, 0.1) !important;
 }
 
+/* Payout Expiry Notice */
+.payout-expiry-notice {
+    margin: 8px 5% 14px 5%;
+    font-size: 0.82rem;
+    color: #ef4444;
+    font-weight: 600;
+    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    font-family: 'Outfit', sans-serif;
+    opacity: 0.9;
+}
 
+.payout-expiry-notice svg {
+    flex-shrink: 0;
+    color: #ef4444;
+}
 
+@media (min-width: 1024px) {
+    .payout-expiry-notice {
+        max-width: 1200px;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        width: 90% !important;
+        padding-right: 10px;
+        box-sizing: border-box;
+    }
+}
