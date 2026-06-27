@@ -36,13 +36,13 @@ function initProductModalLogic() {
 
     function isVariantFlexibleAllowed(v, product) {
         if (!product) return false;
+        if (!product.allowUserFlexiblePricing) return false;
         
-        // Inherently flexible variants (c3 for special/flexible products) are ALWAYS allowed to be flexible.
+        // If allowUserFlexiblePricing is true, check if this is Special/Flexible and v.variantType is c3
         if ((product.isSpecial || product.isFlexible) && v.variantType === 'c3') {
             return true;
         }
 
-        if (!product.allowUserFlexiblePricing) return false;
         const flexVars = product.flexibleVariants || [];
         if (flexVars.length === 0) return true;
         
@@ -63,10 +63,7 @@ function initProductModalLogic() {
     function determineVariantFlexState(v, product, toggleChecked) {
         const isAllowed = isVariantFlexibleAllowed(v, product);
         if (!isAllowed) return false;
-        if (product.allowUserFlexiblePricing) {
-            return !!toggleChecked;
-        }
-        return (product.isFlexible || product.isSpecial) && v.variantType === 'c3';
+        return !!toggleChecked;
     }
 
     const pmStandardHero = document.getElementById('pmStandardHero');
@@ -199,14 +196,14 @@ function initProductModalLogic() {
                             const cupProfit = s.cupProfit !== undefined ? s.cupProfit : (s.c3Profit !== undefined ? s.c3Profit : 0);
                             cupPrice = Math.round(c3Cost + cupProfit) || 0;
                         }
-                        variants.push({ title: pts.cup.title || 'Container 3', price: cupPrice, flex: true, cost: c3Cost, variantType: 'c3' });
+                        variants.push({ title: pts.cup.title || 'Container 3', price: cupPrice, flex: false, cost: c3Cost, variantType: 'c3' });
                     }
                 } else if (product.isFlexible) {
                     const pts = product.packTypes || {};
                     const baseCost = parseFloat(product.cost) || 0;
                     if (pts.c1 && Number(pts.c1.price) > 0) variants.push({ title: pts.c1.title || 'Container 1', price: Number(pts.c1.price), flex: false, cost: baseCost, variantType: 'c1' });
                     if (pts.c2 && Number(pts.c2.price) > 0) variants.push({ title: pts.c2.title || 'Container 2', price: Number(pts.c2.price), flex: false, cost: baseCost, variantType: 'c2' });
-                    if (pts.c3) variants.push({ title: pts.c3.title || 'Container 3', price: Number(pts.c3.price) || 0, flex: true, cost: baseCost, variantType: 'c3' });
+                    if (pts.c3) variants.push({ title: pts.c3.title || 'Container 3', price: Number(pts.c3.price) || 0, flex: false, cost: baseCost, variantType: 'c3' });
                 } else if (product.isCustom) {
                     isCustomMode = true;
                     variants.push({ title: 'Default', price: Number(product.price) || 0, flex: false, unit: product.unit || 'per unit', cost: parseFloat(product.cost) || 0, variantType: null });
@@ -691,8 +688,8 @@ function initProductModalLogic() {
                 const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
                 const latest = dbProducts.find(p => p.name === currentProduct.name && !p.isDeleted);
                 if (latest) {
-                    const wasFlexibleAllowed = currentProduct.isFlexible || currentProduct.allowUserFlexiblePricing;
-                    const isFlexibleAllowed = latest.isFlexible || latest.allowUserFlexiblePricing;
+                    const wasFlexibleAllowed = !!currentProduct.allowUserFlexiblePricing;
+                    const isFlexibleAllowed = !!latest.allowUserFlexiblePricing;
                     
                     if (wasFlexibleAllowed && !isFlexibleAllowed) {
                         productModal.classList.remove('show');
@@ -732,7 +729,7 @@ function initProductModalLogic() {
                             const baseCost = parseFloat(latest.cost) || 0;
                             if (pts.c1 && Number(pts.c1.price) > 0) newVariants.push({ title: pts.c1.title || 'Container 1', price: Number(pts.c1.price), flex: false, cost: baseCost, variantType: 'c1' });
                             if (pts.c2 && Number(pts.c2.price) > 0) newVariants.push({ title: pts.c2.title || 'Container 2', price: Number(pts.c2.price), flex: false, cost: baseCost, variantType: 'c2' });
-                            if (pts.c3) newVariants.push({ title: pts.c3.title || 'Container 3', price: Number(pts.c3.price) || 0, flex: true, cost: baseCost, variantType: 'c3' });
+                            if (pts.c3) newVariants.push({ title: pts.c3.title || 'Container 3', price: Number(pts.c3.price) || 0, flex: false, cost: baseCost, variantType: 'c3' });
                         } else if (latest.isCustom) {
                             newVariants.push({ title: 'Default', price: Number(latest.price) || 0, flex: false, unit: latest.unit || 'per unit', cost: parseFloat(latest.cost) || 0, variantType: null });
                         } else {

@@ -255,7 +255,7 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
             const latestProduct = dbProducts.find(p => (p.name === productName || p.name === productName.replace(/\s+\([^)]+\)$/, '')) && !p.isDeleted);
             if (latestProduct) {
-                if (!latestProduct.isFlexible && !latestProduct.allowUserFlexiblePricing) {
+                if (!latestProduct.allowUserFlexiblePricing) {
                     if (typeof window.showCustomAlert === 'function') {
                         window.showCustomAlert(`Flexible pricing is no longer available for this item.`, 'error');
                     } else {
