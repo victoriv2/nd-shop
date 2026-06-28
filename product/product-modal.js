@@ -939,10 +939,25 @@ function initProductModalLogic() {
         }
     };
 
-    window.addEventListener('nd_sync_complete', handleRealtimeSyncUpdate);
+    window.addEventListener('nd_sync_complete', () => {
+        handleRealtimeSyncUpdate();
+        updateModalEstimates();
+    });
     if (window.realtimeSync) {
         window.realtimeSync.on('nd_products_data', handleRealtimeSyncUpdate);
+        window.realtimeSync.on('nd_payout_rate', () => {
+            updateModalEstimates();
+        });
+        window.realtimeSync.on('nd_payout_enabled', () => {
+            updateModalEstimates();
+        });
     }
+    window.addEventListener('local-storage-update', (e) => {
+        const k = e.detail.key;
+        if (k === 'nd_payout_rate' || k === 'nd_payout_enabled') {
+            updateModalEstimates();
+        }
+    });
 }
 
 

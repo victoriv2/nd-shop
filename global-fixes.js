@@ -290,7 +290,7 @@
     window.addEventListener('local-storage-update', (e) => {
         const k = e.detail.key;
         try {
-            if (k === 'nd_products_data' && typeof window.renderDynamicProducts === 'function') {
+            if ((k === 'nd_products_data' || k === 'nd_payout_rate' || k === 'nd_payout_enabled') && typeof window.renderDynamicProducts === 'function') {
                 const i = document.getElementById('productSearchInput');
                 window.renderDynamicProducts(i ? i.value : '');
             }

@@ -309,7 +309,19 @@ window.loadProductTab = function() {
                     window.realtimeSync.on('nd_products_data', () => {
                         window.refreshProducts();
                     });
+                    window.realtimeSync.on('nd_payout_rate', () => {
+                        window.refreshProducts();
+                    });
+                    window.realtimeSync.on('nd_payout_enabled', () => {
+                        window.refreshProducts();
+                    });
                 }
+                window.addEventListener('local-storage-update', (e) => {
+                    const k = e.detail.key;
+                    if (k === 'nd_payout_rate' || k === 'nd_payout_enabled') {
+                        window.refreshProducts();
+                    }
+                });
                 // Also refresh when nd_sync_complete fires (SSE push from server)
                 window.addEventListener('nd_sync_complete', () => {
                     const cont = document.getElementById('product-container');
