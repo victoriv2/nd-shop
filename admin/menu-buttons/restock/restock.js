@@ -1920,7 +1920,8 @@ function openRestockDetailModal(productName, dateAdded) {
                 var costV = t.costVal || 0;
                 var profitV = (s[t.profitKey] !== undefined && s[t.profitKey] !== '') ? parseFloat(s[t.profitKey]) : ((price && costV) ? parseFloat((price - costV).toFixed(2)) : 0);
                 var profitPctV = (s[t.profitPctKey] !== undefined && s[t.profitPctKey] !== '' && parseFloat(s[t.profitPctKey]) > 0) ? parseFloat(s[t.profitPctKey]).toFixed(2).replace(/\.?0+$/, '') : ((costV > 0 && profitV > 0) ? ((profitV / costV) * 100).toFixed(2).replace(/\.?0+$/, '') : '\u2014');
-                var payV = Math.max(0, profitV) * (payoutRate / 100);
+                var isTierFlexible = p.isFlexible && (t.key === 'c3' || t.key === 'cup');
+                var payV = isTierFlexible ? 0 : Math.max(0, profitV) * (payoutRate / 100);
                 var formPayV = Number.isInteger(payV) ? payV : payV.toFixed(2);
                 
                 html += '<div style="background: ' + t.bg + '; border: 1px solid ' + t.border + '; border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;">'
@@ -1950,10 +1951,15 @@ function openRestockDetailModal(productName, dateAdded) {
                     + '<span style="font-size: 1.1rem; font-weight: 900; color: ' + t.color + ';">\u20a6' + (price > 0 ? price.toLocaleString() : '0') + '</span>'
                     + '</div>'
                     + (payoutEnabled
-                    ? '<div style="display: flex; justify-content: space-between; align-items: center;">'
-                    + '<span style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Payout</span>'
-                    + '<span style="font-weight: 700; color: #16a34a; font-size: 0.85rem;">+\u20a6' + formPayV + ' (' + payoutRate + '%)</span>'
-                    + '</div>'
+                    ? (isTierFlexible
+                      ? '<div style="display: flex; justify-content: space-between; align-items: center; opacity:0.5;">'
+                      + '<span style="font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase;">Payout</span>'
+                      + '<span style="font-weight: 700; color: #94a3b8; font-size: 0.85rem;">Disabled</span>'
+                      + '</div>'
+                      : '<div style="display: flex; justify-content: space-between; align-items: center;">'
+                      + '<span style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Payout</span>'
+                      + '<span style="font-weight: 700; color: #16a34a; font-size: 0.85rem;">+\u20a6' + formPayV + ' (' + payoutRate + '%)</span>'
+                      + '</div>')
                     : '<div style="display: flex; justify-content: space-between; align-items: center; opacity:0.5;">'
                     + '<span style="font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase;">Payout</span>'
                     + '<span style="font-weight: 700; color: #94a3b8; font-size: 0.85rem;">Disabled</span>'

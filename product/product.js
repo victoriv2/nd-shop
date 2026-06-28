@@ -325,7 +325,8 @@ window.loadProductTab = function() {
                 // Also refresh when nd_sync_complete fires (SSE push from server)
                 window.addEventListener('nd_sync_complete', () => {
                     const cont = document.getElementById('product-container');
-                    if (cont && cont.style.display !== 'none') {
+                    const isActive = document.querySelector('.bar-item[data-tab="product"]')?.classList.contains('active');
+                    if (cont && (cont.style.display !== 'none' || isActive)) {
                         window.refreshProducts();
                     }
                 });

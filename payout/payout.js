@@ -2175,7 +2175,8 @@ if (window.realtimeSync) {
 window.addEventListener('nd_sync_complete', () => {
     if (typeof window.refreshPayouts === 'function') {
         const container = document.getElementById('payout-container');
-        if (container && container.style.display !== 'none') {
+        const isActive = document.querySelector('.bar-item[data-tab="payout"]')?.classList.contains('active');
+        if (container && (container.style.display !== 'none' || isActive)) {
             window.refreshPayouts();
         }
     }

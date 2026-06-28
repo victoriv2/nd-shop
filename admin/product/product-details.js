@@ -251,7 +251,8 @@ function _pdRenderDetails(p) {
             : (p.profitPercent || '—');
 
         const isDefaultFlex = p.allowUserFlexiblePricing && p.flexibleVariants && p.flexibleVariants.some(fv => fv.startsWith('Default'));
-        const payout = (p.isFlexible || isDefaultFlex) ? 0 : Math.max(0, profit) * (payoutRate / 100);
+        const isPayoutDisabled = p.isFlexible || isDefaultFlex || p.isCustom;
+        const payout = isPayoutDisabled ? 0 : Math.max(0, profit) * (payoutRate / 100);
         const formatPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
 
         const row = (label, value, bg, border) =>
@@ -293,7 +294,7 @@ function _pdRenderDetails(p) {
         html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 18px;background:linear-gradient(135deg,#f0f4f8 0%,#e0e7ff 100%);border-radius:12px;border:1px solid #bfdbfe;">` +
             `<span style="font-size:0.8rem;font-weight:700;color:#0F172A;text-transform:uppercase;">Final Unit Price</span>` +
             `<span style="font-size:1.2rem;font-weight:900;color:#6366f1;">₦${Math.round(parseFloat(p.price) || 0).toLocaleString()}</span></div>`;
-        if (payoutEnabled) {
+        if (payoutEnabled && !isPayoutDisabled) {
             html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#f0fdf4;border-radius:12px;border:1px solid #bbf7d0;">` +
                 `<span style="font-size:0.8rem;font-weight:700;color:#166534;text-transform:uppercase;">App Payout</span>` +
                 `<span style="font-weight:700;color:#16a34a;">+₦${formatPayout} (${payoutRate}%)</span></div>`;
@@ -430,9 +431,15 @@ function _pdRenderDetails(p) {
                 `<span style="font-size:0.8rem;font-weight:600;color:#475569;">Retail Price</span>` +
                 `<span style="font-size:1.1rem;font-weight:900;color:${t.color};">₦${price > 0 ? Math.round(price).toLocaleString() : '0'}</span></div>`;
             if (payoutEnabled) {
-                html += `<div style="display:flex;justify-content:space-between;align-items:center;">` +
-                    `<span style="font-size:0.75rem;font-weight:600;color:#64748b;text-transform:uppercase;">Payout</span>` +
-                    `<span style="font-weight:700;color:#16a34a;font-size:0.85rem;">+₦${formPayV} (${payoutRate}%)</span></div>`;
+                if (isTierFlexible) {
+                    html += `<div style="display:flex;justify-content:space-between;align-items:center;opacity:0.5;">` +
+                        `<span style="font-size:0.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;">Payout</span>` +
+                        `<span style="font-weight:700;color:#94a3b8;font-size:0.85rem;">Disabled</span></div>`;
+                } else {
+                    html += `<div style="display:flex;justify-content:space-between;align-items:center;">` +
+                        `<span style="font-size:0.75rem;font-weight:600;color:#64748b;text-transform:uppercase;">Payout</span>` +
+                        `<span style="font-weight:700;color:#16a34a;font-size:0.85rem;">+₦${formPayV} (${payoutRate}%)</span></div>`;
+                }
             }
             html += `</div>`;
         });
