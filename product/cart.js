@@ -216,8 +216,8 @@ function updateCartItemQty(index, delta) {
                 let payoutRate = parseFloat(localStorage.getItem('nd_payout_rate') || 2);
                 let isFlat = false;
                 
-                if (cart[index].isCustom && cart[index].customPayoutRate !== undefined) {
-                    payoutRate = cart[index].customPayoutRate;
+                if (cart[index].customPayoutRate !== undefined && cart[index].customPayoutRate !== null) {
+                    payoutRate = parseFloat(cart[index].customPayoutRate);
                     isFlat = cart[index].customPayoutType === 'flat';
                 }
 
@@ -318,11 +318,23 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
         
         const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
         if (payoutEnabled) {
-            const payoutRate = parseFloat(localStorage.getItem('nd_payout_rate') || 2);
+            let payoutRate = parseFloat(localStorage.getItem('nd_payout_rate') || 2);
+            let isFlat = false;
+            if (cart[existingIndex].customPayoutRate !== undefined && cart[existingIndex].customPayoutRate !== null) {
+                payoutRate = parseFloat(cart[existingIndex].customPayoutRate);
+                isFlat = cart[existingIndex].customPayoutType === 'flat';
+            }
             const costVal = cart[existingIndex].unitCost !== undefined ? cart[existingIndex].unitCost : 0;
             const totalCost = cart[existingIndex].qty * costVal;
             const profit = cart[existingIndex].total - totalCost;
-            cart[existingIndex].payout = cart[existingIndex].isFlexible ? 0 : Math.max(0, profit) * (payoutRate / 100);
+            
+            if (cart[existingIndex].isFlexible) {
+                cart[existingIndex].payout = 0;
+            } else if (isFlat) {
+                cart[existingIndex].payout = cart[existingIndex].qty * payoutRate;
+            } else {
+                cart[existingIndex].payout = Math.max(0, profit) * (payoutRate / 100);
+            }
         }
     } else {
         // Flexible: total is the entered price, do not multiply by qty
@@ -333,7 +345,7 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             let payoutRate = parseFloat(localStorage.getItem('nd_payout_rate') || 2);
             let isFlat = false;
             
-            if (isCustom && specificPayoutRate !== undefined) {
+            if (specificPayoutRate !== undefined && specificPayoutRate !== null) {
                 payoutRate = specificPayoutRate;
                 isFlat = specificPayoutType === 'flat';
             }

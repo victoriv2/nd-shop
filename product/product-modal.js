@@ -188,36 +188,87 @@ function initProductModalLogic() {
                     const cpc = s.cupsPerCustard !== undefined ? Number(s.cupsPerCustard) : (s.c3sPerC2 || 1);
                     const c3Cost = (cpc > 0 && cpb > 0) ? c2Cost / cpc : 0;
 
-                    if (pts.bag && Number(pts.bag.price) > 0) variants.push({ title: pts.bag.title || 'Container 1', price: Number(pts.bag.price), flex: false, cost: perUnitCost, variantType: 'c1' });
-                    if (pts.custard && Number(pts.custard.price) > 0) variants.push({ title: pts.custard.title || 'Container 2', price: Number(pts.custard.price), flex: false, cost: c2Cost, variantType: 'c2' });
+                    if (pts.bag && Number(pts.bag.price) > 0) {
+                        variants.push({
+                            title: pts.bag.title || 'Container 1',
+                            price: Number(pts.bag.price),
+                            flex: false,
+                            cost: perUnitCost,
+                            variantType: 'c1',
+                            payoutRate: pts.bag.payoutRate !== undefined ? pts.bag.payoutRate : product.payoutRate
+                        });
+                    }
+                    if (pts.custard && Number(pts.custard.price) > 0) {
+                        variants.push({
+                            title: pts.custard.title || 'Container 2',
+                            price: Number(pts.custard.price),
+                            flex: false,
+                            cost: c2Cost,
+                            variantType: 'c2',
+                            payoutRate: pts.custard.payoutRate !== undefined ? pts.custard.payoutRate : product.payoutRate
+                        });
+                    }
                     if (pts.cup) {
                         let cupPrice = Number(pts.cup.price) || 0;
                         if (cupPrice <= 0) {
                             const cupProfit = s.cupProfit !== undefined ? s.cupProfit : (s.c3Profit !== undefined ? s.c3Profit : 0);
                             cupPrice = Math.round(c3Cost + cupProfit) || 0;
                         }
-                        variants.push({ title: pts.cup.title || 'Container 3', price: cupPrice, flex: false, cost: c3Cost, variantType: 'c3' });
+                        variants.push({
+                            title: pts.cup.title || 'Container 3',
+                            price: cupPrice,
+                            flex: false,
+                            cost: c3Cost,
+                            variantType: 'c3',
+                            payoutRate: pts.cup.payoutRate !== undefined ? pts.cup.payoutRate : product.payoutRate
+                        });
                     }
                 } else if (product.isFlexible) {
                     const pts = product.packTypes || {};
                     const baseCost = parseFloat(product.cost) || 0;
-                    if (pts.c1 && Number(pts.c1.price) > 0) variants.push({ title: pts.c1.title || 'Container 1', price: Number(pts.c1.price), flex: false, cost: baseCost, variantType: 'c1' });
-                    if (pts.c2 && Number(pts.c2.price) > 0) variants.push({ title: pts.c2.title || 'Container 2', price: Number(pts.c2.price), flex: false, cost: baseCost, variantType: 'c2' });
-                    if (pts.c3) variants.push({ title: pts.c3.title || 'Container 3', price: Number(pts.c3.price) || 0, flex: false, cost: baseCost, variantType: 'c3' });
+                    if (pts.c1 && Number(pts.c1.price) > 0) {
+                        variants.push({
+                            title: pts.c1.title || 'Container 1',
+                            price: Number(pts.c1.price),
+                            flex: false,
+                            cost: baseCost,
+                            variantType: 'c1',
+                            payoutRate: pts.c1.payoutRate !== undefined ? pts.c1.payoutRate : product.payoutRate
+                        });
+                    }
+                    if (pts.c2 && Number(pts.c2.price) > 0) {
+                        variants.push({
+                            title: pts.c2.title || 'Container 2',
+                            price: Number(pts.c2.price),
+                            flex: false,
+                            cost: baseCost,
+                            variantType: 'c2',
+                            payoutRate: pts.c2.payoutRate !== undefined ? pts.c2.payoutRate : product.payoutRate
+                        });
+                    }
+                    if (pts.c3) {
+                        variants.push({
+                            title: pts.c3.title || 'Container 3',
+                            price: Number(pts.c3.price) || 0,
+                            flex: false,
+                            cost: baseCost,
+                            variantType: 'c3',
+                            payoutRate: pts.c3.payoutRate !== undefined ? pts.c3.payoutRate : product.payoutRate
+                        });
+                    }
                 } else if (product.isCustom) {
                     isCustomMode = true;
-                    variants.push({ title: 'Default', price: Number(product.price) || 0, flex: false, unit: product.unit || 'per unit', cost: parseFloat(product.cost) || 0, variantType: null });
+                    variants.push({ title: 'Default', price: Number(product.price) || 0, flex: false, unit: product.unit || 'per unit', cost: parseFloat(product.cost) || 0, variantType: null, payoutRate: product.payoutRate });
                 } else {
                     const baseCost = parseFloat(product.cost) || 0;
-                    // Derive a human-readable title from the admin-set unit (e.g. 'per cup' → 'Cup')
                     const rawUnit = product.unit || '';
                     const unitTitle = rawUnit ? rawUnit.replace(/^per\s+/i, '').replace(/^\w/, c => c.toUpperCase()) : 'Default';
-                    variants.push({ title: unitTitle, price: Number(product.price) || 0, flex: false, unit: rawUnit || 'per unit', cost: baseCost, variantType: null });
+                    variants.push({ title: unitTitle, price: Number(product.price) || 0, flex: false, unit: rawUnit || 'per unit', cost: baseCost, variantType: null, payoutRate: product.payoutRate });
                     if (product.wholesalePrice && Number(product.wholesalePrice) > 0) {
                         const bulkUnitStr = product.bulkUnit || 'Carton';
                         const wholesaleRemaining = window.getRemainingProductStock ? window.getRemainingProductStock(product.id || product.name, 'wholesale') : Infinity;
                         if (wholesaleRemaining > 0) {
-                            variants.push({ title: bulkUnitStr, price: Number(product.wholesalePrice), flex: false, unit: 'per ' + bulkUnitStr.toLowerCase(), cost: baseCost * (product.pieces || 1), variantType: 'wholesale' });
+                            variants.push({ title: bulkUnitStr, price: Number(product.wholesalePrice), flex: false, unit: 'per ' + bulkUnitStr.toLowerCase(), cost: baseCost * (product.pieces || 1), variantType: 'wholesale', payoutRate: product.payoutRate });
                         }
                     }
                 }
@@ -505,6 +556,26 @@ function initProductModalLogic() {
         let payoutRate = parseFloat(localStorage.getItem('nd_payout_rate') || 2);
         let isFlat = false;
 
+        const checkedRadio = document.querySelector('input[name="pmVariant"]:checked');
+        if (checkedRadio && currentVariants) {
+            const idx = parseInt(checkedRadio.value);
+            const selectedVariant = currentVariants[idx];
+            if (selectedVariant && selectedVariant.payoutRate !== undefined) {
+                payoutRate = parseFloat(selectedVariant.payoutRate);
+            } else if (currentProduct && currentProduct.payoutRate !== undefined) {
+                payoutRate = parseFloat(currentProduct.payoutRate);
+            }
+        } else if (currentVariants && currentVariants.length === 1) {
+            const selectedVariant = currentVariants[0];
+            if (selectedVariant && selectedVariant.payoutRate !== undefined) {
+                payoutRate = parseFloat(selectedVariant.payoutRate);
+            } else if (currentProduct && currentProduct.payoutRate !== undefined) {
+                payoutRate = parseFloat(currentProduct.payoutRate);
+            }
+        } else if (currentProduct && currentProduct.payoutRate !== undefined) {
+            payoutRate = parseFloat(currentProduct.payoutRate);
+        }
+
         const payoutContainer = document.getElementById('pmPayoutDetailContainer');
         
         if (payoutEnabled && !isFlex && !isCustomMode) {
@@ -643,10 +714,31 @@ function initProductModalLogic() {
         const totalCost = isFlex ? basePriceValue : basePriceValue * currentQuantity;
         const payoutEnabled = localStorage.getItem('nd_payout_enabled') === 'true';
         let payout = 0;
+        let payoutRate = parseFloat(localStorage.getItem('nd_payout_rate') || 2);
         if (payoutEnabled && !isFlex && !isCustomMode) {
+            const checkedRadio = document.querySelector('input[name="pmVariant"]:checked');
+            if (checkedRadio && currentVariants) {
+                const idx = parseInt(checkedRadio.value);
+                const selectedVariant = currentVariants[idx];
+                if (selectedVariant && selectedVariant.payoutRate !== undefined) {
+                    payoutRate = parseFloat(selectedVariant.payoutRate);
+                } else if (currentProduct && currentProduct.payoutRate !== undefined) {
+                    payoutRate = parseFloat(currentProduct.payoutRate);
+                }
+            } else if (currentVariants && currentVariants.length === 1) {
+                const selectedVariant = currentVariants[0];
+                if (selectedVariant && selectedVariant.payoutRate !== undefined) {
+                    payoutRate = parseFloat(selectedVariant.payoutRate);
+                } else if (currentProduct && currentProduct.payoutRate !== undefined) {
+                    payoutRate = parseFloat(currentProduct.payoutRate);
+                }
+            } else if (currentProduct && currentProduct.payoutRate !== undefined) {
+                payoutRate = parseFloat(currentProduct.payoutRate);
+            }
+
             const totalItemCost = baseCostValue * currentQuantity;
             const profit = totalCost - totalItemCost;
-            payout = Math.max(0, profit) * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100);
+            payout = Math.max(0, profit) * (payoutRate / 100);
         }
 
         // Visual Feedback
@@ -656,7 +748,7 @@ function initProductModalLogic() {
 
         // Add to Cart instead of direct Request
         if (typeof window.addToCart === 'function') {
-            const success = window.addToCart(name, currentQuantity, unit, effectiveUnitPrice, isCustomMode, undefined, undefined, currentImageData, isFlex, baseCostValue, currentProduct?.id || '');
+            const success = window.addToCart(name, currentQuantity, unit, effectiveUnitPrice, isCustomMode, payoutRate, undefined, currentImageData, isFlex, baseCostValue, currentProduct?.id || '');
             if (success === false) {
                 btn.textContent = originalText;
                 btn.classList.remove('pending');
@@ -714,34 +806,86 @@ function initProductModalLogic() {
                             const cpc = s.cupsPerCustard !== undefined ? Number(s.cupsPerCustard) : (s.c3sPerC2 || 1);
                             const c3Cost = (cpc > 0 && cpb > 0) ? c2Cost / cpc : 0;
 
-                            if (pts.bag && Number(pts.bag.price) > 0) newVariants.push({ title: pts.bag.title || 'Container 1', price: Number(pts.bag.price), flex: false, cost: perUnitCost, variantType: 'c1' });
-                            if (pts.custard && Number(pts.custard.price) > 0) newVariants.push({ title: pts.custard.title || 'Container 2', price: Number(pts.custard.price), flex: false, cost: c2Cost, variantType: 'c2' });
+                            if (pts.bag && Number(pts.bag.price) > 0) {
+                                newVariants.push({
+                                    title: pts.bag.title || 'Container 1',
+                                    price: Number(pts.bag.price),
+                                    flex: false,
+                                    cost: perUnitCost,
+                                    variantType: 'c1',
+                                    payoutRate: pts.bag.payoutRate !== undefined ? pts.bag.payoutRate : latest.payoutRate
+                                });
+                            }
+                            if (pts.custard && Number(pts.custard.price) > 0) {
+                                newVariants.push({
+                                    title: pts.custard.title || 'Container 2',
+                                    price: Number(pts.custard.price),
+                                    flex: false,
+                                    cost: c2Cost,
+                                    variantType: 'c2',
+                                    payoutRate: pts.custard.payoutRate !== undefined ? pts.custard.payoutRate : latest.payoutRate
+                                });
+                            }
                             if (pts.cup) {
                                 let cupPrice = Number(pts.cup.price) || 0;
                                 if (cupPrice <= 0) {
                                     const cupProfit = s.cupProfit !== undefined ? s.cupProfit : (s.c3Profit !== undefined ? s.c3Profit : 0);
                                     cupPrice = Math.round(c3Cost + cupProfit) || 0;
                                 }
-                                newVariants.push({ title: pts.cup.title || 'Container 3', price: cupPrice, flex: false, cost: c3Cost, variantType: 'c3' });
+                                newVariants.push({
+                                    title: pts.cup.title || 'Container 3',
+                                    price: cupPrice,
+                                    flex: false,
+                                    cost: c3Cost,
+                                    variantType: 'c3',
+                                    payoutRate: pts.cup.payoutRate !== undefined ? pts.cup.payoutRate : latest.payoutRate
+                                });
                             }
                         } else if (latest.isFlexible) {
                             const pts = latest.packTypes || {};
                             const baseCost = parseFloat(latest.cost) || 0;
-                            if (pts.c1 && Number(pts.c1.price) > 0) newVariants.push({ title: pts.c1.title || 'Container 1', price: Number(pts.c1.price), flex: false, cost: baseCost, variantType: 'c1' });
-                            if (pts.c2 && Number(pts.c2.price) > 0) newVariants.push({ title: pts.c2.title || 'Container 2', price: Number(pts.c2.price), flex: false, cost: baseCost, variantType: 'c2' });
-                            if (pts.c3) newVariants.push({ title: pts.c3.title || 'Container 3', price: Number(pts.c3.price) || 0, flex: false, cost: baseCost, variantType: 'c3' });
+                            if (pts.c1 && Number(pts.c1.price) > 0) {
+                                newVariants.push({
+                                    title: pts.c1.title || 'Container 1',
+                                    price: Number(pts.c1.price),
+                                    flex: false,
+                                    cost: baseCost,
+                                    variantType: 'c1',
+                                    payoutRate: pts.c1.payoutRate !== undefined ? pts.c1.payoutRate : latest.payoutRate
+                                });
+                            }
+                            if (pts.c2 && Number(pts.c2.price) > 0) {
+                                newVariants.push({
+                                    title: pts.c2.title || 'Container 2',
+                                    price: Number(pts.c2.price),
+                                    flex: false,
+                                    cost: baseCost,
+                                    variantType: 'c2',
+                                    payoutRate: pts.c2.payoutRate !== undefined ? pts.c2.payoutRate : latest.payoutRate
+                                });
+                            }
+                            if (pts.c3) {
+                                newVariants.push({
+                                    title: pts.c3.title || 'Container 3',
+                                    price: Number(pts.c3.price) || 0,
+                                    flex: false,
+                                    cost: baseCost,
+                                    variantType: 'c3',
+                                    payoutRate: pts.c3.payoutRate !== undefined ? pts.c3.payoutRate : latest.payoutRate
+                                });
+                            }
                         } else if (latest.isCustom) {
-                            newVariants.push({ title: 'Default', price: Number(latest.price) || 0, flex: false, unit: latest.unit || 'per unit', cost: parseFloat(latest.cost) || 0, variantType: null });
+                            newVariants.push({ title: 'Default', price: Number(latest.price) || 0, flex: false, unit: latest.unit || 'per unit', cost: parseFloat(latest.cost) || 0, variantType: null, payoutRate: latest.payoutRate });
                         } else {
                             const baseCost = parseFloat(latest.cost) || 0;
                             const rawUnit = latest.unit || '';
                             const unitTitle = rawUnit ? rawUnit.replace(/^per\s+/i, '').replace(/^\w/, c => c.toUpperCase()) : 'Default';
-                            newVariants.push({ title: unitTitle, price: Number(latest.price) || 0, flex: false, unit: rawUnit || 'per unit', cost: baseCost, variantType: null });
+                            newVariants.push({ title: unitTitle, price: Number(latest.price) || 0, flex: false, unit: rawUnit || 'per unit', cost: baseCost, variantType: null, payoutRate: latest.payoutRate });
                             if (latest.wholesalePrice && Number(latest.wholesalePrice) > 0) {
                                 const bulkUnitStr = latest.bulkUnit || 'Carton';
                                 const wholesaleRemaining = window.getRemainingProductStock ? window.getRemainingProductStock(latest.id || latest.name, 'wholesale') : Infinity;
                                 if (wholesaleRemaining > 0) {
-                                    newVariants.push({ title: bulkUnitStr, price: Number(latest.wholesalePrice), flex: false, unit: 'per ' + bulkUnitStr.toLowerCase(), cost: baseCost * (latest.pieces || 1), variantType: 'wholesale' });
+                                    newVariants.push({ title: bulkUnitStr, price: Number(latest.wholesalePrice), flex: false, unit: 'per ' + bulkUnitStr.toLowerCase(), cost: baseCost * (latest.pieces || 1), variantType: 'wholesale', payoutRate: latest.payoutRate });
                                 }
                             }
                         }
