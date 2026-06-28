@@ -251,8 +251,8 @@ function _pdRenderDetails(p) {
             : (p.profitPercent || '—');
 
         const isDefaultFlex = p.allowUserFlexiblePricing && p.flexibleVariants && p.flexibleVariants.some(fv => fv.startsWith('Default'));
-        const payout = (p.isFlexible || isDefaultFlex) ? 0 : Math.round(Math.max(0, profit) * (payoutRate / 100));
-        const formatPayout = payout;
+        const payout = (p.isFlexible || isDefaultFlex) ? 0 : Math.max(0, profit) * (payoutRate / 100);
+        const formatPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
 
         const row = (label, value, bg, border) =>
             `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:${bg};border-radius:12px;border:1px solid ${border};">` +
@@ -406,8 +406,8 @@ function _pdRenderDetails(p) {
                 ? parseFloat(s[t.profitPctKey]).toFixed(2).replace(/\.?0+$/, '')
                 : ((costV > 0 && profitV > 0) ? ((profitV / costV) * 100).toFixed(2).replace(/\.?0+$/, '') : '—');
             const isTierFlexible = p.allowUserFlexiblePricing && p.flexibleVariants && (p.flexibleVariants.includes(title) || (title === 'Default' && p.flexibleVariants.some(fv => fv.startsWith('Default ('))));
-            const payV = isTierFlexible ? 0 : Math.round(Math.max(0, profitV) * (payoutRate / 100));
-            const formPayV = payV;
+            const payV = isTierFlexible ? 0 : Math.max(0, profitV) * (payoutRate / 100);
+            const formPayV = Number.isInteger(payV) ? payV : payV.toFixed(2);
 
             html += `<div style="background:${t.bg};border:1px solid ${t.border};border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;">` +
                 `<span style="font-size:0.8rem;font-weight:800;color:${t.color};text-transform:uppercase;border-bottom:1px solid ${t.border};padding-bottom:6px;">${title} Format</span>`;

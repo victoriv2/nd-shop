@@ -100,8 +100,10 @@ function initAddProductModalLogic() {
     if (newProductPrice && apmPayoutValue) {
         newProductPrice.addEventListener('input', () => {
             const price = parseFloat(newProductPrice.value) || 0;
-            const payout = Math.round(price * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100)); // 2%
-            const formattedPayout = payout;
+            const payout = price * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100); // 2%
+
+            // Format number (e.g., 20.00 if it has decimals, else just 20)
+            const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
             apmPayoutValue.textContent = `₦${formattedPayout} (Payout)`;
         });
     }
@@ -121,8 +123,8 @@ function initAddProductModalLogic() {
                 return;
             }
 
-            const payout = Math.round(price * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100));
-            const formattedPayout = payout;
+            const payout = price * ((parseFloat(localStorage.getItem('nd_payout_rate')) || 2) / 100);
+            const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
 
             // Create new DOM element for product card
             const newCard = document.createElement('div');

@@ -648,7 +648,7 @@ function _buildEditableOrderTable(req, id) {
                         } else {
                             const totalCost = currentQty * (activeVariant.cost || 0);
                             const profit = total - totalCost;
-                            item.payout = Math.round(Math.max(0, profit) * (payoutRate / 100));
+                            item.payout = Math.max(0, profit) * (payoutRate / 100);
                         }
                     } else {
                         item.payout = 0;

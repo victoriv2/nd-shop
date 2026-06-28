@@ -224,12 +224,12 @@ function updateCartItemQty(index, delta) {
                 if (cart[index].isFlexible) {
                     cart[index].payout = 0;
                 } else if (isFlat) {
-                    cart[index].payout = Math.round(cart[index].qty * payoutRate);
+                    cart[index].payout = cart[index].qty * payoutRate;
                 } else {
                     const costVal = cart[index].unitCost !== undefined ? cart[index].unitCost : 0;
                     const totalCost = cart[index].qty * costVal;
                     const profit = cart[index].total - totalCost;
-                    cart[index].payout = Math.round(Math.max(0, profit) * (payoutRate / 100));
+                    cart[index].payout = Math.max(0, profit) * (payoutRate / 100);
                 }
             } else {
                 cart[index].payout = 0;
@@ -331,9 +331,9 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             if (cart[existingIndex].isFlexible) {
                 cart[existingIndex].payout = 0;
             } else if (isFlat) {
-                cart[existingIndex].payout = Math.round(cart[existingIndex].qty * payoutRate);
+                cart[existingIndex].payout = cart[existingIndex].qty * payoutRate;
             } else {
-                cart[existingIndex].payout = Math.round(Math.max(0, profit) * (payoutRate / 100));
+                cart[existingIndex].payout = Math.max(0, profit) * (payoutRate / 100);
             }
         }
     } else {
@@ -353,12 +353,12 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             if (isFlexible || isCustom) {
                 payout = 0;
             } else if (isFlat) {
-                payout = Math.round(qty * payoutRate);
+                payout = qty * payoutRate;
             } else {
                 const costVal = unitCost !== undefined ? unitCost : 0;
                 const totalCost = qty * costVal;
                 const profit = total - totalCost;
-                payout = Math.round(Math.max(0, profit) * (payoutRate / 100));
+                payout = Math.max(0, profit) * (payoutRate / 100);
             }
         }
 

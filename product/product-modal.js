@@ -586,13 +586,13 @@ function initProductModalLogic() {
             }
             let payout = 0;
             if (isFlat) {
-                payout = Math.round(payoutRate * currentQuantity);
+                payout = payoutRate * currentQuantity;
             } else {
                 const totalItemCost = baseCostValue * currentQuantity;
                 const profit = totalCost - totalItemCost;
-                payout = Math.round(Math.max(0, profit) * (payoutRate / 100));
+                payout = Math.max(0, profit) * (payoutRate / 100);
             }
-            const formattedPayout = payout;
+            const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
             if (payoutDisplay) {
                 const rateText = isFlat ? `Fixed Reward` : `${payoutRate}% Reward`;
                 payoutDisplay.textContent = `${rateText} (+₦${formattedPayout})`;
@@ -738,7 +738,7 @@ function initProductModalLogic() {
 
             const totalItemCost = baseCostValue * currentQuantity;
             const profit = totalCost - totalItemCost;
-            payout = Math.round(Math.max(0, profit) * (payoutRate / 100));
+            payout = Math.max(0, profit) * (payoutRate / 100);
         }
 
         // Visual Feedback

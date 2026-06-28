@@ -1641,8 +1641,8 @@ PAYOUT PURCHASES:
         const total = Number(data.total) || (Number(data.qty || 1) * Number(data.unitPrice || 0));
         const unitPrice = Number(data.unitPrice) || (data.qty ? Math.round(total / data.qty) : total);
         const payoutRate = parseFloat(localStorage.getItem('nd_payout_rate') || '2');
-        const payoutAmt = Math.round(total * (payoutRate / 100));
-        const formattedPayout = payoutAmt;
+        const payoutAmt = total * (payoutRate / 100);
+        const formattedPayout = Number.isInteger(payoutAmt) ? payoutAmt : payoutAmt.toFixed(2);
 
         div.innerHTML = `
             <div class="ai-review-card" id="${cardId}" style="border-left: 4px solid #8b5cf6;">
