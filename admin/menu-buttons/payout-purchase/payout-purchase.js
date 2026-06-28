@@ -1125,7 +1125,7 @@ function _verifyPPUser(searchTerm) {
 
         ppUserPayoutBalance = typeof calculateTrueSpendableBalance === 'function' ? calculateTrueSpendableBalance(user.id) : 0;
 
-        document.getElementById('ppUserBalance').textContent = `₦${ppUserPayoutBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('ppUserBalance').textContent = `₦${Math.round(ppUserPayoutBalance).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
         errorEl.style.display = 'none';
         infoEl.style.display = 'block';

@@ -803,8 +803,8 @@ ${JSON.stringify(cleanUserRequests)}
             const cardId = 'ai-prod-' + Date.now();
             const price = Number(prod.price) || 0;
             const payoutRate = parseFloat(localStorage.getItem('nd_payout_rate') || '2');
-            const payout = price * (payoutRate / 100);
-            const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
+            const payout = Math.round(price * (payoutRate / 100));
+            const formattedPayout = payout;
 
             const div = document.createElement('div');
             div.className = 'ai-message system-msg';
@@ -832,10 +832,9 @@ ${JSON.stringify(cleanUserRequests)}
                         <div class="ai-review-row" style="margin-top:4px;">
                             <span class="ai-review-label">Total Estimate</span>
                             <span class="ai-review-value" id="totalEst-${cardId}" style="font-weight:800; color:#0f172a; font-size:16px;">₦${(price * initialQty).toLocaleString()}</span>
-                        </div>
-                        <div class="ai-review-row" style="margin-top:4px; background:#f0fdf4; padding:6px 8px; border-radius:8px;">
+                                              <div class="ai-review-row" style="margin-top:4px; background:#f0fdf4; padding:6px 8px; border-radius:8px;">
                             <span class="ai-review-label" style="color:#16a34a;">Expected Payout</span>
-                            <span class="ai-review-value" id="payoutEst-${cardId}" style="color:#16a34a; font-weight:600;">${payoutRate}% Payout (+₦${Number.isInteger(price * initialQty * (payoutRate / 100)) ? (price * initialQty * (payoutRate / 100)) : (price * initialQty * (payoutRate / 100)).toFixed(2)})</span>
+                            <span class="ai-review-value" id="payoutEst-${cardId}" style="color:#16a34a; font-weight:600;">${payoutRate}% Payout (+₦${Math.round(price * initialQty * (payoutRate / 100))})</span>
                         </div>
                     </div>
                     <div class="ai-review-card-actions">
@@ -854,8 +853,8 @@ ${JSON.stringify(cleanUserRequests)}
 
             function updateCardTotals() {
                 const total = price * qty;
-                const p = total * (payoutRate / 100);
-                const fp = Number.isInteger(p) ? p : p.toFixed(2);
+                const p = Math.round(total * (payoutRate / 100));
+                const fp = p;
                 qtyValEl.textContent = qty;
                 totalEstEl.textContent = '₦' + total.toLocaleString();
                 payoutEstEl.textContent = payoutRate + '% Payout (+₦' + fp + ')';

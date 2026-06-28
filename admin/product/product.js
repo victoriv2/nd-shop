@@ -491,8 +491,8 @@ function initAdminProductLogic() {
                 displayPrice = '<strong>₦' + Math.round(priceVal).toLocaleString() + '</strong> ' + (p.unit || '');
             }
 
-            const payout = (p.isFlexible || p.isCustom) ? 0 : Math.max(0, profitVal) * (currentRate / 100);
-            const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
+            const payout = (p.isFlexible || p.isCustom) ? 0 : Math.round(Math.max(0, profitVal) * (currentRate / 100));
+            const formattedPayout = payout;
             const safeName = p.name.replace(/'/g, "\\'");
             
             const payoutHTML = payoutEnabled ? `
@@ -1513,8 +1513,8 @@ function initAdminProductLogic() {
             const profitValStr = document.getElementById('adminNewProductProfit')?.value || '';
             const profit = parseFloat(profitValStr) || 0;
             if (profit > 0) {
-                const payoutReturn = profit * (rateNum / 100);
-                if (apmVal) apmVal.textContent = `₦${payoutReturn.toFixed(1)}/unit (${rateStr}%)`;
+                const payoutReturn = Math.round(profit * (rateNum / 100));
+                if (apmVal) apmVal.textContent = `₦${payoutReturn}/unit (${rateStr}%)`;
             } else {
                 if (apmVal) apmVal.textContent = `Calculating... (${rateStr}%)`;
             }
@@ -1547,8 +1547,8 @@ function initAdminProductLogic() {
     function _calcSpecPayoutHTML(id, rateNum, rateStr) {
         const val = parseFloat(document.getElementById(id)?.value) || 0;
         if (val <= 0) return '...';
-        const payout = val * (rateNum / 100);
-        return `₦${Number.isInteger(payout) ? payout : payout.toFixed(2)} (${rateStr}%)`;
+        const payout = Math.round(val * (rateNum / 100));
+        return `₦${payout} (${rateStr}%)`;
     }
 
     function updateProfitBadge() {
@@ -2549,8 +2549,8 @@ window.generateProductPDF = function (btn) {
             displayPrice = '<span style="font-size: 18px; font-weight: 900; color: #6366f1;">₦' + Math.round(priceVal).toLocaleString() + '</span> <span style="font-size: 13px; color: #888; font-weight: 500; margin-left: 4px;">' + (p.unit || '') + '</span>';
         }
 
-        const payout = priceVal * 0.02;
-        const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
+        const payout = Math.round(priceVal * 0.02);
+        const formattedPayout = payout;
         cardsHtml += `
             <div style="break-inside: avoid; border: 1px solid #edf1f7; border-radius: 12px; padding: 16px; background: #fffcf8; box-shadow: 0 4px 6px rgba(27, 38, 59,0.04); margin-bottom: 20px;">
                 <div style="font-weight: 800; font-size: 16px; color: #333; margin-bottom: 8px;">${p.name}</div>

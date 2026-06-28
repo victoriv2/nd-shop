@@ -864,9 +864,9 @@ function _initRestockProductForm() {
         const customPayoutVal = document.getElementById('rsCustomPayoutValue');
 
         if (payoutEnabled) {
-            const payout = Math.max(0, profit) * (payoutRate / 100);
+            const payout = Math.round(Math.max(0, profit) * (payoutRate / 100));
             if (payoutDisplay) {
-                payoutDisplay.textContent = `₦${Number.isInteger(payout) ? payout : payout.toFixed(2)} (${payoutRate}%)`;
+                payoutDisplay.textContent = `₦${payout} (${payoutRate}%)`;
                 payoutDisplay.style.color = '';
             }
             if (payoutPreview) {
@@ -1319,9 +1319,9 @@ function _initRestockProductForm() {
             const bagFinal = parseFloat(specBagPrice.value) || 0;
             const custFinal = parseFloat(specCustardPrice.value) || 0;
             const cupFinal = parseFloat(specCupPrice.value) || 0;
-            if (rsBagPayEl) rsBagPayEl.textContent = `₦${(Math.max(0, bagProfit) * payoutRateVal / 100).toFixed(2)} (${payoutRateVal}%)`;
-            if (rsCustardPayEl) rsCustardPayEl.textContent = custFinal > 0 ? `₦${(Math.max(0, custardProfit) * payoutRateVal / 100).toFixed(2)} (${payoutRateVal}%)` : `₦0 (${payoutRateVal}%)`;
-            if (rsCupPayEl) rsCupPayEl.textContent = cupFinal > 0 ? `₦${(Math.max(0, cupProfit) * payoutRateVal / 100).toFixed(2)} (${payoutRateVal}%)` : `₦0 (${payoutRateVal}%)`;
+            if (rsBagPayEl) rsBagPayEl.textContent = `₦${Math.round(Math.max(0, bagProfit) * payoutRateVal / 100)} (${payoutRateVal}%)`;
+            if (rsCustardPayEl) rsCustardPayEl.textContent = custFinal > 0 ? `₦${Math.round(Math.max(0, custardProfit) * payoutRateVal / 100)} (${payoutRateVal}%)` : `₦0 (${payoutRateVal}%)`;
+            if (rsCupPayEl) rsCupPayEl.textContent = cupFinal > 0 ? `₦${Math.round(Math.max(0, cupProfit) * payoutRateVal / 100)} (${payoutRateVal}%)` : `₦0 (${payoutRateVal}%)`;
         } else {
             if (rsSpecPayoutParent) { rsSpecPayoutParent.style.opacity = '0.5'; rsSpecPayoutParent.style.filter = 'grayscale(1)'; }
             if (rsBagPayEl) rsBagPayEl.textContent = 'Disabled';
@@ -1786,8 +1786,8 @@ function openRestockDetailModal(productName, dateAdded) {
             const profitStr = profit > 0 ? '\u20a6' + profit.toLocaleString() : '\u2014';
             const profitPct = (retailCost > 0 && profit > 0) ? ((profit / retailCost) * 100).toFixed(2).replace(/\.?0+$/, '') : (p.profitPercent || '\u2014');
             
-            const payout = p.isFlexible ? 0 : Math.max(0, profit) * (payoutRate / 100);
-            const formatPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
+            const payout = p.isFlexible ? 0 : Math.round(Math.max(0, profit) * (payoutRate / 100));
+            const formatPayout = payout;
             
             const wholesaleProfit = parseFloat(p.wholesaleProfit) || 0;
             const wholesaleProfitStr = wholesaleProfit > 0 ? '\u20a6' + wholesaleProfit.toLocaleString() : '\u2014';
@@ -1920,8 +1920,8 @@ function openRestockDetailModal(productName, dateAdded) {
                 var costV = t.costVal || 0;
                 var profitV = (s[t.profitKey] !== undefined && s[t.profitKey] !== '') ? parseFloat(s[t.profitKey]) : ((price && costV) ? parseFloat((price - costV).toFixed(2)) : 0);
                 var profitPctV = (s[t.profitPctKey] !== undefined && s[t.profitPctKey] !== '' && parseFloat(s[t.profitPctKey]) > 0) ? parseFloat(s[t.profitPctKey]).toFixed(2).replace(/\.?0+$/, '') : ((costV > 0 && profitV > 0) ? ((profitV / costV) * 100).toFixed(2).replace(/\.?0+$/, '') : '\u2014');
-                var payV = price * (payoutRate / 100);
-                var formPayV = Number.isInteger(payV) ? payV : payV.toFixed(2);
+                var payV = Math.round(price * (payoutRate / 100));
+                var formPayV = payV;
                 
                 html += '<div style="background: ' + t.bg + '; border: 1px solid ' + t.border + '; border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;">'
                     + '<span style="font-size: 0.8rem; font-weight: 800; color: ' + t.color + '; text-transform: uppercase; border-bottom: 1px solid ' + t.border + '; padding-bottom: 6px;">' + title + ' Format</span>';
@@ -2791,8 +2791,8 @@ function _rsEditPriceDefCalc() {
     
     // Payout logic
     const prRate = parseFloat(localStorage.getItem('nd_payout_rate')) || 2;
-    const pay = (parseFloat(document.getElementById('rsEditPriceDefPrice').value) || 0) * (prRate / 100);
-    const fp = Number.isInteger(pay) ? pay : pay.toFixed(2);
+    const pay = Math.round((parseFloat(document.getElementById('rsEditPriceDefPrice').value) || 0) * (prRate / 100));
+    const fp = pay;
     const payoutEl = document.getElementById('rsEditPricePayoutValue');
     if (payoutEl) {
         payoutEl.textContent = `₦${fp} (${prRate}%)`;
@@ -2821,16 +2821,16 @@ function _rsEditPriceAnaCalc() {
     const prRate = parseFloat(localStorage.getItem('nd_payout_rate')) || 2;
     
     const bgP = parseFloat(document.getElementById('rsEditPriceAnaBagPrice').value) || 0;
-    const pay1 = bgP * (prRate / 100);
-    document.getElementById('rsEditPriceAnaBagPayout').textContent = `₦${Number.isInteger(pay1) ? pay1 : pay1.toFixed(2)} (${prRate}%)`;
+    const pay1 = Math.round(bgP * (prRate / 100));
+    document.getElementById('rsEditPriceAnaBagPayout').textContent = `₦${pay1} (${prRate}%)`;
     
     const cP = parseFloat(document.getElementById('rsEditPriceAnaCustardPrice').value) || 0;
-    const pay2 = cP * (prRate / 100);
-    document.getElementById('rsEditPriceAnaCustardPayout').textContent = `₦${Number.isInteger(pay2) ? pay2 : pay2.toFixed(2)} (${prRate}%)`;
+    const pay2 = Math.round(cP * (prRate / 100));
+    document.getElementById('rsEditPriceAnaCustardPayout').textContent = `₦${pay2} (${prRate}%)`;
     
     const cupP = parseFloat(document.getElementById('rsEditPriceAnaCupPrice').value) || 0;
-    const pay3 = cupP * (prRate / 100);
-    document.getElementById('rsEditPriceAnaCupPayout').textContent = `₦${Number.isInteger(pay3) ? pay3 : pay3.toFixed(2)} (${prRate}%)`;
+    const pay3 = Math.round(cupP * (prRate / 100));
+    document.getElementById('rsEditPriceAnaCupPayout').textContent = `₦${pay3} (${prRate}%)`;
 }
 
 
@@ -2916,8 +2916,8 @@ function _rsEditPriceDefCalc() {
     
     // Payout logic
     const prRate = parseFloat(localStorage.getItem('nd_payout_rate')) || 2;
-    const pay = (parseFloat(document.getElementById('rsEditPriceDefPrice').value) || 0) * (prRate / 100);
-    const fp = Number.isInteger(pay) ? pay : pay.toFixed(2);
+    const pay = Math.round((parseFloat(document.getElementById('rsEditPriceDefPrice').value) || 0) * (prRate / 100));
+    const fp = pay;
     const payoutEl = document.getElementById('rsEditPricePayoutValue');
     if (payoutEl) {
         payoutEl.textContent = `₦${fp} (${prRate}%)`;
@@ -2946,16 +2946,16 @@ function _rsEditPriceAnaCalc() {
     const prRate = parseFloat(localStorage.getItem('nd_payout_rate')) || 2;
     
     const bgP = parseFloat(document.getElementById('rsEditPriceAnaBagPrice').value) || 0;
-    const pay1 = bgP * (prRate / 100);
-    document.getElementById('rsEditPriceAnaBagPayout').textContent = `₦${Number.isInteger(pay1) ? pay1 : pay1.toFixed(2)} (${prRate}%)`;
+    const pay1 = Math.round(bgP * (prRate / 100));
+    document.getElementById('rsEditPriceAnaBagPayout').textContent = `₦${pay1} (${prRate}%)`;
     
     const cP = parseFloat(document.getElementById('rsEditPriceAnaCustardPrice').value) || 0;
-    const pay2 = cP * (prRate / 100);
-    document.getElementById('rsEditPriceAnaCustardPayout').textContent = `₦${Number.isInteger(pay2) ? pay2 : pay2.toFixed(2)} (${prRate}%)`;
+    const pay2 = Math.round(cP * (prRate / 100));
+    document.getElementById('rsEditPriceAnaCustardPayout').textContent = `₦${pay2} (${prRate}%)`;
     
     const cupP = parseFloat(document.getElementById('rsEditPriceAnaCupPrice').value) || 0;
-    const pay3 = cupP * (prRate / 100);
-    document.getElementById('rsEditPriceAnaCupPayout').textContent = `₦${Number.isInteger(pay3) ? pay3 : pay3.toFixed(2)} (${prRate}%)`;
+    const pay3 = Math.round(cupP * (prRate / 100));
+    document.getElementById('rsEditPriceAnaCupPayout').textContent = `₦${pay3} (${prRate}%)`;
 }
 
 
@@ -3600,8 +3600,8 @@ function _rsEditPriceDefCalc(triggerId = null) {
     
     // Payout logic
     const prRate = parseFloat(localStorage.getItem('nd_payout_rate')) || 2;
-    const pay = finalPrice * (prRate / 100);
-    const fp = Number.isInteger(pay) ? pay : pay.toFixed(2);
+    const pay = Math.round(finalPrice * (prRate / 100));
+    const fp = pay;
     const payoutEl = document.getElementById('rsEditPricePayoutValue');
     if (payoutEl) {
         payoutEl.textContent = `₦${fp} (${prRate}%)`;
@@ -3667,19 +3667,19 @@ function _rsEditPriceAnaCalc(triggerId = null) {
     const prRate = parseFloat(localStorage.getItem('nd_payout_rate')) || 2;
     
     const bgPVal = parseFloat(document.getElementById('rsEditPriceAnaBagPrice').value) || 0;
-    const pay1 = bgPVal * (prRate / 100);
+    const pay1 = Math.round(bgPVal * (prRate / 100));
     const el1 = document.getElementById('rsEditPriceAnaBagPayout');
-    if (el1) el1.textContent = `₦${Number.isInteger(pay1) ? pay1 : pay1.toFixed(2)} (${prRate}%)`;
+    if (el1) el1.textContent = `₦${pay1} (${prRate}%)`;
     
     const cPVal = parseFloat(document.getElementById('rsEditPriceAnaCustardPrice').value) || 0;
-    const pay2 = cPVal * (prRate / 100);
+    const pay2 = Math.round(cPVal * (prRate / 100));
     const el2 = document.getElementById('rsEditPriceAnaCustardPayout');
-    if (el2) el2.textContent = `₦${Number.isInteger(pay2) ? pay2 : pay2.toFixed(2)} (${prRate}%)`;
+    if (el2) el2.textContent = `₦${pay2} (${prRate}%)`;
     
     const cupPVal = parseFloat(document.getElementById('rsEditPriceAnaCupPrice').value) || 0;
-    const pay3 = cupPVal * (prRate / 100);
+    const pay3 = Math.round(cupPVal * (prRate / 100));
     const el3 = document.getElementById('rsEditPriceAnaCupPayout');
-    if (el3) el3.textContent = `₦${Number.isInteger(pay3) ? pay3 : pay3.toFixed(2)} (${prRate}%)`;
+    if (el3) el3.textContent = `₦${pay3} (${prRate}%)`;
 }
 
 window._rsOpenEditPriceForm = function() {
