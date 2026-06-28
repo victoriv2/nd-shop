@@ -736,6 +736,8 @@ function initProductModalLogic() {
                 payoutRate = parseFloat(currentProduct.payoutRate);
             }
 
+            const totalItemCost = baseCostValue * currentQuantity;
+            const profit = totalCost - totalItemCost;
             payout = Math.round(Math.max(0, profit) * (payoutRate / 100));
         }
 

@@ -185,6 +185,7 @@ window.loadProductTab = function() {
                                 `;
                             } else if (typeof item.price === 'number') {
                                 const costVal = item.rawProduct ? (item.rawProduct.unitCost !== undefined ? Number(item.rawProduct.unitCost) : (Number(item.rawProduct.cost) || 0)) : 0;
+                                const profit = item.price - costVal;
                                 const payout = Math.round(Math.max(0, profit) * (currentRate / 100));
                                 const formattedPayout = payout;
                                 payoutHTML = payoutEnabled ? `
