@@ -391,6 +391,10 @@
                         const val = typeof op.data.value === 'object' ? JSON.stringify(op.data.value) : String(op.data.value ?? '');
                         nativeSetItem.call(localStorage, key, val);
                         stateCache[key] = val;
+                        // Notify all local-storage-update listeners (product.js, payout.js, etc.)
+                        // so they re-render immediately without waiting for the 1-second polling cycle.
+                        const evt = new CustomEvent('local-storage-update', { detail: { key: key, value: val } });
+                        window.dispatchEvent(evt);
                     }
                 } else if (op.type === 'DELETE') {
                     localStorage.removeItem(op.id);
