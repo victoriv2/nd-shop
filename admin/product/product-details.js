@@ -250,9 +250,8 @@ function _pdRenderDetails(p) {
             ? ((profit / retailCost) * 100).toFixed(2).replace(/\.?0+$/, '')
             : (p.profitPercent || '—');
 
-        const isDefaultFlex = p.allowUserFlexiblePricing && p.flexibleVariants && p.flexibleVariants.some(fv => fv.startsWith('Default'));
-        const isPayoutDisabled = p.isFlexible || isDefaultFlex || p.isCustom;
-        const payout = isPayoutDisabled ? 0 : Math.max(0, profit) * (payoutRate / 100);
+        const isPayoutDisabled = p.isCustom;
+        const payout = (parseFloat(p.price) || 0) * (payoutRate / 100);
         const formatPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
 
         const row = (label, value, bg, border) =>
@@ -406,10 +405,9 @@ function _pdRenderDetails(p) {
             const profitPctV = (s[t.profitPctKey] !== undefined && s[t.profitPctKey] !== '' && parseFloat(s[t.profitPctKey]) > 0)
                 ? parseFloat(s[t.profitPctKey]).toFixed(2).replace(/\.?0+$/, '')
                 : ((costV > 0 && profitV > 0) ? ((profitV / costV) * 100).toFixed(2).replace(/\.?0+$/, '') : '—');
-            const isTierFlexible = p.allowUserFlexiblePricing && p.flexibleVariants && (p.flexibleVariants.includes(title) || (title === 'Default' && p.flexibleVariants.some(fv => fv.startsWith('Default ('))));
-            const payV = isTierFlexible ? 0 : Math.max(0, profitV) * (payoutRate / 100);
+            const payV = (parseFloat(price) || 0) * (payoutRate / 100);
             const formPayV = Number.isInteger(payV) ? payV : payV.toFixed(2);
-
+ 
             html += `<div style="background:${t.bg};border:1px solid ${t.border};border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;">` +
                 `<span style="font-size:0.8rem;font-weight:800;color:${t.color};text-transform:uppercase;border-bottom:1px solid ${t.border};padding-bottom:6px;">${title} Format</span>`;
             if (t.perParent) {
@@ -431,15 +429,9 @@ function _pdRenderDetails(p) {
                 `<span style="font-size:0.8rem;font-weight:600;color:#475569;">Retail Price</span>` +
                 `<span style="font-size:1.1rem;font-weight:900;color:${t.color};">₦${price > 0 ? Math.round(price).toLocaleString() : '0'}</span></div>`;
             if (payoutEnabled) {
-                if (isTierFlexible) {
-                    html += `<div style="display:flex;justify-content:space-between;align-items:center;opacity:0.5;">` +
-                        `<span style="font-size:0.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;">Payout</span>` +
-                        `<span style="font-weight:700;color:#94a3b8;font-size:0.85rem;">Disabled</span></div>`;
-                } else {
-                    html += `<div style="display:flex;justify-content:space-between;align-items:center;">` +
-                        `<span style="font-size:0.75rem;font-weight:600;color:#64748b;text-transform:uppercase;">Payout</span>` +
-                        `<span style="font-weight:700;color:#16a34a;font-size:0.85rem;">+₦${formPayV} (${payoutRate}%)</span></div>`;
-                }
+                html += `<div style="display:flex;justify-content:space-between;align-items:center;">` +
+                    `<span style="font-size:0.75rem;font-weight:600;color:#64748b;text-transform:uppercase;">Payout</span>` +
+                    `<span style="font-weight:700;color:#16a34a;font-size:0.85rem;">+₦${formPayV} (${payoutRate}%)</span></div>`;
             }
             html += `</div>`;
         });
