@@ -184,9 +184,7 @@ window.loadProductTab = function() {
                                         </div>
                                 `;
                             } else if (typeof item.price === 'number') {
-                                const costVal = item.rawProduct ? (item.rawProduct.unitCost !== undefined ? Number(item.rawProduct.unitCost) : (Number(item.rawProduct.cost) || 0)) : 0;
-                                const profit = item.price - costVal;
-                                const payout = Math.max(0, profit) * (currentRate / 100);
+                                const payout = item.price * (currentRate / 100);
                                 const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
                                 payoutHTML = payoutEnabled ? `
                                         <div class="product-info-right">

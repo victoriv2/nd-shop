@@ -324,16 +324,12 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
                 payoutRate = parseFloat(cart[existingIndex].customPayoutRate);
                 isFlat = cart[existingIndex].customPayoutType === 'flat';
             }
-            const costVal = cart[existingIndex].unitCost !== undefined ? cart[existingIndex].unitCost : 0;
-            const totalCost = cart[existingIndex].qty * costVal;
-            const profit = cart[existingIndex].total - totalCost;
-            
             if (cart[existingIndex].isFlexible) {
                 cart[existingIndex].payout = 0;
             } else if (isFlat) {
                 cart[existingIndex].payout = cart[existingIndex].qty * payoutRate;
             } else {
-                cart[existingIndex].payout = Math.max(0, profit) * (payoutRate / 100);
+                cart[existingIndex].payout = cart[existingIndex].total * (payoutRate / 100);
             }
         }
     } else {
@@ -355,10 +351,7 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             } else if (isFlat) {
                 payout = qty * payoutRate;
             } else {
-                const costVal = unitCost !== undefined ? unitCost : 0;
-                const totalCost = qty * costVal;
-                const profit = total - totalCost;
-                payout = Math.max(0, profit) * (payoutRate / 100);
+                payout = total * (payoutRate / 100);
             }
         }
 
