@@ -329,7 +329,10 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             } else if (isFlat) {
                 cart[existingIndex].payout = cart[existingIndex].qty * payoutRate;
             } else {
-                cart[existingIndex].payout = cart[existingIndex].total * (payoutRate / 100);
+                const costVal = cart[existingIndex].unitCost !== undefined ? cart[existingIndex].unitCost : 0;
+                const totalCost = cart[existingIndex].qty * costVal;
+                const profit = cart[existingIndex].total - totalCost;
+                cart[existingIndex].payout = Math.max(0, profit) * (payoutRate / 100);
             }
         }
     } else {
@@ -351,7 +354,10 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             } else if (isFlat) {
                 payout = qty * payoutRate;
             } else {
-                payout = total * (payoutRate / 100);
+                const costVal = unitCost !== undefined ? unitCost : 0;
+                const totalCost = qty * costVal;
+                const profit = total - totalCost;
+                payout = Math.max(0, profit) * (payoutRate / 100);
             }
         }
 

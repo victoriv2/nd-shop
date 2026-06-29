@@ -491,7 +491,7 @@ function initAdminProductLogic() {
                 displayPrice = '<strong>₦' + Math.round(priceVal).toLocaleString() + '</strong> ' + (p.unit || '');
             }
 
-            const payout = p.isCustom ? 0 : priceVal * (currentRate / 100);
+            const payout = p.isCustom ? 0 : Math.max(0, profitVal) * (currentRate / 100);
             const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
             const safeName = p.name.replace(/'/g, "\\'");
             
@@ -1510,10 +1510,10 @@ function initAdminProductLogic() {
 
         // Regular Default Product Update
         if (dfltParent && dfltParent.style.display !== 'none') {
-            const priceValStr = priceInput?.value || '';
-            const price = parseFloat(priceValStr) || 0;
-            if (price > 0) {
-                const payoutReturn = price * (rateNum / 100);
+            const profitValStr = document.getElementById('adminNewProductProfit')?.value || '';
+            const profit = parseFloat(profitValStr) || 0;
+            if (profit > 0) {
+                const payoutReturn = profit * (rateNum / 100);
                 if (apmVal) apmVal.textContent = `₦${payoutReturn.toFixed(1)}/unit (${rateStr}%)`;
             } else {
                 if (apmVal) apmVal.textContent = `Calculating... (${rateStr}%)`;
@@ -1528,9 +1528,9 @@ function initAdminProductLogic() {
         // Analytical Product Update
         if (specParent && dfltParent && dfltParent.style.display === 'none') {
             // ... existing analytical payout calculation
-            const bagHTML = _calcSpecPayoutHTML('adminSpecBagPrice', rateNum, rateStr);
-            const custardHTML = _calcSpecPayoutHTML('adminSpecCustardPrice', rateNum, rateStr);
-            const cupHTML = _calcSpecPayoutHTML('adminSpecCupPrice', rateNum, rateStr);
+            const bagHTML = _calcSpecPayoutHTML('adminSpecBagProfit', rateNum, rateStr);
+            const custardHTML = _calcSpecPayoutHTML('adminSpecCustardProfit', rateNum, rateStr);
+            const cupHTML = _calcSpecPayoutHTML('adminSpecCupProfit', rateNum, rateStr);
 
             const bagLbl = document.getElementById('adminSpecBagTitle') ? document.getElementById('adminSpecBagTitle').value || 'Container 1' : 'Container 1';
             const custardLbl = document.getElementById('adminSpecCustardTitle') ? document.getElementById('adminSpecCustardTitle').value || 'Container 2' : 'Container 2';
