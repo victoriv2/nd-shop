@@ -29,36 +29,6 @@ async function openFinancialSettings() {
                             const newRateStr = input.value;
                             const newRate = parseFloat(newRateStr) || 2;
                             
-                            const policyNewer = document.getElementById('policyNewer');
-                            const isNewerOnly = policyNewer && policyNewer.classList.contains('selected');
-                            
-                            let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-                            const oldRate = parseFloat(localStorage.getItem('nd_payout_rate')) || 2;
-
-                            if (isNewerOnly) {
-                                // Freeze the current global rate into all existing products that don't have one
-                                products.forEach(p => {
-                                    if (p.payoutRate === undefined) {
-                                        p.payoutRate = oldRate;
-                                    }
-                                    if (p.isSpecial && p.packTypes) {
-                                        if (p.packTypes.bag && p.packTypes.bag.payoutRate === undefined) p.packTypes.bag.payoutRate = oldRate;
-                                        if (p.packTypes.custard && p.packTypes.custard.payoutRate === undefined) p.packTypes.custard.payoutRate = oldRate;
-                                        if (p.packTypes.cup && p.packTypes.cup.payoutRate === undefined) p.packTypes.cup.payoutRate = oldRate;
-                                    }
-                                });
-                            } else {
-                                // Apply Retroactively: clear frozen rates so everything uses the new global rate
-                                products.forEach(p => {
-                                    delete p.payoutRate;
-                                    if (p.isSpecial && p.packTypes) {
-                                        if (p.packTypes.bag) delete p.packTypes.bag.payoutRate;
-                                        if (p.packTypes.custard) delete p.packTypes.custard.payoutRate;
-                                        if (p.packTypes.cup) delete p.packTypes.cup.payoutRate;
-                                    }
-                                });
-                            }
-                            localStorage.setItem('nd_products_data', JSON.stringify(products));
                             localStorage.setItem('nd_payout_rate', newRate);
 
                             const toggle = document.getElementById('payoutEnableSwitch');
@@ -180,23 +150,7 @@ function closeFinancialSettings() {
     }
 }
 
-/**
- * UI Toggle: Select strategy without business logic.
- */
-function selectStrategy(strategy) {
-    const policyNewer = document.getElementById('policyNewer');
-    const policyAll = document.getElementById('policyAll');
 
-    if (policyNewer && policyAll) {
-        if (strategy === 'newer') {
-            policyNewer.classList.add('selected');
-            policyAll.classList.remove('selected');
-        } else if (strategy === 'all') {
-            policyAll.classList.add('selected');
-            policyNewer.classList.remove('selected');
-        }
-    }
-}
 
 
 
