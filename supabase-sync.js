@@ -430,8 +430,11 @@
         });
 
         if (changed) {
-            nativeSetItem.call(localStorage, localKey, JSON.stringify(currentList));
+            const val = JSON.stringify(currentList);
+            nativeSetItem.call(localStorage, localKey, val);
             stateCache[localKey] = currentList;
+            const evt = new CustomEvent('local-storage-update', { detail: { key: localKey, value: val } });
+            window.dispatchEvent(evt);
             window.dispatchEvent(new Event('nd_sync_complete'));
         }
     }

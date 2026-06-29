@@ -29,6 +29,13 @@ class RealtimeSyncEngine {
             }
         });
 
+        // Listen for local storage updates within the same tab to bypass polling delay
+        window.addEventListener('local-storage-update', (e) => {
+            if (e.detail && e.detail.key) {
+                this.broadcastChange(e.detail.key);
+            }
+        });
+
         // Also set up polling for same-tab changes (since storage event doesn't fire in same tab)
         setInterval(() => this.pollForChanges(), 1000);
 
