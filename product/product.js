@@ -40,7 +40,13 @@ window.loadProductTab = function() {
                     const saved = localStorage.getItem('nd_products_data');
                     if (saved) {
                         try {
-                            return JSON.parse(saved);
+                            const parsed = JSON.parse(saved);
+                            return parsed.map(p => ({
+                                ...p,
+                                isSpecial: p.isSpecial === true || p.isSpecial === 'true',
+                                isFlexible: p.isFlexible === true || p.isFlexible === 'true',
+                                isCustom: p.isCustom === true || p.isCustom === 'true'
+                            }));
                         } catch (e) {
                             console.error('Failed to parse products', e);
                             return [];

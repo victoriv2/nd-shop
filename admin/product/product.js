@@ -4,7 +4,12 @@ let adminProducts = [];
 const savedProducts = localStorage.getItem('nd_products_data');
 if (savedProducts) {
     try {
-        adminProducts = JSON.parse(savedProducts);
+        adminProducts = JSON.parse(savedProducts).map(p => ({
+            ...p,
+            isSpecial: p.isSpecial === true || p.isSpecial === 'true',
+            isFlexible: p.isFlexible === true || p.isFlexible === 'true',
+            isCustom: p.isCustom === true || p.isCustom === 'true'
+        }));
     } catch (e) {
         console.error('Failed to parse saved products', e);
         adminProducts = [];
@@ -20,7 +25,12 @@ function saveProductsToMemory() {
 window.reloadAdminProducts = function() {
     try {
         const saved = localStorage.getItem('nd_products_data');
-        adminProducts = saved ? JSON.parse(saved) : [];
+        adminProducts = saved ? JSON.parse(saved).map(p => ({
+            ...p,
+            isSpecial: p.isSpecial === true || p.isSpecial === 'true',
+            isFlexible: p.isFlexible === true || p.isFlexible === 'true',
+            isCustom: p.isCustom === true || p.isCustom === 'true'
+        })) : [];
     } catch(e) {
         console.error('Failed to reload admin products', e);
         adminProducts = [];

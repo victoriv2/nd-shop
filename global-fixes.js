@@ -790,7 +790,12 @@ window.getVariantTypeFromUnit = function(unit) {
  */
 window.checkProductOutOfStock = function(productNameOrId) {
     const allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-    const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared);
+    const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared).map(item => ({
+        ...item,
+        isSpecial: item.isSpecial === true || item.isSpecial === 'true',
+        isFlexible: item.isFlexible === true || item.isFlexible === 'true',
+        isCustom: item.isCustom === true || item.isCustom === 'true'
+    }));
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     
     let p = null;
@@ -964,7 +969,12 @@ window.checkProductOutOfStock = function(productNameOrId) {
 
 window.checkProductRunningLow = function(productNameOrId) {
     const allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-    const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared);
+    const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared).map(item => ({
+        ...item,
+        isSpecial: item.isSpecial === true || item.isSpecial === 'true',
+        isFlexible: item.isFlexible === true || item.isFlexible === 'true',
+        isCustom: item.isCustom === true || item.isCustom === 'true'
+    }));
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     
     let p = null;
@@ -1142,7 +1152,12 @@ window.checkProductRunningLow = function(productNameOrId) {
 
 window.getRemainingProductStock = function(productNameOrId, variantType = null, excludeRequestId = null) {
     const allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-    const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared);
+    const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared).map(item => ({
+        ...item,
+        isSpecial: item.isSpecial === true || item.isSpecial === 'true',
+        isFlexible: item.isFlexible === true || item.isFlexible === 'true',
+        isCustom: item.isCustom === true || item.isCustom === 'true'
+    }));
     let sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     
     const requests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');

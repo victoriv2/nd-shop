@@ -98,9 +98,18 @@
                     const freshQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
                     const hasPendingOps = freshQueue.some(q => q.table === tableName);
                     if (!hasPendingOps) {
+                        let serverData = data.data;
+                        if (localKey === 'nd_products_data') {
+                            serverData = serverData.map(p => ({
+                                ...p,
+                                isSpecial: p.isSpecial === true || p.isSpecial === 'true',
+                                isFlexible: p.isFlexible === true || p.isFlexible === 'true',
+                                isCustom: p.isCustom === true || p.isCustom === 'true'
+                            }));
+                        }
                         // Update localStorage with truth
-                        nativeSetItem.call(localStorage, localKey, JSON.stringify(data.data));
-                        stateCache[localKey] = data.data; // Update cache
+                        nativeSetItem.call(localStorage, localKey, JSON.stringify(serverData));
+                        stateCache[localKey] = serverData; // Update cache
                     }
                 }
             } catch (err) {
@@ -164,7 +173,24 @@
 
     // Intercept localStorage writes
     Storage.prototype.setItem = function(key, value) {
-        nativeSetItem.apply(this, arguments);
+        if (key === 'nd_products_data') {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) {
+                    const normalized = parsed.map(p => ({
+                        ...p,
+                        isSpecial: p.isSpecial === true || p.isSpecial === 'true',
+                        isFlexible: p.isFlexible === true || p.isFlexible === 'true',
+                        isCustom: p.isCustom === true || p.isCustom === 'true'
+                    }));
+                    value = JSON.stringify(normalized);
+                }
+            } catch (e) {
+                console.error('[sync] Error normalizing products on write:', e);
+            }
+        }
+        
+        nativeSetItem.call(this, key, value);
         
         if (TABLES_TO_SYNC[key]) {
             lastLocalWrite[key] = Date.now();
@@ -430,9 +456,18 @@
         });
 
         if (changed) {
-            const val = JSON.stringify(currentList);
+            let valList = currentList;
+            if (localKey === 'nd_products_data') {
+                valList = valList.map(p => ({
+                    ...p,
+                    isSpecial: p.isSpecial === true || p.isSpecial === 'true',
+                    isFlexible: p.isFlexible === true || p.isFlexible === 'true',
+                    isCustom: p.isCustom === true || p.isCustom === 'true'
+                }));
+            }
+            const val = JSON.stringify(valList);
             nativeSetItem.call(localStorage, localKey, val);
-            stateCache[localKey] = currentList;
+            stateCache[localKey] = valList;
             const evt = new CustomEvent('local-storage-update', { detail: { key: localKey, value: val } });
             window.dispatchEvent(evt);
             window.dispatchEvent(new Event('nd_sync_complete'));
