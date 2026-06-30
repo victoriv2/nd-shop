@@ -226,6 +226,11 @@ window.loadProductTab = function() {
                             // if (showNew) badges += '<span style="background: rgba(16, 185, 129, 0.9); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; backdrop-filter: blur(2px);">NEW</span>';
                             // if (showOld) badges += '<span style="background: rgba(245, 158, 11, 0.9); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; backdrop-filter: blur(2px);">OLD</span>';
 
+                            const isRunningLow = window.checkProductRunningLow && item.rawProduct && window.checkProductRunningLow(item.rawProduct.id);
+                            if (isRunningLow) {
+                                badges += '<span style="background: rgba(234, 179, 8, 0.95); color: white; padding: 2.5px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; backdrop-filter: blur(4px); box-shadow: 0 4px 10px rgba(234, 179, 8, 0.3); border: 1px solid rgba(234, 179, 8, 0.5); letter-spacing: 0.5px;">RUNNING LOW</span>';
+                            }
+
                             const productDataStr = encodeURIComponent(JSON.stringify(item.rawProduct || {}));
                             const priceDisplay = typeof item.price === 'number' ? '\u20a6' + Math.round(item.price).toLocaleString() : item.price;
 

@@ -102,7 +102,8 @@ function initProductModalLogic() {
                 currentQuantity++;
                 updateModalEstimates();
             } else {
-                const stockMsg = maxStock <= 0 ? 'This item is out of stock!' : `Only ${maxStock} remaining in stock!`;
+                const isRunningLow = window.checkProductRunningLow && currentProduct && window.checkProductRunningLow(currentProduct.id);
+                const stockMsg = maxStock <= 0 ? 'This item is out of stock!' : (isRunningLow ? `Only ${maxStock} remaining (Running Low!)` : `Only ${maxStock} remaining in stock!`);
                 if (typeof window.showCustomAlert === 'function') {
                     window.showCustomAlert(stockMsg, 'warning');
                 } else {
@@ -392,7 +393,12 @@ function initProductModalLogic() {
                             if (maxStock <= 0) {
                                 parts.push(`<span style="white-space:nowrap; color:#ef4444">${altV.title}: <strong>Out of Stock</strong></span>`);
                             } else {
-                                parts.push(`<span style="white-space:nowrap; color:#16a34a">${altV.title}: <strong>${maxStock}</strong></span>`);
+                                const isLow = window.checkProductRunningLow && currentProduct && window.checkProductRunningLow(currentProduct.id);
+                                if (isLow) {
+                                    parts.push(`<span style="white-space:nowrap; color:#eab308">${altV.title}: <strong>${maxStock} (Low)</strong></span>`);
+                                } else {
+                                    parts.push(`<span style="white-space:nowrap; color:#16a34a">${altV.title}: <strong>${maxStock}</strong></span>`);
+                                }
                                 allZero = false;
                             }
                         }
