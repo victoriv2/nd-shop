@@ -196,10 +196,11 @@ function updateCartItemQty(index, delta) {
                 maxStock = window.getRemainingProductStock(cart[index].productId || cart[index].name, variantType);
             }
             if (cart[index].qty + delta > maxStock) {
+                const stockMsg = maxStock <= 0 ? 'This item is out of stock!' : `Only ${maxStock} remaining in stock!`;
                 if (typeof window.showCustomAlert === 'function') {
-                    window.showCustomAlert(`Only ${maxStock} remaining in stock!`, 'warning');
+                    window.showCustomAlert(stockMsg, 'warning');
                 } else {
-                    alert(`Only ${maxStock} remaining in stock!`);
+                    alert(stockMsg);
                 }
                 return;
             }
@@ -303,10 +304,11 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
         }
     });
     if (currentQtyInCart + qty > maxStock) {
+        const stockMsg = maxStock <= 0 ? 'This item is out of stock!' : `Only ${maxStock} remaining in stock!`;
         if (typeof window.showCustomAlert === 'function') {
-            window.showCustomAlert(`Only ${maxStock} remaining in stock!`, 'warning');
+            window.showCustomAlert(stockMsg, 'warning');
         } else {
-            alert(`Only ${maxStock} remaining in stock!`);
+            alert(stockMsg);
         }
         return false;
     }

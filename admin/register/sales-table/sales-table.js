@@ -1371,7 +1371,8 @@ function initSalesTable() {
                 const remaining = window.getRemainingProductStock ? window.getRemainingProductStock((prod ? prod.id : '') || itemName, variantParam) : Infinity;
                 if (requiredQty > remaining) {
                     const unitLabel = isWholesale ? (prod.bulkUnit || 'Carton') : (unit ? unit.replace(/^per\s+/i, '') : 'items');
-                    customAlert(`Cannot add to basket. Only ${remaining} ${unitLabel}(s) remaining in stock.`);
+                    const stockMsg = remaining <= 0 ? `This item is out of stock!` : `Cannot add to basket. Only ${remaining} ${unitLabel}(s) remaining in stock.`;
+                    customAlert(stockMsg);
                     return;
                 }
                 addToBasket(finalName, qty, price, finalUnit, isFlexibleSale, prod ? prod.id : '');
@@ -1419,7 +1420,8 @@ function initSalesTable() {
                 
                 const remaining = window.getRemainingProductStock ? window.getRemainingProductStock((selectedProduct ? selectedProduct.id : '') || itemName, variantKey) : Infinity;
                 if (requiredQty > remaining) {
-                    customAlert(`Cannot add to basket. Only ${remaining} ${titleStr}(s) remaining in stock.`);
+                    const stockMsg = remaining <= 0 ? `This item is out of stock!` : `Cannot add to basket. Only ${remaining} ${titleStr}(s) remaining in stock.`;
+                    customAlert(stockMsg);
                     return;
                 }
                 
@@ -1477,7 +1479,8 @@ function initSalesTable() {
                 const remaining = window.getRemainingProductStock ? window.getRemainingProductStock((prod ? prod.id : '') || itemName) : Infinity;
                 
                 if (requiredQty > remaining) {
-                    customAlert(`Cannot add to basket. Only ${remaining} ${unit ? unit.replace(/^per\s+/i, '') : 'items'} remaining in stock.`);
+                    const stockMsg = remaining <= 0 ? `This item is out of stock!` : `Cannot add to basket. Only ${remaining} ${unit ? unit.replace(/^per\s+/i, '') : 'items'} remaining in stock.`;
+                    customAlert(stockMsg);
                     return;
                 }
 
@@ -1503,7 +1506,8 @@ function initSalesTable() {
                 const remaining = window.getRemainingProductStock ? window.getRemainingProductStock((prod ? prod.id : '') || itemName, variantKey) : Infinity;
                 
                 if (requiredQty > remaining) {
-                    customAlert(`Cannot add to basket. Only ${remaining} items remaining in stock.`);
+                    const stockMsg = remaining <= 0 ? `This item is out of stock!` : `Cannot add to basket. Only ${remaining} items remaining in stock.`;
+                    customAlert(stockMsg);
                     return;
                 }
                 

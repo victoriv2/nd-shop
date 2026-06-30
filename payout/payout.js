@@ -1768,10 +1768,11 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
             const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName, variantParam) : Infinity;
             if (requiredQty > remaining) {
                 const unitLabel = isWholesale ? (prod.bulkUnit || 'Carton') : (unit ? unit.replace(/^per\s+/i, '') : 'items');
+                const stockMsg = remaining <= 0 ? `This item is out of stock!` : `Cannot add to list. Only ${remaining} ${unitLabel}(s) remaining in stock.`;
                 if (typeof customAlert === 'function') {
-                    customAlert(`Cannot add to list. Only ${remaining} ${unitLabel}(s) remaining in stock.`);
+                    customAlert(stockMsg);
                 } else {
-                    alert(`Cannot add to list. Only ${remaining} ${unitLabel}(s) remaining in stock.`);
+                    alert(stockMsg);
                 }
                 return;
             }
@@ -1826,10 +1827,11 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
             
             const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName, variantKey) : Infinity;
             if (requiredQty > remaining) {
+                const stockMsg = remaining <= 0 ? `This item is out of stock!` : `Cannot add to list. Only ${remaining} ${titleStr}(s) remaining in stock.`;
                 if (typeof customAlert === 'function') {
-                    customAlert(`Cannot add to list. Only ${remaining} ${titleStr}(s) remaining in stock.`);
+                    customAlert(stockMsg);
                 } else {
-                    alert(`Cannot add to list. Only ${remaining} ${titleStr}(s) remaining in stock.`);
+                    alert(stockMsg);
                 }
                 return;
             }
@@ -1902,10 +1904,11 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
             const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName) : Infinity;
             
             if (requiredQty > remaining) {
+                const stockMsg = remaining <= 0 ? `This item is out of stock!` : `Cannot add to list. Only ${remaining} ${unit ? unit.replace(/^per\s+/i, '') : 'items'} remaining in stock.`;
                 if (typeof customAlert === 'function') {
-                    customAlert(`Cannot add to list. Only ${remaining} ${unit ? unit.replace(/^per\s+/i, '') : 'items'} remaining in stock.`);
+                    customAlert(stockMsg);
                 } else {
-                    alert(`Cannot add to list. Only ${remaining} items remaining in stock.`);
+                    alert(stockMsg);
                 }
                 return;
             }
@@ -1967,10 +1970,11 @@ function _initUserRewardPurchaseLogic(modal, spendableRewardBalance, user) {
             
             const remaining = window.getRemainingProductStock ? window.getRemainingProductStock(productId || itemName, variantKey) : Infinity;
             if (requiredQty > remaining) {
+                const stockMsg = remaining <= 0 ? `This item is out of stock!` : `Cannot add to list. Only ${remaining} items remaining in stock.`;
                 if (typeof customAlert === 'function') {
-                    customAlert(`Cannot add to list. Only ${remaining} items remaining in stock.`);
+                    customAlert(stockMsg);
                 } else {
-                    alert(`Cannot add to list. Only ${remaining} items remaining in stock.`);
+                    alert(stockMsg);
                 }
                 return;
             }

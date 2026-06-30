@@ -1336,7 +1336,7 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
             }
         });
 
-        return totalBought - totalSold;
+        return (totalBought - totalSold); // numeric remaining count (≤0 means out of stock)
 
     } else {
         let totalBoughtPieces = 0;

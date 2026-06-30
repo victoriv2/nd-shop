@@ -102,10 +102,11 @@ function initProductModalLogic() {
                 currentQuantity++;
                 updateModalEstimates();
             } else {
+                const stockMsg = maxStock <= 0 ? 'This item is out of stock!' : `Only ${maxStock} remaining in stock!`;
                 if (typeof window.showCustomAlert === 'function') {
-                    window.showCustomAlert(`Only ${maxStock} remaining in stock!`, 'warning');
+                    window.showCustomAlert(stockMsg, 'warning');
                 } else {
-                    alert(`Only ${maxStock} remaining in stock!`);
+                    alert(stockMsg);
                 }
             }
             return;
@@ -388,8 +389,12 @@ function initProductModalLogic() {
                             parts.push(`<span style="white-space:nowrap;">${altV.title}: <strong>In Stock</strong></span>`);
                             allZero = false;
                         } else {
-                            parts.push(`<span style="white-space:nowrap; color:${maxStock > 0 ? '#16a34a' : '#ef4444'}">${altV.title}: <strong>${maxStock}</strong></span>`);
-                            if (maxStock > 0) allZero = false;
+                            if (maxStock <= 0) {
+                                parts.push(`<span style="white-space:nowrap; color:#ef4444">${altV.title}: <strong>Out of Stock</strong></span>`);
+                            } else {
+                                parts.push(`<span style="white-space:nowrap; color:#16a34a">${altV.title}: <strong>${maxStock}</strong></span>`);
+                                allZero = false;
+                            }
                         }
                     }
                     
