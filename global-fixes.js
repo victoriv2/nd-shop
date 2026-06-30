@@ -779,230 +779,9 @@ window.getVariantTypeFromUnit = function(unit) {
         return 'retail';
     }
     if (u.includes('cup') || u.includes('c3') || u.includes('container 3') || u.includes('piece')) {
-}
-                    current = current.parentElement;
-                }
-
-                return 0;
-            }
-
-            scrollContainers.forEach(container => {
-                if (!container) return;
-
-                let startY = 0;
-                let startX = 0;
-                let currentY = 0;
-                let isPulling = false;
-
-                const targetBinding = (container === document.body) ? window : container;
-                const useCaptureOption = (container === document.body);
-
-                targetBinding.addEventListener('touchstart', (e) => {
-                    if (isModalActive()) return;
-
-                    const scrollTop = getScrollTop(targetBinding, e.target);
-
-                    if (scrollTop <= 5 && e.touches.length === 1 && !ptrIndicator.classList.contains('loading')) {
-                        startY = e.touches[0].pageY;
-                        startX = e.touches[0].pageX;
-                        currentY = startY;
-                        isPulling = true;
-                        
-                        const animTarget = getAnimTarget(container);
-                        if (animTarget) animTarget.style.transition = '';
-                        ptrIndicator.style.transition = '';
-                    }
-                }, { passive: true, capture: useCaptureOption });
-
-                targetBinding.addEventListener('touchmove', (e) => {
-                    if (!isPulling) return;
-                    currentY = e.touches[0].pageY;
-                    const diff = currentY - startY;
-                    const diffX = Math.abs(e.touches[0].pageX - startX);
-
-                    // Cancel pull-to-refresh if they are swiping horizontally (changing tabs or sliding tables)
-                    if (diffX > Math.abs(diff) && diffX > 10) {
-                        isPulling = false;
-                        const animTarget = getAnimTarget(container);
-                        if (animTarget) {
-                            animTarget.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-                            animTarget.style.transform = '';
-                        }
-                        ptrIndicator.style.transform = 'translate(-50%, -50px) scale(0)';
-                        ptrIndicator.style.opacity = '0';
-                        return;
-                    }
-
-                    if (diff > 0) {
-                        if (e.cancelable) e.preventDefault();
-                        
-                        const pullDistance = Math.min(diff * 0.4, 100); // Physics damping
-                        const animTarget = getAnimTarget(container);
-                        if (animTarget) {
-                            animTarget.style.transform = `translateY(${pullDistance}px)`;
-                        }
-
-                        // Animate global indicator
-                        ptrIndicator.style.opacity = Math.min(1, pullDistance / 40);
-                        const indicatorY = Math.min(pullDistance * 0.8, 60);
-                        ptrIndicator.style.transform = `translate(-50%, ${indicatorY}px) scale(${Math.min(1, pullDistance / 60)})`;
-                        
-                        const progress = Math.min(1, pullDistance / 70);
-                        ptrCirclePath.style.strokeDashoffset = 56.5 * (1 - progress);
-                        ptrSpinnerSvg.style.transform = `rotate(${progress * 360 - 90}deg)`;
-
-                        if (pullDistance >= 70) {
-                            ptrIndicator.classList.add('ready');
-                        } else {
-                            ptrIndicator.classList.remove('ready');
-                        }
-                    } else {
-                        // Reset visual position if drag goes backwards
-                        const animTarget = getAnimTarget(container);
-                        if (animTarget) animTarget.style.transform = '';
-                        ptrIndicator.style.transform = 'translate(-50%, -50px) scale(0)';
-                        ptrIndicator.style.opacity = '0';
-                    }
-                }, { passive: false, capture: useCaptureOption });
-
-                targetBinding.addEventListener('touchend', () => {
-                    if (!isPulling) return;
-                    isPulling = false;
-                    const diff = currentY - startY;
-                    const pullDistance = Math.min(diff * 0.4, 100);
-                    const animTarget = getAnimTarget(container);
-
-                    if (pullDistance >= 70) {
-                        ptrIndicator.classList.add('loading');
-                        ptrCirclePath.style.strokeDashoffset = '15'; // Loader dash gap
-                        
-                        if (animTarget) {
-                            animTarget.style.transition = 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.15)';
-                            animTarget.style.transform = 'translateY(55px)';
-                        }
-                        ptrIndicator.style.transition = 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.15), opacity 0.25s';
-                        ptrIndicator.style.transform = 'translate(-50%, 55px) scale(1)';
-                        ptrIndicator.style.opacity = '1';
-                        
-                        setTimeout(() => {
-                            try {
-                                if (window.parent && window.parent.location) {
-                                    window.parent.location.reload(true);
-                                } else {
-                                    window.location.reload(true);
-                                }
-                            } catch (e) {
-                                window.location.href = window.location.pathname + window.location.search + window.location.hash;
-                            }
-                            
-                            // Failsafe: if the page doesn't unload/reload within 3 seconds, reset the spinner
-                            setTimeout(() => {
-                                ptrIndicator.classList.remove('loading');
-                                ptrIndicator.style.transform = 'translate(-50%, -50px) scale(0)';
-                                ptrIndicator.style.opacity = '0';
-                                if (animTarget) {
-                                    animTarget.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1)';
-                                    animTarget.style.transform = '';
-                                }
-                            }, 3000);
-                        }, 300); // Slight snap pause to wow the user
-                    } else {
-                        // Bounce back to default
-                        if (animTarget) {
-                            animTarget.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1)';
-                            animTarget.style.transform = '';
-                        }
-                        ptrIndicator.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1), opacity 0.3s ease';
-                        ptrIndicator.style.transform = 'translate(-50%, -50px) scale(0)';
-                        ptrIndicator.style.opacity = '0';
-                        
-                        setTimeout(() => {
-                            if (!ptrIndicator.classList.contains('loading')) {
-                                ptrCirclePath.style.strokeDashoffset = '56.5';
-                                ptrIndicator.classList.remove('ready');
-                            }
-                        }, 400);
-                    }
-                });
-
-                targetBinding.addEventListener('touchcancel', () => {
-                    if (!isPulling) return;
-                    isPulling = false;
-                    const animTarget = getAnimTarget(container);
-                    if (animTarget) {
-                        animTarget.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-                        animTarget.style.transform = '';
-                    }
-                    ptrIndicator.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                    ptrIndicator.style.transform = 'translate(-50%, -50px) scale(0)';
-                    ptrIndicator.style.opacity = '0';
-                });
-            });
-        }
-    });
-
-})();
-
-window.parseSaleDate = function(dateStr) {
-    if (!dateStr) return 0;
-    try {
-        if (dateStr.includes('·')) {
-            const parts = dateStr.split('·');
-            const d = new Date(parts[0].trim());
-            const timeParts = parts[1].trim().match(/(\d+):(\d+)\s*(am|pm)/i);
-            if (timeParts) {
-                let h = parseInt(timeParts[1]);
-                if (timeParts[3].toLowerCase() === 'pm' && h < 12) h += 12;
-                if (timeParts[3].toLowerCase() === 'am' && h === 12) h = 0;
-                d.setHours(h, parseInt(timeParts[2]), 0, 0);
-            }
-            return d.getTime();
-        }
-        return new Date(dateStr).getTime();
-    } catch(e) {
-        return 0;
-    }
-};
-
-window.getVariantTypeFromUnit = function(unit) {
-    if (!unit) return null;
-    const u = unit.toLowerCase();
-    if (u.includes('bag') || u.includes('carton') || u.includes('wholesale') || u.includes('c1') || u.includes('container 1')) {
-        return 'wholesale';
-    }
-    if (u.includes('custard') || u.includes('retail') || u.includes('c2') || u.includes('container 2')) {
-        return 'retail';
-    }
-    if (u.includes('cup') || u.includes('c3') || u.includes('container 3') || u.includes('piece')) {
         return 'retail_sub';
     }
     return null;
-};
-
-/**
- * Safe Sale Item Parser
- * Accurately extracts base name and variant without mangling product names that end with parentheses.
- */
-window.parseSaleItem = function(saleItem, knownBaseName) {
-    if (!saleItem) return { saleBaseName: '', saleVariant: '' };
-    saleItem = saleItem.trim();
-    if (!knownBaseName) {
-        const m = saleItem.match(/^(.*?)\s+\(([^)]+)\)$/);
-        return m ? { saleBaseName: m[1].trim(), saleVariant: m[2].trim() } : { saleBaseName: saleItem, saleVariant: '' };
-    }
-    
-    knownBaseName = knownBaseName.trim();
-    if (saleItem.toLowerCase() === knownBaseName.toLowerCase()) {
-        return { saleBaseName: knownBaseName, saleVariant: '' };
-    } else if (saleItem.toLowerCase().startsWith(knownBaseName.toLowerCase() + ' (')) {
-        const remainder = saleItem.substring(knownBaseName.length).trim();
-        const m = remainder.match(/^\(([^)]+)\)$/);
-        if (m) {
-            return { saleBaseName: knownBaseName, saleVariant: m[1].trim() };
-        }
-    }
-    const m = saleItem.match(/^(.*?)\s+\(([^)]+)\)$/);
-    return m ? { saleBaseName: m[1].trim(), saleVariant: m[2].trim() } : { saleBaseName: saleItem, saleVariant: '' };
 };
 
 /**
@@ -1061,9 +840,13 @@ window.checkProductOutOfStock = function(productNameOrId) {
         let soldCups = 0, soldCustards = 0, soldBags = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
-                let saleVariant = parsedSale.saleVariant;
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -1100,9 +883,13 @@ window.checkProductOutOfStock = function(productNameOrId) {
         let soldC1 = 0, soldC2 = 0, soldC3 = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
-                let saleVariant = parsedSale.saleVariant;
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -1131,8 +918,11 @@ window.checkProductOutOfStock = function(productNameOrId) {
         let totalSold = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
+                let saleBaseName = sale.item.trim();
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                }
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     totalSold += parseFloat(sale.qty) || 0;
@@ -1153,9 +943,13 @@ window.checkProductOutOfStock = function(productNameOrId) {
         let totalSoldPieces = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
-                let saleVariant = parsedSale.saleVariant;
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -1225,9 +1019,13 @@ window.checkProductRunningLow = function(productNameOrId) {
         let soldCups = 0, soldCustards = 0, soldBags = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
-                let saleVariant = parsedSale.saleVariant;
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -1265,9 +1063,13 @@ window.checkProductRunningLow = function(productNameOrId) {
         let soldC1 = 0, soldC2 = 0, soldC3 = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
-                let saleVariant = parsedSale.saleVariant;
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -1297,8 +1099,11 @@ window.checkProductRunningLow = function(productNameOrId) {
         let totalSold = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
+                let saleBaseName = sale.item.trim();
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                }
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     totalSold += parseFloat(sale.qty) || 0;
@@ -1320,9 +1125,13 @@ window.checkProductRunningLow = function(productNameOrId) {
         let totalSoldPieces = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
-                let saleVariant = parsedSale.saleVariant;
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -1424,9 +1233,13 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         let soldCups = 0, soldCustards = 0, soldBags = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
-                let saleVariant = parsedSale.saleVariant;
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
 
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
@@ -1479,9 +1292,13 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         let soldC1 = 0, soldC2 = 0, soldC3 = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
-                let saleVariant = parsedSale.saleVariant;
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
 
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
@@ -1522,8 +1339,11 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         let totalSold = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
+                let saleBaseName = sale.item.trim();
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                }
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     totalSold += parseFloat(sale.qty) || 0;
@@ -1544,9 +1364,13 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         let totalSoldPieces = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const parsedSale = window.parseSaleItem(sale.item, baseName);
-                let saleBaseName = parsedSale.saleBaseName;
-                let saleVariant = parsedSale.saleVariant;
+                let saleBaseName = sale.item.trim();
+                let saleVariant = '';
+                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
+                if (match) {
+                    saleBaseName = match[1].trim();
+                    saleVariant = match[2].trim();
+                }
 
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
