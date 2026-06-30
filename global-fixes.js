@@ -1166,11 +1166,9 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         let baseName = productNameOrId.trim();
         let pTemp = products.find(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
         if (!pTemp) {
-            const match = productNameOrId.match(/^(.*?)\s+\(([^)]+)\)$/);
-            if (match) {
-                baseName = match[1].trim();
-                pTemp = products.find(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
-            }
+            const parsedInput = window.parseSaleItem(productNameOrId);
+            baseName = parsedInput.saleBaseName;
+            pTemp = products.find(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
         }
         p = pTemp;
     }
@@ -1192,10 +1190,8 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
 
     let extractedVariantTitle = null;
     if (!isId) {
-        const match = productNameOrId.match(/^(.*?)\s+\(([^)]+)\)$/);
-        if (match) {
-            extractedVariantTitle = match[2].trim();
-        }
+        const parsedInput = window.parseSaleItem(productNameOrId, baseName);
+        extractedVariantTitle = parsedInput.saleVariant || null;
     }
 
     let oldestDateAdded = null;
