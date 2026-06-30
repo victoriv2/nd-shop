@@ -785,6 +785,32 @@ window.getVariantTypeFromUnit = function(unit) {
 };
 
 /**
+ * Safe Sale Item Parser
+ * Accurately extracts base name and variant without mangling product names that end with parentheses.
+ */
+window.parseSaleItem = function(saleItem, knownBaseName) {
+    if (!saleItem) return { saleBaseName: '', saleVariant: '' };
+    saleItem = saleItem.trim();
+    if (!knownBaseName) {
+        const m = saleItem.match(/^(.*?)\s+\(([^)]+)\)$/);
+        return m ? { saleBaseName: m[1].trim(), saleVariant: m[2].trim() } : { saleBaseName: saleItem, saleVariant: '' };
+    }
+    
+    knownBaseName = knownBaseName.trim();
+    if (saleItem.toLowerCase() === knownBaseName.toLowerCase()) {
+        return { saleBaseName: knownBaseName, saleVariant: '' };
+    } else if (saleItem.toLowerCase().startsWith(knownBaseName.toLowerCase() + ' (')) {
+        const remainder = saleItem.substring(knownBaseName.length).trim();
+        const m = remainder.match(/^\(([^)]+)\)$/);
+        if (m) {
+            return { saleBaseName: knownBaseName, saleVariant: m[1].trim() };
+        }
+    }
+    const m = saleItem.match(/^(.*?)\s+\(([^)]+)\)$/);
+    return m ? { saleBaseName: m[1].trim(), saleVariant: m[2].trim() } : { saleBaseName: saleItem, saleVariant: '' };
+};
+
+/**
  * Shared Inventory Management Logic
  * Used by both Admin and User sides to track stock levels accurately
  */
@@ -840,13 +866,9 @@ window.checkProductOutOfStock = function(productNameOrId) {
         let soldCups = 0, soldCustards = 0, soldBags = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                    saleVariant = match[2].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
+                let saleVariant = parsedSale.saleVariant;
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -883,13 +905,9 @@ window.checkProductOutOfStock = function(productNameOrId) {
         let soldC1 = 0, soldC2 = 0, soldC3 = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                    saleVariant = match[2].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
+                let saleVariant = parsedSale.saleVariant;
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -918,11 +936,8 @@ window.checkProductOutOfStock = function(productNameOrId) {
         let totalSold = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     totalSold += parseFloat(sale.qty) || 0;
@@ -943,13 +958,9 @@ window.checkProductOutOfStock = function(productNameOrId) {
         let totalSoldPieces = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                    saleVariant = match[2].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
+                let saleVariant = parsedSale.saleVariant;
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -1019,13 +1030,9 @@ window.checkProductRunningLow = function(productNameOrId) {
         let soldCups = 0, soldCustards = 0, soldBags = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                    saleVariant = match[2].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
+                let saleVariant = parsedSale.saleVariant;
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -1063,13 +1070,9 @@ window.checkProductRunningLow = function(productNameOrId) {
         let soldC1 = 0, soldC2 = 0, soldC3 = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                    saleVariant = match[2].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
+                let saleVariant = parsedSale.saleVariant;
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -1099,11 +1102,8 @@ window.checkProductRunningLow = function(productNameOrId) {
         let totalSold = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     totalSold += parseFloat(sale.qty) || 0;
@@ -1125,13 +1125,9 @@ window.checkProductRunningLow = function(productNameOrId) {
         let totalSoldPieces = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                    saleVariant = match[2].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
+                let saleVariant = parsedSale.saleVariant;
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
@@ -1233,13 +1229,9 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         let soldCups = 0, soldCustards = 0, soldBags = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                    saleVariant = match[2].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
+                let saleVariant = parsedSale.saleVariant;
 
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
@@ -1292,13 +1284,9 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         let soldC1 = 0, soldC2 = 0, soldC3 = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                    saleVariant = match[2].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
+                let saleVariant = parsedSale.saleVariant;
 
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
@@ -1339,11 +1327,8 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         let totalSold = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
                     totalSold += parseFloat(sale.qty) || 0;
@@ -1364,13 +1349,9 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         let totalSoldPieces = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                let saleBaseName = sale.item.trim();
-                let saleVariant = '';
-                const match = sale.item.match(/^(.*?)\s+\(([^)]+)\)$/);
-                if (match) {
-                    saleBaseName = match[1].trim();
-                    saleVariant = match[2].trim();
-                }
+                const parsedSale = window.parseSaleItem(sale.item, baseName);
+                let saleBaseName = parsedSale.saleBaseName;
+                let saleVariant = parsedSale.saleVariant;
 
                 const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
                 if (isMatch) {
