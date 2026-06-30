@@ -1336,7 +1336,7 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
             }
         });
 
-        return (totalBought - totalSold) <= 0;
+        return totalBought - totalSold;
 
     } else {
         let totalBoughtPieces = 0;
