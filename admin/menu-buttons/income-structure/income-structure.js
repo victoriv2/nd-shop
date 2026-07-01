@@ -1,19 +1,6 @@
 // admin/menu-buttons/income-structure/income-structure.js
-(function() {
-    const now = new Date();
-    const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const isMonthEnd = now.getDate() === lastDayOfCurrentMonth;
-    // Default to previous completed month unless today is the last day of the current month
-    if (!isMonthEnd) {
-        const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
-        const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
-        window.currentIsMonthIdx = prevMonth;
-        window.currentIsYear = prevYear;
-    } else {
-        window.currentIsMonthIdx = now.getMonth();
-        window.currentIsYear = now.getFullYear();
-    }
-})();
+window.currentIsMonthIdx = new Date().getMonth();
+window.currentIsYear = new Date().getFullYear();
 window._isTitleTapCount = 0;
 window._isTitleTapTimer = null;
 window._isAllocationUnlocked = false;

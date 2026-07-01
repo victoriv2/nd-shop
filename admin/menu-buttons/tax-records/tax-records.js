@@ -1,20 +1,8 @@
 const SHORT_MONTHS_TR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const FULL_MONTHS_TR = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-(function() {
-    const now = new Date();
-    const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const isMonthEnd = now.getDate() === lastDayOfCurrentMonth;
-    if (!isMonthEnd) {
-        const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
-        const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
-        window.currentTrMonthIdx = prevMonth;
-        window.currentTrYear = prevYear;
-    } else {
-        window.currentTrMonthIdx = now.getMonth();
-        window.currentTrYear = now.getFullYear();
-    }
-})();
+window.currentTrMonthIdx = new Date().getMonth();
+window.currentTrYear = new Date().getFullYear();
 
 function initTaxRecords() {
     if (document.getElementById('TaxRecordsPage')) {

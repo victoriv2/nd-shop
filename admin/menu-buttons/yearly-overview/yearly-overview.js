@@ -38,7 +38,7 @@ function initYearlyOverview() {
 
                     <!-- Grand Totals Section -->
                     <div onclick="handleYoGrandTotalsTap()" style="font-weight: 800; font-size: 1.1rem; color: #1e293b; margin-top: 10px; border-top: 2px dashed #cbd5e1; padding-top: 15px; text-align: center; cursor: pointer; user-select: none; -webkit-user-select: none;">
-                        <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 12px;">Year-to-Date Totals</span>
+                        <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 12px;">Yearly Grand Totals</span>
                     </div>
 
                     <div class="en-summary-card" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 5px;">
@@ -61,7 +61,7 @@ function initYearlyOverview() {
                     </div>
                     
                     <div class="en-summary-item" style="padding: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #8b5cf6;">
-                        <span style="color: #475569; font-weight: 800; font-size: 1.2rem;">YTD Gross Profit</span>
+                        <span style="color: #475569; font-weight: 800; font-size: 1.2rem;">Yearly Gross Profit</span>
                         <strong id="yoNetBalance" style="color: #0f172a; font-size: 1.7rem;">₦0</strong>
                     </div>
                 </div>
@@ -341,8 +341,8 @@ window.renderYearlyOverview = function() {
         const lastDayOfMonth = new Date(targetYear, m + 1, 0).getDate();
         const isMonthEnd = isCurrentMonth && (now.getDate() === lastDayOfMonth);
 
-        // Accumulate to yearly totals (YTD — always include past months; include current month running data too)
-        if (!isFuture) {
+        // Accumulate to yearly
+        if (!isCurrentMonth || isMonthEnd || window.yoGrandTotalsRevealed) {
             grandRevenue += data.revenue;
             grandCost += data.cost;
             grandTax += monthTaxObj;
