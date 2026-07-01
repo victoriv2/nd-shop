@@ -332,7 +332,7 @@ window.renderYearlyOverview = function() {
     for (let m = 0; m < 12; m++) {
         const data = monthlyData[m];
         const monthTaxObj = data.manualTax + data.autoTax;
-        const monthNet = data.revenue - data.cost - monthTaxObj;
+        const monthNet = data.revenue - data.cost;
         
         const isCurrentMonth = (targetYear === now.getFullYear()) && (m === now.getMonth());
         const isFuture = (targetYear === now.getFullYear()) && (m > now.getMonth());
@@ -423,7 +423,7 @@ window.renderYearlyOverview = function() {
     if (taxEl) taxEl.textContent = '₦' + grandTax.toLocaleString(undefined, {maximumFractionDigits:2});
     
     if (balEl) {
-        const grandNet = grandRevenue - grandCost - grandTax;
+        const grandNet = grandRevenue - grandCost;
         balEl.textContent = '₦' + grandNet.toLocaleString(undefined, {maximumFractionDigits:2});
         balEl.style.color = grandNet < 0 ? '#b91c1c' : '#0f172a';
         balEl.parentElement.style.borderLeftColor = grandNet < 0 ? '#ef4444' : '#8b5cf6';
