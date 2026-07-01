@@ -434,34 +434,34 @@ window.renderTaxs = function() {
     products.forEach(p => {
         if (p.isDeleted || p.addedViaProductTab) return;
         
-        if (p.topUpHistory && p.topUpHistory.length > 0) {
-            p.topUpHistory.forEach(th => {
-                if (!th.date || !th.cost) return;
-                const d = new Date(th.date);
-                if (d.getMonth() === targetMonthIdx && d.getFullYear() === targetYear) {
-                    totalRestock += (parseFloat(th.cost) || 0);
-                }
-            });
-        } else {
-            // Fallback for older products without topUpHistory
-            const d = p.dateAdded ? new Date(p.dateAdded) : null;
-            let isMatch = false;
-            if (!d) {
-                if (targetMonthIdx === new Date().getMonth() && targetYear === new Date().getFullYear()) isMatch = true;
-            } else if (d.getMonth() === targetMonthIdx && d.getFullYear() === targetYear) {
+        let isMatch = false;
+        const d = p.dateAdded ? new Date(p.dateAdded) : null;
+        if (!d) {
+            if (targetMonthIdx === new Date().getMonth() && targetYear === new Date().getFullYear()) {
                 isMatch = true;
             }
-            if (isMatch) totalRestock += (parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0);
+        } else if (d.getMonth() === targetMonthIdx && d.getFullYear() === targetYear) {
+            isMatch = true;
+        }
+
+        if (isMatch) {
+            totalRestock += (parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0);
         }
     });
 
     let totalRevenue = 0;
     try {
         let allSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
-        allSales.forEach(s => {
-            const dParts = s.date.split(' ');
-            if (dParts.length >= 3 && dParts[1].replace(',','') === targetShortMonth && dParts[2] == targetYear) {
-                totalRevenue += (parseFloat(s.price) || ((s.qty || 1) * (s.unitPrice || 0)));
+        allSales.forEach(sale => {
+            const dParts = sale.date ? sale.date.split(' ') : [];
+            if (dParts.length >= 3) {
+                const sMonth = dParts[1].replace(',', '');
+                const sYear = dParts[2];
+                if (sMonth === targetShortMonth && sYear === String(targetYear)) {
+                    const qty = (sale.qty || 1);
+                    const price = (sale.price || (sale.isFlexible ? (sale.unitPrice || 0) : (qty * (sale.unitPrice || 0))));
+                    totalRevenue += price;
+                }
             }
         });
     } catch(e) {}

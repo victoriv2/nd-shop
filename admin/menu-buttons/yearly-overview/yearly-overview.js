@@ -171,38 +171,35 @@ window.renderYearlyOverview = function() {
     // Calculate Revenue per month from nd_sales_history
     try {
         const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
-        sales.forEach(s => {
-            const dParts = s.date.replace(/\s*,\s*/g, ', ').split(' ');
+        sales.forEach(sale => {
+            const dParts = sale.date ? sale.date.replace(/\s*,\s*/g, ', ').split(' ') : [];
             if (dParts.length >= 3 && parseInt(dParts[2].replace(',', '')) === targetYear) {
                 const mIdx = SHORT_MONTHS.indexOf(dParts[1].replace(',',''));
                 if (mIdx !== -1) {
-                    monthlyData[mIdx].revenue += (parseFloat(s.price) || ((s.qty || 1) * (s.unitPrice || 0)));
+                    const qty = (sale.qty || 1);
+                    const price = (sale.price || (sale.isFlexible ? (sale.unitPrice || 0) : (qty * (sale.unitPrice || 0))));
+                    monthlyData[mIdx].revenue += price;
                 }
             }
         });
     } catch(e) { console.error('Revenue Calculation Error:', e); }
 
     // Calculate Cost of Goods per month from nd_products_data
-    // EXACT match with Restock list logic
     try {
         const products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
         products.forEach(p => {
             if (p.isDeleted || p.addedViaProductTab) return;
             
-            if (p.topUpHistory && p.topUpHistory.length > 0) {
-                p.topUpHistory.forEach(th => {
-                    if (!th.date || !th.cost) return;
-                    const d = new Date(th.date);
-                    if (d.getFullYear() === targetYear) {
-                        monthlyData[d.getMonth()].cost += (parseFloat(th.cost) || 0);
-                    }
-                });
-            } else {
-                // Fallback for older products without topUpHistory
-                const d = p.dateAdded ? new Date(p.dateAdded) : new Date();
-                if (d.getFullYear() === targetYear) {
-                    monthlyData[d.getMonth()].cost += (parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0);
+            let isMatch = false;
+            const d = p.dateAdded ? new Date(p.dateAdded) : null;
+            if (!d) {
+                // If no date, match current month/year
+                const now = new Date();
+                if (targetYear === now.getFullYear()) {
+                    monthlyData[now.getMonth()].cost += (parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0);
                 }
+            } else if (d.getFullYear() === targetYear) {
+                monthlyData[d.getMonth()].cost += (parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0);
             }
         });
     } catch(e) { console.error('Cost Calculation Error:', e); }
