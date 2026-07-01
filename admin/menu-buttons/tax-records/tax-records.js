@@ -161,6 +161,13 @@ window.openTaxRecords = function() {
 function openTaxRecordsPage() {
     const page = document.getElementById('TaxRecordsPage');
     if (page) {
+        // Always reset to current month/year so it never sticks on a past month
+        window.currentTrMonthIdx = new Date().getMonth();
+        window.currentTrYear = new Date().getFullYear();
+        const selMonthEl = document.getElementById('trSelMonth');
+        const selYearEl = document.getElementById('trSelYear');
+        if (selMonthEl) selMonthEl.textContent = FULL_MONTHS_TR[window.currentTrMonthIdx];
+        if (selYearEl) selYearEl.textContent = window.currentTrYear;
         page.style.display = 'flex';
         document.body.classList.add('modal-open');
         renderTaxs();

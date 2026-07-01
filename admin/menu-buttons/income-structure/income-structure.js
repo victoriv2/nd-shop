@@ -170,6 +170,15 @@ window.openIncomeStructure = function() {
 function openIncomeStructurePage() {
     const page = document.getElementById('incomeStructurePage');
     if (page) {
+        // Always reset to current month/year so it never sticks on a past month
+        window.currentIsMonthIdx = new Date().getMonth();
+        window.currentIsYear = new Date().getFullYear();
+        const fMonthsFallback = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const fMonths = typeof FULL_MONTHS_EN !== 'undefined' ? FULL_MONTHS_EN : fMonthsFallback;
+        const selMonthEl = document.getElementById('isSelMonth');
+        const selYearEl = document.getElementById('isSelYear');
+        if (selMonthEl) selMonthEl.textContent = fMonths[window.currentIsMonthIdx];
+        if (selYearEl) selYearEl.textContent = window.currentIsYear;
         page.style.display = 'flex';
         document.body.classList.add('modal-open');
         renderIncomeStructure();
@@ -391,15 +400,16 @@ window.renderIncomeStructure = function() {
     const fMonths = typeof FULL_MONTHS_EN !== 'undefined' ? FULL_MONTHS_EN : FULL_MONTHS_FALLBACK;
 
     if (!showAllocations) {
-        // Hide summary card, blue header table and total card
-        if (summaryCard) summaryCard.style.display = 'none';
+        // Show the summary card so the user can always see Revenue / Cost / Gross Profit
+        if (summaryCard) summaryCard.style.display = '';
+
+        // Hide only the allocation table and total card (these are locked until month-end)
         if (tableHeaderContainer) tableHeaderContainer.style.display = 'none';
         if (totalCard) totalCard.style.display = 'none';
 
-        // Keep body container visible so the message inside tbody shows
         if (tableBodyContainer) {
             tableBodyContainer.style.display = '';
-            tableBodyContainer.style.borderRadius = '14px'; // full radius since header is gone
+            tableBodyContainer.style.borderRadius = '14px';
         }
 
         tbody.innerHTML = `
