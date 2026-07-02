@@ -71,6 +71,12 @@
             : { 'Content-Type': 'application/json' };
 
         for (const [localKey, tableName] of Object.entries(TABLES_TO_SYNC)) {
+            // Skip user-specific tables if there is no logged-in user or admin
+            const userSpecificTables = ['requests', 'messages', 'user_carts', 'ai_chat_history', 'ai_chat_threads', 'user_ai_chat_threads'];
+            if (userSpecificTables.includes(tableName) && !userId) {
+                console.log(`[sync] Skipping pull for user-specific table ${tableName} because no user is logged in.`);
+                continue;
+            }
             try {
                 // Read what's currently in localStorage
                 const currentLocal = JSON.parse(localStorage.getItem(localKey) || '[]');
