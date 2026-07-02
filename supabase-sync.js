@@ -39,6 +39,9 @@
     const lastLocalWrite = {};
 
     const nativeSetItem = Storage.prototype.setItem;
+    const nativeRemoveItem = Storage.prototype.removeItem;
+    const nativeClear = Storage.prototype.clear;
+    const AUTH_KEYS = ['nd_token', 'nd_admin_logged_in', 'nd_logged_in_user', 'nd_admin_id'];
     
     // Initialize cache and pull fresh data from Supabase
     async function initSync() {
@@ -171,7 +174,7 @@
         processSyncQueue();
     }
 
-    // Intercept localStorage writes
+    // Intercept localStorage/sessionStorage writes
     Storage.prototype.setItem = function(key, value) {
         if (key === 'nd_products_data') {
             try {
@@ -201,7 +204,34 @@
             // Dispatch custom event to notify local listeners
             const event = new CustomEvent('local-storage-update', { detail: { key: key, value: value } });
             window.dispatchEvent(event);
+            window.dispatchEvent(new Event('nd_sync_complete'));
+        } else if (AUTH_KEYS.includes(key)) {
+            console.log(`[sync] Auth key ${key} updated in storage. Debouncing re-sync...`);
+            if (window._syncDebounce) clearTimeout(window._syncDebounce);
+            window._syncDebounce = setTimeout(() => {
+                initSync();
+            }, 200);
         }
+    };
+
+    Storage.prototype.removeItem = function(key) {
+        nativeRemoveItem.call(this, key);
+        if (AUTH_KEYS.includes(key)) {
+            console.log(`[sync] Auth key ${key} removed from storage. Debouncing re-sync...`);
+            if (window._syncDebounce) clearTimeout(window._syncDebounce);
+            window._syncDebounce = setTimeout(() => {
+                initSync();
+            }, 200);
+        }
+    };
+
+    Storage.prototype.clear = function() {
+        nativeClear.call(this);
+        console.log('[sync] Storage cleared. Debouncing re-sync...');
+        if (window._syncDebounce) clearTimeout(window._syncDebounce);
+        window._syncDebounce = setTimeout(() => {
+            initSync();
+        }, 200);
     };
 
     function handleSettingsMutation(key, value) {
@@ -249,7 +279,8 @@
                     id: 'sync_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                     table,
                     operation: op,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    retries: 0
                 });
             }
         });
@@ -320,6 +351,20 @@
                     progressMade = true;
                 } else {
                     console.warn(`[sync-queue] Sync failed for ${table}:`, data.error);
+                    let currentQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
+                    let updatedQueue = currentQueue.map(item => {
+                        if (items.some(x => x.id === item.id)) {
+                            item.retries = (item.retries || 0) + 1;
+                        }
+                        return item;
+                    }).filter(item => {
+                        if (item.retries >= 5) {
+                            console.warn(`[sync-queue] Discarding persistently failing sync item ${item.id} for table ${item.table} after 5 retries. Error:`, data.error);
+                            return false;
+                        }
+                        return true;
+                    });
+                    localStorage.setItem('nd_sync_retry_queue', JSON.stringify(updatedQueue));
                 }
             } catch (err) {
                 console.error(`[sync-queue] Network error syncing ${table} (offline/poor network):`, err);
