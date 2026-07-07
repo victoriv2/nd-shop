@@ -280,12 +280,16 @@
     };
 
     // --- ISSUE 1: Data not updating until refresh ---
-    const originalSetItem = localStorage.setItem;
-    localStorage.setItem = function(key, value) {
-        originalSetItem.apply(this, arguments);
-        const event = new CustomEvent('local-storage-update', { detail: { key, value } });
-        window.dispatchEvent(event);
-    };
+    try {
+        const originalSetItem = Storage.prototype.setItem;
+        Storage.prototype.setItem = function(key, value) {
+            originalSetItem.apply(this, arguments);
+            const event = new CustomEvent('local-storage-update', { detail: { key, value } });
+            window.dispatchEvent(event);
+        };
+    } catch (e) {
+        console.warn('[global-fixes] Safe Storage wrapper failed:', e);
+    }
 
     window.addEventListener('local-storage-update', (e) => {
         const k = e.detail.key;
