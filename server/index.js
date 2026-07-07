@@ -1082,12 +1082,15 @@ app.post('/api/ai-chat', optionalToken, async (req, res) => {
     try {
         const { messages, apiKeyOverride, model, temperature } = req.body;
         
-        // Retrieve the API Key from environment variables
+        // Retrieve the API Key from environment variables (recommended to prevent committing keys to Git)
         const XAI_API_KEY = process.env.XAI_API_KEY;
 
         if (!XAI_API_KEY) {
             console.error('[ai-chat] Error: XAI_API_KEY is not configured in the environment.');
-            return res.status(500).json({ success: false, error: { message: 'AI API Key is not configured on the server.' } });
+            return res.status(500).json({ 
+                success: false, 
+                error: { message: 'AI API Key is not configured on the server. Please add XAI_API_KEY to your Railway environment variables.' } 
+            });
         }
 
         // Force model to a valid one
