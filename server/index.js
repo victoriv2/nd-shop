@@ -1082,8 +1082,13 @@ app.post('/api/ai-chat', optionalToken, async (req, res) => {
     try {
         const { messages, apiKeyOverride, model, temperature } = req.body;
         
-        // Force the valid key, ignoring any old/invalid env vars in Railway
-        const XAI_API_KEY = 'xai-0Rcj7hvD1iuPzIYQPpi65Iz105iB4357w05JWcEzHXxE6Ff24jp9fobyi0HiOazBXJaUpiBB5hdEhqtI';
+        // Retrieve the API Key from environment variables
+        const XAI_API_KEY = process.env.XAI_API_KEY;
+
+        if (!XAI_API_KEY) {
+            console.error('[ai-chat] Error: XAI_API_KEY is not configured in the environment.');
+            return res.status(500).json({ success: false, error: { message: 'AI API Key is not configured on the server.' } });
+        }
 
         // Force model to a valid one
         const finalModel = 'grok-4.20-0309-reasoning';
