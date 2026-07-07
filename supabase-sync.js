@@ -94,6 +94,13 @@
                     cache: 'no-store'
                 });
                 clearTimeout(timeoutId);
+
+                if (res.status === 401 || res.status === 403) {
+                    console.warn(`[sync] Unauthorized request to ${tableName}. Expiring session...`);
+                    handleSessionExpiration();
+                    return;
+                }
+
                 const data = await res.json();
                 
                 if (data.success && data.data) {
@@ -137,6 +144,13 @@
                 cache: 'no-store'
             });
             clearTimeout(timeoutId);
+
+            if (res.status === 401 || res.status === 403) {
+                console.warn(`[sync] Unauthorized settings request. Expiring session...`);
+                handleSessionExpiration();
+                return;
+            }
+
             const data = await res.json();
             if (data.success && data.data) {
                 // Prevent overwriting local settings if there are pending optimistic updates
@@ -343,6 +357,13 @@
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
+
+                if (res.status === 401 || res.status === 403) {
+                    console.warn(`[sync] Unauthorized sync-items request. Expiring session...`);
+                    handleSessionExpiration();
+                    return;
+                }
+
                 const data = await res.json();
                 if (data.success) {
                     const itemIds = items.map(item => item.id);
@@ -549,6 +570,13 @@
                 cache: 'no-store'
             });
             clearTimeout(timeoutId);
+
+            if (res.status === 401 || res.status === 403) {
+                console.warn(`[sync] Unauthorized pending stock fetch. Expiring session...`);
+                handleSessionExpiration();
+                return;
+            }
+
             const data = await res.json();
             if (data.success && Array.isArray(data.data)) {
                 nativeSetItem.call(localStorage, 'nd_pending_stock_data', JSON.stringify(data.data));
@@ -624,6 +652,29 @@
             window.dispatchEvent(event);
         }
     });
+
+    function handleSessionExpiration() {
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/login.html') || currentPath.includes('/signup.html') || currentPath.includes('/forgot-password.html')) {
+            return;
+        }
+
+        const authKeys = [
+            'nd_token', 'nd_logged_in_user', 'nd_admin_logged_in', 'nd_admin_id',
+            'nd_admin_active_tab', 'nd_admin_page_state', 'nd_user_page_state'
+        ];
+        authKeys.forEach(k => {
+            localStorage.removeItem(k);
+            sessionStorage.removeItem(k);
+        });
+
+        const isAdminPage = currentPath.includes('/admin/');
+        if (isAdminPage) {
+            window.location.href = '../auth/login.html';
+        } else {
+            window.location.href = 'auth/login.html';
+        }
+    }
 
 })();
 

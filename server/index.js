@@ -1171,6 +1171,29 @@ app.post('/api/factory-reset', optionalToken, async (req, res) => {
     }
 });
 
+// ==========================================
+// 5.5 STATIC ASSET SERVING & CACHE CONTROL
+// ==========================================
+// Serve static files from the root of the project
+app.use(express.static(path.join(__dirname, '../'), {
+    setHeaders: (res, filePath) => {
+        // Strict Cache-Control for HTML files to prevent caching of stale UI shells
+        if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        } else {
+            // Revalidate JS/CSS/Images every time
+            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+        }
+    }
+}));
+
+// Fallback to index.html on root request
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../index.html'));
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n========================================`);
     console.log(`🚀 ND Shop Clean Backend Running!`);
