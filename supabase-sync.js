@@ -178,6 +178,9 @@
         // Let the app know data is fresh
         window.dispatchEvent(new Event('nd_sync_complete'));
         processSyncQueue();
+
+        // Pull all pending requests for accurate cross-user stock calculation
+        await refreshPendingStockData(authHeaders);
     }
 
     // Intercept localStorage/sessionStorage writes
@@ -522,15 +525,48 @@
             const evt = new CustomEvent('local-storage-update', { detail: { key: localKey, value: val } });
             window.dispatchEvent(evt);
             window.dispatchEvent(new Event('nd_sync_complete'));
+
+            // When requests change, refresh pending stock so all clients have
+            // accurate cross-user stock counts
+            if (table === 'requests') {
+                refreshPendingStockData();
+            }
+        }
+    }
+
+    // ── Pending stock refresh helper ────────────────────────────────────────
+    // Fetches ALL pending requests (PII-stripped) from the server so every
+    // client — including regular users — can see everyone's pending orders
+    // when computing product stock levels.
+    async function refreshPendingStockData(headers) {
+        if (!window.API_BASE) return;
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+            const res = await fetch(`${window.API_BASE}/api/pending-requests-stock?_t=${Date.now()}`, {
+                headers: headers || { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                cache: 'no-store'
+            });
+            clearTimeout(timeoutId);
+            const data = await res.json();
+            if (data.success && Array.isArray(data.data)) {
+                nativeSetItem.call(localStorage, 'nd_pending_stock_data', JSON.stringify(data.data));
+            }
+        } catch (err) {
+            // Non-fatal — stock falls back to nd_requests_data
+            console.warn('[sync] Could not refresh pending stock data:', err.message || err);
         }
     }
 
     // Connect to SSE for instant updates
+    let _sseRetryDelay = 1500;
     function connectSSE() {
         if (!window.API_BASE) return;
         try {
             const eventSource = new EventSource(`${window.API_BASE}/api/stream`);
             eventSource.onopen = () => {
+                _sseRetryDelay = 1500; // Reset backoff on success
                 // Ensure we are fully synced upon connection (catches missed updates while disconnected)
                 initSync();
             };
@@ -551,14 +587,27 @@
             };
             eventSource.onerror = () => {
                 eventSource.close();
-                setTimeout(connectSSE, 1500); // Attempt to reconnect after 1.5s
+                // Exponential backoff: 1.5s → 2.25s → ... → 30s cap
+                const delay = _sseRetryDelay;
+                _sseRetryDelay = Math.min(_sseRetryDelay * 1.5, 30000);
+                setTimeout(connectSSE, delay);
             };
         } catch (e) {
             console.warn('[sync] SSE connection failed:', e);
+            setTimeout(connectSSE, _sseRetryDelay);
         }
     }
     
     connectSSE();
+
+    // ── 60-second periodic fallback sync ────────────────────────────────────
+    // Safety net: if SSE silently drops (e.g. proxy, mobile sleep), this
+    // guarantees data is never more than 60 seconds stale.
+    setInterval(() => {
+        if (!document.hidden) {
+            initSync();
+        }
+    }, 60000);
     
     // Listen for storage changes from other tabs to keep stateCache in sync
     window.addEventListener('storage', (e) => {

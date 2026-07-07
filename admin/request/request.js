@@ -32,6 +32,39 @@ function loadRequest() {
     `;
 
     renderAdminRequests();
+
+    // ── Real-time auto-refresh ──────────────────────────────────────────────
+    // Remove any stale listeners registered by a previous visit to this page
+    if (window._reqPageLocalListener) {
+        window.removeEventListener('local-storage-update', window._reqPageLocalListener);
+    }
+    if (window._reqPageSyncListener) {
+        window.removeEventListener('nd_sync_complete', window._reqPageSyncListener);
+    }
+
+    let _reqRefreshTimer = null;
+    function _debouncedRefresh() {
+        if (!document.getElementById('adminRequestList')) {
+            // Page navigated away – clean up
+            window.removeEventListener('local-storage-update', window._reqPageLocalListener);
+            window.removeEventListener('nd_sync_complete', window._reqPageSyncListener);
+            return;
+        }
+        clearTimeout(_reqRefreshTimer);
+        _reqRefreshTimer = setTimeout(() => renderAdminRequests(), 150);
+    }
+
+    // Fired by supabase-sync.js applyServerDelta when nd_requests_data changes (SSE delta)
+    window._reqPageLocalListener = function(e) {
+        if (e.detail && e.detail.key === 'nd_requests_data') _debouncedRefresh();
+    };
+
+    // Fired by supabase-sync.js after a full initSync pull (catches reconnections)
+    window._reqPageSyncListener = function() { _debouncedRefresh(); };
+
+    window.addEventListener('local-storage-update', window._reqPageLocalListener);
+    window.addEventListener('nd_sync_complete', window._reqPageSyncListener);
+    // ───────────────────────────────────────────────────────────────────────
 }
 
 function handleRequestSearch(query) {

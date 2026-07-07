@@ -950,6 +950,56 @@ app.post('/api/sync-items', optionalToken, async (req, res) => {
         res.status(500).json({ success: false, error: 'Internal server error.' });
     }
 });
+
+// ==========================================
+// 5b. PENDING REQUESTS STOCK ENDPOINT
+// Returns all PENDING requests (stripped of PII) so every client can
+// accurately calculate remaining stock, accounting for ALL users' pending orders.
+// ==========================================
+app.get('/api/pending-requests-stock', optionalToken, async (req, res) => {
+    try {
+        // Fetch only pending requests from Supabase
+        const { data, error } = await supabase
+            .from('requests')
+            .select('id, data')
+            .filter('data->>status', 'eq', 'Pending');
+
+        if (error) {
+            console.error('[pending-requests-stock] Supabase error:', error.message);
+            return res.status(500).json({ success: false, error: error.message });
+        }
+
+        // Strip personal user data — only keep what's needed for stock calculation
+        const stripped = (data || []).map(row => {
+            const d = row.data;
+            if (!d) return null;
+            return {
+                id: d.id || row.id,
+                status: d.status,
+                timestamp: d.timestamp,
+                isGroupedOrder: d.isGroupedOrder,
+                items: d.items ? d.items.map(item => ({
+                    name: item.name,
+                    qty: item.qty,
+                    unit: item.unit || '',
+                    productId: item.productId || ''
+                })) : null,
+                product: d.product ? {
+                    name: d.product.name,
+                    qty: d.product.qty,
+                    unit: d.product.unit || '',
+                    productId: d.product.productId || ''
+                } : null
+            };
+        }).filter(Boolean);
+
+        res.json({ success: true, data: stripped });
+    } catch (err) {
+        console.error('[pending-requests-stock] Fatal error:', err.message);
+        res.status(500).json({ success: false, error: 'Internal server error.' });
+    }
+});
+
 app.get('/api/storage-stats', async (req, res) => {
     try {
         const { data, error } = await supabase.rpc('get_db_size');

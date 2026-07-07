@@ -1156,7 +1156,13 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
     }));
     let sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     
-    const requests = JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
+    // Prefer nd_pending_stock_data (all users' pending orders for accurate cross-user stock).
+    // Fall back to nd_requests_data for backwards compatibility if not yet populated.
+    const pendingStockRaw = localStorage.getItem('nd_pending_stock_data');
+    const requests = pendingStockRaw
+        ? JSON.parse(pendingStockRaw)
+        : JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
+
     
     let p = null;
     const isId = productNameOrId && productNameOrId.startsWith('ndp_');
