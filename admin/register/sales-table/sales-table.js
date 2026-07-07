@@ -1572,6 +1572,55 @@ function initSalesTable() {
         // Remove the bullet and normalize
         return dateStr.replace('·', '').trim();
     }
+
+    // ── Real-time auto-refresh ──────────────────────────────────────────────
+    // Clean up any stale listeners from previous visits to the Register page
+    if (window._salesTableLocalListener) {
+        window.removeEventListener('local-storage-update', window._salesTableLocalListener);
+    }
+    if (window._salesTableSyncListener) {
+        window.removeEventListener('nd_sync_complete', window._salesTableSyncListener);
+    }
+
+    let _salesRefreshTimer = null;
+    function _debouncedRefresh() {
+        const bodyEl = document.getElementById('salesTableBody');
+        if (!bodyEl) {
+            // Page navigated away – clean up listeners
+            window.removeEventListener('local-storage-update', window._salesTableLocalListener);
+            window.removeEventListener('nd_sync_complete', window._salesTableSyncListener);
+            return;
+        }
+        clearTimeout(_salesRefreshTimer);
+        _salesRefreshTimer = setTimeout(() => {
+            // Reload sampleData from local storage
+            try {
+                const savedSales = localStorage.getItem('nd_sales_history');
+                if (savedSales) {
+                    sampleData = JSON.parse(savedSales);
+                } else {
+                    sampleData = [];
+                }
+            } catch (e) {
+                console.error('Failed to parse saved sales on real-time update', e);
+            }
+            applyFiltersAndSort();
+        }, 150);
+    }
+
+    window._salesTableLocalListener = function(e) {
+        if (e.detail && e.detail.key === 'nd_sales_history') {
+            _debouncedRefresh();
+        }
+    };
+
+    window._salesTableSyncListener = function() {
+        _debouncedRefresh();
+    };
+
+    window.addEventListener('local-storage-update', window._salesTableLocalListener);
+    window.addEventListener('nd_sync_complete', window._salesTableSyncListener);
+    // ───────────────────────────────────────────────────────────────────────
 }
 
 function syncTableScroll() {
