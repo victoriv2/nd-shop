@@ -129,31 +129,7 @@ window.loadProductTab = function() {
                         });
                     }
 
-                    // Deduplicate by name, keeping only the newest active product (sorted by dateAdded), preserving original order
-                    const newestByName = {};
-                    displayList.forEach(item => {
-                        const normalizedName = item.name.trim().toLowerCase();
-                        const existing = newestByName[normalizedName];
-                        if (!existing) {
-                            newestByName[normalizedName] = item;
-                        } else {
-                            const tExisting = existing.dateAdded ? new Date(existing.dateAdded).getTime() : 0;
-                            const tCurrent = item.dateAdded ? new Date(item.dateAdded).getTime() : 0;
-                            if (tCurrent > tExisting) {
-                                newestByName[normalizedName] = item;
-                            }
-                        }
-                    });
-
-                    const seenNames = new Set();
-                    displayList = displayList.map(item => {
-                        const normalizedName = item.name.trim().toLowerCase();
-                        if (seenNames.has(normalizedName)) {
-                            return null;
-                        }
-                        seenNames.add(normalizedName);
-                        return newestByName[normalizedName];
-                    }).filter(Boolean);
+                    // No deduplication by name: render every product batch with a different ID individually as requested.
 
                     // EMPTY STATE: If no products exist or none match search
                     if (displayList.length === 0) {
