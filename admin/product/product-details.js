@@ -225,10 +225,11 @@ function _pdRenderDetails(p) {
         ? new Date(p.dateAdded).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
         : 'Unknown';
 
-    const boughtQty = parseFloat(p.boughtQuantity) || 1;
+    const boughtQtyRaw = parseFloat(p.boughtQuantity) || 1;
+    const boughtQty = Number.isInteger(boughtQtyRaw) ? boughtQtyRaw : parseFloat(boughtQtyRaw.toFixed(2));
     const totalCostStr = p.purchaseCost
         ? '₦' + Math.round(parseFloat(p.purchaseCost)).toLocaleString()
-        : (p.cost ? '₦' + Math.round(parseFloat(p.cost) * boughtQty).toLocaleString() : '—');
+        : (p.cost ? '₦' + Math.round(parseFloat(p.cost) * boughtQtyRaw).toLocaleString() : '—');
 
     let html = '';
 
@@ -631,7 +632,7 @@ function _pdCalculateStock(p) {
 
         const bought = totalBags * maxCPB;
         const sold = (sBags * maxCPB) + (sCus * cpc) + sCups;
-        const rem = bought - sold;
+        const rem = Math.round(bought - sold);
         const isOut = rem <= 0;
         const isLow = !isOut && window.checkProductRunningLow && window.checkProductRunningLow(p.id);
         const rB = Math.floor(rem / maxCPB);
@@ -646,7 +647,7 @@ function _pdCalculateStock(p) {
             `<div style="font-size:0.8rem;font-weight:600;color:#64748b;margin-top:6px;">Total Base Units Remaining: ${rem}</div></div>` +
             `<div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:16px;">` +
             `<h4 style="margin:0 0 12px 0;font-size:0.95rem;color:#1e293b;">Breakdown</h4>` +
-            `<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#64748b;font-size:0.9rem;">Bought (${bagT}s)</span><span style="font-weight:700;color:#0f172a;">${totalBags}</span></div>` +
+            `<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#64748b;font-size:0.9rem;">Bought (${bagT}s)</span><span style="font-weight:700;color:#0f172a;">${Number.isInteger(totalBags) ? totalBags : parseFloat(totalBags.toFixed(2))}</span></div>` +
             `<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#64748b;font-size:0.9rem;">Sold (${bagT})</span><span style="font-weight:700;color:#ef4444;">- ${sBags}</span></div>` +
             `<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#64748b;font-size:0.9rem;">Sold (${cusT})</span><span style="font-weight:700;color:#ef4444;">- ${sCus}</span></div>` +
             `<div style="display:flex;justify-content:space-between;"><span style="color:#64748b;font-size:0.9rem;">Sold (${cupT})</span><span style="font-weight:700;color:#ef4444;">- ${sCups}</span></div></div>`;

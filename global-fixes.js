@@ -1438,7 +1438,7 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         } else if (targetVariantType === 'custard' || targetVariantType === 'c2' || ((p.isSpecial || p.packTypes) && targetVariantType === 'retail')) {
             return Math.floor(remainingCups / cpc);
         } else {
-            return remainingCups;
+            return Math.round(remainingCups);
         }
     } else if (p.isFlexible) {
         let totalC3Bought = 0;
@@ -1502,7 +1502,7 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
 
         if (targetVariantType === 'c1' || targetVariantType === 'wholesale') return Math.floor(remainingC3 / (c2sPerC1 * c3sPerC2));
         if (targetVariantType === 'c2' || targetVariantType === 'retail') return Math.floor(remainingC3 / c3sPerC2);
-        return remainingC3; // c3 or unspecified
+        return Math.round(remainingC3); // c3 or unspecified
 
     } else if (p.isCustom) {
         let totalBought = 0;
@@ -1535,7 +1535,7 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
             }
         });
 
-        return (totalBought - totalSold); // numeric remaining count (≤0 means out of stock)
+        return Math.round(totalBought - totalSold); // numeric remaining count (≤0 means out of stock)
 
     } else {
         let totalBoughtPieces = 0;
@@ -1584,7 +1584,7 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         if (targetVariantType === 'wholesale') {
             return Math.floor(rem / (parseInt(p.pieces) || 1));
         }
-        return rem;
+        return Math.round(rem);
     }};window.openImageViewer = function(src) {
     if (!src) return;
     let viewer = document.getElementById('globalImageViewer');
