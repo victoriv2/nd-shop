@@ -818,6 +818,51 @@ window.parseSaleItem = function(saleItem, knownBaseName) {
  * Shared Inventory Management Logic
  * Used by both Admin and User sides to track stock levels accurately
  */
+window.isSaleAssociatedWithProduct = function(sale, p, products) {
+    const saleProductId = sale.productId;
+    if (saleProductId) {
+        return saleProductId === p.id;
+    }
+    
+    // If no productId in sale, fallback to name-based date matching
+    const saleItem = sale.item;
+    if (!saleItem) return false;
+    
+    const parsedSale = window.parseSaleItem(saleItem, p.name);
+    if (parsedSale.saleBaseName.toLowerCase() !== p.name.toLowerCase()) {
+        return false;
+    }
+    
+    // Find all active products with the same name
+    const sameNameProducts = products.filter(item => item && !item.isDeleted && !item.cleared && item.name && item.name.trim().toLowerCase() === p.name.trim().toLowerCase());
+    if (sameNameProducts.length <= 1) {
+        return true; // Only one product with this name, must be it
+    }
+    
+    // Sort them by dateAdded ascending
+    sameNameProducts.sort((a, b) => {
+        const da = a.dateAdded ? new Date(a.dateAdded).getTime() : 0;
+        const db = b.dateAdded ? new Date(b.dateAdded).getTime() : 0;
+        return da - db;
+    });
+    
+    // Find the one that was active at the time of the sale
+    const saleTime = window.parseSaleDate(sale.date || sale.timestamp || 0);
+    
+    // We find the product with the largest dateAdded that is <= saleTime
+    let associatedProduct = sameNameProducts[0];
+    for (let i = 1; i < sameNameProducts.length; i++) {
+        const prodTime = sameNameProducts[i].dateAdded ? new Date(sameNameProducts[i].dateAdded).getTime() : 0;
+        if (prodTime <= saleTime) {
+            associatedProduct = sameNameProducts[i];
+        } else {
+            break;
+        }
+    }
+    
+    return associatedProduct.id === p.id;
+};
+
 window.checkProductOutOfStock = function(productNameOrId) {
     const allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     const products = allProducts.filter(item => item && !item.isDeleted && !item.cleared).map(item => ({
@@ -840,28 +885,39 @@ window.checkProductOutOfStock = function(productNameOrId) {
     const baseName = p.name;
 
     let oldestDateAdded = null;
-    const activeMatches = products.filter(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
-    activeMatches.forEach(item => {
-        if (item.dateAdded) {
-            const t = new Date(item.dateAdded).getTime();
-            if (!oldestDateAdded || t < oldestDateAdded) {
-                oldestDateAdded = t;
+    if (isId) {
+        oldestDateAdded = p.dateAdded ? new Date(p.dateAdded).getTime() : null;
+    } else {
+        const activeMatches = products.filter(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
+        activeMatches.forEach(item => {
+            if (item.dateAdded) {
+                const t = new Date(item.dateAdded).getTime();
+                if (!oldestDateAdded || t < oldestDateAdded) {
+                    oldestDateAdded = t;
+                }
             }
-        }
-    });
+        });
+    }
 
     const filteredSales = oldestDateAdded ? sales.filter(sale => window.parseSaleDate(sale.date || sale.timestamp) >= oldestDateAdded) : sales;
 
     if (p.isSpecial || p.packTypes) {
         let totalBoughtCups = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.packTypes) {
-                const s = item.structure || {};
-                const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
-                const cpc = parseInt(s.cupsPerCustard || s.c3sPerC2) || 1;
-                totalBoughtCups += (parseFloat(item.boughtQuantity) || 0) * (cpb * cpc);
-            }
-        });
+        if (isId) {
+            const s = p.structure || {};
+            const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
+            const cpc = parseInt(s.cupsPerCustard || s.c3sPerC2) || 1;
+            totalBoughtCups = (parseFloat(p.boughtQuantity) || 0) * (cpb * cpc);
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.packTypes) {
+                    const s = item.structure || {};
+                    const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
+                    const cpc = parseInt(s.cupsPerCustard || s.c3sPerC2) || 1;
+                    totalBoughtCups += (parseFloat(item.boughtQuantity) || 0) * (cpb * cpc);
+                }
+            });
+        }
 
         const bTitle = p.packTypes.bag?.title || p.packTypes.c1?.title || 'Container 1';
         const cTitle = p.packTypes.custard?.title || p.packTypes.c2?.title || 'Container 2';
@@ -873,7 +929,14 @@ window.checkProductOutOfStock = function(productNameOrId) {
                 const parsedSale = window.parseSaleItem(sale.item, baseName);
                 let saleBaseName = parsedSale.saleBaseName;
                 let saleVariant = parsedSale.saleVariant;
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+                
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
                     if (saleVariant === cpTitle || saleVariant === 'Container 3') soldCups += q;
@@ -892,14 +955,21 @@ window.checkProductOutOfStock = function(productNameOrId) {
         return (totalBoughtCups - totalSoldCups) <= 0;
     } else if (p.isFlexible) {
         let totalC3Bought = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isFlexible) {
-                const s = item.structure || {};
-                const c2sPerC1 = parseInt(s.c2sPerC1) || 1;
-                const c3sPerC2 = parseInt(s.c3sPerC2) || 1;
-                totalC3Bought += (parseFloat(item.boughtQuantity) || 0) * c2sPerC1 * c3sPerC2;
-            }
-        });
+        if (isId) {
+            const s = p.structure || {};
+            const c2sPerC1 = parseInt(s.c2sPerC1) || 1;
+            const c3sPerC2 = parseInt(s.c3sPerC2) || 1;
+            totalC3Bought = (parseFloat(p.boughtQuantity) || 0) * c2sPerC1 * c3sPerC2;
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isFlexible) {
+                    const s = item.structure || {};
+                    const c2sPerC1 = parseInt(s.c2sPerC1) || 1;
+                    const c3sPerC2 = parseInt(s.c3sPerC2) || 1;
+                    totalC3Bought += (parseFloat(item.boughtQuantity) || 0) * c2sPerC1 * c3sPerC2;
+                }
+            });
+        }
 
         const pk = p.packTypes || {};
         const c1Title = (pk.c1 && pk.c1.title) || 'Container 1';
@@ -912,7 +982,14 @@ window.checkProductOutOfStock = function(productNameOrId) {
                 const parsedSale = window.parseSaleItem(sale.item, baseName);
                 let saleBaseName = parsedSale.saleBaseName;
                 let saleVariant = parsedSale.saleVariant;
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+                
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
                     if (saleVariant === c3Title || saleVariant === 'Container 3') soldC3 += q;
@@ -931,18 +1008,29 @@ window.checkProductOutOfStock = function(productNameOrId) {
 
     } else if (p.isCustom) {
         let totalBought = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isCustom) {
-                totalBought += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
-            }
-        });
+        if (isId) {
+            totalBought = (parseFloat(p.boughtQuantity) || 0) * (parseInt(p.pieces) || 1);
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isCustom) {
+                    totalBought += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
+                }
+            });
+        }
 
         let totalSold = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
                 const parsedSale = window.parseSaleItem(sale.item, baseName);
                 let saleBaseName = parsedSale.saleBaseName;
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+                
                 if (isMatch) {
                     totalSold += parseFloat(sale.qty) || 0;
                 }
@@ -953,11 +1041,15 @@ window.checkProductOutOfStock = function(productNameOrId) {
 
     } else {
         let totalBoughtPieces = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && !item.isSpecial && !item.isFlexible && !item.isCustom) {
-                totalBoughtPieces += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
-            }
-        });
+        if (isId) {
+            totalBoughtPieces = (parseFloat(p.boughtQuantity) || 0) * (parseInt(p.pieces) || 1);
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && !item.isSpecial && !item.isFlexible && !item.isCustom) {
+                    totalBoughtPieces += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
+                }
+            });
+        }
         
         let totalSoldPieces = 0;
         filteredSales.forEach(sale => {
@@ -965,7 +1057,14 @@ window.checkProductOutOfStock = function(productNameOrId) {
                 const parsedSale = window.parseSaleItem(sale.item, baseName);
                 let saleBaseName = parsedSale.saleBaseName;
                 let saleVariant = parsedSale.saleVariant;
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+                
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
                     const bulkSuffix = (p.bulkUnit || 'Carton').trim().toLowerCase();
@@ -1004,28 +1103,39 @@ window.checkProductRunningLow = function(productNameOrId) {
     const baseName = p.name;
 
     let oldestDateAdded = null;
-    const activeMatches = products.filter(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
-    activeMatches.forEach(item => {
-        if (item.dateAdded) {
-            const t = new Date(item.dateAdded).getTime();
-            if (!oldestDateAdded || t < oldestDateAdded) {
-                oldestDateAdded = t;
+    if (isId) {
+        oldestDateAdded = p.dateAdded ? new Date(p.dateAdded).getTime() : null;
+    } else {
+        const activeMatches = products.filter(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
+        activeMatches.forEach(item => {
+            if (item.dateAdded) {
+                const t = new Date(item.dateAdded).getTime();
+                if (!oldestDateAdded || t < oldestDateAdded) {
+                    oldestDateAdded = t;
+                }
             }
-        }
-    });
+        });
+    }
 
     const filteredSales = oldestDateAdded ? sales.filter(sale => window.parseSaleDate(sale.date || sale.timestamp) >= oldestDateAdded) : sales;
 
     if (p.isSpecial || p.packTypes) {
         let totalBoughtCups = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.packTypes) {
-                const s = item.structure || {};
-                const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
-                const cpc = parseInt(s.cupsPerCustard || s.c3sPerC2) || 1;
-                totalBoughtCups += (parseFloat(item.boughtQuantity) || 0) * (cpb * cpc);
-            }
-        });
+        if (isId) {
+            const s = p.structure || {};
+            const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
+            const cpc = parseInt(s.cupsPerCustard || s.c3sPerC2) || 1;
+            totalBoughtCups = (parseFloat(p.boughtQuantity) || 0) * (cpb * cpc);
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.packTypes) {
+                    const s = item.structure || {};
+                    const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
+                    const cpc = parseInt(s.cupsPerCustard || s.c3sPerC2) || 1;
+                    totalBoughtCups += (parseFloat(item.boughtQuantity) || 0) * (cpb * cpc);
+                }
+            });
+        }
 
         const bTitle = p.packTypes.bag?.title || p.packTypes.c1?.title || 'Container 1';
         const cTitle = p.packTypes.custard?.title || p.packTypes.c2?.title || 'Container 2';
@@ -1037,7 +1147,14 @@ window.checkProductRunningLow = function(productNameOrId) {
                 const parsedSale = window.parseSaleItem(sale.item, baseName);
                 let saleBaseName = parsedSale.saleBaseName;
                 let saleVariant = parsedSale.saleVariant;
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+                
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
                     if (saleVariant === cpTitle || saleVariant === 'Container 3') soldCups += q;
@@ -1057,14 +1174,21 @@ window.checkProductRunningLow = function(productNameOrId) {
         return remaining > 0 && remaining <= (totalBoughtCups / 2);
     } else if (p.isFlexible) {
         let totalC3Bought = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isFlexible) {
-                const s = item.structure || {};
-                const c2sPerC1 = parseInt(s.c2sPerC1) || 1;
-                const c3sPerC2 = parseInt(s.c3sPerC2) || 1;
-                totalC3Bought += (parseFloat(item.boughtQuantity) || 0) * c2sPerC1 * c3sPerC2;
-            }
-        });
+        if (isId) {
+            const s = p.structure || {};
+            const c2sPerC1 = parseInt(s.c2sPerC1) || 1;
+            const c3sPerC2 = parseInt(s.c3sPerC2) || 1;
+            totalC3Bought = (parseFloat(p.boughtQuantity) || 0) * c2sPerC1 * c3sPerC2;
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isFlexible) {
+                    const s = item.structure || {};
+                    const c2sPerC1 = parseInt(s.c2sPerC1) || 1;
+                    const c3sPerC2 = parseInt(s.c3sPerC2) || 1;
+                    totalC3Bought += (parseFloat(item.boughtQuantity) || 0) * c2sPerC1 * c3sPerC2;
+                }
+            });
+        }
 
         const pk = p.packTypes || {};
         const c1Title = (pk.c1 && pk.c1.title) || 'Container 1';
@@ -1077,7 +1201,14 @@ window.checkProductRunningLow = function(productNameOrId) {
                 const parsedSale = window.parseSaleItem(sale.item, baseName);
                 let saleBaseName = parsedSale.saleBaseName;
                 let saleVariant = parsedSale.saleVariant;
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+                
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
                     if (saleVariant === c3Title || saleVariant === 'Container 3') soldC3 += q;
@@ -1097,18 +1228,29 @@ window.checkProductRunningLow = function(productNameOrId) {
 
     } else if (p.isCustom) {
         let totalBought = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isCustom) {
-                totalBought += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
-            }
-        });
+        if (isId) {
+            totalBought = (parseFloat(p.boughtQuantity) || 0) * (parseInt(p.pieces) || 1);
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isCustom) {
+                    totalBought += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
+                }
+            });
+        }
 
         let totalSold = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
                 const parsedSale = window.parseSaleItem(sale.item, baseName);
                 let saleBaseName = parsedSale.saleBaseName;
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+                
                 if (isMatch) {
                     totalSold += parseFloat(sale.qty) || 0;
                 }
@@ -1120,11 +1262,15 @@ window.checkProductRunningLow = function(productNameOrId) {
 
     } else {
         let totalBoughtPieces = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && !item.isSpecial && !item.isFlexible && !item.isCustom) {
-                totalBoughtPieces += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
-            }
-        });
+        if (isId) {
+            totalBoughtPieces = (parseFloat(p.boughtQuantity) || 0) * (parseInt(p.pieces) || 1);
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && !item.isSpecial && !item.isFlexible && !item.isCustom) {
+                    totalBoughtPieces += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
+                }
+            });
+        }
         
         let totalSoldPieces = 0;
         filteredSales.forEach(sale => {
@@ -1132,7 +1278,14 @@ window.checkProductRunningLow = function(productNameOrId) {
                 const parsedSale = window.parseSaleItem(sale.item, baseName);
                 let saleBaseName = parsedSale.saleBaseName;
                 let saleVariant = parsedSale.saleVariant;
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+                
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
                     const bulkSuffix = (p.bulkUnit || 'Carton').trim().toLowerCase();
@@ -1167,7 +1320,6 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         ? JSON.parse(pendingStockRaw)
         : JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
 
-    
     let p = null;
     const isId = productNameOrId && productNameOrId.startsWith('ndp_');
     if (isId) {
@@ -1205,28 +1357,39 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
     }
 
     let oldestDateAdded = null;
-    const activeMatches = products.filter(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
-    activeMatches.forEach(item => {
-        if (item.dateAdded) {
-            const t = new Date(item.dateAdded).getTime();
-            if (!oldestDateAdded || t < oldestDateAdded) {
-                oldestDateAdded = t;
+    if (isId) {
+        oldestDateAdded = p.dateAdded ? new Date(p.dateAdded).getTime() : null;
+    } else {
+        const activeMatches = products.filter(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
+        activeMatches.forEach(item => {
+            if (item.dateAdded) {
+                const t = new Date(item.dateAdded).getTime();
+                if (!oldestDateAdded || t < oldestDateAdded) {
+                    oldestDateAdded = t;
+                }
             }
-        }
-    });
+        });
+    }
 
     const filteredSales = oldestDateAdded ? sales.filter(sale => window.parseSaleDate(sale.date || sale.timestamp) >= oldestDateAdded) : sales;
 
     if (p.isSpecial || p.packTypes) {
         let totalBoughtCups = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.packTypes) {
-                const s = item.structure || {};
-                const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
-                const cpc = parseInt(s.cupsPerCustard || s.c3sPerC2) || 1;
-                totalBoughtCups += (parseFloat(item.boughtQuantity) || 0) * (cpb * cpc);
-            }
-        });
+        if (isId) {
+            const s = p.structure || {};
+            const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
+            const cpc = parseInt(s.cupsPerCustard || s.c3sPerC2) || 1;
+            totalBoughtCups = (parseFloat(p.boughtQuantity) || 0) * (cpb * cpc);
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.packTypes) {
+                    const s = item.structure || {};
+                    const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
+                    const cpc = parseInt(s.cupsPerCustard || s.c3sPerC2) || 1;
+                    totalBoughtCups += (parseFloat(item.boughtQuantity) || 0) * (cpb * cpc);
+                }
+            });
+        }
 
         const bTitle = p.packTypes?.bag?.title || p.packTypes?.c1?.title || 'Container 1';
         const cTitle = p.packTypes?.custard?.title || p.packTypes?.c2?.title || 'Container 2';
@@ -1239,7 +1402,13 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
                 let saleBaseName = parsedSale.saleBaseName;
                 let saleVariant = parsedSale.saleVariant;
 
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
                     if (saleVariant === cpTitle || saleVariant === 'Container 3') soldCups += q;
@@ -1273,14 +1442,21 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         }
     } else if (p.isFlexible) {
         let totalC3Bought = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isFlexible) {
-                const s = item.structure || {};
-                const c2sPerC1 = parseInt(s.c2sPerC1) || 1;
-                const c3sPerC2 = parseInt(s.c3sPerC2) || 1;
-                totalC3Bought += (parseFloat(item.boughtQuantity) || 0) * c2sPerC1 * c3sPerC2;
-            }
-        });
+        if (isId) {
+            const s = p.structure || {};
+            const c2sPerC1 = parseInt(s.c2sPerC1) || 1;
+            const c3sPerC2 = parseInt(s.c3sPerC2) || 1;
+            totalC3Bought = (parseFloat(p.boughtQuantity) || 0) * c2sPerC1 * c3sPerC2;
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isFlexible) {
+                    const s = item.structure || {};
+                    const c2sPerC1 = parseInt(s.c2sPerC1) || 1;
+                    const c3sPerC2 = parseInt(s.c3sPerC2) || 1;
+                    totalC3Bought += (parseFloat(item.boughtQuantity) || 0) * c2sPerC1 * c3sPerC2;
+                }
+            });
+        }
 
         const pk = p.packTypes || {};
         const c1Title = (pk.c1 && pk.c1.title) || 'Container 1';
@@ -1294,7 +1470,13 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
                 let saleBaseName = parsedSale.saleBaseName;
                 let saleVariant = parsedSale.saleVariant;
 
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
                     if (saleVariant === c3Title || saleVariant === 'Container 3') soldC3 += q;
@@ -1324,18 +1506,29 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
 
     } else if (p.isCustom) {
         let totalBought = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isCustom) {
-                totalBought += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
-            }
-        });
+        if (isId) {
+            totalBought = (parseFloat(p.boughtQuantity) || 0) * (parseInt(p.pieces) || 1);
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && item.isCustom) {
+                    totalBought += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
+                }
+            });
+        }
 
         let totalSold = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
                 const parsedSale = window.parseSaleItem(sale.item, baseName);
                 let saleBaseName = parsedSale.saleBaseName;
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+
                 if (isMatch) {
                     totalSold += parseFloat(sale.qty) || 0;
                 }
@@ -1346,11 +1539,15 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
 
     } else {
         let totalBoughtPieces = 0;
-        products.forEach(item => {
-            if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && !item.isSpecial && !item.isFlexible && !item.isCustom) {
-                totalBoughtPieces += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
-            }
-        });
+        if (isId) {
+            totalBoughtPieces = (parseFloat(p.boughtQuantity) || 0) * (parseInt(p.pieces) || 1);
+        } else {
+            products.forEach(item => {
+                if (item.name && item.name.trim().toLowerCase() === baseName.toLowerCase() && !item.isSpecial && !item.isFlexible && !item.isCustom) {
+                    totalBoughtPieces += (parseFloat(item.boughtQuantity) || 0) * (parseInt(item.pieces) || 1);
+                }
+            });
+        }
         
         let totalSoldPieces = 0;
         filteredSales.forEach(sale => {
@@ -1359,7 +1556,13 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
                 let saleBaseName = parsedSale.saleBaseName;
                 let saleVariant = parsedSale.saleVariant;
 
-                const isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                let isMatch = false;
+                if (isId) {
+                    isMatch = window.isSaleAssociatedWithProduct(sale, p, products);
+                } else {
+                    isMatch = (saleBaseName.toLowerCase() === baseName.toLowerCase());
+                }
+
                 if (isMatch) {
                     const q = parseFloat(sale.qty) || 0;
                     const bulkSuffix = (p.bulkUnit || 'Carton').trim().toLowerCase();
@@ -1382,8 +1585,7 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
             return Math.floor(rem / (parseInt(p.pieces) || 1));
         }
         return rem;
-    }
-};window.openImageViewer = function(src) {
+    }};window.openImageViewer = function(src) {
     if (!src) return;
     let viewer = document.getElementById('globalImageViewer');
     if (!viewer) {
