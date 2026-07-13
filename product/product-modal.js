@@ -170,7 +170,7 @@ function initProductModalLogic() {
             // (e.g. flexible pricing toggle) without needing a page refresh
             try {
                 const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-                const freshProduct = dbProducts.find(p => p.name === product.name && !p.isDeleted);
+                const freshProduct = dbProducts.find(p => (product.id ? p.id === product.id : p.name === product.name) && !p.isDeleted);
                 if (freshProduct) {
                     product = freshProduct;
                 }
@@ -789,7 +789,7 @@ function initProductModalLogic() {
         if (productModal && productModal.classList.contains('show') && currentProduct) {
             try {
                 const dbProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-                const latest = dbProducts.find(p => p.name === currentProduct.name && !p.isDeleted);
+                const latest = dbProducts.find(p => (currentProduct.id ? p.id === currentProduct.id : p.name === currentProduct.name) && !p.isDeleted);
                 if (latest) {
                     const wasFlexibleAllowed = !!currentProduct.allowUserFlexiblePricing;
                     const isFlexibleAllowed = !!latest.allowUserFlexiblePricing;
