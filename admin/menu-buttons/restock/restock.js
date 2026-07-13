@@ -258,10 +258,11 @@ function renderRestockList(filter = '') {
 
     const totalSn = products.length;
     const totalQuantityBought = products.reduce((sum, p) => sum + (parseFloat(p.boughtQuantity) || 1), 0);
+    const totalQuantityBoughtStr = Number.isInteger(totalQuantityBought) ? totalQuantityBought : parseFloat(totalQuantityBought.toFixed(2));
     const totalValue = products.reduce((sum, p) => sum + (parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0), 0);
     const snEl = document.getElementById('restockTotalSn');
     const priceEl = document.getElementById('restockTotalPrice');
-    if (snEl) snEl.textContent = `${totalSn} / ${totalQuantityBought}`;
+    if (snEl) snEl.textContent = `${totalSn} / ${totalQuantityBoughtStr}`;
     if (priceEl) priceEl.textContent = '₦' + totalValue.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
 
     if (products.length === 0) {
