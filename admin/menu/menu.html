@@ -401,6 +401,20 @@
             <span class="card-chevron">&rsaquo;</span>
         </div>
 
+        <!-- Clear Cache -->
+        <div class="admin-menu-card clear-cache" id="btnAdminClearCache" onclick="if(confirm('Are you sure you want to clear the local cache? This will log you out and perform a complete re-sync.')) { if(typeof window.wipeLocalCacheAndReload === 'function') window.wipeLocalCacheAndReload(); }">
+            <div class="card-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </div>
+            <div class="card-details">
+                <h3>Clear Cache</h3>
+                <p>Force refresh and re-sync all shop data</p>
+            </div>
+            <span class="card-chevron">&rsaquo;</span>
+        </div>
+
         <!-- Logout -->
         <div class="admin-menu-card logout" id="btnAdminLogout">
             <div class="card-icon exit">

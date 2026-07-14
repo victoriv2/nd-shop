@@ -600,6 +600,32 @@ function _pdCalculateStock(p) {
     try { sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]'); } catch (e) { }
     try { allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]'); } catch (e) { }
 
+    // Map all products to ensure they have correct boolean flags just like global-fixes.js
+    const mappedProducts = allProducts.filter(item => item && !item.isDeleted && !item.cleared).map(item => ({
+        ...item,
+        isSpecial: item.isSpecial === true || item.isSpecial === 'true',
+        isFlexible: item.isFlexible === true || item.isFlexible === 'true',
+        isCustom: item.isCustom === true || item.isCustom === 'true'
+    }));
+
+    // Include pending requests from user carts/requests for real-time inventory count consistency
+    const pendingStockRaw = localStorage.getItem('nd_pending_stock_data');
+    const requests = pendingStockRaw
+        ? JSON.parse(pendingStockRaw)
+        : JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
+        
+    requests.forEach(req => {
+        if (req.status === 'Pending') {
+            if (req.isGroupedOrder && req.items) {
+                req.items.forEach(item => {
+                    sales.push({ item: item.name, qty: item.qty, date: req.timestamp || req.date, productId: item.productId || '' });
+                });
+            } else if (req.product) {
+                sales.push({ item: req.product.name, qty: req.product.qty, date: req.timestamp || req.date, productId: req.product.productId || '' });
+            }
+        }
+    });
+
     let oldestDateAdded = p.dateAdded ? new Date(p.dateAdded).getTime() : null;
     const filteredSales = oldestDateAdded ? sales.filter(sale => window.parseSaleDate(sale.date || sale.timestamp) >= oldestDateAdded) : sales;
 
@@ -607,25 +633,40 @@ function _pdCalculateStock(p) {
 
     if (p.isSpecial || p.packTypes) {
         const s = p.structure || {};
-        const cpb = parseInt(s.custardsPerBag) || 1;
-        const cpc = parseInt(s.cupsPerCustard) || 1;
+        const cpb = parseInt(s.custardsPerBag || s.c2sPerC1) || 1;
+        const cpc = parseInt(s.cupsPerCustard || s.c3sPerC2) || 1;
         const maxCPB = cpb * cpc;
+        
+        // Resolve titles case-insensitively/correctly
         const bagT = (p.isFlexible && p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) ? p.packTypes.c1.title : ((p.packTypes && p.packTypes.bag && p.packTypes.bag.title) || (p.packTypes && p.packTypes.c1 && p.packTypes.c1.title) || p.bulkUnit || 'Container 1');
         const cusT = (p.isFlexible && p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) ? p.packTypes.c2.title : ((p.packTypes && p.packTypes.custard && p.packTypes.custard.title) || (p.packTypes && p.packTypes.c2 && p.packTypes.c2.title) || 'Container 2');
         const cupT = (p.isFlexible && p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) ? p.packTypes.c3.title : ((p.packTypes && p.packTypes.cup && p.packTypes.cup.title) || (p.packTypes && p.packTypes.c3 && p.packTypes.c3.title) || 'Container 3');
 
+        // Sum bought quantities for the specific product ID
         let totalBags = 0;
-        allProducts.forEach(item => { if (!item.isDeleted && item.id === p.id && (item.isSpecial || item.packTypes)) totalBags += (parseFloat(item.boughtQuantity) || 1); });
+        allProducts.forEach(item => { 
+            if (!item.isDeleted && item.id === p.id && (item.isSpecial || item.packTypes)) {
+                totalBags += (parseFloat(item.boughtQuantity) || 1); 
+            }
+        });
 
         let sBags = 0, sCus = 0, sCups = 0;
         filteredSales.forEach(sale => {
             if (sale.item) {
-                const saleBaseName = sale.item.split(' (')[0].trim();
-                const isMatch = sale.productId ? sale.productId === p.id : (saleBaseName.toLowerCase() === p.name.toLowerCase());
+                // Determine association using window.isSaleAssociatedWithProduct
+                const isMatch = window.isSaleAssociatedWithProduct(sale, p, mappedProducts);
                 if (isMatch) {
-                    if (sale.item === p.name + ' (' + bagT + ')') sBags += parseFloat(sale.qty) || 0;
-                    else if (sale.item === p.name + ' (' + cusT + ')') sCus += parseFloat(sale.qty) || 0;
-                    else if (sale.item === p.name + ' (' + cupT + ')') sCups += parseFloat(sale.qty) || 0;
+                    const parsedSale = window.parseSaleItem(sale.item, p.name);
+                    const saleVariant = parsedSale.saleVariant || '';
+                    const q = parseFloat(sale.qty) || 0;
+                    
+                    if (saleVariant.toLowerCase() === cupT.toLowerCase() || saleVariant.toLowerCase() === 'container 3' || saleVariant.toLowerCase() === 'cup' || saleVariant.toLowerCase() === 'c3') {
+                        sCups += q;
+                    } else if (saleVariant.toLowerCase() === cusT.toLowerCase() || saleVariant.toLowerCase() === 'container 2' || saleVariant.toLowerCase() === 'custard' || saleVariant.toLowerCase() === 'c2') {
+                        sCus += q;
+                    } else if (saleVariant.toLowerCase() === bagT.toLowerCase() || saleVariant.toLowerCase() === 'container 1' || saleVariant.toLowerCase() === 'bag' || saleVariant.toLowerCase() === 'c1' || saleVariant.toLowerCase() === 'wholesale') {
+                        sBags += q;
+                    }
                 }
             }
         });
@@ -657,6 +698,7 @@ function _pdCalculateStock(p) {
         const ppb = parseInt(p.pieces) || 1;
         const unit = (p.unit || 'piece').replace('per ', '');
 
+        // Sum bought quantities for the specific product ID
         allProducts.forEach(item => { 
             if (!item.isDeleted && item.id === p.id && !item.isSpecial) {
                 boughtPieces += (parseFloat(item.boughtQuantity) || 1) * ppb;
@@ -668,12 +710,16 @@ function _pdCalculateStock(p) {
         
         filteredSales.forEach(sale => { 
             if (sale.item) {
-                const isMatch = sale.productId ? sale.productId === p.id : (sale.item.trim().toLowerCase() === p.name.trim().toLowerCase() || sale.item.trim().toLowerCase() === `${p.name} (${bulk})`.toLowerCase());
+                const isMatch = window.isSaleAssociatedWithProduct(sale, p, mappedProducts);
                 if (isMatch) {
-                    if (sale.item === p.name) {
-                        soldRetailPieces += parseFloat(sale.qty) || 0;
-                    } else if (sale.item === `${p.name} (${bulk})`) {
-                        soldWholesaleBulk += parseFloat(sale.qty) || 0;
+                    const parsedSale = window.parseSaleItem(sale.item, p.name);
+                    const saleVariant = parsedSale.saleVariant || '';
+                    const q = parseFloat(sale.qty) || 0;
+                    
+                    if (saleVariant.toLowerCase() === bulk.toLowerCase() || saleVariant.toLowerCase() === 'carton' || saleVariant.toLowerCase() === 'wholesale') {
+                        soldWholesaleBulk += q;
+                    } else {
+                        soldRetailPieces += q;
                     }
                 }
             }
@@ -697,7 +743,7 @@ function _pdCalculateStock(p) {
             `<h4 style="margin:0 0 12px 0;font-size:0.95rem;color:#1e293b;">Breakdown</h4>` +
             `<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#64748b;font-size:0.9rem;">Total Bought</span><span style="font-weight:700;color:#0f172a;">${boughtPieces} ${unit}(s)</span></div>` +
             `<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#64748b;font-size:0.9rem;">Sold (${unit})</span><span style="font-weight:700;color:#ef4444;">- ${Math.round(soldRetailPieces * 10) / 10}</span></div>` +
-            (p.wholesalePrice ? `<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#64748b;font-size:0.9rem;">Sold (${bulk})</span><span style="font-weight:700;color:#ef4444;">- ${Math.round(soldWholesaleBulk * 10) / 10}</span></div>` : '') +
+            (p.wholesalePrice || p.bulkUnit ? `<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#64748b;font-size:0.9rem;">Sold (${bulk})</span><span style="font-weight:700;color:#ef4444;">- ${Math.round(soldWholesaleBulk * 10) / 10}</span></div>` : '') +
             `<div style="display:flex;justify-content:space-between;border-top:1px dashed #cbd5e1;padding-top:8px;"><span style="color:#64748b;font-size:0.9rem;font-weight:600;">Total Sold (In ${unit}s)</span><span style="font-weight:800;color:#ef4444;">- ${Math.round(totalSoldPieces * 10) / 10}</span></div></div>`;
     }
 

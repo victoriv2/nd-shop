@@ -83,6 +83,12 @@
             <span class="chevron">&rsaquo;</span>
         </button>
 
+        <!-- Clear Cache -->
+        <button class="menu-action-btn outline-btn" id="clearCacheBtn" onclick="if(confirm('Are you sure you want to clear the local cache? This will log you out and perform a complete re-sync.')) { if(typeof window.wipeLocalCacheAndReload === 'function') window.wipeLocalCacheAndReload(); }">
+            <span class="btn-text">Clear Cache</span>
+            <span class="chevron">&rsaquo;</span>
+        </button>
+
         <!-- Log Out -->
         <button class="menu-action-btn outline-btn logout-btn" id="logoutBtn">
             <span class="btn-text">Log Out</span>

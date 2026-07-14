@@ -268,6 +268,11 @@
     border-color: #fee2e2;
 }
 
+.admin-menu-card.clear-cache:hover {
+    background: #fff5f5;
+    border-color: #feb2b2;
+}
+
 /* Footer Stats */
 .admin-menu-footer {
     margin-top: auto;
