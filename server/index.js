@@ -1052,6 +1052,16 @@ app.get('/api/get-table/:table', optionalToken, async (req, res) => {
             if (!isAdmin) query = query.or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
         }
 
+        // Override Supabase's default 1000-row limit to prevent newest records from being
+        // silently dropped (sales_history had 1088 rows — the newest 88 were cut off each fetch).
+        // sales_history is ordered newest-first (id contains an embedded timestamp) so that
+        // the most recent sales are always returned even if we hit the cap.
+        if (table === 'sales_history') {
+            query = query.order('id', { ascending: false }).limit(10000);
+        } else {
+            query = query.limit(5000);
+        }
+
         const { data, error } = await query;
         if (error) {
             console.error(`[get-table] Error reading ${table}:`, error.message);
