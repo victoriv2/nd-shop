@@ -37,6 +37,9 @@
 
     // Track timestamps of last local writes to prevent in-flight fetches from overwriting newer local state
     const lastLocalWrite = {};
+    // Grace period (ms): if a local write happened within this window, skip server pull for that key
+    // This prevents new sales/data from being wiped when the sync queue empties and initSync re-fires
+    const LOCAL_WRITE_GRACE_MS = 30000;
 
     const nativeSetItem = Storage.prototype.setItem;
     const nativeRemoveItem = Storage.prototype.removeItem;
@@ -104,9 +107,11 @@
                 const data = await res.json();
                 
                 if (data.success && data.data) {
-                    // Check if a local write occurred while the fetch was in progress
-                    if (lastLocalWrite[localKey] && lastLocalWrite[localKey] >= fetchStartTime) {
-                        console.log(`[sync] Skipping pull update for ${localKey} because a newer local change occurred.`);
+                    // Check if a local write occurred while the fetch was in progress OR within the grace window
+                    // Grace period protects optimistic updates that have already been flushed from the queue
+                    const writeAge = lastLocalWrite[localKey] ? (fetchStartTime - lastLocalWrite[localKey]) : Infinity;
+                    if (lastLocalWrite[localKey] && writeAge < LOCAL_WRITE_GRACE_MS) {
+                        console.log(`[sync] Skipping pull update for ${localKey} because a local write occurred ${Math.round(writeAge/1000)}s ago (within ${LOCAL_WRITE_GRACE_MS/1000}s grace window).`);
                         continue;
                     }
 
