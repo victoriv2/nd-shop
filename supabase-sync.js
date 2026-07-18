@@ -35,6 +35,20 @@
     // We keep an in-memory cache of the "last known good state" to compute diffs against
     let stateCache = {};
 
+    // On startup, purge any sync queue items older than 10 minutes.
+    // Stale queue items permanently block server pulls, causing browsers to show outdated data.
+    (function purgeStaleSyncQueue() {
+        try {
+            const STALE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
+            const queue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
+            const fresh = queue.filter(item => (Date.now() - (item.timestamp || 0)) < STALE_THRESHOLD_MS);
+            if (fresh.length !== queue.length) {
+                localStorage.setItem('nd_sync_retry_queue', JSON.stringify(fresh));
+                console.log(`[sync] Purged ${queue.length - fresh.length} stale queue items on startup.`);
+            }
+        } catch(e) {}
+    })();
+
     // Track timestamps of last local writes to prevent in-flight fetches from overwriting newer local state
     const lastLocalWrite = {};
     // Grace period (ms): if a local write happened within this window, skip server pull for that key
@@ -115,9 +129,12 @@
                         continue;
                     }
 
-                    // Prevent overwriting local data if there are pending optimistic updates
+                    // Prevent overwriting local data if there are RECENT pending optimistic updates.
+                    // Only block the pull if the pending op is less than 2 minutes old.
+                    // Stale queue items must NOT block the server pull — they will be retried or discarded separately.
                     const freshQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
-                    const hasPendingOps = freshQueue.some(q => q.table === tableName);
+                    const QUEUE_BLOCK_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
+                    const hasPendingOps = freshQueue.some(q => q.table === tableName && (Date.now() - (q.timestamp || 0)) < QUEUE_BLOCK_THRESHOLD_MS);
                     if (!hasPendingOps) {
                         let serverData = data.data;
                         if (localKey === 'nd_products_data') {
@@ -160,7 +177,8 @@
             if (data.success && data.data) {
                 // Prevent overwriting local settings if there are pending optimistic updates
                 const freshQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
-                const hasPendingSettings = freshQueue.some(q => q.table === 'admin_settings');
+                const QUEUE_BLOCK_THRESHOLD_MS = 2 * 60 * 1000;
+                const hasPendingSettings = freshQueue.some(q => q.table === 'admin_settings' && (Date.now() - (q.timestamp || 0)) < QUEUE_BLOCK_THRESHOLD_MS);
                 if (!hasPendingSettings) {
                     const receivedKeys = new Set(data.data.map(s => s.id));
                     
