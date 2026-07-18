@@ -252,7 +252,7 @@ function _pdRenderDetails(p) {
             : (p.profitPercent || '—');
 
         const isPayoutDisabled = p.isCustom;
-         const payout = isPayoutDisabled ? 0 : finalPrice * (payoutRate / 100);
+         const payout = isPayoutDisabled ? 0 : Math.max(0, profit) * (payoutRate / 100);
         const formatPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
 
         const row = (label, value, bg, border) =>
@@ -406,7 +406,7 @@ function _pdRenderDetails(p) {
             const profitPctV = (s[t.profitPctKey] !== undefined && s[t.profitPctKey] !== '' && parseFloat(s[t.profitPctKey]) > 0)
                 ? parseFloat(s[t.profitPctKey]).toFixed(2).replace(/\.?0+$/, '')
                 : ((costV > 0 && profitV > 0) ? ((profitV / costV) * 100).toFixed(2).replace(/\.?0+$/, '') : '—');
-            const payV = price * (payoutRate / 100);
+            const payV = Math.max(0, profitV) * (payoutRate / 100);
             const formPayV = Number.isInteger(payV) ? payV : payV.toFixed(2);
  
             html += `<div style="background:${t.bg};border:1px solid ${t.border};border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;">` +
