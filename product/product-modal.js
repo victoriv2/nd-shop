@@ -599,7 +599,9 @@ function initProductModalLogic() {
             if (isFlat) {
                 payout = payoutRate * currentQuantity;
             } else {
-                payout = totalCost * (payoutRate / 100);
+                const totalItemCost = baseCostValue * currentQuantity;
+                const profit = totalCost - totalItemCost;
+                payout = Math.max(0, profit) * (payoutRate / 100);
             }
             const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
             if (payoutDisplay) {
@@ -744,7 +746,9 @@ function initProductModalLogic() {
             } else if (currentProduct && currentProduct.payoutRate !== undefined) {
                 payoutRate = parseFloat(currentProduct.payoutRate);
             }
-            payout = totalCost * (payoutRate / 100);
+            const totalItemCost = baseCostValue * currentQuantity;
+            const profit = totalCost - totalItemCost;
+            payout = Math.max(0, profit) * (payoutRate / 100);
         }
 
         // Visual Feedback

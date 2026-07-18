@@ -227,7 +227,10 @@ function updateCartItemQty(index, delta) {
                 } else if (isFlat) {
                     cart[index].payout = cart[index].qty * payoutRate;
                 } else {
-                    cart[index].payout = cart[index].total * (payoutRate / 100);
+                    const costVal = cart[index].unitCost !== undefined ? cart[index].unitCost : 0;
+                    const totalCost = cart[index].qty * costVal;
+                    const profit = cart[index].total - totalCost;
+                    cart[index].payout = Math.max(0, profit) * (payoutRate / 100);
                 }
             } else {
                 cart[index].payout = 0;
@@ -328,7 +331,10 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             } else if (isFlat) {
                 cart[existingIndex].payout = cart[existingIndex].qty * payoutRate;
             } else {
-                cart[existingIndex].payout = cart[existingIndex].total * (payoutRate / 100);
+                const costVal = cart[existingIndex].unitCost !== undefined ? cart[existingIndex].unitCost : 0;
+                const totalCost = cart[existingIndex].qty * costVal;
+                const profit = cart[existingIndex].total - totalCost;
+                cart[existingIndex].payout = Math.max(0, profit) * (payoutRate / 100);
             }
         }
     } else {
@@ -350,7 +356,10 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
             } else if (isFlat) {
                 payout = qty * payoutRate;
             } else {
-                payout = total * (payoutRate / 100);
+                const costVal = unitCost !== undefined ? unitCost : 0;
+                const totalCost = qty * costVal;
+                const profit = total - totalCost;
+                payout = Math.max(0, profit) * (payoutRate / 100);
             }
         }
 

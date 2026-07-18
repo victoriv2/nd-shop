@@ -679,7 +679,9 @@ function _buildEditableOrderTable(req, id) {
                         if (activeVariant.flex || (prod && prod.isCustom)) {
                             item.payout = 0;
                         } else {
-                            item.payout = total * (payoutRate / 100);
+                            const totalCost = currentQty * (activeVariant.cost || 0);
+                            const profit = total - totalCost;
+                            item.payout = Math.max(0, profit) * (payoutRate / 100);
                         }
                     } else {
                         item.payout = 0;
