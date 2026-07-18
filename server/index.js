@@ -1041,31 +1041,41 @@ app.get('/api/get-table/:table', optionalToken, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid table: ' + table });
         }
 
-        let query = supabase.from(table).select('*');
-
-        // Apply user-scoped filtering for private tables
-        if (table === 'requests') {
-            if (!userId) return res.json({ success: true, data: [] });
-            if (!isAdmin) query = query.eq('user_id', userId);
-        } else if (table === 'messages') {
-            if (!userId) return res.json({ success: true, data: [] });
-            if (!isAdmin) query = query.or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
-        }
-
-        // Override Supabase's default 1000-row limit to prevent newest records from being
-        // silently dropped (sales_history had 1088 rows — the newest 88 were cut off each fetch).
-        // sales_history is ordered newest-first (id contains an embedded timestamp) so that
-        // the most recent sales are always returned even if we hit the cap.
+        let data = [];
         if (table === 'sales_history') {
-            query = query.order('id', { ascending: false }).limit(10000);
+            let from = 0;
+            let to = 999;
+            let hasMore = true;
+            while (hasMore) {
+                const { data: chunk, error } = await supabase.from(table).select('*').order('id', { ascending: false }).range(from, to);
+                if (error) {
+                    console.error(`[get-table] Error reading ${table} chunk:`, error.message);
+                    throw error;
+                }
+                data = data.concat(chunk);
+                if (chunk.length < 1000 || data.length >= 10000) {
+                    hasMore = false;
+                } else {
+                    from += 1000;
+                    to += 1000;
+                }
+            }
         } else {
+            let query = supabase.from(table).select('*');
+            if (table === 'requests') {
+                if (!userId) return res.json({ success: true, data: [] });
+                if (!isAdmin) query = query.eq('user_id', userId);
+            } else if (table === 'messages') {
+                if (!userId) return res.json({ success: true, data: [] });
+                if (!isAdmin) query = query.or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
+            }
             query = query.limit(5000);
-        }
-
-        const { data, error } = await query;
-        if (error) {
-            console.error(`[get-table] Error reading ${table}:`, error.message);
-            throw error;
+            const { data: result, error } = await query;
+            if (error) {
+                console.error(`[get-table] Error reading ${table}:`, error.message);
+                throw error;
+            }
+            data = result;
         }
         
         let mappedData;
