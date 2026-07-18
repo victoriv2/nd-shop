@@ -501,7 +501,7 @@ function initAdminProductLogic() {
                 displayPrice = '<strong>₦' + Math.round(priceVal).toLocaleString() + '</strong> ' + (p.unit || '');
             }
 
-            const payout = p.isCustom ? 0 : Math.max(0, profitVal) * (currentRate / 100);
+            const payout = p.isCustom ? 0 : priceVal * (currentRate / 100);
             const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
             const safeName = p.name.replace(/'/g, "\\'");
             
@@ -2559,7 +2559,8 @@ window.generateProductPDF = function (btn) {
             displayPrice = '<span style="font-size: 18px; font-weight: 900; color: #6366f1;">₦' + Math.round(priceVal).toLocaleString() + '</span> <span style="font-size: 13px; color: #888; font-weight: 500; margin-left: 4px;">' + (p.unit || '') + '</span>';
         }
 
-        const payout = priceVal * 0.02;
+        const globalPayoutRate = parseFloat(localStorage.getItem('nd_payout_rate') || '2');
+        const payout = priceVal * (globalPayoutRate / 100);
         const formattedPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
         cardsHtml += `
             <div style="break-inside: avoid; border: 1px solid #edf1f7; border-radius: 12px; padding: 16px; background: #fffcf8; box-shadow: 0 4px 6px rgba(27, 38, 59,0.04); margin-bottom: 20px;">

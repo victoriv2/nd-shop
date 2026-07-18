@@ -1320,9 +1320,9 @@ function _initRestockProductForm() {
             const bagFinal = parseFloat(specBagPrice.value) || 0;
             const custFinal = parseFloat(specCustardPrice.value) || 0;
             const cupFinal = parseFloat(specCupPrice.value) || 0;
-            if (rsBagPayEl) rsBagPayEl.textContent = `₦${Number.isInteger(Math.max(0, bagProfit) * payoutRateVal / 100) ? Math.max(0, bagProfit) * payoutRateVal / 100 : (Math.max(0, bagProfit) * payoutRateVal / 100).toFixed(2)} (${payoutRateVal}%)`;
-            if (rsCustardPayEl) rsCustardPayEl.textContent = custFinal > 0 ? `₦${Number.isInteger(Math.max(0, custardProfit) * payoutRateVal / 100) ? Math.max(0, custardProfit) * payoutRateVal / 100 : (Math.max(0, custardProfit) * payoutRateVal / 100).toFixed(2)} (${payoutRateVal}%)` : `₦${(0).toFixed(2)} (${payoutRateVal}%)`;
-            if (rsCupPayEl) rsCupPayEl.textContent = cupFinal > 0 ? `₦${Number.isInteger(Math.max(0, cupProfit) * payoutRateVal / 100) ? Math.max(0, cupProfit) * payoutRateVal / 100 : (Math.max(0, cupProfit) * payoutRateVal / 100).toFixed(2)} (${payoutRateVal}%)` : `₦${(0).toFixed(2)} (${payoutRateVal}%)`;
+            if (rsBagPayEl) rsBagPayEl.textContent = `₦${Number.isInteger(bagFinal * payoutRateVal / 100) ? bagFinal * payoutRateVal / 100 : (bagFinal * payoutRateVal / 100).toFixed(2)} (${payoutRateVal}%)`;
+            if (rsCustardPayEl) rsCustardPayEl.textContent = custFinal > 0 ? `₦${Number.isInteger(custFinal * payoutRateVal / 100) ? custFinal * payoutRateVal / 100 : (custFinal * payoutRateVal / 100).toFixed(2)} (${payoutRateVal}%)` : `₦${(0).toFixed(2)} (${payoutRateVal}%)`;
+            if (rsCupPayEl) rsCupPayEl.textContent = cupFinal > 0 ? `₦${Number.isInteger(cupFinal * payoutRateVal / 100) ? cupFinal * payoutRateVal / 100 : (cupFinal * payoutRateVal / 100).toFixed(2)} (${payoutRateVal}%)` : `₦${(0).toFixed(2)} (${payoutRateVal}%)`;
         } else {
             if (rsSpecPayoutParent) { rsSpecPayoutParent.style.opacity = '0.5'; rsSpecPayoutParent.style.filter = 'grayscale(1)'; }
             if (rsBagPayEl) rsBagPayEl.textContent = 'Disabled';
