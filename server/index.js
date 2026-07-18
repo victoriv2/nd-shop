@@ -1197,14 +1197,19 @@ app.post('/api/factory-reset', optionalToken, async (req, res) => {
 // Serve static files from the root of the project
 app.use(express.static(path.join(__dirname, '../'), {
     setHeaders: (res, filePath) => {
-        // Strict Cache-Control for HTML files to prevent caching of stale UI shells
         if (filePath.endsWith('.html')) {
+            // HTML: never cache
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        } else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+            // JS/CSS: never cache — always serve fresh to prevent stale code bugs
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
             res.setHeader('Pragma', 'no-cache');
             res.setHeader('Expires', '0');
         } else {
-            // Revalidate JS/CSS/Images every time
-            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+            // Images/fonts: short cache
+            res.setHeader('Cache-Control', 'public, max-age=3600');
         }
     }
 }));
