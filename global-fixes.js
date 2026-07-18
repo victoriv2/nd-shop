@@ -1849,33 +1849,13 @@ window.openCameraCapture = function(onCapture) {
 
 
 
-// Migration: Deduct payout from existing recorded sales prices if not a Reward Purchase
+// Migration v2: RETIRED — this migration previously subtracted payout from sale.price,
+// which was incorrect. It has been removed to prevent data corruption.
+// The flag is kept so browsers that haven't run it skip it silently.
 (function() {
     try {
-        let historyFixed = localStorage.getItem('nd_sales_history_fixed_payout_v2');
-        if (!historyFixed) {
-            let sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
-            let modified = false;
-            sales.forEach(sale => {
-                if (sale.type !== 'Payout Purchase' && Number(sale.payout) > 0) {
-                    const parsedQty = parseFloat(sale.qty) || 1;
-                    const parsedUnitPrice = Number(sale.unitPrice) || 0;
-                    const expectedGross = parsedUnitPrice * parsedQty;
-                    if (Number(sale.price) === expectedGross) {
-                        sale.price = expectedGross - Number(sale.payout);
-                        modified = true;
-                    }
-                }
-            });
-            if (modified) {
-                localStorage.setItem('nd_sales_history', JSON.stringify(sales));
-            }
-            localStorage.setItem('nd_sales_history_fixed_payout_v2', 'true');
-            console.log('Fixed existing sales payout prices.');
-        }
-    } catch(e) {
-        console.error('Error fixing sales payouts', e);
-    }
+        localStorage.setItem('nd_sales_history_fixed_payout_v2', 'true');
+    } catch(e) {}
 })();
 
 // Migration: Ensure all sales have an explicit price property for consistency (fixes total calculation for flexible items)

@@ -865,7 +865,7 @@ function _initRestockProductForm() {
         const customPayoutVal = document.getElementById('rsCustomPayoutValue');
 
         if (payoutEnabled) {
-            const payout = Math.max(0, profit) * (payoutRate / 100);
+            const payout = finalPrice * (payoutRate / 100);
             if (payoutDisplay) {
                 payoutDisplay.textContent = `₦${Number.isInteger(payout) ? payout : payout.toFixed(2)} (${payoutRate}%)`;
                 payoutDisplay.style.color = '';
@@ -1788,7 +1788,7 @@ function openRestockDetailModal(productName, dateAdded) {
             const profitStr = profit > 0 ? '\u20a6' + profit.toLocaleString() : '\u2014';
             const profitPct = (retailCost > 0 && profit > 0) ? ((profit / retailCost) * 100).toFixed(2).replace(/\.?0+$/, '') : (p.profitPercent || '\u2014');
             
-            const payout = p.isFlexible ? 0 : Math.max(0, profit) * (payoutRate / 100);
+            const payout = p.isFlexible ? 0 : (p.price ? parseFloat(p.price) : 0) * (payoutRate / 100);
             const formatPayout = Number.isInteger(payout) ? payout : payout.toFixed(2);
             
             const wholesaleProfit = parseFloat(p.wholesaleProfit) || 0;
@@ -1923,7 +1923,7 @@ function openRestockDetailModal(productName, dateAdded) {
                 var profitV = (s[t.profitKey] !== undefined && s[t.profitKey] !== '') ? parseFloat(s[t.profitKey]) : ((price && costV) ? parseFloat((price - costV).toFixed(2)) : 0);
                 var profitPctV = (s[t.profitPctKey] !== undefined && s[t.profitPctKey] !== '' && parseFloat(s[t.profitPctKey]) > 0) ? parseFloat(s[t.profitPctKey]).toFixed(2).replace(/\.?0+$/, '') : ((costV > 0 && profitV > 0) ? ((profitV / costV) * 100).toFixed(2).replace(/\.?0+$/, '') : '\u2014');
                 var isTierFlexible = p.isFlexible && (t.key === 'c3' || t.key === 'cup');
-                var payV = isTierFlexible ? 0 : Math.max(0, profitV) * (payoutRate / 100);
+                var payV = isTierFlexible ? 0 : price * (payoutRate / 100);
                 var formPayV = Number.isInteger(payV) ? payV : payV.toFixed(2);
                 
                 html += '<div style="background: ' + t.bg + '; border: 1px solid ' + t.border + '; border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;">'
