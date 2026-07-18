@@ -369,6 +369,25 @@
                     return;
                 }
 
+                if (!res.ok) {
+                    console.warn(`[sync-queue] HTTP error ${res.status} syncing ${table}`);
+                    let currentQueue = JSON.parse(localStorage.getItem('nd_sync_retry_queue') || '[]');
+                    let updatedQueue = currentQueue.map(item => {
+                        if (items.some(x => x.id === item.id)) {
+                            item.retries = (item.retries || 0) + 1;
+                        }
+                        return item;
+                    }).filter(item => {
+                        if (item.retries >= 5) {
+                            console.warn(`[sync-queue] Discarding persistently failing sync item ${item.id} for table ${item.table} after HTTP error ${res.status}`);
+                            return false;
+                        }
+                        return true;
+                    });
+                    localStorage.setItem('nd_sync_retry_queue', JSON.stringify(updatedQueue));
+                    continue;
+                }
+
                 const data = await res.json();
                 if (data.success) {
                     const itemIds = items.map(item => item.id);
