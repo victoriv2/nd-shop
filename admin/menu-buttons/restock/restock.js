@@ -351,7 +351,7 @@ function renderRestockList(filter = '') {
             : `<div class="admin-product-thumb placeholder"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`;
 
         return `
-            <tr onclick="openRestockDetailModal('${safeName}'${p.dateAdded ? `, '${p.dateAdded}'` : ''})" style="cursor: pointer; ${rowBgStyle}">
+            <tr onclick="openRestockDetailModal('${safeName}', '${p.dateAdded || ''}', '${p.id || ''}')" style="cursor: pointer; ${rowBgStyle}">
                 <td style="color: #64748b; vertical-align: middle;">${index + 1}</td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 12px;">
@@ -371,7 +371,7 @@ function renderRestockList(filter = '') {
                 </td>
                 <td style="text-align: right; font-weight: 800; color: ${isOutOfStock ? '#ef4444' : '#8b5cf6'};">₦${(parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0).toLocaleString()}</td>
                 <td style="text-align: right;">
-                    <button class="restock-delete-btn" onclick="event.stopPropagation(); openRestockDetailModal('${safeName}'${p.dateAdded ? `, '${p.dateAdded}'` : ''})" title="Details" style="${isOutOfStock ? 'color: #ef4444; background: #fee2e2;' : ''}">
+                    <button class="restock-delete-btn" onclick="event.stopPropagation(); openRestockDetailModal('${safeName}', '${p.dateAdded || ''}', '${p.id || ''}')" title="Details" style="${isOutOfStock ? 'color: #ef4444; background: #fee2e2;' : ''}">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle>
                         </svg>
@@ -1738,12 +1738,13 @@ function _initRestockFlexImportDropdown() {
 // ============================================================
 // Product Detail Modal
 // ============================================================
-function openRestockDetailModal(productName, dateAdded) {
+function openRestockDetailModal(productName, dateAdded, productId) {
     _restockDetailProductName = productName;
     const products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
     let p;
-    if (dateAdded) { p = products.find(x => x.name === productName && x.dateAdded === dateAdded); }
-    else { p = products.find(x => x.name === productName); }
+    if (productId) { p = products.find(x => x.id === productId); }
+    if (!p && dateAdded) { p = products.find(x => x.name === productName && x.dateAdded === dateAdded); }
+    if (!p) { p = products.find(x => x.name === productName); }
     if (!p) return;
     
     window._rsCurrentProduct = p;

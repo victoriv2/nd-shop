@@ -274,7 +274,14 @@ window.addToCart = function(productName, qty, unit, unitPrice, isCustom, specifi
     const cart = getCartData();
     
     // Check if item exists (if not custom/flexible, we can just bump qty)
-    const existingIndex = cart.findIndex(item => item.name === productName && !isCustom && !isFlexible);
+    const existingIndex = cart.findIndex(item => {
+        if (isCustom || isFlexible) return false;
+        if (productId) {
+            return item.productId === productId;
+        } else {
+            return item.name === productName && !item.productId;
+        }
+    });
 
     let maxStock = Infinity;
     if (typeof window.getRemainingProductStock === 'function') {

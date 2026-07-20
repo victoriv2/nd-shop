@@ -848,8 +848,9 @@ window.isSaleAssociatedWithProduct = function(sale, p, products) {
         return false;
     }
     
-    // Find all active products with the same name
-    const sameNameProducts = products.filter(item => item && !item.isDeleted && !item.cleared && item.name && item.name.trim().toLowerCase() === p.name.trim().toLowerCase());
+    // Find all products with the same name, including deleted/cleared/hidden ones
+    const allProducts = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+    const sameNameProducts = allProducts.filter(item => item && item.name && item.name.trim().toLowerCase() === p.name.trim().toLowerCase());
     if (sameNameProducts.length <= 1) {
         return true; // Only one product with this name, must be it
     }
@@ -886,10 +887,18 @@ window.checkProductOutOfStock = function(productNameOrId) {
         isFlexible: item.isFlexible === true || item.isFlexible === 'true',
         isCustom: item.isCustom === true || item.isCustom === 'true'
     }));
+
+    const isId = productNameOrId && productNameOrId.startsWith('ndp_');
+    if (!isId && productNameOrId) {
+        let baseName = productNameOrId.trim();
+        let activeMatches = products.filter(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
+        if (activeMatches.length === 0) return true; // No active product, so out of stock
+        return activeMatches.every(match => window.checkProductOutOfStock(match.id));
+    }
+
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     
     let p = null;
-    const isId = productNameOrId && productNameOrId.startsWith('ndp_');
     if (isId) {
         p = products.find(item => item.id === productNameOrId);
     } else {
@@ -1104,10 +1113,18 @@ window.checkProductRunningLow = function(productNameOrId) {
         isFlexible: item.isFlexible === true || item.isFlexible === 'true',
         isCustom: item.isCustom === true || item.isCustom === 'true'
     }));
+
+    const isId = productNameOrId && productNameOrId.startsWith('ndp_');
+    if (!isId && productNameOrId) {
+        let baseName = productNameOrId.trim();
+        let activeMatches = products.filter(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
+        if (activeMatches.length === 0) return false; // No active product, so not running low
+        return activeMatches.some(match => window.checkProductRunningLow(match.id));
+    }
+
     const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     
     let p = null;
-    const isId = productNameOrId && productNameOrId.startsWith('ndp_');
     if (isId) {
         p = products.find(item => item.id === productNameOrId);
     } else {
@@ -1326,6 +1343,27 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         isFlexible: item.isFlexible === true || item.isFlexible === 'true',
         isCustom: item.isCustom === true || item.isCustom === 'true'
     }));
+
+    const isId = productNameOrId && productNameOrId.startsWith('ndp_');
+    if (!isId && productNameOrId) {
+        let baseName = productNameOrId.trim();
+        let activeMatches = products.filter(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
+        if (activeMatches.length === 0) {
+            const parsedInput = window.parseSaleItem(productNameOrId);
+            baseName = parsedInput.saleBaseName;
+            activeMatches = products.filter(item => item.name && item.name.trim().toLowerCase() === baseName.toLowerCase());
+        }
+        if (activeMatches.length === 0) return 0;
+        if (activeMatches.length === 1) {
+            return window.getRemainingProductStock(activeMatches[0].id, variantType, excludeRequestId);
+        }
+        let totalStock = 0;
+        activeMatches.forEach(match => {
+            totalStock += window.getRemainingProductStock(match.id, variantType, excludeRequestId);
+        });
+        return totalStock;
+    }
+
     let sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
     
     // Prefer nd_pending_stock_data (all users' pending orders for accurate cross-user stock).
@@ -1336,7 +1374,6 @@ window.getRemainingProductStock = function(productNameOrId, variantType = null, 
         : JSON.parse(localStorage.getItem('nd_requests_data') || '[]');
 
     let p = null;
-    const isId = productNameOrId && productNameOrId.startsWith('ndp_');
     if (isId) {
         p = products.find(item => item.id === productNameOrId);
     } else {

@@ -310,9 +310,9 @@ function _pdRenderDetails(p) {
             `<span style="font-size:0.72rem;color:#7c3aed;font-weight:500;display:block;margin-top:2px;text-align:left;">Allow user to input custom price in shop</span>` +
             `</div>` +
             `<div style="display:flex;align-items:center;gap:12px;">` +
-            (p.allowUserFlexiblePricing ? `<button onclick="window.openFlexibleVariantsModal('${p.name.replace(/'/g, "\\'")}', '${p.dateAdded}')" style="background:transparent;border:none;color:#6b21a8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;" title="Edit Containers"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>` : '') +
+            (p.allowUserFlexiblePricing ? `<button onclick="window.openFlexibleVariantsModal('${p.name.replace(/'/g, "\\'")}', '${p.dateAdded}', false, '${p.id}')" style="background:transparent;border:none;color:#6b21a8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;" title="Edit Containers"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>` : '') +
             `<label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px; margin-bottom: 0;">` +
-            `<input type="checkbox" id="pdDetailsIsFlexibleToggleDef" ${p.allowUserFlexiblePricing ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;" onchange="window.toggleProductFlexibleState('${p.name.replace(/'/g, "\\'")}', '${p.dateAdded}', this.checked)">` +
+            `<input type="checkbox" id="pdDetailsIsFlexibleToggleDef" ${p.allowUserFlexiblePricing ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;" onchange="window.toggleProductFlexibleState('${p.name.replace(/'/g, "\\'")}', '${p.dateAdded}', this.checked, '${p.id}')">` +
             `<span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${p.allowUserFlexiblePricing ? '#7c3aed' : '#cbd5e1'}; transition: .4s; border-radius: 34px;">` +
             `<span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: ${p.allowUserFlexiblePricing ? 'translateX(20px)' : 'translateX(0)'};"></span>` +
             `</span>` +
@@ -443,9 +443,9 @@ function _pdRenderDetails(p) {
             `<span style="font-size:0.72rem;color:#7c3aed;font-weight:500;display:block;margin-top:2px;text-align:left;">Allow user to input custom price in shop</span>` +
             `</div>` +
             `<div style="display:flex;align-items:center;gap:12px;">` +
-            (p.allowUserFlexiblePricing ? `<button onclick="window.openFlexibleVariantsModal('${p.name.replace(/'/g, "\\'")}', '${p.dateAdded}')" style="background:transparent;border:none;color:#6b21a8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;" title="Edit Containers"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>` : '') +
+            (p.allowUserFlexiblePricing ? `<button onclick="window.openFlexibleVariantsModal('${p.name.replace(/'/g, "\\'")}', '${p.dateAdded}', false, '${p.id}')" style="background:transparent;border:none;color:#6b21a8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;" title="Edit Containers"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>` : '') +
             `<label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px; margin-bottom: 0;">` +
-            `<input type="checkbox" id="pdDetailsIsFlexibleToggle" ${p.allowUserFlexiblePricing ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;" onchange="window.toggleProductFlexibleState('${p.name.replace(/'/g, "\\'")}', '${p.dateAdded}', this.checked)">` +
+            `<input type="checkbox" id="pdDetailsIsFlexibleToggle" ${p.allowUserFlexiblePricing ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;" onchange="window.toggleProductFlexibleState('${p.name.replace(/'/g, "\\'")}', '${p.dateAdded}', this.checked, '${p.id}')">` +
             `<span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${p.allowUserFlexiblePricing ? '#7c3aed' : '#cbd5e1'}; transition: .4s; border-radius: 34px;">` +
             `<span class="knob" style="position: absolute; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: ${p.allowUserFlexiblePricing ? 'translateX(20px)' : 'translateX(0)'};"></span>` +
             `</span>` +
@@ -1534,12 +1534,12 @@ function _setVal(id, value) {
 }
 
 // Global helper to toggle flexible pricing state directly from Product details card view
-window.toggleProductFlexibleState = function(name, dateAdded, isChecked) {
+window.toggleProductFlexibleState = function(name, dateAdded, isChecked, productId) {
     if (isChecked) {
-        window.openFlexibleVariantsModal(name, dateAdded, true);
+        window.openFlexibleVariantsModal(name, dateAdded, true, productId);
     } else {
         let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-        const index = products.findIndex(item => item.name === name && item.dateAdded === dateAdded);
+        const index = productId ? products.findIndex(item => item.id === productId) : products.findIndex(item => item.name === name && item.dateAdded === dateAdded);
         if (index !== -1) {
             products[index].allowUserFlexiblePricing = false;
             products[index].flexibleVariants = [];
@@ -1556,9 +1556,9 @@ window.toggleProductFlexibleState = function(name, dateAdded, isChecked) {
     }
 };
 
-window.openFlexibleVariantsModal = function(name, dateAdded, isTogglingOn = false) {
+window.openFlexibleVariantsModal = function(name, dateAdded, isTogglingOn = false, productId) {
     let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
-    const p = products.find(item => item.name === name && item.dateAdded === dateAdded);
+    const p = productId ? products.find(item => item.id === productId) : products.find(item => item.name === name && item.dateAdded === dateAdded);
     if (!p) return;
 
     let containers = [];
@@ -1612,7 +1612,7 @@ window.openFlexibleVariantsModal = function(name, dateAdded, isTogglingOn = fals
 
     document.getElementById('flexVarSaveBtn').onclick = function() {
         const selectedTitles = Array.from(document.querySelectorAll('.flex-var-cb:checked')).map(cb => cb.getAttribute('data-title'));
-        const index = products.findIndex(item => item.name === name && item.dateAdded === dateAdded);
+        const index = productId ? products.findIndex(item => item.id === productId) : products.findIndex(item => item.name === name && item.dateAdded === dateAdded);
         if (index !== -1) {
             if (selectedTitles.length === 0) {
                 products[index].allowUserFlexiblePricing = false;
