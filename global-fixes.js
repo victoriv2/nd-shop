@@ -1,4 +1,17 @@
 (function() {
+    // --- Automatic daily cache clearing ---
+    (function() {
+        const today = new Date().toDateString();
+        const lastClear = localStorage.getItem('nd_last_cache_clear_date');
+        if (lastClear !== today) {
+            localStorage.clear();
+            sessionStorage.clear();
+            localStorage.setItem('nd_last_cache_clear_date', today);
+            window.location.reload();
+            return;
+        }
+    })();
+
     // --- Automatic user ID migration from nd SHOP00001 to nd00001 ---
     (function() {
         const migratedKey = 'nd_user_id_prefix_migrated_to_nd';
@@ -169,8 +182,10 @@
             'nd_pinned_chats', 'nd_comm_messages',
             'nd_blocked_messaging_users'
         ];
+        const today = new Date().toDateString();
         USER_DATA_KEYS.forEach(k => localStorage.removeItem(k));
         USER_DATA_KEYS.forEach(k => sessionStorage.removeItem(k));
+        localStorage.setItem('nd_last_cache_clear_date', today);
         window.location.reload();
     };
 
@@ -2162,7 +2177,9 @@ window.calculateTrueSpendableBalance = function(userId) {
 
 // Global cache rescue utility to purge all local storage/session storage and reload
 window.wipeLocalCacheAndReload = function() {
+    const today = new Date().toDateString();
     localStorage.clear();
     sessionStorage.clear();
+    localStorage.setItem('nd_last_cache_clear_date', today);
     window.location.reload();
 };
