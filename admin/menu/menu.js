@@ -168,6 +168,10 @@ function initAdminMenu() {
     document.getElementById('btnAdminLogout')?.addEventListener('click', () => {
         customConfirm('Are you sure you want to securely log out of the admin panel?', true).then(confirmed => {
             if (confirmed) {
+                // Clear all non-auth caches
+                if (typeof window.clearNonAuthCache === 'function') {
+                    window.clearNonAuthCache();
+                }
                 sessionStorage.removeItem('nd_admin_logged_in');
                 sessionStorage.removeItem('nd_admin_bypass');
                 window.location.reload();

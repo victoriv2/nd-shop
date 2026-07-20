@@ -71,6 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = await response.json();
 
                     if (data.success) {
+                        // Clear all non-auth cached data tables/settings before storing session
+                        if (typeof window.clearNonAuthCache === 'function') {
+                            window.clearNonAuthCache();
+                        }
+
                         // Store session in sessionStorage (tab-isolated) to prevent cross-tab session bleed
                         sessionStorage.setItem('nd_logged_in_user', JSON.stringify(data.user));
                         // Clear any stale localStorage session from an old login on this browser

@@ -2220,3 +2220,39 @@ window.wipeLocalCacheAndReload = function() {
     localStorage.setItem('nd_last_cache_clear_date', today);
     window.location.reload();
 };
+
+// Clear all non-essential cached data tables, sync states, and local settings while preserving active authentication
+window.clearNonAuthCache = function() {
+    const authKeys = [
+        'nd_token',
+        'nd_admin_logged_in',
+        'nd_logged_in_user',
+        'nd_admin_id',
+        'nd_admin_email',
+        'nd_admin_phone',
+        'nd_admin_name',
+        'nd_user_last_seen',
+        'nd_user_id_prefix_migrated_to_nd',
+        'nd_last_cache_clear_date'
+    ];
+    
+    // Clear localStorage
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && !authKeys.includes(key)) {
+            localStorage.removeItem(key);
+        }
+    }
+    
+    // Clear sessionStorage
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const key = sessionStorage.key(i);
+        if (key && !authKeys.includes(key)) {
+            sessionStorage.removeItem(key);
+        }
+    }
+    
+    // Reset sync states in memory if needed
+    if (window._syncStateCache) window._syncStateCache = {};
+    console.log("[cache] Non-auth cache cleared successfully on login/logout.");
+};
