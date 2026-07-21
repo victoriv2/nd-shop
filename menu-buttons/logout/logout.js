@@ -47,11 +47,6 @@ function initLogoutLogic() {
         saveBtn.addEventListener('click', () => {
             saveBtn.textContent = 'Logging out...';
             saveBtn.style.opacity = '0.7';
-            
-            // Clear all non-auth caches
-            if (typeof window.clearNonAuthCache === 'function') {
-                window.clearNonAuthCache();
-            }
 
             // Clear session from both storages (session may be in either depending on when user last logged in)
             sessionStorage.removeItem('nd_logged_in_user');

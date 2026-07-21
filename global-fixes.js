@@ -1,16 +1,4 @@
 (function() {
-    // --- Automatic daily cache clearing ---
-    (function() {
-        const today = new Date().toDateString();
-        const lastClear = localStorage.getItem('nd_last_cache_clear_date');
-        if (lastClear !== today) {
-            localStorage.clear();
-            sessionStorage.clear();
-            localStorage.setItem('nd_last_cache_clear_date', today);
-            window.location.reload();
-            return;
-        }
-    })();
 
     // --- Automatic user ID migration from nd SHOP00001 to nd00001 ---
     (function() {

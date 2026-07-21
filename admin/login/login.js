@@ -150,10 +150,6 @@ async function processAdminLogin() {
         const data = await response.json();
 
         if (data.success) {
-            // Clear all non-auth cached data tables/settings before storing session
-            if (typeof window.clearNonAuthCache === 'function') {
-                window.clearNonAuthCache();
-            }
 
             sessionStorage.setItem('nd_admin_logged_in', 'true');
             // Store basic non-sensitive admin info
