@@ -873,7 +873,7 @@ function initAiChatLogic() {
                         let totalNeeded = mCost + priorDef;
                         let mCarryOverOut = totalNeeded > mRev ? (totalNeeded - mRev) : 0;
                         if (y === curYear && m === curMonth) {
-                            curMonthCarryOver = priorDef;
+                            curMonthCarryOver = Math.min(curMonthRevenue, priorDef);
                         }
                         priorCarryOverIn = mCarryOverOut;
                     }

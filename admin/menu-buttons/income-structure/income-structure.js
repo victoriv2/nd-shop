@@ -371,7 +371,7 @@ window.renderIncomeStructure = function() {
             if (y === targetYear && m === targetMonthIdx) {
                 totalRevenue = mRevenue;
                 totalRestock = mRestock;
-                carryOverAmount = priorDeficit;
+                carryOverAmount = Math.min(mRevenue, priorDeficit);
                 targetGrossProfit = mGrossProfit;
                 targetDistributable = mDistributable;
             }
