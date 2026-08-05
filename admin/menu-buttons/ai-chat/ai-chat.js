@@ -843,16 +843,43 @@ function initAiChatLogic() {
             });
             const curMonthRestockTotal = curMonthRestocks.reduce((sum, r) => sum + (parseFloat(r.cost) || 0), 0);
 
-            // Compute current month revenue for Profit Allocation Framework.
-            const curMonthSales = dbSales.filter(s => {
-                const parts = s.date.replace(/\s*,\s*/g, ', ').split(' ');
-                if (parts.length < 3) return false;
-                const sMonth = parts[1].replace(',', '');
-                const sYear = parts[2];
-                return sMonth === shortMonths[curMonth] && sYear === String(curYear);
-            });
-            const curMonthRevenue = curMonthSales.reduce((sum, s) => sum + (parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0), 0);
-            const curMonthNetProfit = curMonthRevenue - curMonthRestockTotal;
+            // Compute Carry-Over roll forward up to current month
+            let curMonthCarryOver = 0;
+            try {
+                const sMonths = shortMonths;
+                let priorCarryOverIn = 0;
+                let startY = curYear - 1;
+                for (let y = startY; y <= curYear; y++) {
+                    for (let m = 0; m < 12; m++) {
+                        if (y === curYear && m > curMonth) break;
+                        let mCost = dbProducts.reduce((sum, p) => {
+                            if (p.isDeleted || p.addedViaProductTab) return sum;
+                            const d = p.dateAdded ? new Date(p.dateAdded) : null;
+                            if (d && d.getFullYear() === y && d.getMonth() === m) {
+                                return sum + (parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0);
+                            }
+                            return sum;
+                        }, 0);
+                        let mRev = dbSales.reduce((sum, s) => {
+                            if (!s.date) return sum;
+                            const parts = s.date.replace(/\s*,\s*/g, ', ').split(' ');
+                            if (parts.length >= 3 && parts[1].replace(',', '') === sMonths[m] && parts[2] === String(y)) {
+                                const qty = (s.qty || 1);
+                                return sum + (s.price || (s.isFlexible ? (s.unitPrice || 0) : (qty * (s.unitPrice || 0))));
+                            }
+                            return sum;
+                        }, 0);
+                        let diff = mRev - (mCost + priorCarryOverIn);
+                        let mCarryOverOut = diff < 0 ? Math.abs(diff) : 0;
+                        if (y === curYear && m === curMonth) {
+                            curMonthCarryOver = priorCarryOverIn;
+                        }
+                        priorCarryOverIn = mCarryOverOut;
+                    }
+                }
+            } catch(e) {}
+
+            const curMonthNetProfit = curMonthRevenue - (curMonthRestockTotal + curMonthCarryOver);
 
             // Profit Allocation Framework. Allocations — use ACTUAL saved allocations
             const incomeStructure = dbIncomeAllocations.map(a => ({

@@ -53,6 +53,10 @@ function initIncomeStructure() {
                           <span>Gross Profit</span>
                           <strong id="isNetProfit">₦0</strong>
                       </div>
+                      <div class="is-summary-item" id="isCarryOverItem">
+                          <span>Carry-Over</span>
+                          <strong id="isCarryOver">₦0</strong>
+                      </div>
                  </div>
 
                  <div class="is-table-wrapper-clean" style="flex:1; display:flex; flex-direction:column; min-height:0; margin: 0 20px 20px 20px;">
@@ -306,63 +310,84 @@ window.renderIncomeStructure = function() {
     // Need short months for parsing old string dates
     const sMonths = typeof SHORT_MONTHS_EN !== 'undefined' ? SHORT_MONTHS_EN : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
-    // Calculate total restock for this month
     let products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+    let allSales = [];
+    try {
+        allSales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+    } catch(e) {}
+
+    // Calculate month-by-month carry-over roll-forward up to target (targetYear, targetMonthIdx)
+    let startYear = targetYear - 1;
+    let endYear = targetYear;
+    let carryOverIn = 0;
+
     let totalRestock = 0;
-    products.forEach(p => {
-        // EXACT match with Restock list logic
-        if (p.isDeleted || p.addedViaProductTab) return;
-        
-        let isMatch = false;
-        const d = p.dateAdded ? new Date(p.dateAdded) : null;
-        if (!d) {
-            if (targetMonthIdx === new Date().getMonth() && targetYear === new Date().getFullYear()) {
-                isMatch = true;
-            }
-        } else if (d.getMonth() === targetMonthIdx && d.getFullYear() === targetYear) {
-            isMatch = true;
-        }
-
-        if (isMatch) {
-            totalRestock += (parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0);
-        }
-    });
-
-    // Calculate total revenue for this month
     let totalRevenue = 0;
-    if(targetYear !== null && targetMonthIdx !== null) {
-        const targetShortMonth = sMonths[targetMonthIdx];
-        const targetYearStr = String(targetYear);
-        const savedSales = localStorage.getItem('nd_sales_history');
-        if (savedSales) {
-            try {
-                const allSales = JSON.parse(savedSales);
-                allSales.forEach(sale => {
-                    const dParts = sale.date.split(' ');
-                    if (dParts.length >= 3) {
-                        const sMonth = dParts[1].replace(',', '');
-                        const sYear = dParts[2];
-                        if (sMonth === targetShortMonth && sYear === targetYearStr) {
-                            const qty = (sale.qty || 1);
-                            const price = (sale.price || (sale.isFlexible ? (sale.unitPrice || 0) : (qty * (sale.unitPrice || 0))));
-                            totalRevenue += price;
-                        }
+    let carryOverAmount = 0;
+
+    for (let y = startYear; y <= endYear; y++) {
+        for (let m = 0; m < 12; m++) {
+            if (y === endYear && m > targetMonthIdx) break;
+
+            // Restock for (y, m)
+            let mRestock = 0;
+            products.forEach(p => {
+                if (p.isDeleted || p.addedViaProductTab) return;
+                const d = p.dateAdded ? new Date(p.dateAdded) : null;
+                if (!d) {
+                    if (m === new Date().getMonth() && y === new Date().getFullYear()) {
+                        mRestock += (parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0);
                     }
-                });
-            } catch(e) {}
+                } else if (d.getMonth() === m && d.getFullYear() === y) {
+                    mRestock += (parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0);
+                }
+            });
+
+            // Revenue for (y, m)
+            let mRevenue = 0;
+            const targetShortMonth = sMonths[m];
+            const targetYearStr = String(y);
+            allSales.forEach(sale => {
+                if (!sale.date) return;
+                const dParts = sale.date.split(' ');
+                if (dParts.length >= 3) {
+                    const sMonth = dParts[1].replace(',', '');
+                    const sYear = dParts[2];
+                    if (sMonth === targetShortMonth && sYear === targetYearStr) {
+                        const qty = (sale.qty || 1);
+                        const price = (sale.price || (sale.isFlexible ? (sale.unitPrice || 0) : (qty * (sale.unitPrice || 0))));
+                        mRevenue += price;
+                    }
+                }
+            });
+
+            let mCarryOver = carryOverIn;
+            let totalNeeded = mRestock + mCarryOver;
+            let mGrossProfit = mRevenue - totalNeeded;
+            let mCarryOverOut = mGrossProfit < 0 ? Math.abs(mGrossProfit) : 0;
+
+            if (y === targetYear && m === targetMonthIdx) {
+                totalRevenue = mRevenue;
+                totalRestock = mRestock;
+                carryOverAmount = mCarryOver;
+            }
+
+            carryOverIn = mCarryOverOut;
         }
     }
 
-    const netProfitRaw = totalRevenue - totalRestock;
+    const netProfitRaw = totalRevenue - (totalRestock + carryOverAmount);
     const revEl = document.getElementById('isTotalRevenue');
     const restockEl = document.getElementById('isTotalRestock');
-    if(revEl) revEl.textContent = '₦' + totalRevenue.toLocaleString();
-    if(restockEl) restockEl.textContent = '₦' + totalRestock.toLocaleString();
+    const carryOverEl = document.getElementById('isCarryOver');
+    if(revEl) revEl.textContent = '₦' + totalRevenue.toLocaleString(undefined, {maximumFractionDigits:2});
+    if(restockEl) restockEl.textContent = '₦' + totalRestock.toLocaleString(undefined, {maximumFractionDigits:2});
+    if(carryOverEl) carryOverEl.textContent = '₦' + carryOverAmount.toLocaleString(undefined, {maximumFractionDigits:2});
 
     const profitEl = document.getElementById('isNetProfit');
     const profitContainer = document.getElementById('isNetProfitItem');
     
-    if(profitEl) profitEl.textContent = '₦' + netProfitRaw.toLocaleString();
+    if(profitEl) profitEl.textContent = '₦' + netProfitRaw.toLocaleString(undefined, {maximumFractionDigits:2});
     if(profitContainer) {
         if(netProfitRaw < 0) {
             profitContainer.classList.add('negative');

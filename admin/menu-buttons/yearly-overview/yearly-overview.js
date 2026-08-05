@@ -166,7 +166,7 @@ window.renderYearlyOverview = function() {
     const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const FULL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-    let monthlyData = Array(12).fill(null).map(() => ({ revenue: 0, cost: 0, manualTax: 0, autoTax: 0, autoNetProfit: 0 }));
+    let monthlyData = Array(12).fill(null).map(() => ({ revenue: 0, cost: 0, carryOver: 0, manualTax: 0, autoTax: 0, autoNetProfit: 0 }));
 
     // Calculate Revenue per month from nd_sales_history
     try {
@@ -203,6 +203,44 @@ window.renderYearlyOverview = function() {
             }
         });
     } catch(e) { console.error('Cost Calculation Error:', e); }
+
+    // Calculate Carry-Over roll-forward
+    try {
+        const products = JSON.parse(localStorage.getItem('nd_products_data') || '[]');
+        const sales = JSON.parse(localStorage.getItem('nd_sales_history') || '[]');
+        let priorCarryOverIn = 0;
+        for (let m = 0; m < 12; m++) {
+            let mCost = 0;
+            products.forEach(p => {
+                if (p.isDeleted || p.addedViaProductTab) return;
+                const d = p.dateAdded ? new Date(p.dateAdded) : null;
+                if (d && d.getFullYear() === (targetYear - 1) && d.getMonth() === m) {
+                    mCost += (parseFloat(p.purchaseCost) || parseFloat(p.cost) || 0);
+                }
+            });
+            let mRev = 0;
+            const targetShortMonth = SHORT_MONTHS[m];
+            const targetYearStr = String(targetYear - 1);
+            sales.forEach(sale => {
+                if (!sale.date) return;
+                const dParts = sale.date.split(' ');
+                if (dParts.length >= 3 && dParts[1].replace(',', '') === targetShortMonth && dParts[2] === targetYearStr) {
+                    const qty = (sale.qty || 1);
+                    mRev += (sale.price || (sale.isFlexible ? (sale.unitPrice || 0) : (qty * (sale.unitPrice || 0))));
+                }
+            });
+            let diff = mRev - (mCost + priorCarryOverIn);
+            priorCarryOverIn = diff < 0 ? Math.abs(diff) : 0;
+        }
+
+        let currentCarryOverIn = priorCarryOverIn;
+        for (let m = 0; m < 12; m++) {
+            monthlyData[m].carryOver = currentCarryOverIn;
+            let totalNeeded = monthlyData[m].cost + currentCarryOverIn;
+            let diff = monthlyData[m].revenue - totalNeeded;
+            currentCarryOverIn = diff < 0 ? Math.abs(diff) : 0;
+        }
+    } catch(e) { console.error('Carry-Over Calculation Error:', e); }
 
     // Manual Tax Distribution
     try {
@@ -377,9 +415,13 @@ window.renderYearlyOverview = function() {
                     <span style="color: #64748b; font-size: 0.95rem;">Allocated Tax</span>
                     <strong style="color: #b91c1c; font-size: 1.05rem;">₦${monthTaxObj.toLocaleString(undefined, {maximumFractionDigits:2})}</strong>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 10px; margin-bottom: 8px;">
                     <span style="color: #475569; font-size: 0.95rem; font-weight: 800;">Gross Profit</span>
                     <strong style="color: ${monthNet < 0 ? '#b91c1c' : '#16a34a'}; font-size: 1.15rem;">₦${monthNet.toLocaleString(undefined, {maximumFractionDigits:2})}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                    <span style="color: #64748b; font-size: 0.95rem; font-weight: 700;">Carry-Over</span>
+                    <strong style="color: #8b5cf6; font-size: 1.05rem;">₦${(data.carryOver || 0).toLocaleString(undefined, {maximumFractionDigits:2})}</strong>
                 </div>
             </div>
         `;
