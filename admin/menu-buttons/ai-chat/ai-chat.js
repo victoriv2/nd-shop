@@ -843,8 +843,37 @@ function initAiChatLogic() {
             });
             const curMonthRestockTotal = curMonthRestocks.reduce((sum, r) => sum + (parseFloat(r.cost) || 0), 0);
 
+            // Compute current month sales split by New Stock vs Old Stock
+            const curMonthSales = dbSales.filter(s => {
+                const parts = s.date.replace(/\s*,\s*/g, ', ').split(' ');
+                if (parts.length < 3) return false;
+                const sMonth = parts[1].replace(',', '');
+                const sYear = parts[2];
+                return sMonth === shortMonths[curMonth] && sYear === String(curYear);
+            });
+            const curMonthRevenue = curMonthSales.reduce((sum, s) => sum + (parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0), 0);
+
+            let curMonthRevenueNew = 0;
+            let curMonthRevenueOld = 0;
+            curMonthSales.forEach(s => {
+                const price = parseFloat(s.price || (s.isFlexible ? s.unitPrice : s.qty * s.unitPrice)) || 0;
+                let isNewStock = false;
+                if (s.productId) {
+                    const prod = dbProducts.find(p => p.id === s.productId);
+                    if (prod && prod.dateAdded) {
+                        const pd = new Date(prod.dateAdded);
+                        if (pd.getFullYear() === curYear && pd.getMonth() === curMonth) {
+                            isNewStock = true;
+                        }
+                    }
+                }
+                if (isNewStock) curMonthRevenueNew += price;
+                else curMonthRevenueOld += price;
+            });
+
             // Compute Carry-Over roll forward up to current month
             let curMonthCarryOver = 0;
+            let priorDeficitTarget = 0;
             try {
                 const sMonths = shortMonths;
                 let priorCarryOverIn = 0;
@@ -873,20 +902,22 @@ function initAiChatLogic() {
                         let totalNeeded = mCost + priorDef;
                         let mCarryOverOut = totalNeeded > mRev ? (totalNeeded - mRev) : 0;
                         if (y === curYear && m === curMonth) {
-                            curMonthCarryOver = Math.min(curMonthRevenue, priorDef);
+                            priorDeficitTarget = priorDef;
+                            curMonthCarryOver = Math.min(curMonthRevenueOld, priorDef);
                         }
                         priorCarryOverIn = mCarryOverOut;
                     }
                 }
             } catch(e) {}
 
-            const curMonthNetProfit = curMonthRevenue - (curMonthRestockTotal + (curMonthCarryOver || 0));
+            const curMonthGrossProfit = curMonthRestockTotal > 0 ? curMonthRevenueNew : (curMonthRevenueOld > 0 && priorDeficitTarget > 0 ? 0 : curMonthRevenue - curMonthRestockTotal);
+            const curMonthDistributableProfit = Math.max(0, curMonthRevenue - (curMonthRestockTotal + priorDeficitTarget));
 
             // Profit Allocation Framework. Allocations — use ACTUAL saved allocations
             const incomeStructure = dbIncomeAllocations.map(a => ({
                 name: a.name,
                 percent: a.percent + '%',
-                amount: curMonthNetProfit > 0 ? Math.round((a.percent / 100) * curMonthNetProfit) : 0
+                amount: curMonthDistributableProfit > 0 ? Math.round((a.percent / 100) * curMonthDistributableProfit) : 0
             }));
 
             const todaySales = dbSales.filter(s => {
@@ -1057,8 +1088,10 @@ Note: Each expense has: id, title, amount, dateStr, timestamp, year, monthIdx
 PROFIT ALLOCATION FRAMEWORK. (Current Month: ${todayMonth} ${todayYear}):
 - Total Revenue This Month: ₦${curMonthRevenue.toLocaleString()}
 - Total Cost of Goods This Month: ₦${curMonthRestockTotal.toLocaleString()}
-- Gross Profit This Month: ₦${curMonthNetProfit.toLocaleString()}
-- Allocation Breakdown (only applies when gross profit > 0):
+- Gross Profit This Month: ₦${curMonthGrossProfit.toLocaleString()}
+- Carry-Over This Month: ₦${curMonthCarryOver.toLocaleString()}
+- Distributable Profit for Allocations: ₦${curMonthDistributableProfit.toLocaleString()}
+- Allocation Breakdown (only applies when distributable profit > 0):
 ${JSON.stringify(incomeStructure)}
 - Raw Allocation Categories (admin-customized): ${JSON.stringify(dbIncomeAllocations)}
 - Note: These categories are set by the admin and may differ from defaults. Always use these ACTUAL values.
