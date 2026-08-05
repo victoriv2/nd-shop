@@ -363,7 +363,7 @@ window.renderIncomeStructure = function() {
             });
 
             let priorDeficit = carryOverIn;
-            let mGrossProfit = mRevenue - mRestock;
+            let mGrossProfit = mRestock === 0 ? 0 : (mRevenue - mRestock);
             let totalNeeded = mRestock + priorDeficit;
             let mCarryOverOut = totalNeeded > mRevenue ? (totalNeeded - mRevenue) : 0;
             let mDistributable = Math.max(0, mRevenue - totalNeeded);
