@@ -297,7 +297,7 @@ window.renderYearlyOverview = function() {
         if (taxAlloc && parseFloat(taxAlloc.percent) > 0) {
             const taxPercent = parseFloat(taxAlloc.percent);
             for (let m = 0; m < 12; m++) {
-                const netProfitBeforeAuto = monthlyData[m].revenue - monthlyData[m].cost;
+                const netProfitBeforeAuto = monthlyData[m].distributableProfit || 0;
                 if (netProfitBeforeAuto > 0) {
                     monthlyData[m].autoTax = (taxPercent / 100) * netProfitBeforeAuto;
                 }
@@ -322,7 +322,7 @@ window.renderYearlyOverview = function() {
         if (npAlloc && parseFloat(npAlloc.percent) > 0) {
             const npPercent = parseFloat(npAlloc.percent);
             for (let m = 0; m < 12; m++) {
-                const netProfitBeforeAuto = monthlyData[m].revenue - monthlyData[m].cost;
+                const netProfitBeforeAuto = monthlyData[m].distributableProfit || 0;
                 if (netProfitBeforeAuto > 0) {
                     monthlyData[m].autoNetProfit = (npPercent / 100) * netProfitBeforeAuto;
                 }
