@@ -235,10 +235,11 @@ window.renderYearlyOverview = function() {
 
         let currentCarryOverIn = priorCarryOverIn;
         for (let m = 0; m < 12; m++) {
-            monthlyData[m].carryOver = currentCarryOverIn;
-            let totalNeeded = monthlyData[m].cost + currentCarryOverIn;
-            let diff = monthlyData[m].revenue - totalNeeded;
-            currentCarryOverIn = diff < 0 ? Math.abs(diff) : 0;
+            let priorDef = currentCarryOverIn;
+            monthlyData[m].carryOver = Math.min(monthlyData[m].revenue, priorDef);
+            monthlyData[m].grossProfit = Math.max(0, monthlyData[m].revenue - (monthlyData[m].cost + priorDef));
+            let totalNeeded = monthlyData[m].cost + priorDef;
+            currentCarryOverIn = totalNeeded > monthlyData[m].revenue ? (totalNeeded - monthlyData[m].revenue) : 0;
         }
     } catch(e) { console.error('Carry-Over Calculation Error:', e); }
 
@@ -370,7 +371,7 @@ window.renderYearlyOverview = function() {
     for (let m = 0; m < 12; m++) {
         const data = monthlyData[m];
         const monthTaxObj = data.manualTax + data.autoTax;
-        const monthNet = data.revenue - data.cost;
+        const monthNet = data.grossProfit || 0;
         
         const isCurrentMonth = (targetYear === now.getFullYear()) && (m === now.getMonth());
         const isFuture = (targetYear === now.getFullYear()) && (m > now.getMonth());

@@ -324,6 +324,7 @@ window.renderIncomeStructure = function() {
     let totalRestock = 0;
     let totalRevenue = 0;
     let carryOverAmount = 0;
+    let targetGrossProfit = 0;
 
     for (let y = startYear; y <= endYear; y++) {
         for (let m = 0; m < 12; m++) {
@@ -361,22 +362,24 @@ window.renderIncomeStructure = function() {
                 }
             });
 
-            let mCarryOver = carryOverIn;
-            let totalNeeded = mRestock + mCarryOver;
-            let mGrossProfit = mRevenue - totalNeeded;
-            let mCarryOverOut = mGrossProfit < 0 ? Math.abs(mGrossProfit) : 0;
+            let priorDeficit = carryOverIn;
+            let mCarryOver = Math.min(mRevenue, priorDeficit);
+            let totalNeeded = mRestock + priorDeficit;
+            let mGrossProfit = Math.max(0, mRevenue - totalNeeded);
+            let mCarryOverOut = totalNeeded > mRevenue ? (totalNeeded - mRevenue) : 0;
 
             if (y === targetYear && m === targetMonthIdx) {
                 totalRevenue = mRevenue;
                 totalRestock = mRestock;
                 carryOverAmount = mCarryOver;
+                targetGrossProfit = mGrossProfit;
             }
 
             carryOverIn = mCarryOverOut;
         }
     }
 
-    const netProfitRaw = totalRevenue - (totalRestock + carryOverAmount);
+    const netProfitRaw = targetGrossProfit;
     const revEl = document.getElementById('isTotalRevenue');
     const restockEl = document.getElementById('isTotalRestock');
     const carryOverEl = document.getElementById('isCarryOver');
