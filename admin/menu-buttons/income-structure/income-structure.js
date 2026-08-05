@@ -344,8 +344,9 @@ window.renderIncomeStructure = function() {
                 }
             });
 
-            // Revenue for (y, m)
-            let mRevenue = 0;
+            // Revenue for (y, m) split by New Stock vs Old Stock
+            let mRevenueNew = 0;
+            let mRevenueOld = 0;
             const targetShortMonth = sMonths[m];
             const targetYearStr = String(y);
             allSales.forEach(sale => {
@@ -357,13 +358,31 @@ window.renderIncomeStructure = function() {
                     if (sMonth === targetShortMonth && sYear === targetYearStr) {
                         const qty = (sale.qty || 1);
                         const price = (sale.price || (sale.isFlexible ? (sale.unitPrice || 0) : (qty * (sale.unitPrice || 0))));
-                        mRevenue += price;
+                        
+                        let isNewStockSale = false;
+                        if (sale.productId) {
+                            const prod = products.find(p => p.id === sale.productId);
+                            if (prod && prod.dateAdded) {
+                                const pd = new Date(prod.dateAdded);
+                                if (pd.getFullYear() === y && pd.getMonth() === m) {
+                                    isNewStockSale = true;
+                                }
+                            }
+                        }
+
+                        if (isNewStockSale) {
+                            mRevenueNew += price;
+                        } else {
+                            mRevenueOld += price;
+                        }
                     }
                 }
             });
 
+            let mRevenue = mRevenueNew + mRevenueOld;
             let priorDeficit = carryOverIn;
-            let mGrossProfit = mRestock === 0 ? 0 : (mRevenue - mRestock);
+            let mCarryOver = Math.min(mRevenueOld, priorDeficit);
+            let mGrossProfit = mRestock > 0 ? mRevenueNew : (mRevenueOld > 0 && priorDeficit > 0 ? 0 : mRevenue - mRestock);
             let totalNeeded = mRestock + priorDeficit;
             let mCarryOverOut = totalNeeded > mRevenue ? (totalNeeded - mRevenue) : 0;
             let mDistributable = Math.max(0, mRevenue - totalNeeded);
@@ -371,7 +390,7 @@ window.renderIncomeStructure = function() {
             if (y === targetYear && m === targetMonthIdx) {
                 totalRevenue = mRevenue;
                 totalRestock = mRestock;
-                carryOverAmount = Math.min(mRevenue, priorDeficit);
+                carryOverAmount = mCarryOver;
                 targetGrossProfit = mGrossProfit;
                 targetDistributable = mDistributable;
             }

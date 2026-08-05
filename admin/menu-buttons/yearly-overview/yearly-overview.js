@@ -236,8 +236,30 @@ window.renderYearlyOverview = function() {
         let currentCarryOverIn = priorCarryOverIn;
         for (let m = 0; m < 12; m++) {
             let priorDef = currentCarryOverIn;
-            monthlyData[m].carryOver = Math.min(monthlyData[m].revenue, priorDef);
-            monthlyData[m].grossProfit = monthlyData[m].cost === 0 ? 0 : (monthlyData[m].revenue - monthlyData[m].cost);
+            let mRevNew = 0;
+            let mRevOld = 0;
+            sales.forEach(sale => {
+                if (!sale.date) return;
+                const dParts = sale.date.split(' ');
+                if (dParts.length >= 3 && dParts[1].replace(',', '') === SHORT_MONTHS[m] && dParts[2] === String(targetYear)) {
+                    const qty = (sale.qty || 1);
+                    const price = (sale.price || (sale.isFlexible ? (sale.unitPrice || 0) : (qty * (sale.unitPrice || 0))));
+                    let isNewStock = false;
+                    if (sale.productId) {
+                        const prod = products.find(p => p.id === sale.productId);
+                        if (prod && prod.dateAdded) {
+                            const pd = new Date(prod.dateAdded);
+                            if (pd.getFullYear() === targetYear && pd.getMonth() === m) {
+                                isNewStock = true;
+                            }
+                        }
+                    }
+                    if (isNewStock) mRevNew += price;
+                    else mRevOld += price;
+                }
+            });
+            monthlyData[m].carryOver = Math.min(mRevOld, priorDef);
+            monthlyData[m].grossProfit = monthlyData[m].cost > 0 ? mRevNew : (mRevOld > 0 && priorDef > 0 ? 0 : monthlyData[m].revenue - monthlyData[m].cost);
             monthlyData[m].distributableProfit = Math.max(0, monthlyData[m].revenue - (monthlyData[m].cost + priorDef));
             let totalNeeded = monthlyData[m].cost + priorDef;
             currentCarryOverIn = totalNeeded > monthlyData[m].revenue ? (totalNeeded - monthlyData[m].revenue) : 0;
