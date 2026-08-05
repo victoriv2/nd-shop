@@ -236,8 +236,8 @@ window.renderYearlyOverview = function() {
         let currentCarryOverIn = priorCarryOverIn;
         for (let m = 0; m < 12; m++) {
             let priorDef = currentCarryOverIn;
-            monthlyData[m].carryOver = Math.min(monthlyData[m].revenue, priorDef);
-            monthlyData[m].grossProfit = Math.max(0, monthlyData[m].revenue - (monthlyData[m].cost + priorDef));
+            monthlyData[m].carryOver = priorDef;
+            monthlyData[m].grossProfit = monthlyData[m].revenue - (monthlyData[m].cost + priorDef);
             let totalNeeded = monthlyData[m].cost + priorDef;
             currentCarryOverIn = totalNeeded > monthlyData[m].revenue ? (totalNeeded - monthlyData[m].revenue) : 0;
         }

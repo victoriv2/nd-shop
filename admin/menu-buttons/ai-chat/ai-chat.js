@@ -870,18 +870,17 @@ function initAiChatLogic() {
                             return sum;
                         }, 0);
                         let priorDef = priorCarryOverIn;
-                        let mCarryOver = Math.min(mRev, priorDef);
                         let totalNeeded = mCost + priorDef;
                         let mCarryOverOut = totalNeeded > mRev ? (totalNeeded - mRev) : 0;
                         if (y === curYear && m === curMonth) {
-                            curMonthCarryOver = mCarryOver;
+                            curMonthCarryOver = priorDef;
                         }
                         priorCarryOverIn = mCarryOverOut;
                     }
                 }
             } catch(e) {}
 
-            const curMonthNetProfit = Math.max(0, curMonthRevenue - (curMonthRestockTotal + (curMonthCarryOver || 0)));
+            const curMonthNetProfit = curMonthRevenue - (curMonthRestockTotal + (curMonthCarryOver || 0));
 
             // Profit Allocation Framework. Allocations — use ACTUAL saved allocations
             const incomeStructure = dbIncomeAllocations.map(a => ({

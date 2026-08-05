@@ -363,15 +363,14 @@ window.renderIncomeStructure = function() {
             });
 
             let priorDeficit = carryOverIn;
-            let mCarryOver = Math.min(mRevenue, priorDeficit);
             let totalNeeded = mRestock + priorDeficit;
-            let mGrossProfit = Math.max(0, mRevenue - totalNeeded);
-            let mCarryOverOut = totalNeeded > mRevenue ? (totalNeeded - mRevenue) : 0;
+            let mGrossProfit = mRevenue - totalNeeded;
+            let mCarryOverOut = mGrossProfit < 0 ? Math.abs(mGrossProfit) : 0;
 
             if (y === targetYear && m === targetMonthIdx) {
                 totalRevenue = mRevenue;
                 totalRestock = mRestock;
-                carryOverAmount = mCarryOver;
+                carryOverAmount = priorDeficit;
                 targetGrossProfit = mGrossProfit;
             }
 
@@ -390,7 +389,13 @@ window.renderIncomeStructure = function() {
     const profitEl = document.getElementById('isNetProfit');
     const profitContainer = document.getElementById('isNetProfitItem');
     
-    if(profitEl) profitEl.textContent = '₦' + netProfitRaw.toLocaleString(undefined, {maximumFractionDigits:2});
+    if(profitEl) {
+        if(netProfitRaw < 0) {
+            profitEl.textContent = '-₦' + Math.abs(netProfitRaw).toLocaleString(undefined, {maximumFractionDigits:2});
+        } else {
+            profitEl.textContent = '₦' + netProfitRaw.toLocaleString(undefined, {maximumFractionDigits:2});
+        }
+    }
     if(profitContainer) {
         if(netProfitRaw < 0) {
             profitContainer.classList.add('negative');
