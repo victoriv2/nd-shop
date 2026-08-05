@@ -363,22 +363,23 @@ window.renderIncomeStructure = function() {
             });
 
             let priorDeficit = carryOverIn;
+            let mGrossProfit = mRevenue - mRestock;
             let totalNeeded = mRestock + priorDeficit;
-            let mGrossProfit = mRevenue - totalNeeded;
-            let mCarryOverOut = mGrossProfit < 0 ? Math.abs(mGrossProfit) : 0;
+            let mCarryOverOut = totalNeeded > mRevenue ? (totalNeeded - mRevenue) : 0;
+            let mDistributable = Math.max(0, mRevenue - totalNeeded);
 
             if (y === targetYear && m === targetMonthIdx) {
                 totalRevenue = mRevenue;
                 totalRestock = mRestock;
                 carryOverAmount = priorDeficit;
                 targetGrossProfit = mGrossProfit;
+                targetDistributable = mDistributable;
             }
 
             carryOverIn = mCarryOverOut;
         }
     }
 
-    const netProfitRaw = targetGrossProfit;
     const revEl = document.getElementById('isTotalRevenue');
     const restockEl = document.getElementById('isTotalRestock');
     const carryOverEl = document.getElementById('isCarryOver');
@@ -390,14 +391,14 @@ window.renderIncomeStructure = function() {
     const profitContainer = document.getElementById('isNetProfitItem');
     
     if(profitEl) {
-        if(netProfitRaw < 0) {
-            profitEl.textContent = '-₦' + Math.abs(netProfitRaw).toLocaleString(undefined, {maximumFractionDigits:2});
+        if(targetGrossProfit < 0) {
+            profitEl.textContent = '-₦' + Math.abs(targetGrossProfit).toLocaleString(undefined, {maximumFractionDigits:2});
         } else {
-            profitEl.textContent = '₦' + netProfitRaw.toLocaleString(undefined, {maximumFractionDigits:2});
+            profitEl.textContent = '₦' + targetGrossProfit.toLocaleString(undefined, {maximumFractionDigits:2});
         }
     }
     if(profitContainer) {
-        if(netProfitRaw < 0) {
+        if(targetGrossProfit < 0) {
             profitContainer.classList.add('negative');
             profitContainer.style.borderColor = '#e11d48';
             profitContainer.querySelector('span').style.color = '#e11d48';
@@ -489,12 +490,14 @@ window.renderIncomeStructure = function() {
 
     let allocations = window.loadIsAllocations();
 
-    if (netProfitRaw <= 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color: #64748b;">No positive gross profit to allocate.</td></tr>`;
+    if (targetDistributable <= 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color: #64748b;">No positive distributable profit to allocate (Carry-Over pending).</td></tr>`;
+        const totalDisp = document.getElementById('isTotalAmtDisplay');
+        if(totalDisp) totalDisp.textContent = '₦0';
         return;
     }
 
-    let actualProfit = netProfitRaw;
+    let actualProfit = targetDistributable;
     
     let html = '';
     let totalAllocated = 0;
